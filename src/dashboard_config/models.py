@@ -266,6 +266,19 @@ class ValidateResponse(BaseModel):
     config: DashboardConfig | None = None
 
 
+class ItemHealthStatus(BaseModel):
+    item_id: str
+    ok: bool
+    checked_url: str
+    status_code: int | None = None
+    latency_ms: int | None = None
+    error: str | None = None
+
+
+class DashboardHealthResponse(BaseModel):
+    items: list[ItemHealthStatus] = Field(default_factory=list)
+
+
 class IframeSourceResponse(BaseModel):
     item_id: str
     src: str

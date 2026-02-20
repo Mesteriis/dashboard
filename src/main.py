@@ -1,21 +1,34 @@
 from __future__ import annotations
 
+import asyncio
 import os
 from pathlib import Path
+from time import perf_counter
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 import httpx
-from fastapi import FastAPI, HTTPException, Request, Response
+from fastapi import FastAPI, HTTPException, Query, Request, Response
 from fastapi.responses import FileResponse, PlainTextResponse
 from fastapi.staticfiles import StaticFiles
 
-from src.dashboard_config.models import ConfigVersion, DashboardConfig, IframeSourceResponse, ValidateRequest, ValidateResponse
+from src.dashboard_config.models import (
+    ConfigVersion,
+    DashboardConfig,
+    DashboardHealthResponse,
+    IframeSourceResponse,
+    ItemHealthStatus,
+    LinkItemConfig,
+    ValidateRequest,
+    ValidateResponse,
+)
 from src.dashboard_config.service import DashboardConfigService, DashboardConfigValidationError
 
 BASE_DIR = Path(__file__).resolve().parent
 STATIC_DIR = BASE_DIR / "static"
 INDEX_FILE = BASE_DIR / "templates" / "index.html"
 CONFIG_FILE = Path(os.getenv("DASHBOARD_CONFIG_FILE", str(BASE_DIR.parent / "dashboard.yaml")))
+HEALTHCHECK_TIMEOUT_SEC = float(os.getenv("DASHBOARD_HEALTHCHECK_TIMEOUT_SEC", "4"))
+HEALTHCHECK_MAX_PARALLEL = int(os.getenv("DASHBOARD_HEALTHCHECK_MAX_PARALLEL", "8"))
 
 PROXY_REQUEST_HEADERS = {
     "accept",
@@ -79,6 +92,26 @@ async def get_dashboard_last_errors() -> dict[str, list[dict[str, str]]]:
 async def validate_dashboard_yaml(payload: ValidateRequest) -> ValidateResponse:
     config, issues = config_service.validate_yaml(payload.yaml)
     return ValidateResponse(valid=not issues, issues=issues, config=config)
+
+
+@app.get("/api/v1/dashboard/health", response_model=DashboardHealthResponse)
+async def get_dashboard_health(item_id: list[str] | None = Query(default=None)) -> DashboardHealthResponse:
+    try:
+        items = config_service.list_items()
+    except DashboardConfigValidationError as exc:
+        raise HTTPException(status_code=422, detail=[issue.model_dump() for issue in exc.issues]) from exc
+
+    if item_id:
+        requested = set(item_id)
+        items = [item for item in items if item.id in requested]
+
+    semaphore = asyncio.Semaphore(max(1, HEALTHCHECK_MAX_PARALLEL))
+    async with httpx.AsyncClient(follow_redirects=True, timeout=max(0.2, HEALTHCHECK_TIMEOUT_SEC), verify=False) as client:
+        statuses = await asyncio.gather(
+            *[_probe_item_health(item=item, client=client, semaphore=semaphore) for item in items]
+        )
+
+    return DashboardHealthResponse(items=statuses)
 
 
 @app.get("/api/v1/dashboard/iframe/{item_id}/source", response_model=IframeSourceResponse)
@@ -195,3 +228,38 @@ def rewrite_location(location: str, item_url: str, item_id: str) -> str:
         return f"{proxy_base}{location}"
 
     return f"{proxy_base}/{location}"
+
+
+async def _probe_item_health(item, client: httpx.AsyncClient, semaphore: asyncio.Semaphore) -> ItemHealthStatus:
+    checked_url = str(item.url)
+    timeout_sec = max(0.2, HEALTHCHECK_TIMEOUT_SEC)
+
+    if isinstance(item, LinkItemConfig) and item.healthcheck:
+        checked_url = str(item.healthcheck.url)
+        timeout_sec = max(0.2, item.healthcheck.timeout_ms / 1000)
+
+    started_at = perf_counter()
+
+    try:
+        async with semaphore:
+            response = await client.get(checked_url, timeout=timeout_sec)
+        latency_ms = int((perf_counter() - started_at) * 1000)
+        is_ok = 200 <= response.status_code < 400
+        return ItemHealthStatus(
+            item_id=item.id,
+            ok=is_ok,
+            checked_url=checked_url,
+            status_code=response.status_code,
+            latency_ms=latency_ms,
+            error=None if is_ok else f"HTTP {response.status_code}",
+        )
+    except Exception as exc:  # noqa: BLE001 - health checks should never fail the endpoint
+        latency_ms = int((perf_counter() - started_at) * 1000)
+        return ItemHealthStatus(
+            item_id=item.id,
+            ok=False,
+            checked_url=checked_url,
+            status_code=None,
+            latency_ms=latency_ms,
+            error=str(exc),
+        )

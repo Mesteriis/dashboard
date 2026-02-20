@@ -209,3 +209,4 @@ security:
     allowed_domains:
       - "rf.sh-inc.ru"
       - "sh-inc.ru"
+      - ".local"

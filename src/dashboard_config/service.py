@@ -95,6 +95,15 @@ class DashboardConfigService:
                         return item
         raise KeyError(item_id)
 
+    def list_items(self) -> list[ItemConfig]:
+        config = self.load()
+        return [
+            item
+            for group in config.groups
+            for subgroup in group.subgroups
+            for item in subgroup.items
+        ]
+
     def get_iframe_item(self, item_id: str) -> IframeItemConfig:
         item = self.get_item(item_id)
         if not isinstance(item, IframeItemConfig):
@@ -340,6 +349,7 @@ class DashboardConfigService:
             normalized = domain.lower().strip()
             if not normalized:
                 continue
+            normalized = normalized.lstrip(".")
             if host == normalized or host.endswith(f".{normalized}"):
                 return True
         return False
