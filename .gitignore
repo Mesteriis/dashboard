@@ -1,0 +1,15 @@
+# macOS / IDE
+.DS_Store
+.idea/
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# Node build artifacts
+src/frontend/node_modules/
+src/frontend/dist/
+
+# Local runtime data
+data/
