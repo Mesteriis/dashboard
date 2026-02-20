@@ -41,7 +41,7 @@ layout:
         - type: widget_grid
           widgets: ["net.routes", "net.tunnels"]
         - type: groups
-          group_ids: ["net.core", "net.edge"]
+          group_ids: ["infra.core", "infra.ops"]
 
 # ====== ГРУППЫ / ПОДГРУППЫ / ЭЛЕМЕНТЫ ======
 

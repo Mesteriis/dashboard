@@ -28,6 +28,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --no-dev
 
 COPY src/main.py /app/src/main.py
+COPY dashboard.yaml /app/dashboard.yaml
 COPY src/templates/ /app/src/templates/
 COPY src/static/ /app/src/static/
 
