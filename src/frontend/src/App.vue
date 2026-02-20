@@ -2,24 +2,24 @@
   <div class="shell">
     <img class="center-emblem" :src="EMBLEM_SRC" alt="" aria-hidden="true" />
 
-    <div class="app-shell">
-      <aside class="sidebar">
+    <div class="app-shell" :class="{ 'sidebar-compact': isSidebarIconOnly }">
+      <aside class="sidebar" :class="{ compact: isSidebarIconOnly }">
         <div id="sidebar-particles" class="sidebar-particles" aria-hidden="true"></div>
-        <div class="sidebar-content">
-          <div class="brand">
+        <div class="sidebar-content" :class="{ compact: isSidebarIconOnly }">
+          <div class="brand" :class="{ compact: isSidebarIconOnly }">
             <img :src="EMBLEM_SRC" alt="Oko" />
-            <div>
+            <div v-if="!isSidebarIconOnly">
               <p class="brand-title">{{ appTitle }}</p>
               <p class="brand-subtitle">{{ appTagline }}</p>
             </div>
           </div>
 
-          <nav class="tab-list" role="tablist" aria-label="Разделы">
+          <nav class="tab-list" :class="{ compact: isSidebarIconOnly }" role="tablist" aria-label="Разделы">
             <button
               v-for="page in pages"
               :key="page.id"
               class="tab-btn"
-              :class="{ active: activePage?.id === page.id }"
+              :class="{ active: activePage?.id === page.id, compact: isSidebarIconOnly }"
               type="button"
               role="tab"
               :title="page.title"
@@ -32,7 +32,7 @@
             </button>
           </nav>
 
-          <section v-if="treeGroups.length" class="sidebar-tree" aria-label="Дерево сервисов">
+          <section v-if="treeGroups.length && !isSidebarIconOnly" class="sidebar-tree" aria-label="Дерево сервисов">
             <div class="tree-topline">
               <p class="sidebar-tree-title">Навигация</p>
               <span class="tree-page-chip">{{ activePage?.title }}</span>
@@ -60,43 +60,146 @@
             </div>
 
             <ul v-if="filteredTreeGroups.length" class="tree-root">
-              <li v-for="group in filteredTreeGroups" :key="group.key" class="tree-group-item">
-                <button
-                  class="tree-node tree-group"
-                  :class="{ active: isGroupSelected(group.key) }"
-                  type="button"
-                  @click="toggleGroupNode(group.key)"
-                >
-                  <span class="tree-caret" :class="{ open: isGroupExpanded(group.key) }">▾</span>
-                  <component :is="resolveGroupIcon(group)" class="ui-icon tree-icon" />
-                  <span class="tree-text">{{ group.title }}</span>
-                  <span class="tree-meta">{{ groupOnlineItems(group) }}/{{ groupTotalItems(group) }}</span>
-                </button>
+              <li
+                v-for="group in filteredTreeGroups"
+                :key="group.key"
+                class="tree-group-item"
+                :class="{ dragging: dragState.type === 'group' && dragState.groupId === group.id && isDirectGroupNode(group) }"
+                :draggable="editMode && isDirectGroupNode(group)"
+                @dragstart.stop="onGroupDragStart($event, group)"
+                @dragend.stop="clearDragState"
+                @dragover.stop="onGroupDragOver($event, group)"
+                @drop.stop="onGroupDrop($event, group)"
+              >
+                <div class="tree-node-row">
+                  <button
+                    class="tree-node tree-group"
+                    :class="{ active: isGroupSelected(group.key) }"
+                    type="button"
+                    @click="toggleGroupNode(group.key)"
+                  >
+                    <span class="tree-caret" :class="{ open: isGroupExpanded(group.key) }">▾</span>
+                    <component :is="resolveGroupIcon(group)" class="ui-icon tree-icon" />
+                    <span class="tree-text">{{ group.title }}</span>
+                    <span class="tree-meta">{{ groupOnlineItems(group) }}/{{ groupTotalItems(group) }}</span>
+                  </button>
+                  <div v-if="editMode && isDirectGroupNode(group)" class="tree-inline-actions">
+                    <GripVertical class="ui-icon tree-grip" />
+                    <button class="tree-mini-btn" type="button" title="Редактировать группу" @click.stop="editGroup(group.id)">
+                      <Pencil class="ui-icon" />
+                    </button>
+                    <button class="tree-mini-btn" type="button" title="Добавить подгруппу" @click.stop="addSubgroup(group.id)">
+                      <Plus class="ui-icon" />
+                    </button>
+                    <button class="tree-mini-btn danger" type="button" title="Удалить группу" @click.stop="removeGroup(group.id)">
+                      <Trash2 class="ui-icon" />
+                    </button>
+                  </div>
+                </div>
 
                 <ul v-show="isGroupExpanded(group.key)" class="tree-subgroups">
-                  <li v-for="subgroup in group.subgroups" :key="subgroup.id" class="tree-subgroup-item">
-                    <button
-                      class="tree-node tree-subgroup"
-                      :class="{ active: isSubgroupSelected(group.key, subgroup.id) }"
-                      type="button"
-                      @click="selectSubgroupNode(group.key, subgroup.id)"
-                    >
-                      <component :is="resolveSubgroupIcon(subgroup)" class="ui-icon tree-icon tree-sub-icon" />
-                      <span class="tree-text">{{ subgroup.title }}</span>
-                    </button>
+                  <li
+                    v-for="subgroup in group.subgroups"
+                    :key="subgroup.id"
+                    class="tree-subgroup-item"
+                    :class="{ dragging: dragState.type === 'subgroup' && dragState.subgroupId === subgroup.id }"
+                    :draggable="editMode"
+                    @dragstart.stop="onSubgroupDragStart($event, group.id, subgroup.id)"
+                    @dragend.stop="clearDragState"
+                    @dragover.stop="onSubgroupDragOver($event, group.id, subgroup.id)"
+                    @drop.stop="onSubgroupDrop($event, group.id, subgroup.id)"
+                  >
+                    <div class="tree-node-row">
+                      <button
+                        class="tree-node tree-subgroup"
+                        :class="{ active: isSubgroupSelected(group.key, subgroup.id) }"
+                        type="button"
+                        @click="selectSubgroupNode(group.key, subgroup.id)"
+                      >
+                        <component :is="resolveSubgroupIcon(subgroup)" class="ui-icon tree-icon tree-sub-icon" />
+                        <span class="tree-text">{{ subgroup.title }}</span>
+                      </button>
+                      <div v-if="editMode" class="tree-inline-actions">
+                        <GripVertical class="ui-icon tree-grip" />
+                        <button
+                          class="tree-mini-btn"
+                          type="button"
+                          title="Редактировать подгруппу"
+                          @click.stop="editSubgroup(group.id, subgroup.id)"
+                        >
+                          <Pencil class="ui-icon" />
+                        </button>
+                        <button
+                          class="tree-mini-btn"
+                          type="button"
+                          title="Добавить элемент"
+                          @click.stop="addItem(group.id, subgroup.id)"
+                        >
+                          <Plus class="ui-icon" />
+                        </button>
+                        <button
+                          class="tree-mini-btn danger"
+                          type="button"
+                          title="Удалить подгруппу"
+                          @click.stop="removeSubgroup(group.id, subgroup.id)"
+                        >
+                          <Trash2 class="ui-icon" />
+                        </button>
+                      </div>
+                    </div>
 
                     <ul class="tree-items">
-                      <li v-for="item in subgroup.items" :key="item.id" class="tree-item-row">
-                        <button
-                          class="tree-node tree-item"
-                          :class="{ active: isItemSelected(item.id) }"
-                          type="button"
-                          @click="selectItemNode(group.key, subgroup.id, item.id)"
-                        >
-                          <span class="health-dot" :class="healthClass(item.id)"></span>
-                          <component :is="resolveItemIcon(item)" class="ui-icon tree-icon tree-item-icon" />
-                          <span class="tree-text">{{ item.title }}</span>
-                        </button>
+                      <li
+                        v-for="item in subgroup.items"
+                        :key="item.id"
+                        class="tree-item-row"
+                        :class="{ dragging: dragState.type === 'item' && dragState.itemId === item.id }"
+                        :draggable="editMode"
+                        @dragstart.stop="onItemDragStart($event, group.id, subgroup.id, item.id)"
+                        @dragend.stop="clearDragState"
+                        @dragover.stop="onItemDragOver($event, group.id, subgroup.id, item.id)"
+                        @drop.stop="onItemDrop($event, group.id, subgroup.id, item.id)"
+                      >
+                        <div class="tree-node-row">
+                          <button
+                            class="tree-node tree-item"
+                            :class="{ active: isItemSelected(item.id) }"
+                            type="button"
+                            @click="selectItemNode(group.key, subgroup.id, item.id)"
+                          >
+                            <span class="health-dot" :class="healthClass(item.id)"></span>
+                            <img
+                              v-if="itemFaviconSrc(item)"
+                              :src="itemFaviconSrc(item)"
+                              class="service-favicon tree-item-favicon"
+                              alt=""
+                              loading="lazy"
+                              referrerpolicy="no-referrer"
+                              @error="markItemFaviconFailed(item)"
+                            />
+                            <component v-else :is="resolveItemIcon(item)" class="ui-icon tree-icon tree-item-icon" />
+                            <span class="tree-text">{{ item.title }}</span>
+                          </button>
+                          <div v-if="editMode" class="tree-inline-actions">
+                            <GripVertical class="ui-icon tree-grip" />
+                            <button
+                              class="tree-mini-btn"
+                              type="button"
+                              title="Редактировать элемент"
+                              @click.stop="editItem(group.id, subgroup.id, item.id)"
+                            >
+                              <Pencil class="ui-icon" />
+                            </button>
+                            <button
+                              class="tree-mini-btn danger"
+                              type="button"
+                              title="Удалить элемент"
+                              @click.stop="removeItem(group.id, subgroup.id, item.id)"
+                            >
+                              <Trash2 class="ui-icon" />
+                            </button>
+                          </div>
+                        </div>
                       </li>
                     </ul>
                   </li>
@@ -107,7 +210,47 @@
             <p v-else class="tree-empty">По вашему запросу ничего не найдено.</p>
           </section>
 
-          <div class="sidebar-stats-accordion" aria-label="Индикаторы">
+          <section v-else-if="treeGroups.length && isSidebarIconOnly" class="sidebar-icon-rail" aria-label="Иконки навигации">
+            <button
+              v-for="node in sidebarIconNodes"
+              :key="node.key"
+              class="sidebar-icon-btn"
+              :class="{
+                active: isSidebarIconActive(node),
+                group: node.type === 'group',
+                subgroup: node.type === 'subgroup',
+                item: node.type === 'item',
+              }"
+              type="button"
+              :title="sidebarIconNodeTitle(node)"
+              :aria-label="sidebarIconNodeTitle(node)"
+              @click="selectSidebarIconNode(node)"
+            >
+              <img
+                v-if="node.type === 'item' && itemFaviconSrc(node.item)"
+                :src="itemFaviconSrc(node.item)"
+                class="service-favicon sidebar-nav-favicon"
+                alt=""
+                loading="lazy"
+                referrerpolicy="no-referrer"
+                @error="markItemFaviconFailed(node.item)"
+              />
+              <component
+                v-else
+                :is="
+                  node.type === 'group'
+                    ? resolveGroupIcon(node.group)
+                    : node.type === 'subgroup'
+                      ? resolveSubgroupIcon(node.subgroup)
+                      : resolveItemIcon(node.item)
+                "
+                class="ui-icon sidebar-nav-icon"
+              />
+              <span v-if="node.type === 'item'" class="health-dot sidebar-icon-health" :class="healthClass(node.itemId)"></span>
+            </button>
+          </section>
+
+          <div v-if="!isSidebarIconOnly" class="sidebar-stats-accordion" aria-label="Индикаторы">
             <button
               class="sidebar-stats-toggle"
               type="button"
@@ -271,13 +414,214 @@
           </section>
 
           <template v-else>
-            <header class="hero panel">
-              <p class="eyebrow">{{ activePage.id }}</p>
-              <h1>{{ activePage.title }}</h1>
-              <p class="subtitle">{{ appTagline }}</p>
-            </header>
+            <template v-if="isLanPage">
+              <section class="hero-layout">
+                <header class="hero panel hero-title-panel">
+                  <div id="hero-title-particles" class="hero-panel-particles" aria-hidden="true"></div>
+                  <div class="hero-title-content">
+                    <h1>Локальная сеть</h1>
+                  </div>
+                </header>
 
-            <section class="page-stack">
+                <aside class="panel hero-control-panel">
+                  <div id="hero-controls-particles" class="hero-panel-particles" aria-hidden="true"></div>
+                  <div class="hero-controls-content">
+                    <button
+                      class="ghost"
+                      type="button"
+                      :disabled="lanScanActionBusy || Boolean(lanScanState?.running)"
+                      @click="runLanScanNow"
+                    >
+                      {{
+                        lanScanState?.running
+                          ? 'Сканирование...'
+                          : lanScanActionBusy
+                            ? 'Запуск...'
+                            : 'Сканировать сейчас'
+                      }}
+                    </button>
+                  </div>
+                </aside>
+              </section>
+
+              <section class="panel lan-scan-panel">
+                <p v-if="lanScanError" class="widget-error">{{ lanScanError }}</p>
+                <p v-else-if="lanScanLoading && !lanScanState" class="widget-loading">Загрузка состояния сканера...</p>
+
+                <template v-else>
+                  <section class="lan-summary-grid">
+                    <article class="lan-summary-card">
+                      <p>Статус</p>
+                      <strong>{{
+                        lanScanState?.running
+                          ? 'Сканирование'
+                          : lanScanState?.queued
+                            ? 'В очереди'
+                            : 'Ожидание'
+                      }}</strong>
+                    </article>
+                    <article class="lan-summary-card">
+                      <p>Хостов найдено</p>
+                      <strong>{{ lanHosts.length }}</strong>
+                    </article>
+                    <article class="lan-summary-card">
+                      <p>Проверено IP</p>
+                      <strong>{{ lanScanState?.result?.scanned_hosts ?? 0 }}</strong>
+                    </article>
+                    <article class="lan-summary-card">
+                      <p>Проверено портов</p>
+                      <strong>{{ lanScanState?.result?.scanned_ports ?? 0 }}</strong>
+                    </article>
+                    <article class="lan-summary-card">
+                      <p>Длительность</p>
+                      <strong>{{ formatLanDuration(lanScanState?.result?.duration_ms) }}</strong>
+                    </article>
+                    <article class="lan-summary-card">
+                      <p>Последний старт</p>
+                      <strong>{{ formatLanMoment(lanScanState?.last_started_at) }}</strong>
+                    </article>
+                    <article class="lan-summary-card">
+                      <p>Следующий запуск</p>
+                      <strong>{{ formatLanMoment(lanScanState?.next_run_at) }}</strong>
+                    </article>
+                  </section>
+
+                  <p class="subtitle lan-meta-line">
+                    Подсети: {{ lanCidrsLabel }}
+                  </p>
+                  <p class="subtitle lan-meta-line">
+                    Планировщик: {{ lanScanState?.scheduler || 'asyncio' }} · интервал {{ lanScanState?.interval_sec || 1020 }} сек
+                  </p>
+                  <p class="subtitle lan-meta-line">
+                    Файл результата: {{ lanScanState?.result?.source_file || 'не создан' }}
+                  </p>
+
+                  <div class="lan-table-wrap">
+                    <table class="lan-table">
+                      <thead>
+                        <tr>
+                          <th>IP</th>
+                          <th>Имя</th>
+                          <th>MAC</th>
+                          <th>Вендор</th>
+                          <th>Тип устройства</th>
+                          <th>Открытые порты</th>
+                          <th>Сервисы dashboard</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr
+                          v-for="host in lanHosts"
+                          :key="host.ip"
+                          class="lan-host-row"
+                          @click="openLanHostModal(host)"
+                        >
+                          <td>{{ host.ip }}</td>
+                          <td>{{ host.hostname || '—' }}</td>
+                          <td>{{ host.mac_address || '—' }}</td>
+                          <td>{{ host.mac_vendor || '—' }}</td>
+                          <td>{{ host.device_type || '—' }}</td>
+                          <td>{{ lanPortsLabel(host) }}</td>
+                          <td>
+                            <div v-if="host.dashboard_items?.length" class="lan-service-links">
+                              <a
+                                v-for="service in host.dashboard_items"
+                                :key="service.id"
+                                class="lan-service-link"
+                                :href="service.url"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                @click.stop
+                              >
+                                {{ service.title }}
+                              </a>
+                            </div>
+                            <span v-else>—</span>
+                          </td>
+                        </tr>
+                        <tr v-if="!lanHosts.length">
+                          <td colspan="7" class="lan-empty">Хосты не обнаружены. Запустите сканирование вручную.</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </template>
+              </section>
+            </template>
+
+            <template v-else>
+              <section class="hero-layout">
+                <header class="hero panel hero-title-panel">
+                  <div id="hero-title-particles" class="hero-panel-particles" aria-hidden="true"></div>
+                  <div class="hero-title-content">
+                    <h1>{{ activePage.title }}</h1>
+                  </div>
+                </header>
+
+                <aside class="panel hero-control-panel" :class="{ active: editMode }">
+                  <div id="hero-controls-particles" class="hero-panel-particles" aria-hidden="true"></div>
+                  <div class="hero-controls-content">
+                    <button
+                      class="ghost icon-btn hero-icon-btn editor-toggle"
+                      :class="{ active: editMode }"
+                      type="button"
+                      :title="editMode ? 'Выключить режим редактирования' : 'Включить режим редактирования'"
+                      :aria-label="editMode ? 'Выключить режим редактирования' : 'Включить режим редактирования'"
+                      @click="toggleEditMode"
+                    >
+                      <Pencil class="ui-icon hero-action-icon" />
+                    </button>
+
+                    <button
+                      v-if="editMode"
+                      class="ghost icon-btn hero-icon-btn"
+                      type="button"
+                      title="Добавить группу"
+                      aria-label="Добавить группу"
+                      @click="addGroup"
+                    >
+                      <Plus class="ui-icon hero-action-icon" />
+                    </button>
+
+                    <button
+                      class="ghost icon-btn hero-icon-btn"
+                      :class="{ active: isIconCardView }"
+                      type="button"
+                      :title="isIconCardView ? 'Переключить на карточки' : 'Переключить на иконки'"
+                      :aria-label="isIconCardView ? 'Переключить на карточки' : 'Переключить на иконки'"
+                      @click="toggleServiceCardView"
+                    >
+                      <Layers class="ui-icon hero-action-icon" />
+                    </button>
+
+                    <button
+                      class="ghost icon-btn hero-icon-btn"
+                      :class="{ active: isSidebarIconOnly }"
+                      type="button"
+                      :title="isSidebarIconOnly ? 'Показать полную боковую панель' : 'Показать только иконки в боковой панели'"
+                      :aria-label="isSidebarIconOnly ? 'Показать полную боковую панель' : 'Показать только иконки в боковой панели'"
+                      @click="toggleSidebarView"
+                    >
+                      <FolderTree class="ui-icon hero-action-icon" />
+                    </button>
+
+                    <span
+                      v-if="editMode"
+                      class="hero-save-indicator"
+                      :class="saveStatus"
+                      role="status"
+                      :title="saveStatusLabel"
+                      :aria-label="saveStatusLabel"
+                    >
+                      <Circle class="ui-icon hero-save-icon" />
+                    </span>
+
+                    <p v-if="editMode && saveError" class="editor-error hero-editor-error">{{ saveError }}</p>
+                  </div>
+                </aside>
+              </section>
+
+              <section class="page-stack">
               <section
                 v-for="(block, index) in activePageGroupBlocks"
                 :key="`${activePage.id}:${index}:groups`"
@@ -288,6 +632,7 @@
                     v-for="group in filteredBlockGroups(block.group_ids)"
                     :key="group.key"
                     class="panel group-panel"
+                    :class="{ 'group-panel-inline': isInlineGroupLayout(group) }"
                   >
                     <header class="group-header">
                       <div class="group-title-row">
@@ -302,38 +647,84 @@
                         <component :is="resolveSubgroupIcon(subgroup)" class="ui-icon subgroup-icon" />
                         <span>{{ subgroup.title }}</span>
                       </h3>
-                      <div class="item-grid">
+                      <div class="item-grid" :class="{ 'icon-card-grid': isIconCardView }">
                         <article
                           v-for="item in subgroup.items"
                           :key="item.id"
                           class="item-card"
-                          :class="{ selected: isItemSelected(item.id) }"
+                          :class="{
+                            selected: !isIconCardView && isItemSelected(item.id),
+                            compact: isIconCardView,
+                          }"
+                          :title="isIconCardView ? item.title : undefined"
+                          @click="onItemCardClick(group.key, subgroup.id, item)"
                         >
-                          <div class="item-head">
-                            <div class="item-title-row">
-                              <component :is="resolveItemIcon(item)" class="ui-icon item-icon" />
-                              <h4>{{ item.title }}</h4>
+                          <template v-if="isIconCardView">
+                            <div class="item-compact-body">
+                              <img
+                                v-if="itemFaviconSrc(item)"
+                                :src="itemFaviconSrc(item)"
+                                class="service-favicon compact-item-favicon"
+                                alt=""
+                                loading="lazy"
+                                referrerpolicy="no-referrer"
+                                @error="markItemFaviconFailed(item)"
+                              />
+                              <component v-else :is="resolveItemIcon(item)" class="ui-icon item-icon compact-item-icon" />
+                              <span class="health-dot compact-health-dot" :class="healthClass(item.id)"></span>
                             </div>
-                            <span class="item-type">{{ item.type }}</span>
-                          </div>
+                          </template>
 
-                          <p class="item-url">{{ item.url }}</p>
+                          <template v-else>
+                            <div class="item-head">
+                              <div class="item-title-row">
+                                <img
+                                  v-if="itemFaviconSrc(item)"
+                                  :src="itemFaviconSrc(item)"
+                                  class="service-favicon item-favicon"
+                                  alt=""
+                                  loading="lazy"
+                                  referrerpolicy="no-referrer"
+                                  @error="markItemFaviconFailed(item)"
+                                />
+                                <component v-else :is="resolveItemIcon(item)" class="ui-icon item-icon" />
+                                <h4>{{ item.title }}</h4>
+                              </div>
+                              <span class="item-type">{{ item.type }}</span>
+                            </div>
 
-                          <div class="item-health">
-                            <span class="health-dot" :class="healthClass(item.id)"></span>
-                            <span class="health-text">{{ healthLabel(item.id) }}</span>
-                          </div>
+                            <p class="item-url">{{ item.url }}</p>
 
-                          <div v-if="item.tags?.length" class="item-tags">
-                            <span v-for="tag in item.tags" :key="tag" class="tag-pill">{{ tag }}</span>
-                          </div>
+                            <div class="item-health">
+                              <span class="health-dot" :class="healthClass(item.id)"></span>
+                              <span class="health-text">{{ healthLabel(item.id) }}</span>
+                            </div>
 
-                          <div class="item-actions">
-                            <button class="ghost" type="button" @click="openItem(item)">
-                              {{ item.type === 'iframe' ? 'Открыть iframe' : 'Открыть' }}
-                            </button>
-                            <button class="ghost" type="button" @click="copyUrl(item.url)">Копировать URL</button>
-                          </div>
+                            <div v-if="item.tags?.length" class="item-tags">
+                              <span v-for="tag in item.tags" :key="tag" class="tag-pill">{{ tag }}</span>
+                            </div>
+
+                            <div class="item-actions">
+                              <button
+                                class="ghost icon-btn"
+                                type="button"
+                                :title="item.type === 'iframe' ? 'Открыть iframe' : 'Открыть'"
+                                :aria-label="item.type === 'iframe' ? 'Открыть iframe' : 'Открыть'"
+                                @click.stop="openItem(item)"
+                              >
+                                <component :is="item.type === 'iframe' ? Globe : Link2" class="ui-icon item-action-icon" />
+                              </button>
+                              <button
+                                class="ghost icon-btn"
+                                type="button"
+                                title="Копировать URL"
+                                aria-label="Копировать URL"
+                                @click.stop="copyUrl(item.url)"
+                              >
+                                <Copy class="ui-icon item-action-icon" />
+                              </button>
+                            </div>
+                          </template>
                         </article>
                       </div>
                     </section>
@@ -356,7 +747,8 @@
                 <h2>Для этой страницы нет групп</h2>
                 <p class="subtitle">Откройте нужный индикатор в аккордеоне слева.</p>
               </article>
-            </section>
+              </section>
+            </template>
           </template>
         </template>
 
@@ -365,6 +757,100 @@
           <p class="subtitle">Проверьте `layout.pages` в `dashboard.yaml`.</p>
         </section>
       </main>
+    </div>
+
+    <div v-if="lanHostModal.open" class="lan-host-modal-backdrop" @click.self="closeLanHostModal">
+      <div class="lan-host-modal">
+        <header class="lan-host-modal-header">
+          <h3>{{ lanHostModal.host?.hostname || lanHostModal.host?.ip || 'Устройство LAN' }}</h3>
+          <button class="ghost" type="button" @click="closeLanHostModal">Закрыть</button>
+        </header>
+
+        <div v-if="lanHostModal.host" class="lan-host-modal-body">
+          <section class="lan-host-overview">
+            <article class="lan-host-meta-card">
+              <p>IP</p>
+              <strong>{{ lanHostModal.host.ip }}</strong>
+            </article>
+            <article class="lan-host-meta-card">
+              <p>Hostname</p>
+              <strong>{{ lanHostModal.host.hostname || '—' }}</strong>
+            </article>
+            <article class="lan-host-meta-card">
+              <p>MAC</p>
+              <strong>{{ lanHostModal.host.mac_address || '—' }}</strong>
+            </article>
+            <article class="lan-host-meta-card">
+              <p>Вендор</p>
+              <strong>{{ lanHostModal.host.mac_vendor || '—' }}</strong>
+            </article>
+            <article class="lan-host-meta-card">
+              <p>Тип устройства</p>
+              <strong>{{ lanHostModal.host.device_type || '—' }}</strong>
+            </article>
+          </section>
+
+          <section class="lan-host-section">
+            <h4>Открытые порты</h4>
+            <div v-if="lanHostModal.host.open_ports?.length" class="lan-port-chips">
+              <span v-for="port in lanHostModal.host.open_ports" :key="port.port" class="lan-port-chip">
+                {{ port.port }}
+                <small v-if="port.service">{{ port.service }}</small>
+              </span>
+            </div>
+            <p v-else class="widget-empty">Открытые порты не обнаружены.</p>
+          </section>
+
+          <section class="lan-host-section">
+            <h4>HTTP/HTTPS профили</h4>
+            <div v-if="lanHostModal.host.http_services?.length" class="lan-http-grid">
+              <article
+                v-for="endpoint in lanHostModal.host.http_services"
+                :key="`${endpoint.scheme}:${endpoint.port}:${endpoint.url}`"
+                class="lan-http-card"
+                :class="{ error: Boolean(endpoint.error) }"
+              >
+                <header class="lan-http-head">
+                  <strong>{{ endpoint.scheme.toUpperCase() }}:{{ endpoint.port }}</strong>
+                  <span>{{ formatLanHttpStatus(endpoint) }}</span>
+                </header>
+                <a
+                  class="lan-http-url"
+                  :href="endpoint.url"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  @click.stop
+                >
+                  {{ endpoint.url }}
+                </a>
+                <p class="lan-http-title">{{ endpoint.title || 'Title не найден' }}</p>
+                <p class="lan-http-description">{{ endpoint.description || 'Описание не найдено' }}</p>
+                <p v-if="endpoint.server" class="lan-http-server">Server: {{ endpoint.server }}</p>
+                <p v-if="endpoint.error" class="widget-error">{{ endpoint.error }}</p>
+              </article>
+            </div>
+            <p v-else class="widget-empty">HTTP/HTTPS endpoint не обнаружен.</p>
+          </section>
+
+          <section class="lan-host-section">
+            <h4>Сервисы из dashboard</h4>
+            <div v-if="lanHostModal.host.dashboard_items?.length" class="lan-service-links">
+              <a
+                v-for="service in lanHostModal.host.dashboard_items"
+                :key="service.id"
+                class="lan-service-link"
+                :href="service.url"
+                target="_blank"
+                rel="noopener noreferrer"
+                @click.stop
+              >
+                {{ service.title }}
+              </a>
+            </div>
+            <p v-else class="widget-empty">Связанные сервисы не найдены.</p>
+          </section>
+        </div>
+      </div>
     </div>
 
     <div v-if="iframeModal.open" class="iframe-modal-backdrop" @click.self="closeIframeModal">
@@ -386,17 +872,188 @@
         ></iframe>
       </div>
     </div>
+
+    <div v-if="itemEditor.open" class="editor-modal-backdrop" @click.self="closeItemEditor">
+      <div class="editor-modal">
+        <header class="editor-modal-header">
+          <h3>{{ itemEditor.mode === 'create' ? 'Новый сервис' : 'Редактирование сервиса' }}</h3>
+          <button class="ghost" type="button" :disabled="itemEditor.submitting" @click="closeItemEditor">Закрыть</button>
+        </header>
+
+        <form class="editor-modal-form" @submit.prevent="submitItemEditor">
+          <p v-if="itemEditor.error" class="widget-error">{{ itemEditor.error }}</p>
+
+          <div class="editor-grid">
+            <label class="editor-field">
+              <span>ID</span>
+              <input
+                v-model.trim="itemEditor.form.id"
+                type="text"
+                placeholder="auto (из названия)"
+                autocomplete="off"
+                :disabled="itemEditor.submitting"
+              />
+            </label>
+
+            <label class="editor-field">
+              <span>Название</span>
+              <input
+                v-model.trim="itemEditor.form.title"
+                type="text"
+                placeholder="Например: Grafana"
+                autocomplete="off"
+                :disabled="itemEditor.submitting"
+                required
+              />
+            </label>
+
+            <label class="editor-field">
+              <span>Тип</span>
+              <select v-model="itemEditor.form.type" :disabled="itemEditor.submitting">
+                <option value="link">link</option>
+                <option value="iframe">iframe</option>
+              </select>
+            </label>
+
+            <label class="editor-field">
+              <span>URL</span>
+              <input
+                v-model.trim="itemEditor.form.url"
+                type="url"
+                placeholder="https://service.example.com"
+                autocomplete="off"
+                :disabled="itemEditor.submitting"
+                required
+              />
+            </label>
+
+            <label class="editor-field">
+              <span>Иконка</span>
+              <input
+                v-model.trim="itemEditor.form.icon"
+                type="text"
+                placeholder="proxmox, grafana..."
+                autocomplete="off"
+                :disabled="itemEditor.submitting"
+              />
+            </label>
+
+            <label class="editor-field">
+              <span>Открытие</span>
+              <select v-model="itemEditor.form.open" :disabled="itemEditor.submitting">
+                <option value="new_tab">new_tab</option>
+                <option value="same_tab">same_tab</option>
+              </select>
+            </label>
+          </div>
+
+          <label class="editor-field">
+            <span>Теги (через запятую)</span>
+            <input
+              v-model.trim="itemEditor.form.tagsInput"
+              type="text"
+              placeholder="infra, monitoring"
+              autocomplete="off"
+              :disabled="itemEditor.submitting"
+            />
+          </label>
+
+          <section v-if="itemEditor.form.type === 'link'" class="editor-section">
+            <div class="editor-section-title">
+              <label class="editor-check">
+                <input v-model="itemEditor.form.healthcheckEnabled" type="checkbox" :disabled="itemEditor.submitting" />
+                <span>Healthcheck</span>
+              </label>
+            </div>
+
+            <div v-if="itemEditor.form.healthcheckEnabled" class="editor-grid">
+              <label class="editor-field">
+                <span>Healthcheck URL</span>
+                <input
+                  v-model.trim="itemEditor.form.healthcheckUrl"
+                  type="url"
+                  placeholder="https://service.example.com/health"
+                  autocomplete="off"
+                  :disabled="itemEditor.submitting"
+                />
+              </label>
+              <label class="editor-field">
+                <span>Интервал (sec)</span>
+                <input v-model.number="itemEditor.form.healthcheckIntervalSec" type="number" min="1" max="3600" :disabled="itemEditor.submitting" />
+              </label>
+              <label class="editor-field">
+                <span>Timeout (ms)</span>
+                <input v-model.number="itemEditor.form.healthcheckTimeoutMs" type="number" min="100" max="120000" :disabled="itemEditor.submitting" />
+              </label>
+            </div>
+          </section>
+
+          <section v-else class="editor-section">
+            <div class="editor-section-title">
+              <span>Iframe-настройки</span>
+            </div>
+            <div class="editor-grid">
+              <label class="editor-field">
+                <span>Sandbox</span>
+                <select v-model="itemEditor.form.iframeSandboxMode" :disabled="itemEditor.submitting">
+                  <option value="default">default</option>
+                  <option value="enabled">enabled</option>
+                  <option value="disabled">disabled</option>
+                </select>
+              </label>
+              <label class="editor-field">
+                <span>Allow (через запятую)</span>
+                <input
+                  v-model.trim="itemEditor.form.iframeAllowInput"
+                  type="text"
+                  placeholder="fullscreen, clipboard-read"
+                  autocomplete="off"
+                  :disabled="itemEditor.submitting"
+                />
+              </label>
+              <label class="editor-field">
+                <span>Referrer policy</span>
+                <input
+                  v-model.trim="itemEditor.form.iframeReferrerPolicy"
+                  type="text"
+                  placeholder="no-referrer"
+                  autocomplete="off"
+                  :disabled="itemEditor.submitting"
+                />
+              </label>
+              <label class="editor-field">
+                <span>Auth profile</span>
+                <select v-model="itemEditor.form.authProfile" :disabled="itemEditor.submitting">
+                  <option value="">none</option>
+                  <option v-for="profile in authProfileOptions" :key="profile.id" :value="profile.id">
+                    {{ profile.id }} ({{ profile.type }})
+                  </option>
+                </select>
+              </label>
+            </div>
+          </section>
+
+          <div class="editor-actions">
+            <button class="ghost" type="button" :disabled="itemEditor.submitting" @click="closeItemEditor">Отмена</button>
+            <button class="ghost" type="submit" :disabled="itemEditor.submitting">
+              {{ itemEditor.submitting ? 'Сохранение...' : itemEditor.mode === 'create' ? 'Создать' : 'Сохранить' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { computed, h, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
+import { computed, h, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import {
   Activity,
   Camera,
   ChartColumn,
   Circle,
   Cloud,
+  Copy,
   Cpu,
   Database,
   Eye,
@@ -406,6 +1063,7 @@ import {
   Gauge,
   GitBranch,
   Globe,
+  GripVertical,
   HardDrive,
   HeartPulse,
   House,
@@ -418,7 +1076,9 @@ import {
   MonitorSmartphone,
   Music,
   Network,
+  Pencil,
   Package,
+  Plus,
   Radar,
   Route,
   Server,
@@ -427,6 +1087,7 @@ import {
   Sparkles,
   Terminal,
   TriangleAlert,
+  Trash2,
   Tv,
   Wifi,
   Workflow,
@@ -456,11 +1117,87 @@ import {
   siYoutube,
   siYoutubeshorts,
 } from 'simple-icons'
-import { fetchDashboardConfig, fetchDashboardHealth, fetchIframeSource, requestJson } from './services/dashboardApi.js'
+import {
+  fetchDashboardConfig,
+  fetchDashboardHealth,
+  fetchIframeSource,
+  fetchLanScanState,
+  requestJson,
+  triggerLanScan,
+  updateDashboardConfig,
+} from './services/dashboardApi.js'
 
 const EMBLEM_SRC = '/static/img/emblem-mark.png'
 const HEALTH_REFRESH_MS = 30000
+const LAN_SCAN_POLL_MS = 10000
+const LAN_PAGE_ID = 'lan'
 const LARGE_INDICATOR_TYPES = new Set(['stat_list', 'table'])
+const DEFAULT_ITEM_URL = 'https://example.com'
+const SIDEBAR_PARTICLES_ID = 'sidebar-particles'
+const HERO_TITLE_PARTICLES_ID = 'hero-title-particles'
+const HERO_CONTROLS_PARTICLES_ID = 'hero-controls-particles'
+const SIDEBAR_PARTICLES_CONFIG = {
+  particles: {
+    number: { value: 88, density: { enable: true, value_area: 700 } },
+    color: { value: '#6df6e2' },
+    shape: { type: 'circle' },
+    opacity: { value: 0.36, random: true },
+    size: { value: 2.4, random: true },
+    line_linked: {
+      enable: true,
+      distance: 120,
+      color: '#2dd4bf',
+      opacity: 0.24,
+      width: 1.2,
+    },
+    move: { enable: true, speed: 1.2 },
+  },
+  interactivity: {
+    events: { onhover: { enable: false }, onclick: { enable: false }, resize: true },
+  },
+  retina_detect: true,
+}
+const HERO_PARTICLES_CONFIG = {
+  particles: {
+    number: { value: 92, density: { enable: true, value_area: 720 } },
+    color: { value: '#6df6e2' },
+    shape: { type: 'circle' },
+    opacity: { value: 0.4, random: true },
+    size: { value: 2.4, random: true },
+    line_linked: {
+      enable: true,
+      distance: 132,
+      color: '#2dd4bf',
+      opacity: 0.26,
+      width: 1.2,
+    },
+    move: { enable: true, speed: 1.2 },
+  },
+  interactivity: {
+    events: { onhover: { enable: false }, onclick: { enable: false }, resize: true },
+  },
+  retina_detect: true,
+}
+
+function defaultItemEditorForm() {
+  return {
+    id: '',
+    title: '',
+    type: 'link',
+    url: DEFAULT_ITEM_URL,
+    icon: '',
+    tagsInput: '',
+    open: 'new_tab',
+    healthcheckEnabled: false,
+    healthcheckUrl: '',
+    healthcheckIntervalSec: 30,
+    healthcheckTimeoutMs: 1500,
+    iframeSandboxMode: 'default',
+    iframeAllowInput: '',
+    iframeReferrerPolicy: '',
+    authProfile: '',
+  }
+}
 
 function createBrandIcon(icon) {
   const brandColor = `#${icon.hex}`
@@ -637,11 +1374,27 @@ const activePageId = ref('')
 const treeFilter = ref('')
 const statsExpanded = ref(false)
 const activeIndicatorViewId = ref('')
+const editMode = ref(false)
+const serviceCardView = ref('detailed')
+const sidebarView = ref('detailed')
+const saveStatus = ref('idle')
+const saveError = ref('')
+const lanScanState = ref(null)
+const lanScanLoading = ref(false)
+const lanScanActionBusy = ref(false)
+const lanScanError = ref('')
+const lanHostModal = reactive({
+  open: false,
+  host: null,
+})
 
 const widgetStates = reactive({})
 const actionBusy = reactive({})
 const widgetIntervals = new Map()
 let healthPollTimer = 0
+let saveStatusTimer = 0
+let lanScanPollTimer = 0
+let lanScanRefreshInFlight = false
 
 const selectedNode = reactive({
   groupKey: '',
@@ -651,6 +1404,13 @@ const selectedNode = reactive({
 
 const expandedGroups = reactive({})
 const healthStates = reactive({})
+const dragState = reactive({
+  type: '',
+  groupId: '',
+  subgroupId: '',
+  itemId: '',
+})
+const itemFaviconFailures = reactive({})
 
 const iframeModal = reactive({
   open: false,
@@ -663,11 +1423,52 @@ const iframeModal = reactive({
   error: '',
 })
 
-const pages = computed(() => config.value?.layout?.pages || [])
+const itemEditor = reactive({
+  open: false,
+  mode: 'create',
+  groupId: '',
+  subgroupId: '',
+  originalItemId: '',
+  submitting: false,
+  error: '',
+  form: defaultItemEditorForm(),
+})
+
+const pages = computed(() => {
+  if (!config.value) return []
+  const configured = config.value?.layout?.pages || []
+  if (configured.some((page) => page.id === LAN_PAGE_ID)) {
+    return configured
+  }
+
+  return [
+    ...configured,
+    {
+      id: LAN_PAGE_ID,
+      title: 'LAN',
+      icon: 'network',
+      blocks: [],
+    },
+  ]
+})
 const widgets = computed(() => config.value?.widgets || [])
+const authProfileOptions = computed(() => config.value?.security?.auth_profiles || [])
 
 const appTitle = computed(() => config.value?.app?.title || 'Oko')
 const appTagline = computed(() => config.value?.app?.tagline || 'Your Infrastructure in Sight')
+const isIconCardView = computed(() => serviceCardView.value === 'icon')
+const isSidebarIconOnly = computed(() => sidebarView.value === 'icons')
+const lanHosts = computed(() => lanScanState.value?.result?.hosts || [])
+const lanCidrsLabel = computed(() => {
+  const cidrs = lanScanState.value?.result?.scanned_cidrs || []
+  return cidrs.length ? cidrs.join(', ') : 'нет данных'
+})
+const saveStatusLabel = computed(() => {
+  if (saveStatus.value === 'saving') return 'Сохранение...'
+  if (saveStatus.value === 'saved') return 'Сохранено'
+  if (saveStatus.value === 'error') return 'Ошибка сохранения'
+  return editMode.value ? 'Готово' : 'Сохранение выключено'
+})
 
 const widgetById = computed(() => {
   const map = new Map()
@@ -696,6 +1497,7 @@ const subgroupById = computed(() => {
 })
 
 const activePage = computed(() => pages.value.find((page) => page.id === activePageId.value) || pages.value[0] || null)
+const isLanPage = computed(() => activePage.value?.id === LAN_PAGE_ID)
 
 const treeGroups = computed(() => {
   if (!activePage.value) return []
@@ -759,6 +1561,42 @@ const filteredTreeGroups = computed(() => {
       }
     })
     .filter(Boolean)
+})
+
+const sidebarIconNodes = computed(() => {
+  const nodes = []
+
+  for (const group of filteredTreeGroups.value) {
+    nodes.push({
+      key: `group:${group.key}`,
+      type: 'group',
+      groupKey: group.key,
+      group,
+    })
+
+    for (const subgroup of group.subgroups || []) {
+      nodes.push({
+        key: `subgroup:${group.key}:${subgroup.id}`,
+        type: 'subgroup',
+        groupKey: group.key,
+        subgroupId: subgroup.id,
+        subgroup,
+      })
+
+      for (const item of subgroup.items || []) {
+        nodes.push({
+          key: `item:${group.key}:${subgroup.id}:${item.id}`,
+          type: 'item',
+          groupKey: group.key,
+          subgroupId: subgroup.id,
+          itemId: item.id,
+          item,
+        })
+      }
+    }
+  }
+
+  return nodes
 })
 
 const visibleTreeItemIds = computed(() => {
@@ -855,6 +1693,905 @@ function applyGrid(grid) {
   }
 }
 
+function toggleEditMode() {
+  editMode.value = !editMode.value
+  saveError.value = ''
+  if (!editMode.value) {
+    clearDragState()
+  }
+}
+
+function toggleServiceCardView() {
+  serviceCardView.value = isIconCardView.value ? 'detailed' : 'icon'
+}
+
+function toggleSidebarView() {
+  sidebarView.value = isSidebarIconOnly.value ? 'detailed' : 'icons'
+  if (!isSidebarIconOnly.value) {
+    treeFilter.value = ''
+  }
+}
+
+function isSidebarIconActive(node) {
+  if (!node) return false
+  if (node.type === 'group') return isGroupSelected(node.groupKey)
+  if (node.type === 'subgroup') return isSubgroupSelected(node.groupKey, node.subgroupId)
+  if (node.type === 'item') return isItemSelected(node.itemId)
+  return false
+}
+
+function sidebarIconNodeTitle(node) {
+  if (!node) return ''
+  if (node.type === 'group') {
+    return `Группа: ${node.group?.title || ''}`
+  }
+  if (node.type === 'subgroup') {
+    return `Подгруппа: ${node.subgroup?.title || ''}`
+  }
+  return `Сервис: ${node.item?.title || ''}`
+}
+
+function selectSidebarIconNode(node) {
+  if (!node) return
+
+  if (node.type === 'group') {
+    expandedGroups[node.groupKey] = true
+    selectedNode.groupKey = node.groupKey
+    selectedNode.subgroupId = ''
+    selectedNode.itemId = ''
+    return
+  }
+
+  if (node.type === 'subgroup') {
+    selectSubgroupNode(node.groupKey, node.subgroupId)
+    return
+  }
+
+  if (node.type === 'item') {
+    selectItemNode(node.groupKey, node.subgroupId, node.itemId)
+  }
+}
+
+function onItemCardClick(groupKey, subgroupId, item) {
+  if (!isIconCardView.value) return
+  selectItemNode(groupKey, subgroupId, item.id)
+  openItem(item)
+}
+
+function cloneConfig(value) {
+  return JSON.parse(JSON.stringify(value))
+}
+
+function normalizeId(value, fallback = 'node') {
+  const normalized = String(value || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '')
+  return normalized || fallback
+}
+
+function makeUniqueId(base, existingIds) {
+  const normalizedBase = normalizeId(base, 'node')
+  let candidate = normalizedBase
+  let index = 2
+
+  while (existingIds.has(candidate)) {
+    candidate = `${normalizedBase}-${index}`
+    index += 1
+  }
+
+  return candidate
+}
+
+function ensureAbsoluteUrl(rawValue) {
+  const trimmed = String(rawValue || '').trim()
+  if (!trimmed) {
+    throw new Error('URL не может быть пустым')
+  }
+
+  const withProtocol = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`
+  let parsed
+  try {
+    parsed = new URL(withProtocol)
+  } catch {
+    throw new Error(`Некорректный URL: ${trimmed}`)
+  }
+
+  if (!['http:', 'https:'].includes(parsed.protocol)) {
+    throw new Error(`Разрешены только http/https URL: ${trimmed}`)
+  }
+
+  return parsed.toString()
+}
+
+function allSubgroupIds(cfg) {
+  const ids = new Set()
+  for (const group of cfg.groups || []) {
+    for (const subgroup of group.subgroups || []) {
+      ids.add(subgroup.id)
+    }
+  }
+  return ids
+}
+
+function allItemIds(cfg) {
+  const ids = new Set()
+  for (const group of cfg.groups || []) {
+    for (const subgroup of group.subgroups || []) {
+      for (const item of subgroup.items || []) {
+        ids.add(item.id)
+      }
+    }
+  }
+  return ids
+}
+
+function findGroup(cfg, groupId) {
+  return (cfg.groups || []).find((group) => group.id === groupId) || null
+}
+
+function findSubgroup(cfg, groupId, subgroupId) {
+  const group = findGroup(cfg, groupId)
+  if (!group) return null
+  return (group.subgroups || []).find((subgroup) => subgroup.id === subgroupId) || null
+}
+
+function isDirectGroupNode(group) {
+  return String(group?.key || '').startsWith('group:')
+}
+
+function normalizeLayoutBlocks(cfg) {
+  const validGroupIds = new Set((cfg.groups || []).map((group) => group.id))
+  const validSubgroupIds = allSubgroupIds(cfg)
+  const validGroupRefs = new Set([...validGroupIds, ...validSubgroupIds])
+
+  for (const page of cfg.layout?.pages || []) {
+    const nextBlocks = []
+
+    for (const block of page.blocks || []) {
+      if (block.type === 'groups') {
+        block.group_ids = (block.group_ids || []).filter((groupId) => validGroupRefs.has(groupId))
+        if (block.group_ids.length) {
+          nextBlocks.push(block)
+        }
+        continue
+      }
+
+      if ((block.widgets || []).length) {
+        nextBlocks.push(block)
+      }
+    }
+
+    if (!nextBlocks.length && cfg.groups?.length) {
+      nextBlocks.push({
+        type: 'groups',
+        group_ids: [cfg.groups[0].id],
+      })
+    }
+
+    page.blocks = nextBlocks
+  }
+}
+
+function ensurePageGroupsReference(cfg, pageId, groupId) {
+  const pagesList = cfg.layout?.pages || []
+  if (!pagesList.length) return
+
+  const page = pagesList.find((entry) => entry.id === pageId) || pagesList[0]
+  let groupsBlock = page.blocks.find((block) => block.type === 'groups')
+
+  if (!groupsBlock) {
+    groupsBlock = {
+      type: 'groups',
+      group_ids: [groupId],
+    }
+    page.blocks.push(groupsBlock)
+    return
+  }
+
+  if (!groupsBlock.group_ids.includes(groupId)) {
+    groupsBlock.group_ids.push(groupId)
+  }
+}
+
+async function persistConfig() {
+  if (!config.value) return
+
+  saveStatus.value = 'saving'
+  saveError.value = ''
+
+  try {
+    const response = await updateDashboardConfig(config.value)
+    config.value = response.config
+
+    if (!activePageId.value || !pages.value.some((page) => page.id === activePageId.value)) {
+      activePageId.value = pages.value[0]?.id || ''
+    }
+
+    saveStatus.value = 'saved'
+    if (saveStatusTimer) {
+      clearTimeout(saveStatusTimer)
+    }
+
+    saveStatusTimer = window.setTimeout(() => {
+      if (saveStatus.value === 'saved') {
+        saveStatus.value = 'idle'
+      }
+    }, 1400)
+  } catch (error) {
+    saveStatus.value = 'error'
+    saveError.value = error?.message || 'Ошибка сохранения YAML'
+    throw error
+  }
+}
+
+async function applyConfigMutation(mutator) {
+  if (!config.value) return false
+
+  const snapshot = cloneConfig(config.value)
+
+  try {
+    const result = mutator(config.value)
+    if (result === false) return false
+
+    normalizeLayoutBlocks(config.value)
+    syncTreeGroupsState()
+    await persistConfig()
+    return true
+  } catch (error) {
+    config.value = snapshot
+    saveStatus.value = 'error'
+    saveError.value = error?.message || 'Не удалось применить изменения'
+    return false
+  }
+}
+
+function buildDefaultItem(itemId, title) {
+  return {
+    id: itemId,
+    type: 'link',
+    title,
+    url: DEFAULT_ITEM_URL,
+    icon: null,
+    tags: [],
+    open: 'new_tab',
+  }
+}
+
+async function addGroup() {
+  if (!editMode.value || !config.value) return
+
+  const title = window.prompt('Название новой группы', 'Новая группа')
+  if (title == null) return
+  const normalizedTitle = title.trim()
+  if (!normalizedTitle) return
+
+  await applyConfigMutation((cfg) => {
+    const groupIds = new Set((cfg.groups || []).map((group) => group.id))
+    const subgroupIds = allSubgroupIds(cfg)
+    const itemIds = allItemIds(cfg)
+
+    const groupId = makeUniqueId(normalizedTitle, groupIds)
+    const subgroupId = makeUniqueId(`${groupId}-core`, subgroupIds)
+    const itemId = makeUniqueId(`${groupId}-service`, itemIds)
+
+    cfg.groups.push({
+      id: groupId,
+      title: normalizedTitle,
+      icon: 'folder',
+      description: '',
+      layout: 'auto',
+      subgroups: [
+        {
+          id: subgroupId,
+          title: 'Core',
+          items: [buildDefaultItem(itemId, 'Новый сервис')],
+        },
+      ],
+    })
+
+    ensurePageGroupsReference(cfg, activePageId.value, groupId)
+    expandedGroups[`group:${groupId}`] = true
+    selectedNode.groupKey = `group:${groupId}`
+    selectedNode.subgroupId = subgroupId
+    selectedNode.itemId = itemId
+  })
+}
+
+async function addSubgroup(groupId) {
+  if (!editMode.value || !config.value) return
+
+  const title = window.prompt('Название подгруппы', 'Новая подгруппа')
+  if (title == null) return
+  const normalizedTitle = title.trim()
+  if (!normalizedTitle) return
+
+  await applyConfigMutation((cfg) => {
+    const group = findGroup(cfg, groupId)
+    if (!group) throw new Error(`Группа '${groupId}' не найдена`)
+
+    const subgroupIds = allSubgroupIds(cfg)
+    const itemIds = allItemIds(cfg)
+    const subgroupId = makeUniqueId(`${groupId}-${normalizedTitle}`, subgroupIds)
+    const itemId = makeUniqueId(`${subgroupId}-service`, itemIds)
+
+    group.subgroups.push({
+      id: subgroupId,
+      title: normalizedTitle,
+      items: [buildDefaultItem(itemId, 'Новый сервис')],
+    })
+
+    expandedGroups[`group:${groupId}`] = true
+    selectedNode.groupKey = `group:${groupId}`
+    selectedNode.subgroupId = subgroupId
+    selectedNode.itemId = itemId
+  })
+}
+
+async function addItem(groupId, subgroupId) {
+  if (!editMode.value || !config.value) return
+  openCreateItemEditor(groupId, subgroupId)
+}
+
+function normalizeStringList(rawValue) {
+  return String(rawValue || '')
+    .split(',')
+    .map((value) => value.trim())
+    .filter(Boolean)
+}
+
+function clampNumber(value, fallback, min, max) {
+  const numeric = Number(value)
+  if (!Number.isFinite(numeric)) return fallback
+  const integerValue = Math.trunc(numeric)
+  return Math.min(max, Math.max(min, integerValue))
+}
+
+function closeItemEditor(force = false) {
+  if (itemEditor.submitting && !force) return
+
+  itemEditor.open = false
+  itemEditor.mode = 'create'
+  itemEditor.groupId = ''
+  itemEditor.subgroupId = ''
+  itemEditor.originalItemId = ''
+  itemEditor.error = ''
+  itemEditor.submitting = false
+  itemEditor.form = defaultItemEditorForm()
+}
+
+function openCreateItemEditor(groupId, subgroupId) {
+  const subgroup = findSubgroup(config.value, groupId, subgroupId)
+  if (!subgroup) {
+    saveStatus.value = 'error'
+    saveError.value = `Подгруппа '${subgroupId}' не найдена`
+    return
+  }
+
+  itemEditor.open = true
+  itemEditor.mode = 'create'
+  itemEditor.groupId = groupId
+  itemEditor.subgroupId = subgroupId
+  itemEditor.originalItemId = ''
+  itemEditor.error = ''
+  itemEditor.submitting = false
+  itemEditor.form = defaultItemEditorForm()
+}
+
+function openEditItemEditor(groupId, subgroupId, itemId) {
+  const subgroup = findSubgroup(config.value, groupId, subgroupId)
+  const item = (subgroup?.items || []).find((entry) => entry.id === itemId)
+  if (!subgroup || !item) {
+    saveStatus.value = 'error'
+    saveError.value = `Элемент '${itemId}' не найден`
+    return
+  }
+
+  itemEditor.open = true
+  itemEditor.mode = 'edit'
+  itemEditor.groupId = groupId
+  itemEditor.subgroupId = subgroupId
+  itemEditor.originalItemId = itemId
+  itemEditor.error = ''
+  itemEditor.submitting = false
+  itemEditor.form = {
+    id: item.id,
+    title: item.title,
+    type: item.type,
+    url: String(item.url || DEFAULT_ITEM_URL),
+    icon: item.icon || '',
+    tagsInput: (item.tags || []).join(', '),
+    open: item.open || 'new_tab',
+    healthcheckEnabled: Boolean(item.type === 'link' && item.healthcheck),
+    healthcheckUrl: item.type === 'link' && item.healthcheck ? String(item.healthcheck.url) : String(item.url || DEFAULT_ITEM_URL),
+    healthcheckIntervalSec: item.type === 'link' && item.healthcheck ? Number(item.healthcheck.interval_sec || 30) : 30,
+    healthcheckTimeoutMs: item.type === 'link' && item.healthcheck ? Number(item.healthcheck.timeout_ms || 1500) : 1500,
+    iframeSandboxMode:
+      item.type === 'iframe'
+        ? item.iframe?.sandbox == null
+          ? 'default'
+          : item.iframe.sandbox
+            ? 'enabled'
+            : 'disabled'
+        : 'default',
+    iframeAllowInput: item.type === 'iframe' ? (item.iframe?.allow || []).join(', ') : '',
+    iframeReferrerPolicy: item.type === 'iframe' ? item.iframe?.referrer_policy || '' : '',
+    authProfile: item.type === 'iframe' ? item.auth_profile || '' : '',
+  }
+}
+
+function buildItemFromEditorForm(cfg) {
+  const form = itemEditor.form
+  const title = String(form.title || '').trim()
+  if (!title) {
+    throw new Error('Название сервиса обязательно')
+  }
+
+  const normalizedType = String(form.type || '').trim().toLowerCase()
+  if (!['link', 'iframe'].includes(normalizedType)) {
+    throw new Error("Тип сервиса должен быть 'link' или 'iframe'")
+  }
+
+  const openMode = String(form.open || 'new_tab')
+  if (!['new_tab', 'same_tab'].includes(openMode)) {
+    throw new Error("Параметр open должен быть 'new_tab' или 'same_tab'")
+  }
+
+  const url = ensureAbsoluteUrl(form.url || DEFAULT_ITEM_URL)
+  const itemIds = allItemIds(cfg)
+  if (itemEditor.mode === 'edit') {
+    itemIds.delete(itemEditor.originalItemId)
+  }
+
+  const rawId = String(form.id || '').trim()
+  const generatedBase = `${itemEditor.subgroupId}-${title}`
+  const normalizedId = normalizeId(rawId || generatedBase, 'service')
+  const nextId = rawId ? normalizedId : makeUniqueId(normalizedId, itemIds)
+
+  if (rawId && itemIds.has(nextId)) {
+    throw new Error(`ID '${nextId}' уже существует`)
+  }
+
+  const baseItem = {
+    id: nextId,
+    type: normalizedType,
+    title,
+    url,
+    icon: String(form.icon || '').trim() || null,
+    tags: normalizeStringList(form.tagsInput),
+    open: openMode,
+  }
+
+  if (normalizedType === 'link') {
+    const linkItem = { ...baseItem }
+
+    if (form.healthcheckEnabled) {
+      const healthcheckUrl = ensureAbsoluteUrl(form.healthcheckUrl || url)
+      linkItem.healthcheck = {
+        type: 'http',
+        url: healthcheckUrl,
+        interval_sec: clampNumber(form.healthcheckIntervalSec, 30, 1, 3600),
+        timeout_ms: clampNumber(form.healthcheckTimeoutMs, 1500, 100, 120000),
+      }
+    }
+
+    return linkItem
+  }
+
+  const sandboxMode = String(form.iframeSandboxMode || 'default')
+  let sandboxValue = null
+  if (sandboxMode === 'enabled') sandboxValue = true
+  if (sandboxMode === 'disabled') sandboxValue = false
+
+  const authProfile = String(form.authProfile || '').trim()
+  if (authProfile && !authProfileOptions.value.some((profile) => profile.id === authProfile)) {
+    throw new Error(`Auth profile '${authProfile}' не найден`)
+  }
+
+  const iframeItem = {
+    ...baseItem,
+    iframe: {
+      sandbox: sandboxValue,
+      allow: normalizeStringList(form.iframeAllowInput),
+      referrer_policy: String(form.iframeReferrerPolicy || '').trim() || null,
+    },
+  }
+
+  if (authProfile) {
+    iframeItem.auth_profile = authProfile
+  }
+
+  return iframeItem
+}
+
+async function submitItemEditor() {
+  if (!itemEditor.open || itemEditor.submitting || !config.value) return
+
+  itemEditor.submitting = true
+  itemEditor.error = ''
+
+  const success = await applyConfigMutation((cfg) => {
+    const subgroup = findSubgroup(cfg, itemEditor.groupId, itemEditor.subgroupId)
+    if (!subgroup) {
+      throw new Error(`Подгруппа '${itemEditor.subgroupId}' не найдена`)
+    }
+
+    const nextItem = buildItemFromEditorForm(cfg)
+
+    if (itemEditor.mode === 'create') {
+      subgroup.items.push(nextItem)
+      selectedNode.groupKey = `group:${itemEditor.groupId}`
+      selectedNode.subgroupId = itemEditor.subgroupId
+      selectedNode.itemId = nextItem.id
+      return true
+    }
+
+    const index = (subgroup.items || []).findIndex((entry) => entry.id === itemEditor.originalItemId)
+    if (index < 0) {
+      throw new Error(`Элемент '${itemEditor.originalItemId}' не найден`)
+    }
+
+    subgroup.items.splice(index, 1, nextItem)
+    selectedNode.groupKey = `group:${itemEditor.groupId}`
+    selectedNode.subgroupId = itemEditor.subgroupId
+    if (selectedNode.itemId === itemEditor.originalItemId || !selectedNode.itemId) {
+      selectedNode.itemId = nextItem.id
+    }
+    return true
+  })
+
+  itemEditor.submitting = false
+  if (success) {
+    closeItemEditor(true)
+  } else {
+    itemEditor.error = saveError.value || 'Не удалось сохранить сервис'
+  }
+}
+
+async function editGroup(groupId) {
+  if (!editMode.value || !config.value) return
+
+  const group = findGroup(config.value, groupId)
+  if (!group) return
+
+  const nextTitle = window.prompt('Название группы', group.title)
+  if (nextTitle == null) return
+
+  const nextDescription = window.prompt('Описание группы', group.description || '')
+  if (nextDescription == null) return
+
+  const nextLayout = window.prompt('Режим группы (auto | full | inline)', group.layout || 'auto')
+  if (nextLayout == null) return
+
+  await applyConfigMutation((cfg) => {
+    const target = findGroup(cfg, groupId)
+    if (!target) throw new Error(`Группа '${groupId}' не найдена`)
+
+    const normalizedLayout = String(nextLayout || '').trim().toLowerCase() || 'auto'
+    if (!['auto', 'full', 'inline'].includes(normalizedLayout)) {
+      throw new Error("Режим группы должен быть 'auto', 'full' или 'inline'")
+    }
+
+    target.title = nextTitle.trim() || target.title
+    target.description = nextDescription.trim()
+    target.layout = normalizedLayout
+  })
+}
+
+async function editSubgroup(groupId, subgroupId) {
+  if (!editMode.value || !config.value) return
+
+  const subgroup = findSubgroup(config.value, groupId, subgroupId)
+  if (!subgroup) return
+
+  const nextTitle = window.prompt('Название подгруппы', subgroup.title)
+  if (nextTitle == null) return
+
+  await applyConfigMutation((cfg) => {
+    const target = findSubgroup(cfg, groupId, subgroupId)
+    if (!target) throw new Error(`Подгруппа '${subgroupId}' не найдена`)
+
+    target.title = nextTitle.trim() || target.title
+  })
+}
+
+async function editItem(groupId, subgroupId, itemId) {
+  if (!editMode.value || !config.value) return
+  openEditItemEditor(groupId, subgroupId, itemId)
+}
+
+async function removeGroup(groupId) {
+  if (!editMode.value || !config.value) return
+
+  const group = findGroup(config.value, groupId)
+  if (!group) return
+
+  if (config.value.groups.length <= 1) {
+    saveStatus.value = 'error'
+    saveError.value = 'Нельзя удалить последнюю группу.'
+    return
+  }
+
+  if (!window.confirm(`Удалить группу "${group.title}"?`)) return
+
+  await applyConfigMutation((cfg) => {
+    const index = (cfg.groups || []).findIndex((entry) => entry.id === groupId)
+    if (index < 0) return false
+    cfg.groups.splice(index, 1)
+
+    selectedNode.groupKey = ''
+    selectedNode.subgroupId = ''
+    selectedNode.itemId = ''
+  })
+}
+
+async function removeSubgroup(groupId, subgroupId) {
+  if (!editMode.value || !config.value) return
+
+  const group = findGroup(config.value, groupId)
+  const subgroup = (group?.subgroups || []).find((entry) => entry.id === subgroupId)
+  if (!group || !subgroup) return
+
+  if (group.subgroups.length <= 1) {
+    saveStatus.value = 'error'
+    saveError.value = 'В группе должна остаться хотя бы одна подгруппа.'
+    return
+  }
+
+  if (!window.confirm(`Удалить подгруппу "${subgroup.title}"?`)) return
+
+  await applyConfigMutation((cfg) => {
+    const targetGroup = findGroup(cfg, groupId)
+    if (!targetGroup) return false
+
+    const index = (targetGroup.subgroups || []).findIndex((entry) => entry.id === subgroupId)
+    if (index < 0) return false
+    targetGroup.subgroups.splice(index, 1)
+
+    selectedNode.subgroupId = ''
+    selectedNode.itemId = ''
+  })
+}
+
+async function removeItem(groupId, subgroupId, itemId) {
+  if (!editMode.value || !config.value) return
+
+  const subgroup = findSubgroup(config.value, groupId, subgroupId)
+  const item = (subgroup?.items || []).find((entry) => entry.id === itemId)
+  if (!subgroup || !item) return
+
+  if (subgroup.items.length <= 1) {
+    saveStatus.value = 'error'
+    saveError.value = 'В подгруппе должен остаться хотя бы один элемент.'
+    return
+  }
+
+  if (!window.confirm(`Удалить сервис "${item.title}"?`)) return
+
+  await applyConfigMutation((cfg) => {
+    const targetSubgroup = findSubgroup(cfg, groupId, subgroupId)
+    if (!targetSubgroup) return false
+
+    const index = (targetSubgroup.items || []).findIndex((entry) => entry.id === itemId)
+    if (index < 0) return false
+    targetSubgroup.items.splice(index, 1)
+
+    if (selectedNode.itemId === itemId) {
+      selectedNode.itemId = ''
+    }
+  })
+}
+
+function clearDragState() {
+  dragState.type = ''
+  dragState.groupId = ''
+  dragState.subgroupId = ''
+  dragState.itemId = ''
+}
+
+function onGroupDragStart(event, group) {
+  if (!editMode.value) return
+  if (!isDirectGroupNode(group)) return
+  const groupId = group.id
+  dragState.type = 'group'
+  dragState.groupId = groupId
+  dragState.subgroupId = ''
+  dragState.itemId = ''
+  if (event.dataTransfer) {
+    event.dataTransfer.effectAllowed = 'move'
+    event.dataTransfer.setData('text/plain', `group:${groupId}`)
+  }
+}
+
+function onSubgroupDragStart(event, groupId, subgroupId) {
+  if (!editMode.value) return
+  dragState.type = 'subgroup'
+  dragState.groupId = groupId
+  dragState.subgroupId = subgroupId
+  dragState.itemId = ''
+  if (event.dataTransfer) {
+    event.dataTransfer.effectAllowed = 'move'
+    event.dataTransfer.setData('text/plain', `subgroup:${subgroupId}`)
+  }
+}
+
+function onItemDragStart(event, groupId, subgroupId, itemId) {
+  if (!editMode.value) return
+  dragState.type = 'item'
+  dragState.groupId = groupId
+  dragState.subgroupId = subgroupId
+  dragState.itemId = itemId
+  if (event.dataTransfer) {
+    event.dataTransfer.effectAllowed = 'move'
+    event.dataTransfer.setData('text/plain', `item:${itemId}`)
+  }
+}
+
+function onGroupDragOver(event, targetGroup) {
+  if (!editMode.value) return
+  if (!isDirectGroupNode(targetGroup)) return
+  const targetGroupId = targetGroup.id
+  if (dragState.type !== 'group') return
+  if (dragState.groupId === targetGroupId) return
+  event.preventDefault()
+}
+
+async function onGroupDrop(event, targetGroup) {
+  if (!editMode.value) return
+  if (!isDirectGroupNode(targetGroup)) return
+  const targetGroupId = targetGroup.id
+  if (dragState.type !== 'group') return
+  if (!dragState.groupId || dragState.groupId === targetGroupId) return
+  event.preventDefault()
+
+  const sourceGroupId = dragState.groupId
+  clearDragState()
+
+  await applyConfigMutation((cfg) => moveGroup(cfg, sourceGroupId, targetGroupId))
+}
+
+function onSubgroupDragOver(event, targetGroupId, targetSubgroupId) {
+  if (!editMode.value) return
+  if (dragState.type === 'subgroup') {
+    if (dragState.subgroupId === targetSubgroupId) return
+    event.preventDefault()
+    return
+  }
+
+  if (dragState.type === 'item') {
+    event.preventDefault()
+  }
+}
+
+async function onSubgroupDrop(event, targetGroupId, targetSubgroupId) {
+  if (!editMode.value) return
+
+  if (dragState.type === 'subgroup') {
+    event.preventDefault()
+    const sourceGroupId = dragState.groupId
+    const sourceSubgroupId = dragState.subgroupId
+    clearDragState()
+
+    await applyConfigMutation((cfg) => moveSubgroup(cfg, sourceGroupId, sourceSubgroupId, targetGroupId, targetSubgroupId))
+    return
+  }
+
+  if (dragState.type === 'item') {
+    event.preventDefault()
+    const sourceGroupId = dragState.groupId
+    const sourceSubgroupId = dragState.subgroupId
+    const sourceItemId = dragState.itemId
+    clearDragState()
+
+    await applyConfigMutation((cfg) =>
+      moveItemToSubgroupEnd(cfg, sourceGroupId, sourceSubgroupId, sourceItemId, targetGroupId, targetSubgroupId)
+    )
+  }
+}
+
+function onItemDragOver(event, _targetGroupId, _targetSubgroupId, targetItemId) {
+  if (!editMode.value) return
+  if (dragState.type !== 'item') return
+  if (dragState.itemId === targetItemId) return
+  event.preventDefault()
+}
+
+async function onItemDrop(event, targetGroupId, targetSubgroupId, targetItemId) {
+  if (!editMode.value) return
+  if (dragState.type !== 'item') return
+  if (!dragState.itemId || dragState.itemId === targetItemId) return
+  event.preventDefault()
+
+  const sourceGroupId = dragState.groupId
+  const sourceSubgroupId = dragState.subgroupId
+  const sourceItemId = dragState.itemId
+  clearDragState()
+
+  await applyConfigMutation((cfg) =>
+    moveItemBefore(cfg, sourceGroupId, sourceSubgroupId, sourceItemId, targetGroupId, targetSubgroupId, targetItemId)
+  )
+}
+
+function moveGroup(cfg, sourceGroupId, targetGroupId) {
+  const groupsList = cfg.groups || []
+  const sourceIndex = groupsList.findIndex((group) => group.id === sourceGroupId)
+  const targetIndex = groupsList.findIndex((group) => group.id === targetGroupId)
+
+  if (sourceIndex < 0 || targetIndex < 0 || sourceIndex === targetIndex) return false
+
+  const [moved] = groupsList.splice(sourceIndex, 1)
+  const insertIndex = sourceIndex < targetIndex ? targetIndex - 1 : targetIndex
+  groupsList.splice(insertIndex, 0, moved)
+  return true
+}
+
+function moveSubgroup(cfg, sourceGroupId, sourceSubgroupId, targetGroupId, targetSubgroupId) {
+  const sourceGroup = findGroup(cfg, sourceGroupId)
+  const targetGroup = findGroup(cfg, targetGroupId)
+  if (!sourceGroup || !targetGroup) return false
+
+  const sourceIndex = (sourceGroup.subgroups || []).findIndex((subgroup) => subgroup.id === sourceSubgroupId)
+  const targetIndex = (targetGroup.subgroups || []).findIndex((subgroup) => subgroup.id === targetSubgroupId)
+  if (sourceIndex < 0 || targetIndex < 0) return false
+
+  if (sourceGroupId !== targetGroupId && sourceGroup.subgroups.length <= 1) {
+    throw new Error('В исходной группе должна остаться минимум одна подгруппа.')
+  }
+
+  const [moved] = sourceGroup.subgroups.splice(sourceIndex, 1)
+
+  if (sourceGroupId === targetGroupId) {
+    const insertIndex = sourceIndex < targetIndex ? targetIndex - 1 : targetIndex
+    sourceGroup.subgroups.splice(insertIndex, 0, moved)
+    return true
+  }
+
+  targetGroup.subgroups.splice(targetIndex, 0, moved)
+  return true
+}
+
+function moveItemBefore(cfg, sourceGroupId, sourceSubgroupId, sourceItemId, targetGroupId, targetSubgroupId, targetItemId) {
+  const sourceSubgroup = findSubgroup(cfg, sourceGroupId, sourceSubgroupId)
+  const targetSubgroup = findSubgroup(cfg, targetGroupId, targetSubgroupId)
+  if (!sourceSubgroup || !targetSubgroup) return false
+
+  const sourceIndex = (sourceSubgroup.items || []).findIndex((item) => item.id === sourceItemId)
+  const targetIndex = (targetSubgroup.items || []).findIndex((item) => item.id === targetItemId)
+  if (sourceIndex < 0 || targetIndex < 0) return false
+
+  if (sourceSubgroupId !== targetSubgroupId && sourceSubgroup.items.length <= 1) {
+    throw new Error('В исходной подгруппе должен остаться минимум один элемент.')
+  }
+
+  const [moved] = sourceSubgroup.items.splice(sourceIndex, 1)
+
+  if (sourceSubgroupId === targetSubgroupId) {
+    const insertIndex = sourceIndex < targetIndex ? targetIndex - 1 : targetIndex
+    sourceSubgroup.items.splice(insertIndex, 0, moved)
+    return true
+  }
+
+  targetSubgroup.items.splice(targetIndex, 0, moved)
+  return true
+}
+
+function moveItemToSubgroupEnd(cfg, sourceGroupId, sourceSubgroupId, sourceItemId, targetGroupId, targetSubgroupId) {
+  const sourceSubgroup = findSubgroup(cfg, sourceGroupId, sourceSubgroupId)
+  const targetSubgroup = findSubgroup(cfg, targetGroupId, targetSubgroupId)
+  if (!sourceSubgroup || !targetSubgroup) return false
+
+  const sourceIndex = (sourceSubgroup.items || []).findIndex((item) => item.id === sourceItemId)
+  if (sourceIndex < 0) return false
+
+  if (sourceSubgroupId !== targetSubgroupId && sourceSubgroup.items.length <= 1) {
+    throw new Error('В исходной подгруппе должен остаться минимум один элемент.')
+  }
+
+  const [moved] = sourceSubgroup.items.splice(sourceIndex, 1)
+  targetSubgroup.items.push(moved)
+  return true
+}
+
 function isWidgetBlock(block) {
   return block?.type === 'widget_row' || block?.type === 'widget_grid'
 }
@@ -897,6 +2634,7 @@ function resolveBlockGroups(groupIds = []) {
         title: group.title,
         icon: group.icon || null,
         description: group.description || '',
+        layout: group.layout || 'auto',
         subgroups: group.subgroups || [],
       })
       continue
@@ -910,6 +2648,7 @@ function resolveBlockGroups(groupIds = []) {
         title: subgroupRef.group.title,
         icon: subgroupRef.group.icon || null,
         description: subgroupRef.group.description || '',
+        layout: subgroupRef.group.layout || 'auto',
         subgroups: [subgroupRef.subgroup],
       })
     }
@@ -985,10 +2724,11 @@ function filteredBlockGroups(groupIds = []) {
   const groups = resolveBlockGroups(groupIds)
 
   if (!selectedNode.groupKey && !selectedNode.subgroupId && !selectedNode.itemId) {
-    return groups
+    const visibleCount = groups.length
+    return groups.map((group) => ({ ...group, __visibleCount: visibleCount }))
   }
 
-  return groups
+  const filtered = groups
     .map((group) => {
       if (selectedNode.groupKey && group.key !== selectedNode.groupKey) {
         return null
@@ -1019,6 +2759,16 @@ function filteredBlockGroups(groupIds = []) {
       }
     })
     .filter(Boolean)
+
+  const visibleCount = filtered.length
+  return filtered.map((group) => ({ ...group, __visibleCount: visibleCount }))
+}
+
+function isInlineGroupLayout(group) {
+  const mode = String(group?.layout || 'auto').toLowerCase()
+  if (mode === 'inline') return true
+  if (mode === 'full') return false
+  return Number(group?.__visibleCount || 0) > 1
 }
 
 function groupTotalItems(group) {
@@ -1035,6 +2785,48 @@ function groupOnlineItems(group) {
     }
   }
   return online
+}
+
+function clearItemFaviconFailures() {
+  for (const key of Object.keys(itemFaviconFailures)) {
+    delete itemFaviconFailures[key]
+  }
+}
+
+function faviconOriginFromUrl(rawValue) {
+  const trimmed = String(rawValue || '').trim()
+  if (!trimmed) return ''
+
+  const withProtocol = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`
+  try {
+    const parsed = new URL(withProtocol)
+    if (!['http:', 'https:'].includes(parsed.protocol)) return ''
+    return parsed.origin
+  } catch {
+    return ''
+  }
+}
+
+function itemFaviconKey(item) {
+  const origin = faviconOriginFromUrl(item?.url)
+  if (!origin) return ''
+  const itemId = String(item?.id || '')
+  return `${itemId}|${origin}`
+}
+
+function itemFaviconSrc(item) {
+  const origin = faviconOriginFromUrl(item?.url)
+  if (!origin) return ''
+
+  const key = itemFaviconKey(item)
+  if (key && itemFaviconFailures[key]) return ''
+  return `${origin}/favicon.ico`
+}
+
+function markItemFaviconFailed(item) {
+  const key = itemFaviconKey(item)
+  if (!key) return
+  itemFaviconFailures[key] = true
 }
 
 function resolvePageIcon(page) {
@@ -1302,6 +3094,9 @@ async function runWidgetAction(widgetId, action) {
 async function loadConfig() {
   loadingConfig.value = true
   configError.value = ''
+  saveStatus.value = 'idle'
+  saveError.value = ''
+  clearItemFaviconFailures()
 
   try {
     const data = await fetchDashboardConfig()
@@ -1388,40 +3183,138 @@ async function copyUrl(url) {
   }
 }
 
-function initSidebarParticles() {
-  if (!window.particlesJS) return
-
-  window.particlesJS('sidebar-particles', {
-    particles: {
-      number: { value: 44, density: { enable: true, value_area: 700 } },
-      color: { value: '#44e3cf' },
-      shape: { type: 'circle' },
-      opacity: { value: 0.22, random: true },
-      size: { value: 2.2, random: true },
-      line_linked: {
-        enable: true,
-        distance: 120,
-        color: '#2dd4bf',
-        opacity: 0.14,
-        width: 1,
-      },
-      move: { enable: true, speed: 0.6 },
-    },
-    interactivity: {
-      events: { onhover: { enable: false }, onclick: { enable: false }, resize: true },
-    },
-    retina_detect: true,
+function formatLanMoment(value) {
+  if (!value) return '—'
+  const timestamp = new Date(value)
+  if (Number.isNaN(timestamp.getTime())) return '—'
+  return timestamp.toLocaleString('ru-RU', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
   })
+}
+
+function formatLanDuration(durationMs) {
+  const value = Number(durationMs || 0)
+  if (!Number.isFinite(value) || value <= 0) return '—'
+  if (value < 1000) return `${Math.round(value)} ms`
+  return `${(value / 1000).toFixed(2)} s`
+}
+
+function openLanHostModal(host) {
+  if (!host) return
+  lanHostModal.host = host
+  lanHostModal.open = true
+}
+
+function closeLanHostModal() {
+  lanHostModal.open = false
+  lanHostModal.host = null
+}
+
+function lanPortsLabel(host) {
+  const ports = host?.open_ports || []
+  if (!ports.length) return '—'
+  return ports
+    .map((entry) => (entry?.service ? `${entry.port} (${entry.service})` : `${entry.port}`))
+    .join(', ')
+}
+
+function formatLanHttpStatus(endpoint) {
+  if (!endpoint) return '—'
+  if (endpoint.error) return endpoint.error
+  if (endpoint.status_code == null) return '—'
+  return `HTTP ${endpoint.status_code}`
+}
+
+async function refreshLanScanState({ silent = false } = {}) {
+  if (lanScanRefreshInFlight) return
+  lanScanRefreshInFlight = true
+
+  if (!silent) {
+    lanScanLoading.value = true
+  }
+
+  try {
+    lanScanState.value = await fetchLanScanState()
+    lanScanError.value = ''
+  } catch (error) {
+    lanScanError.value = error?.message || 'Не удалось загрузить состояние сканера LAN'
+  } finally {
+    lanScanRefreshInFlight = false
+    if (!silent) {
+      lanScanLoading.value = false
+    }
+  }
+}
+
+function stopLanScanPolling() {
+  if (!lanScanPollTimer) return
+  window.clearInterval(lanScanPollTimer)
+  lanScanPollTimer = 0
+}
+
+function startLanScanPolling() {
+  stopLanScanPolling()
+  lanScanPollTimer = window.setInterval(() => {
+    refreshLanScanState({ silent: true })
+  }, LAN_SCAN_POLL_MS)
+}
+
+async function runLanScanNow() {
+  if (lanScanActionBusy.value) return
+  lanScanActionBusy.value = true
+
+  try {
+    const payload = await triggerLanScan()
+    lanScanState.value = payload?.state || lanScanState.value
+    lanScanError.value = payload?.accepted || payload?.state?.queued ? '' : payload?.message || ''
+  } catch (error) {
+    lanScanError.value = error?.message || 'Не удалось запустить сканирование LAN'
+  } finally {
+    lanScanActionBusy.value = false
+    refreshLanScanState({ silent: true })
+  }
+}
+
+function initParticles(containerId, config) {
+  if (!window.particlesJS) return
+  const container = document.getElementById(containerId)
+  if (!container) return
+  container.innerHTML = ''
+  window.particlesJS(containerId, config)
+}
+
+function initSidebarParticles() {
+  initParticles(SIDEBAR_PARTICLES_ID, SIDEBAR_PARTICLES_CONFIG)
+}
+
+function initHeroParticles() {
+  initParticles(HERO_TITLE_PARTICLES_ID, HERO_PARTICLES_CONFIG)
+  initParticles(HERO_CONTROLS_PARTICLES_ID, HERO_PARTICLES_CONFIG)
 }
 
 watch(
   () => activePage.value?.id,
-  () => {
+  async () => {
     activeIndicatorViewId.value = ''
     treeFilter.value = ''
     clearSelectedNode()
     syncTreeGroupsState()
     refreshHealth()
+    await nextTick()
+    initHeroParticles()
+  }
+)
+
+watch(
+  () => activeIndicatorWidget.value?.id,
+  async () => {
+    await nextTick()
+    initHeroParticles()
   }
 )
 
@@ -1444,13 +3337,34 @@ watch(
   { deep: true }
 )
 
+watch(
+  () => isLanPage.value,
+  (active) => {
+    if (active) {
+      refreshLanScanState()
+      startLanScanPolling()
+      return
+    }
+    closeLanHostModal()
+    stopLanScanPolling()
+  }
+)
+
 onMounted(async () => {
   initSidebarParticles()
   await loadConfig()
+  await nextTick()
+  initHeroParticles()
 })
 
 onBeforeUnmount(() => {
   resetWidgetPolling()
   stopHealthPolling()
+  stopLanScanPolling()
+  closeLanHostModal()
+  if (saveStatusTimer) {
+    clearTimeout(saveStatusTimer)
+    saveStatusTimer = 0
+  }
 })
 </script>

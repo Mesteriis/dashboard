@@ -16,12 +16,16 @@ from src.dashboard_config.models import (
     DashboardConfig,
     DashboardHealthResponse,
     IframeSourceResponse,
+    LanScanStateResponse,
+    LanScanTriggerResponse,
     ItemHealthStatus,
     LinkItemConfig,
+    SaveConfigResponse,
     ValidateRequest,
     ValidateResponse,
 )
 from src.dashboard_config.service import DashboardConfigService, DashboardConfigValidationError
+from src.lan_scan import LanScanService, lan_scan_settings_from_env
 
 BASE_DIR = Path(__file__).resolve().parent
 STATIC_DIR = BASE_DIR / "static"
@@ -52,6 +56,10 @@ PROXY_RESPONSE_HEADERS = {
 
 app = FastAPI(title="oko-dashboard")
 config_service = DashboardConfigService(config_path=CONFIG_FILE)
+lan_scan_service = LanScanService(
+    config_service=config_service,
+    settings=lan_scan_settings_from_env(BASE_DIR),
+)
 
 if STATIC_DIR.exists():
     app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
@@ -65,6 +73,16 @@ async def root() -> Response:
             status_code=503,
         )
     return FileResponse(INDEX_FILE)
+
+
+@app.on_event("startup")
+async def on_startup() -> None:
+    await lan_scan_service.start()
+
+
+@app.on_event("shutdown")
+async def on_shutdown() -> None:
+    await lan_scan_service.stop()
 
 
 @app.get("/api/v1/dashboard/config", response_model=DashboardConfig)
@@ -92,6 +110,15 @@ async def get_dashboard_last_errors() -> dict[str, list[dict[str, str]]]:
 async def validate_dashboard_yaml(payload: ValidateRequest) -> ValidateResponse:
     config, issues = config_service.validate_yaml(payload.yaml)
     return ValidateResponse(valid=not issues, issues=issues, config=config)
+
+
+@app.put("/api/v1/dashboard/config", response_model=SaveConfigResponse)
+async def save_dashboard_config(payload: DashboardConfig) -> SaveConfigResponse:
+    try:
+        state = config_service.save(payload.model_dump(mode="json", exclude_none=True))
+        return SaveConfigResponse(config=state.config, version=state.version)
+    except DashboardConfigValidationError as exc:
+        raise HTTPException(status_code=422, detail=[issue.model_dump() for issue in exc.issues]) from exc
 
 
 @app.get("/api/v1/dashboard/health", response_model=DashboardHealthResponse)
@@ -130,6 +157,28 @@ async def get_iframe_source(item_id: str) -> IframeSourceResponse:
         return IframeSourceResponse(item_id=item.id, src=src, proxied=True, auth_profile=item.auth_profile)
 
     return IframeSourceResponse(item_id=item.id, src=str(item.url), proxied=False, auth_profile=None)
+
+
+@app.get("/api/v1/dashboard/lan/state", response_model=LanScanStateResponse)
+async def get_lan_scan_state() -> LanScanStateResponse:
+    return lan_scan_service.state()
+
+
+@app.post("/api/v1/dashboard/lan/run", response_model=LanScanTriggerResponse)
+async def run_lan_scan() -> LanScanTriggerResponse:
+    accepted = await lan_scan_service.trigger_scan()
+    state = lan_scan_service.state()
+    if accepted:
+        message = "Сканирование запущено"
+    elif state.queued:
+        message = "Сканирование уже выполняется, следующий запуск поставлен в очередь"
+    else:
+        message = "Сканирование отключено"
+    return LanScanTriggerResponse(
+        accepted=accepted,
+        message=message,
+        state=state,
+    )
 
 
 @app.api_route(

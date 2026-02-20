@@ -1,212 +1,277 @@
 version: 1
-
 app:
   id: oko
-  title: "OKO"
-  tagline: "Your Infrastructure in Sight"
-  locale: "ru-RU"
-
+  title: OKO
+  tagline: Your Infrastructure in Sight
+  locale: ru-RU
 ui:
   theme:
     mode: dark
-    accent: "#2dd4bf"
-    background: "#050a0f"
-    card: "rgba(255,255,255,0.04)"
-    border: "rgba(255,255,255,0.08)"
+    accent: '#2dd4bf'
+    background: '#050a0f'
+    card: rgba(255,255,255,0.04)
+    border: rgba(255,255,255,0.08)
     glow: true
-
-  # базовые настройки рендера
   grid:
     columns: 12
     gap: 12
     card_radius: 14
-
 layout:
-  # страницы как в Homarr: "Домашняя", "Сеть", "Медиа" и т.д.
   pages:
-    - id: home
-      title: "Дом"
-      icon: "home"
-      blocks:
-        - type: widget_row
-          widgets: ["stats.services", "stats.health", "stats.alerts"]
-
-        - type: groups
-          group_ids: ["infra", "media", "iot"]
-
-    - id: net
-      title: "Сеть"
-      icon: "route"
-      blocks:
-        - type: widget_grid
-          widgets: ["net.routes", "net.tunnels"]
-        - type: groups
-          group_ids: ["infra.core", "infra.ops"]
-
-# ====== ГРУППЫ / ПОДГРУППЫ / ЭЛЕМЕНТЫ ======
-
+  - id: home
+    title: Дом
+    icon: home
+    blocks:
+    - type: widget_row
+      widgets:
+      - stats.services
+      - stats.health
+      - stats.alerts
+    - type: groups
+      group_ids:
+      - infra
+      - media
+      - iot
+      - node
+      - node-2
+  - id: net
+    title: Сеть
+    icon: route
+    blocks:
+    - type: widget_grid
+      widgets:
+      - net.routes
+      - net.tunnels
+    - type: groups
+      group_ids:
+      - infra.core
+      - infra.ops
 groups:
-  - id: infra
-    title: "Инфраструктура"
-    icon: "server"
-    description: "PVE, панели, деплой, мониторинг"
-    subgroups:
-      - id: infra.core
-        title: "Core"
-        items:
-          - id: pve
-            type: link
-            title: "Proxmox"
-            url: "https://pve.rf.sh-inc.ru:8006"
-            icon: "proxmox"
-            tags: ["pve", "virtualization"]
-            open: "new_tab"          # new_tab | same_tab
-            healthcheck:
-              type: http
-              url: "https://pve.rf.sh-inc.ru:8006"
-              interval_sec: 30
-              timeout_ms: 1500
-
-          - id: cockpit
-            type: link
-            title: "Cockpit"
-            url: "https://cc.rf.sh-inc.ru"
-            icon: "cockpit"
-            tags: ["server", "linux"]
-
-      - id: infra.ops
-        title: "Ops"
-        items:
-          - id: grafana
-            type: iframe
-            title: "Grafana"
-            url: "https://grafana.rf.sh-inc.ru"
-            icon: "grafana"
-            iframe:
-              sandbox: false
-              allow:
-                - "fullscreen"
-                - "clipboard-read"
-                - "clipboard-write"
-              referrer_policy: "no-referrer"
-
-          - id: gitea
-            type: link
-            title: "Gitea"
-            url: "https://git.rf.sh-inc.ru"
-            icon: "gitea"
-
-  - id: media
-    title: "Медиа"
-    icon: "tv"
-    subgroups:
-      - id: media.players
-        title: "Плееры"
-        items:
-          - id: jellyfin
-            type: link
-            title: "Jellyfin"
-            url: "https://jellyfin.rf.sh-inc.ru"
-            icon: "jellyfin"
-
-  - id: iot
-    title: "IoT"
-    icon: "home-assistant"
-    subgroups:
-      - id: iot.home
-        title: "Дом"
-        items:
-          - id: ha
-            type: iframe
-            title: "Home Assistant"
-            url: "https://ha.rf.sh-inc.ru"
-            icon: "home-assistant"
-            iframe:
-              sandbox: true
-              allow: ["fullscreen"]
-
-# ====== ВИДЖЕТЫ / СТАТИСТИКА ======
-# Виджет — это UI-компонент + источник данных из backend.
-
+- id: infra
+  title: Инфраструктура
+  icon: server
+  description: PVE, панели, деплой, мониторинг
+  layout: auto
+  subgroups:
+  - id: infra.core
+    title: Core
+    items:
+    - id: pve
+      title: Proxmox
+      url: https://pve.rf.sh-inc.ru:8006/
+      icon: proxmox
+      tags:
+      - pve
+      - virtualization
+      open: new_tab
+      type: link
+      healthcheck:
+        type: http
+        url: https://pve.rf.sh-inc.ru:8006/
+        interval_sec: 30
+        timeout_ms: 1500
+    - id: infra-core
+      title: Новый сервис
+      url: https://example.com/
+      tags: []
+      open: new_tab
+      type: link
+  - id: infra.ops
+    title: Ops
+    items:
+    - id: cockpit
+      title: Cockpit
+      url: https://cc.rf.sh-inc.ru/
+      icon: cockpit
+      tags:
+      - server
+      - linux
+      open: new_tab
+      type: link
+    - id: grafana
+      title: Grafana
+      url: https://grafana.rf.sh-inc.ru/
+      icon: grafana
+      tags: []
+      open: new_tab
+      type: iframe
+      iframe:
+        sandbox: false
+        allow:
+        - fullscreen
+        - clipboard-read
+        - clipboard-write
+        referrer_policy: no-referrer
+    - id: gitea
+      title: Gitea
+      url: https://git.rf.sh-inc.ru/
+      icon: gitea
+      tags: []
+      open: new_tab
+      type: link
+- id: media
+  title: Медиа
+  icon: tv
+  layout: auto
+  subgroups:
+  - id: media.players
+    title: Плееры
+    items:
+    - id: jellyfin
+      title: Jellyfin
+      url: https://jellyfin.rf.sh-inc.ru/
+      icon: jellyfin
+      tags: []
+      open: new_tab
+      type: link
+- id: iot
+  title: IoT
+  icon: home-assistant
+  layout: auto
+  subgroups:
+  - id: iot.home
+    title: Дом
+    items:
+    - id: ha
+      title: Home Assistant
+      url: https://ha.rf.sh-inc.ru/
+      icon: home-assistant
+      tags: []
+      open: new_tab
+      type: iframe
+      iframe:
+        sandbox: true
+        allow:
+        - fullscreen
+- id: node
+  title: Новая группа
+  icon: folder
+  description: ''
+  layout: auto
+  subgroups:
+  - id: node-core
+    title: Core
+    items:
+    - id: node-service
+      title: Новый сервис
+      url: https://example.com/
+      tags: []
+      open: new_tab
+      type: link
+  - id: node
+    title: Новая подгруппа
+    items:
+    - id: node-service-2
+      title: Новый сервис
+      url: https://example.com/
+      tags: []
+      open: new_tab
+      type: link
+- id: node-2
+  title: ывавыа
+  icon: folder
+  description: ''
+  layout: auto
+  subgroups:
+  - id: node-2-core
+    title: Core
+    items:
+    - id: node-2-service
+      title: Новый сервис
+      url: https://example.com/
+      tags: []
+      open: new_tab
+      type: link
+  - id: node-2
+    title: Новая подгруппа
+    items:
+    - id: node-2-service-2
+      title: Новый сервис
+      url: https://example.com/
+      tags: []
+      open: new_tab
+      type: link
 widgets:
-  - id: stats.services
-    type: stat_card
-    title: "Сервисы"
-    icon: "layers"
-    data:
-      source: api
-      endpoint: "/v1/stats/services"     # GET
-      refresh_sec: 10
-      mapping:
-        value: "$.total"
-        subtitle: "$.label"              # например "Stable"
-        trend: "$.trend_24h"             # +/- %
-
-  - id: stats.health
-    type: stat_card
-    title: "Состояние"
-    icon: "heart"
-    data:
-      source: api
-      endpoint: "/v1/stats/health"
-      refresh_sec: 10
-      mapping:
-        value: "$.state"
-        subtitle: "$.details"
-
-  - id: stats.alerts
-    type: stat_list
-    title: "Ошибки"
-    icon: "alert"
-    data:
-      source: api
-      endpoint: "/v1/alerts/summary"
-      refresh_sec: 15
-      mapping:
-        items: "$.items[*]"
-        item_title: "$.title"
-        item_value: "$.count"
-
-  - id: net.routes
-    type: table
-    title: "Маршруты"
-    icon: "route"
-    data:
-      source: api
-      endpoint: "/v1/net/routes"
-      refresh_sec: 10
-      columns:
-        - key: "host"
-          title: "Host"
-        - key: "upstream"
-          title: "Upstream"
-        - key: "status"
-          title: "Статус"
-      actions:
-        - id: "reload"
-          title: "Reload"
-          method: "POST"
-          endpoint: "/v1/net/routes/reload"
-
-  - id: net.tunnels
-    type: stat_list
-    title: "Туннели"
-    icon: "cloud"
-    data:
-      source: api
-      endpoint: "/v1/net/tunnels"
-      refresh_sec: 10
-      mapping:
-        items: "$.tunnels[*]"
-        item_title: "$.name"
-        item_value: "$.state"
-
-# ====== ПРАВИЛА БЕЗОПАСНОСТИ / ПРИВИЛЕГИИ ======
-# (опционально, но очень полезно)
+- id: stats.services
+  type: stat_card
+  title: Сервисы
+  icon: layers
+  data:
+    source: api
+    endpoint: /v1/stats/services
+    refresh_sec: 10
+    mapping:
+      value: $.total
+      subtitle: $.label
+      trend: $.trend_24h
+    columns: []
+    actions: []
+- id: stats.health
+  type: stat_card
+  title: Состояние
+  icon: heart
+  data:
+    source: api
+    endpoint: /v1/stats/health
+    refresh_sec: 10
+    mapping:
+      value: $.state
+      subtitle: $.details
+    columns: []
+    actions: []
+- id: stats.alerts
+  type: stat_list
+  title: Ошибки
+  icon: alert
+  data:
+    source: api
+    endpoint: /v1/alerts/summary
+    refresh_sec: 15
+    mapping:
+      items: $.items[*]
+      item_title: $.title
+      item_value: $.count
+    columns: []
+    actions: []
+- id: net.routes
+  type: table
+  title: Маршруты
+  icon: route
+  data:
+    source: api
+    endpoint: /v1/net/routes
+    refresh_sec: 10
+    columns:
+    - key: host
+      title: Host
+    - key: upstream
+      title: Upstream
+    - key: status
+      title: Статус
+    actions:
+    - id: reload
+      title: Reload
+      method: POST
+      endpoint: /v1/net/routes/reload
+- id: net.tunnels
+  type: stat_list
+  title: Туннели
+  icon: cloud
+  data:
+    source: api
+    endpoint: /v1/net/tunnels
+    refresh_sec: 10
+    mapping:
+      items: $.tunnels[*]
+      item_title: $.name
+      item_value: $.state
+    columns: []
+    actions: []
 security:
   iframe:
     default_sandbox: true
     allowed_domains:
-      - "rf.sh-inc.ru"
-      - "sh-inc.ru"
-      - ".local"
+    - rf.sh-inc.ru
+    - sh-inc.ru
+    - .local
+  auth_profiles: []

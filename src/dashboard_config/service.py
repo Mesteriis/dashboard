@@ -86,6 +86,33 @@ class DashboardConfigService:
             return None, exc.issues
         return config, []
 
+    def save(self, raw_document: Any) -> DashboardConfigState:
+        try:
+            config = self._validate_document(raw_document)
+        except DashboardConfigValidationError as exc:
+            self._last_issues = exc.issues
+            raise
+
+        serialized = yaml.safe_dump(
+            config.model_dump(mode="json", exclude_none=True),
+            sort_keys=False,
+            allow_unicode=True,
+            width=120,
+        )
+
+        if not serialized.endswith("\n"):
+            serialized += "\n"
+
+        self._write_document(serialized)
+
+        file_hash = hashlib.sha256(serialized.encode("utf-8")).hexdigest()
+        file_mtime = self.config_path.stat().st_mtime
+
+        state = DashboardConfigState(config=config, version=ConfigVersion(sha256=file_hash, mtime=file_mtime))
+        self._state = state
+        self._last_issues = []
+        return state
+
     def get_item(self, item_id: str) -> ItemConfig:
         config = self.load()
         for group in config.groups:
@@ -188,6 +215,12 @@ class DashboardConfigService:
             ) from exc
 
         return file_hash, file_mtime, raw_document
+
+    def _write_document(self, serialized_yaml: str) -> None:
+        self.config_path.parent.mkdir(parents=True, exist_ok=True)
+        tmp_path = self.config_path.with_suffix(f"{self.config_path.suffix}.tmp")
+        tmp_path.write_text(serialized_yaml, encoding="utf-8")
+        tmp_path.replace(self.config_path)
 
     def _validate_document(self, raw_document: Any) -> DashboardConfig:
         issues: list[ValidationIssue] = []

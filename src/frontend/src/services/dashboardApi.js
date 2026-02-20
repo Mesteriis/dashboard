@@ -51,3 +51,23 @@ export function fetchDashboardHealth(itemIds = []) {
   const query = params.toString()
   return requestJson(`${DASHBOARD_API_BASE}/health${query ? `?${query}` : ''}`)
 }
+
+export function updateDashboardConfig(config) {
+  return requestJson(`${DASHBOARD_API_BASE}/config`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(config),
+  })
+}
+
+export function fetchLanScanState() {
+  return requestJson(`${DASHBOARD_API_BASE}/lan/state`)
+}
+
+export function triggerLanScan() {
+  return requestJson(`${DASHBOARD_API_BASE}/lan/run`, {
+    method: 'POST',
+  })
+}

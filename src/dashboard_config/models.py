@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from enum import Enum
+from datetime import datetime
 from typing import Annotated, Any, Literal
 
 from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field
@@ -138,6 +139,7 @@ class GroupConfig(BaseModel):
     title: str = Field(min_length=1)
     icon: str | None = None
     description: str | None = None
+    layout: Literal["auto", "full", "inline"] = "auto"
     subgroups: list[SubgroupConfig] = Field(min_length=1)
 
 
@@ -266,6 +268,11 @@ class ValidateResponse(BaseModel):
     config: DashboardConfig | None = None
 
 
+class SaveConfigResponse(BaseModel):
+    config: DashboardConfig
+    version: ConfigVersion
+
+
 class ItemHealthStatus(BaseModel):
     item_id: str
     ok: bool
@@ -284,3 +291,65 @@ class IframeSourceResponse(BaseModel):
     src: str
     proxied: bool
     auth_profile: str | None = None
+
+
+class LanScanPort(BaseModel):
+    port: int = Field(ge=1, le=65535)
+    service: str | None = None
+
+
+class LanScanMappedService(BaseModel):
+    id: str = Field(min_length=1)
+    title: str = Field(min_length=1)
+    url: AnyHttpUrl
+
+
+class LanScanHost(BaseModel):
+    ip: str = Field(min_length=1)
+    hostname: str | None = None
+    mac_address: str | None = None
+    mac_vendor: str | None = None
+    device_type: str | None = None
+    open_ports: list[LanScanPort] = Field(default_factory=list)
+    http_services: list[LanHttpService] = Field(default_factory=list)
+    dashboard_items: list[LanScanMappedService] = Field(default_factory=list)
+
+
+class LanScanResult(BaseModel):
+    generated_at: datetime
+    duration_ms: int = Field(ge=0)
+    scanned_hosts: int = Field(ge=0)
+    scanned_ports: int = Field(default=0, ge=0)
+    scanned_cidrs: list[str] = Field(default_factory=list)
+    hosts: list[LanScanHost] = Field(default_factory=list)
+    source_file: str | None = None
+
+
+class LanHttpService(BaseModel):
+    port: int = Field(ge=1, le=65535)
+    scheme: Literal["http", "https"]
+    url: str = Field(min_length=1)
+    status_code: int | None = None
+    title: str | None = None
+    description: str | None = None
+    server: str | None = None
+    error: str | None = None
+
+
+class LanScanStateResponse(BaseModel):
+    enabled: bool = True
+    scheduler: str = "asyncio"
+    interval_sec: int = Field(default=1020, ge=30)
+    running: bool = False
+    queued: bool = False
+    last_started_at: datetime | None = None
+    last_finished_at: datetime | None = None
+    next_run_at: datetime | None = None
+    last_error: str | None = None
+    result: LanScanResult | None = None
+
+
+class LanScanTriggerResponse(BaseModel):
+    accepted: bool
+    message: str
+    state: LanScanStateResponse
