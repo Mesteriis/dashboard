@@ -1670,36 +1670,73 @@ export function useDashboardStore() {
     return Boolean(state?.ok && state.latency_ms != null && state.latency_ms >= DEGRADED_LATENCY_MS)
   }
 
+  function resolvedHealthLevel(state) {
+    if (!state) return 'unknown'
+
+    const level = String(state.level || '').toLowerCase()
+    if (['online', 'degraded', 'down', 'unknown', 'indirect_failure'].includes(level)) {
+      return level
+    }
+
+    if (isHealthDegraded(state)) return 'degraded'
+    return state.ok ? 'online' : 'down'
+  }
+
   function healthClass(itemId) {
     const state = healthState(itemId)
-    if (!state) return 'unknown'
-    if (isHealthDegraded(state)) return 'degraded'
-    return state.ok ? 'ok' : 'down'
+    const level = resolvedHealthLevel(state)
+
+    if (level === 'online') return 'ok'
+    if (level === 'degraded') return 'degraded'
+    if (level === 'down' || level === 'indirect_failure') return 'down'
+    return 'unknown'
   }
 
   function healthLabel(itemId) {
     const state = healthState(itemId)
     if (!state) return 'Проверка...'
+    const level = resolvedHealthLevel(state)
 
-    if (state.ok) {
+    if (level === 'online') {
       if (state.latency_ms != null) {
-        if (isHealthDegraded(state)) {
-          return `Degraded • ${state.latency_ms} ms`
-        }
         return `Online • ${state.latency_ms} ms`
       }
       return 'Online'
     }
 
-    if (state.error) {
-      return `Offline • ${state.error}`
+    if (level === 'degraded') {
+      if (state.latency_ms != null) {
+        return `Degraded • ${state.latency_ms} ms`
+      }
+      if (state.status_code != null) {
+        return `Degraded • HTTP ${state.status_code}`
+      }
+      if (state.error) {
+        return `Degraded • ${state.error}`
+      }
+      if (state.reason) {
+        return `Degraded • ${String(state.reason).replaceAll('_', ' ')}`
+      }
+      return 'Degraded'
     }
 
-    if (state.status_code != null) {
-      return `Offline • HTTP ${state.status_code}`
+    if (level === 'indirect_failure') {
+      return 'Indirect failure'
     }
 
-    return 'Offline'
+    if (level === 'down') {
+      if (state.error) {
+        return `Offline • ${state.error}`
+      }
+
+      if (state.status_code != null) {
+        return `Offline • HTTP ${state.status_code}`
+      }
+
+      return 'Offline'
+    }
+
+    return 'Unknown'
   }
 
   async function refreshHealth() {

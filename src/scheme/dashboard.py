@@ -82,6 +82,14 @@ class LayoutConfig(BaseModel):
     pages: list[PageConfig] = Field(min_length=1)
 
 
+class HealthcheckThresholds(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    degraded_latency_ms: int = Field(default=700, ge=1, le=120000)
+    down_latency_ms: int = Field(default=3000, ge=1, le=120000)
+    degrade_on_http_4xx: bool = True
+
+
 class HealthcheckConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -89,6 +97,7 @@ class HealthcheckConfig(BaseModel):
     url: AnyHttpUrl
     interval_sec: int = Field(default=30, ge=1, le=3600)
     timeout_ms: int = Field(default=1500, ge=100, le=120000)
+    thresholds: HealthcheckThresholds | None = None
 
 
 class IframeViewConfig(BaseModel):
@@ -280,6 +289,9 @@ class ItemHealthStatus(BaseModel):
     status_code: int | None = None
     latency_ms: int | None = None
     error: str | None = None
+    level: Literal["online", "degraded", "down", "unknown", "indirect_failure"] = "unknown"
+    reason: str | None = None
+    error_kind: Literal["timeout", "dns_error", "ssl_error", "connection_error", "http_error", "unknown"] | None = None
 
 
 class DashboardHealthResponse(BaseModel):
