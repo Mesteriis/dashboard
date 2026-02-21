@@ -29,7 +29,7 @@
   "bundle": {
     "active": true,
     "targets": ["app"],
-    "icon": ["icons/icon-512.png"],
+    "icon": ["icons/icon.icns", "icons/icon.png"],
     "resources": ["binaries/oko-backend-aarch64-apple-darwin"],
     "macOS": {
       "minimumSystemVersion": "13.0"

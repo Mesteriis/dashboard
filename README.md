@@ -41,6 +41,15 @@ npm run tauri:dev
 npm run tauri:build:arm64
 ```
 
+### One-command clean desktop build (recommended)
+
+```bash
+./src/desktop/build_macos_app_arm64.sh
+```
+
+- Final artifacts are placed in one folder: `artifacts/macos-arm64/output/`
+- Intermediate build files are cleaned automatically after build.
+
 ### Build embedded backend sidecar (ARM64)
 
 ```bash

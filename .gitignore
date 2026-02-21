@@ -12,6 +12,10 @@ __pycache__/
 # Node build artifacts
 src/frontend/node_modules/
 src/frontend/dist/
+artifacts/
+src/frontend/src-tauri/target/
+src/frontend/src-tauri/gen/
+src/frontend/src-tauri/binaries/oko-backend-aarch64-apple-darwin
 
 # Local runtime data
 data/
