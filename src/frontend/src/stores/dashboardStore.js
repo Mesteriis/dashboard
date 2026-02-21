@@ -57,6 +57,7 @@ export function useDashboardStore() {
   const HERO_TITLE_PARTICLES_ID = 'hero-title-particles'
   const HERO_CONTROLS_PARTICLES_ID = 'hero-controls-particles'
   const SIDEBAR_PARTICLES_CONFIG = {
+    fps_limit: 58,
     particles: {
       number: { value: 88, density: { enable: true, value_area: 700 } },
       color: { value: '#6df6e2' },
@@ -78,6 +79,7 @@ export function useDashboardStore() {
     retina_detect: true,
   }
   const HERO_PARTICLES_CONFIG = {
+    fps_limit: 58,
     particles: {
       number: { value: 92, density: { enable: true, value_area: 720 } },
       color: { value: '#6df6e2' },
@@ -169,6 +171,7 @@ export function useDashboardStore() {
   let lanScanPollTimer = 0
   let lanScanRefreshInFlight = false
   let visibilitySyncInFlight = false
+  let particlesReinitRaf = 0
 
   const selectedNode = reactive({
     groupKey: '',
@@ -2474,6 +2477,7 @@ export function useDashboardStore() {
     if (mode === 'off') return null
 
     const tuned = JSON.parse(JSON.stringify(config))
+    tuned.fps_limit = mode === 'lite' ? 34 : 58
     if (mode !== 'lite') return tuned
 
     tuned.particles.number.value = Math.max(24, Math.round(tuned.particles.number.value * 0.56))
@@ -2481,7 +2485,39 @@ export function useDashboardStore() {
     tuned.particles.move.speed = Number((tuned.particles.move.speed * 0.74).toFixed(2))
     tuned.particles.line_linked.opacity = Number((tuned.particles.line_linked.opacity * 0.56).toFixed(2))
     tuned.particles.line_linked.distance = Math.max(80, Math.round(tuned.particles.line_linked.distance * 0.84))
+    tuned.retina_detect = false
     return tuned
+  }
+
+  function resetParticlesContainer(containerId) {
+    const container = document.getElementById(containerId)
+    if (!container) return
+    container.innerHTML = ''
+    delete container.dataset.particlesReady
+  }
+
+  function resetAllParticlesContainers() {
+    resetParticlesContainer(SIDEBAR_PARTICLES_ID)
+    resetParticlesContainer(HERO_TITLE_PARTICLES_ID)
+    resetParticlesContainer(HERO_CONTROLS_PARTICLES_ID)
+  }
+
+  async function reinitializeParticlesByFxMode() {
+    if (particlesReinitRaf) {
+      window.cancelAnimationFrame(particlesReinitRaf)
+      particlesReinitRaf = 0
+    }
+
+    particlesReinitRaf = window.requestAnimationFrame(async () => {
+      particlesReinitRaf = 0
+      resetAllParticlesContainers()
+      await initSidebarParticles()
+      await initHeroParticles()
+    })
+  }
+
+  function handleFxModeChange() {
+    reinitializeParticlesByFxMode()
   }
 
   async function initParticles(containerId, baseConfig) {
@@ -2605,6 +2641,7 @@ export function useDashboardStore() {
 
   onMounted(async () => {
     window.addEventListener('visibilitychange', handleDocumentVisibilityChange)
+    window.addEventListener('oko:fx-mode-change', handleFxModeChange)
     await initSidebarParticles()
     await loadConfig()
     await nextTick()
@@ -2617,6 +2654,11 @@ export function useDashboardStore() {
     stopLanScanPolling()
     closeLanHostModal()
     window.removeEventListener('visibilitychange', handleDocumentVisibilityChange)
+    window.removeEventListener('oko:fx-mode-change', handleFxModeChange)
+    if (particlesReinitRaf) {
+      window.cancelAnimationFrame(particlesReinitRaf)
+      particlesReinitRaf = 0
+    }
     if (saveStatusTimer) {
       clearTimeout(saveStatusTimer)
       saveStatusTimer = 0

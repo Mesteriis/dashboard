@@ -15,6 +15,7 @@ function resolveFxMode() {
 
 function applyFxMode(mode) {
   const root = document.documentElement
+  const previousMode = root.dataset.fxMode || ''
   root.dataset.fxMode = mode
 
   if (mode === 'off') {
@@ -23,6 +24,14 @@ function applyFxMode(mode) {
     root.style.setProperty('--glow-enabled', '0.58')
   } else {
     root.style.setProperty('--glow-enabled', '1')
+  }
+
+  if (previousMode && previousMode !== mode) {
+    window.dispatchEvent(
+      new CustomEvent('oko:fx-mode-change', {
+        detail: { mode, previousMode },
+      })
+    )
   }
 }
 
