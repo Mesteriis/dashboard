@@ -51,10 +51,5 @@ function initFxModeProfile() {
 
 initFxModeProfile()
 initDevPerfTelemetry({ enabled: import.meta.env.DEV })
-
-async function bootstrap() {
-  await initDesktopRuntimeBridge()
-  createApp(App).use(MotionPlugin).mount('#app')
-}
-
-bootstrap()
+createApp(App).use(MotionPlugin).mount('#app')
+void initDesktopRuntimeBridge()
