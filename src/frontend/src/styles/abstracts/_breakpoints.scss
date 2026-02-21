@@ -1,0 +1,15 @@
+$bp-xl: 1200px;
+$bp-lg: 980px;
+$bp-sm: 640px;
+
+@mixin down($width) {
+  @media (max-width: $width) {
+    @content;
+  }
+}
+
+@mixin prefers-reduced-motion {
+  @media (prefers-reduced-motion: reduce) {
+    @content;
+  }
+}

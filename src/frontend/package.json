@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "node_modules/.bin/vite",
     "build": "node_modules/.bin/vite build && node scripts/build-to-backend.mjs",
-    "preview": "node_modules/.bin/vite preview --port 4173"
+    "preview": "node_modules/.bin/vite preview --port 4173",
+    "test": "node --test tests/*.test.mjs",
+    "check:files": "node scripts/check-file-length.mjs"
   },
   "dependencies": {
     "lucide-vue-next": "^0.575.0",
@@ -15,6 +17,7 @@
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.1.2",
+    "sass": "^1.97.3",
     "vite": "^5.4.8"
   }
 }

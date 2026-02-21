@@ -1,0 +1,99 @@
+
+.sidebar {
+  position: sticky;
+  top: 18px;
+  height: calc(100vh - 36px);
+  height: calc(100dvh - 36px);
+  max-height: calc(100vh - 36px);
+  max-height: calc(100dvh - 36px);
+  border: 1px solid rgba(76, 226, 204, 0.24);
+  border-radius: calc(var(--card-radius) + 4px);
+  overflow: hidden;
+  background: linear-gradient(178deg, rgba(6, 14, 22, 0.97), rgba(5, 11, 19, 0.95));
+  backdrop-filter: blur(9px) saturate(125%);
+  box-shadow:
+    0 30px 62px rgba(2, 7, 14, 0.62),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  transition: width 280ms ease, border-color 280ms ease, box-shadow 280ms ease;
+}
+
+.sidebar.compact {
+  border-color: rgba(96, 247, 223, 0.34);
+  box-shadow:
+    0 24px 54px rgba(2, 7, 14, 0.56),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.sidebar-particles {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.95;
+}
+
+.sidebar-content {
+  position: relative;
+  z-index: 1;
+  height: 100%;
+  min-height: 0;
+  padding: 16px;
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  align-items: stretch;
+  gap: 14px;
+  overflow: hidden;
+}
+
+.sidebar-content.compact {
+  padding: 10px 6px;
+  gap: 8px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 4px;
+}
+
+.brand.compact {
+  justify-content: center;
+  padding: 2px;
+}
+
+.brand img {
+  width: 50px;
+  height: 50px;
+  object-fit: contain;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.22);
+}
+
+.brand.compact img {
+  width: 44px;
+  height: 44px;
+  border-radius: 11px;
+}
+
+.brand-title {
+  margin: 0;
+  font-family: 'Cinzel', 'Times New Roman', serif;
+  font-size: 1.34rem;
+  letter-spacing: 0.05em;
+}
+
+.brand-subtitle {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.editor-toggle {
+  border-color: rgba(114, 237, 216, 0.5);
+}
+
+.editor-status {
+  font-size: 0.74rem;
+  color: #9ab5c9;
+}

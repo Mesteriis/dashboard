@@ -1,0 +1,95 @@
+:root {
+  --bg: #06121a;
+  --bg-soft: #0a1a24;
+  --surface: rgba(8, 20, 31, 0.76);
+  --surface-strong: rgba(10, 24, 36, 0.9);
+  --text: #e7eff6;
+  --muted: #9db3c5;
+  --accent: #2dd4bf;
+  --accent-soft: #6ef2dc;
+  --border: rgba(132, 170, 188, 0.22);
+  --shadow: 0 28px 60px rgba(0, 0, 0, 0.48);
+  --card-radius: 18px;
+  --grid-gap: 14px;
+  --layout-columns: 12;
+  --glow-enabled: 1;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: 'Space Grotesk', 'Segoe UI', sans-serif;
+  color: var(--text);
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(circle at 18% 10%, rgba(26, 140, 131, 0.22), transparent 38%),
+    radial-gradient(circle at 82% 84%, rgba(18, 96, 98, 0.2), transparent 42%),
+    linear-gradient(168deg, #02060d 0%, #05131c 40%, #062118 74%, #030c14 100%);
+}
+
+.shell {
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
+  perspective: 1800px;
+}
+
+.shell::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(2, 6, 10, 0.46) 0%, rgba(2, 8, 14, 0.08) 44%, rgba(2, 7, 12, 0.48) 100%);
+}
+
+.center-emblem {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 0;
+  width: min(56vmin, 560px);
+  aspect-ratio: 1 / 1;
+  transform: translate(-50%, -50%);
+  object-fit: contain;
+  pointer-events: none;
+  opacity: calc(0.11 * var(--glow-enabled));
+  filter:
+    drop-shadow(0 0 calc(42px * var(--glow-enabled)) rgba(55, 224, 199, 0.26))
+    saturate(1.12)
+    contrast(1.03);
+  mix-blend-mode: screen;
+  animation: emblem-breathe 16s ease-in-out infinite;
+}
+
+.app-shell {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  margin: 0;
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 420px minmax(0, 1fr);
+  gap: var(--grid-gap);
+  padding: 24px clamp(12px, 2.2vw, 28px);
+  transition: grid-template-columns 280ms ease;
+}
+
+.app-shell > * {
+  min-width: 0;
+  min-height: 0;
+}
+
+.app-shell.sidebar-compact {
+  grid-template-columns: 96px minmax(0, 1fr);
+}

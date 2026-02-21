@@ -1,0 +1,90 @@
+
+.tree-inline-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.tree-grip {
+  width: 13px;
+  height: 13px;
+  color: #86a8bf;
+  opacity: 0.86;
+}
+
+.tree-mini-btn {
+  border: 1px solid rgba(118, 173, 194, 0.35);
+  border-radius: 8px;
+  width: 22px;
+  height: 22px;
+  background: rgba(9, 21, 33, 0.66);
+  color: #d3e9f7;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: border-color 140ms ease, background 140ms ease, transform 140ms ease;
+}
+
+.tree-mini-btn .ui-icon {
+  width: 12px;
+  height: 12px;
+  stroke-width: 2.1;
+}
+
+.tree-mini-btn:hover {
+  border-color: rgba(115, 247, 224, 0.52);
+  background: rgba(21, 68, 72, 0.42);
+  transform: translateY(-1px);
+}
+
+.tree-mini-btn.danger {
+  border-color: rgba(230, 103, 117, 0.46);
+  color: #ffd7de;
+}
+
+.tree-mini-btn.danger:hover {
+  border-color: rgba(244, 121, 134, 0.64);
+  background: rgba(90, 29, 40, 0.36);
+}
+
+.sidebar-stats-accordion {
+  margin-top: 0;
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 8px;
+}
+
+.sidebar-stats-toggle {
+  border: 1px solid rgba(113, 175, 196, 0.28);
+  border-radius: 14px;
+  background: linear-gradient(150deg, rgba(12, 30, 45, 0.88), rgba(9, 20, 32, 0.84));
+  color: #d8ebf8;
+  font: inherit;
+  width: 100%;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: border-color 180ms ease, transform 180ms ease, background 180ms ease;
+}
+
+.sidebar-stats-toggle:hover {
+  border-color: rgba(108, 240, 218, 0.46);
+  transform: translateY(-1px);
+}
+
+.sidebar-stats-toggle-text {
+  font-size: 0.8rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #b4cbdd;
+}
+
+.sidebar-stats-toggle-values {
+  margin-left: auto;
+  font-size: 0.82rem;
+  color: #e3f4ff;
+}

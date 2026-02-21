@@ -1,0 +1,35 @@
+@use '../abstracts/breakpoints' as bp;
+
+@include bp.down(bp.$bp-sm) {
+  .editor-modal-header,
+  .editor-modal-form {
+    padding: 12px;
+  }
+
+  .editor-modal-header h3 {
+    font-size: 0.92rem;
+  }
+
+  .editor-actions {
+    justify-content: stretch;
+  }
+
+  .editor-actions .ghost {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .item-grid.icon-card-grid {
+    grid-template-columns: repeat(auto-fill, minmax(74px, 1fr));
+  }
+
+  .item-card.compact {
+    min-height: 82px;
+  }
+
+  .compact-item-icon,
+  .compact-item-favicon {
+    width: 34px;
+    height: 34px;
+  }
+}

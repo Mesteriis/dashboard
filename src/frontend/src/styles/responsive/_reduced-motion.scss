@@ -1,0 +1,25 @@
+@use '../abstracts/breakpoints' as bp;
+
+@include bp.prefers-reduced-motion {
+  .center-emblem {
+    animation: none;
+  }
+
+  .sidebar,
+  .tab-btn,
+  .sidebar-tree,
+  .sidebar-stats-accordion,
+  .sidebar-stats-panel .sidebar-indicator,
+  .page .hero,
+  .page .panel,
+  .page .block-wrap,
+  .item-card,
+  .widget-card,
+  .editor-modal,
+  .lan-host-modal {
+    opacity: 1;
+    transform: none;
+    filter: none;
+    animation: none;
+  }
+}

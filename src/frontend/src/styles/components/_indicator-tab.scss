@@ -1,0 +1,31 @@
+.indicator-tab-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.indicator-tab-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.indicator-tab-title h2 {
+  margin: 0;
+  font-size: 1.03rem;
+}
+
+.indicator-tab-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.indicator-tab-content {
+  display: grid;
+  gap: 10px;
+  align-content: start;
+}

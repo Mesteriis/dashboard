@@ -1,0 +1,95 @@
+@use '../abstracts/breakpoints' as bp;
+
+@include bp.down(bp.$bp-lg) {
+  .page {
+    height: auto;
+    max-height: none;
+    overflow: visible;
+  }
+
+  .app-shell {
+    grid-template-columns: 1fr;
+    min-height: unset;
+  }
+
+  .app-shell.sidebar-compact {
+    grid-template-columns: 1fr;
+  }
+
+  .center-emblem {
+    width: min(76vmin, 460px);
+    opacity: 0.08;
+  }
+
+  .sidebar {
+    position: relative;
+    top: 0;
+    height: auto;
+  }
+
+  .sidebar-content {
+    min-height: 0;
+  }
+
+  .sidebar-tree {
+    max-height: none;
+  }
+
+  .tab-list {
+    --tab-tile-size: 50px;
+  }
+
+  .hero-layout {
+    grid-template-columns: 1fr;
+    position: relative;
+    top: auto;
+  }
+
+  .hero-control-panel {
+    width: 100%;
+    justify-self: stretch;
+    justify-items: flex-start;
+    min-width: 0;
+    width: auto;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .widget-grid,
+  .widget-row,
+  .groups-grid,
+  .item-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .item-grid.icon-card-grid {
+    grid-template-columns: repeat(auto-fill, minmax(82px, 1fr));
+  }
+
+  .lan-summary-grid {
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  }
+
+  .lan-table th,
+  .lan-table td {
+    padding: 8px;
+  }
+
+  .lan-table-wrap {
+    min-height: 240px;
+    max-height: none;
+  }
+
+  .lan-http-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .editor-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .editor-modal {
+    width: min(96vw, 720px);
+    max-height: min(90vh, 900px);
+  }
+}

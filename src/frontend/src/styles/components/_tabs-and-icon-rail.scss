@@ -1,0 +1,89 @@
+
+.ui-icon {
+  width: 14px;
+  height: 14px;
+  stroke-width: 1.9;
+  flex: 0 0 auto;
+}
+
+.tab-tile-icon {
+  width: 17px;
+  height: 17px;
+  color: #9dd9cf;
+  transition: transform 576ms cubic-bezier(0.22, 0.72, 0.14, 1);
+}
+
+.tab-tile-label {
+  inline-size: 0;
+  opacity: 0;
+  margin-left: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transform: translateX(-6px);
+  transition:
+    inline-size 612ms cubic-bezier(0.22, 0.72, 0.14, 1),
+    opacity 396ms ease,
+    margin-left 612ms cubic-bezier(0.22, 0.72, 0.14, 1),
+    transform 612ms cubic-bezier(0.22, 0.72, 0.14, 1);
+  font-size: 0.96rem;
+  font-weight: 600;
+}
+
+.tab-btn.active .tab-tile-label {
+  inline-size: min(42vw, 220px);
+  opacity: 1;
+  margin-left: 8px;
+  transform: translateX(0);
+}
+
+.tab-btn.active .tab-tile-icon {
+  transform: translateX(1px) scale(1.02);
+}
+
+.tab-btn.compact.active {
+  flex-grow: 0;
+  justify-content: center;
+  padding: 0;
+  box-shadow:
+    0 10px 24px rgba(0, 171, 153, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.tab-list.compact .tab-tile-label {
+  display: none;
+}
+
+.sidebar-icon-rail {
+  margin-top: 2px;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  align-content: start;
+  justify-items: center;
+  gap: 8px;
+  overflow: auto;
+  padding-right: 0;
+}
+
+.sidebar-icon-btn {
+  position: relative;
+  width: 42px;
+  min-width: 42px;
+  max-width: 42px;
+  height: 42px;
+  border: 1px solid rgba(113, 170, 190, 0.34);
+  border-radius: 11px;
+  background: linear-gradient(152deg, rgba(11, 24, 36, 0.88), rgba(8, 18, 30, 0.9));
+  color: #cfe1ef;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: border-color 170ms ease, background 170ms ease, transform 170ms ease, box-shadow 170ms ease;
+}
+
+.sidebar-icon-btn:hover {
+  border-color: rgba(126, 245, 224, 0.54);
+  transform: translateY(-1px);
+}

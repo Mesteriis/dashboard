@@ -1,0 +1,91 @@
+
+.health-dot.ok {
+  background: #35d8aa;
+  box-shadow: 0 0 0 3px rgba(53, 216, 170, 0.2);
+}
+
+.health-dot.down {
+  background: #ff7f87;
+  box-shadow: 0 0 0 3px rgba(255, 127, 135, 0.2);
+}
+
+.health-dot.unknown {
+  background: #b8cad8;
+  box-shadow: 0 0 0 3px rgba(184, 202, 216, 0.18);
+}
+
+.health-text {
+  color: var(--muted);
+  font-size: 0.74rem;
+  white-space: nowrap;
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.item-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.tag-pill {
+  display: inline-flex;
+  border: 1px solid rgba(136, 167, 187, 0.26);
+  border-radius: 999px;
+  padding: 2px 8px;
+  color: #cae0ef;
+  font-size: 0.72rem;
+  background: rgba(7, 17, 28, 0.56);
+}
+
+.item-actions {
+  margin-top: 2px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-width: 0;
+}
+
+.item-actions .icon-btn {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.item-action-icon {
+  width: 15px;
+  height: 15px;
+  stroke-width: 2;
+}
+
+.widget-block {
+  padding: 16px;
+}
+
+.widget-layout {
+  display: grid;
+  gap: 10px;
+}
+
+.widget-row {
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+}
+
+.widget-grid {
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+}
+
+.widget-card {
+  border: 1px solid rgba(133, 172, 190, 0.24);
+  border-radius: calc(var(--card-radius) - 6px);
+  background: linear-gradient(160deg, rgba(13, 27, 40, 0.44), var(--surface));
+  padding: 12px;
+  display: grid;
+  gap: 10px;
+  min-height: 124px;
+}

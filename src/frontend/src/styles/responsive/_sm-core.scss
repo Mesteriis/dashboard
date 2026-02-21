@@ -1,0 +1,68 @@
+@use '../abstracts/breakpoints' as bp;
+
+@include bp.down(bp.$bp-sm) {
+  .app-shell {
+    padding: 14px 12px 20px;
+  }
+
+  .tab-list {
+    --tab-tile-size: 46px;
+    gap: 7px;
+  }
+
+  .sidebar-content,
+  .hero,
+  .panel,
+  .sidebar-indicator {
+    padding: 14px;
+  }
+
+  .hero-control-panel {
+    width: 100%;
+    justify-self: stretch;
+  }
+
+  .lan-summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .lan-table {
+    font-size: 0.78rem;
+    width: max(100%, 980px);
+  }
+
+  .lan-host-modal-backdrop {
+    padding: 10px;
+  }
+
+  .lan-host-modal {
+    width: 100%;
+    max-height: min(92vh, 940px);
+  }
+
+  .lan-host-modal-header,
+  .lan-host-modal-body {
+    padding: 12px;
+  }
+
+  .lan-host-overview {
+    grid-template-columns: 1fr;
+  }
+
+  .iframe-modal-backdrop {
+    padding: 10px;
+  }
+
+  .iframe-modal {
+    height: min(90vh, 900px);
+  }
+
+  .editor-modal-backdrop {
+    padding: 10px;
+  }
+
+  .editor-modal {
+    width: 100%;
+    max-height: min(92vh, 920px);
+  }
+}

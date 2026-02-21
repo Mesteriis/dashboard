@@ -1,0 +1,96 @@
+
+.editor-status.saving {
+  color: #d8f5ff;
+}
+
+.editor-status.saved {
+  color: #70edcf;
+}
+
+.editor-status.error {
+  color: #ff9191;
+}
+
+.editor-error {
+  margin: -6px 4px 2px;
+  color: #ff9e9e;
+  font-size: 0.76rem;
+}
+
+.tab-list {
+  --tab-tile-size: 52px;
+  display: flex;
+  width: 100%;
+  gap: 9px;
+  align-items: stretch;
+  overflow: hidden;
+}
+
+.tab-list.compact {
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  overflow: visible;
+}
+
+.tab-btn {
+  border: 1px solid transparent;
+  border-radius: 14px;
+  background: linear-gradient(145deg, rgba(11, 22, 34, 0.9), rgba(8, 16, 27, 0.85));
+  color: var(--text);
+  height: var(--tab-tile-size);
+  min-width: var(--tab-tile-size);
+  flex-grow: 0;
+  flex-shrink: 0;
+  flex-basis: var(--tab-tile-size);
+  padding: 0 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: left;
+  overflow: hidden;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    border-color 324ms ease,
+    transform 324ms ease,
+    background 324ms ease,
+    flex-grow 612ms cubic-bezier(0.22, 0.72, 0.14, 1),
+    flex-basis 612ms cubic-bezier(0.22, 0.72, 0.14, 1),
+    box-shadow 576ms ease,
+    padding 576ms cubic-bezier(0.22, 0.72, 0.14, 1);
+  will-change: flex-grow, flex-basis, padding;
+}
+
+.tab-btn.compact {
+  width: 46px;
+  min-width: 46px;
+  max-width: 46px;
+  flex-basis: 46px;
+  height: 46px;
+  justify-content: center;
+  padding: 0;
+  border-radius: 12px;
+  transition:
+    border-color 220ms ease,
+    transform 220ms ease,
+    background 220ms ease,
+    box-shadow 220ms ease;
+}
+
+.tab-btn:hover {
+  border-color: rgba(91, 241, 219, 0.4);
+  transform: translateY(-1px);
+}
+
+.tab-btn.active {
+  flex-grow: 1;
+  flex-basis: var(--tab-tile-size);
+  justify-content: flex-start;
+  padding: 0 14px;
+  border-color: rgba(96, 247, 223, 0.64);
+  background: linear-gradient(138deg, rgba(12, 79, 81, 0.62), rgba(9, 19, 30, 0.92));
+  box-shadow:
+    0 12px 30px rgba(0, 171, 153, 0.26),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}

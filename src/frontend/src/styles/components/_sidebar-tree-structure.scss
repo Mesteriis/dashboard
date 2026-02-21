@@ -1,0 +1,93 @@
+
+.tree-search input::placeholder {
+  color: #8ea6bb;
+}
+
+.tree-search input:focus {
+  border-color: rgba(108, 240, 219, 0.5);
+  box-shadow: 0 0 0 3px rgba(59, 198, 178, 0.16);
+}
+
+.tree-root-page {
+  border: 1px solid rgba(113, 169, 189, 0.24);
+  border-radius: 12px;
+  background: linear-gradient(155deg, rgba(17, 46, 52, 0.42), rgba(10, 22, 33, 0.64));
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  margin-bottom: 8px;
+}
+
+.tree-root-main {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.root-icon {
+  width: 15px;
+  height: 15px;
+  color: #9cecdf;
+}
+
+.tree-root-title {
+  margin: 0;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #dff0fc;
+}
+
+.tree-root-subtitle {
+  margin: 2px 0 0;
+  font-size: 0.72rem;
+  color: #8ea8bb;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+.tree-root-meta {
+  border: 1px solid rgba(120, 239, 219, 0.34);
+  border-radius: 999px;
+  background: rgba(17, 75, 75, 0.28);
+  color: #d3fff5;
+  font-size: 0.74rem;
+  padding: 2px 8px;
+}
+
+.tree-root,
+.tree-subgroups,
+.tree-items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.tree-subgroups {
+  margin-top: 4px;
+  padding-left: 0;
+}
+
+.tree-items {
+  margin-top: 6px;
+  padding-left: 0;
+}
+
+.tree-node {
+  width: 100%;
+  border: 1px solid transparent;
+  border-radius: 11px;
+  background: rgba(9, 20, 31, 0.5);
+  color: #dceaf4;
+  font: inherit;
+  font-size: 0.81rem;
+  padding: 7px 9px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
+}

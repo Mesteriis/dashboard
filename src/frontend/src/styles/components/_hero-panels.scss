@@ -1,0 +1,99 @@
+.hero-title-panel,
+.hero-control-panel {
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+}
+.hero-title-content,
+.hero-controls-content {
+  position: relative;
+  z-index: 1;
+}
+.hero-controls-content {
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  flex-wrap: nowrap;
+  gap: 6px;
+  min-width: 0;
+  height: 100%;
+}
+.hero-control-panel.active {
+  border-color: rgba(110, 243, 221, 0.52);
+  box-shadow: 0 8px 20px rgba(2, 141, 127, 0.16);
+}
+.service-hero-controls.active {
+  border-color: transparent;
+  box-shadow: none;
+}
+.hero-title {
+  min-width: 0;
+}
+.eyebrow {
+  margin: 0 0 8px;
+  color: var(--accent-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+.hero-title-panel h1 {
+  margin: 0;
+  font-family: 'Cinzel', 'Times New Roman', serif;
+  font-size: clamp(1.15rem, 1.7vw, 1.65rem);
+  line-height: 1.05;
+}
+.subtitle {
+  margin: 12px 0 0;
+  color: var(--muted);
+  line-height: 1.5;
+}
+.hero-editor-error {
+  margin: 4px 0 0;
+  flex-basis: 100%;
+  text-align: right;
+}
+.hero-icon-btn {
+  min-height: 0;
+  aspect-ratio: 1 / 1;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  align-self: stretch;
+}
+.service-hero-controls .hero-icon-btn {
+  block-size: 100%;
+  inline-size: auto;
+  min-height: 0;
+  padding: 0;
+  aspect-ratio: 1 / 1;
+}
+.hero-icon-btn.active {
+  border-color: rgba(113, 245, 222, 0.56);
+  background: rgba(22, 83, 85, 0.36);
+}
+.hero-action-icon {
+  width: 13px;
+  height: 13px;
+  stroke-width: 2;
+}
+.hero-save-indicator {
+  min-height: 0;
+  aspect-ratio: 1 / 1;
+  border: 1px solid rgba(110, 170, 190, 0.34);
+  border-radius: 10px;
+  background: rgba(10, 23, 34, 0.62);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  align-self: stretch;
+  color: #9fb8ca;
+}
+.service-hero-controls .hero-save-indicator {
+  block-size: 100%;
+  inline-size: auto;
+  min-height: 0;
+  padding: 0;
+  aspect-ratio: 1 / 1;
+}
