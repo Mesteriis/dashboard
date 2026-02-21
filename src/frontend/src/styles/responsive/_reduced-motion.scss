@@ -83,3 +83,26 @@ html[data-fx-mode='off'] .lan-host-modal-backdrop,
 html[data-fx-mode='off'] .command-palette-backdrop {
   backdrop-filter: none !important;
 }
+
+html[data-motion-budget='medium'] .item-card .health-dot.ok,
+html[data-motion-budget='medium'] .item-card .health-dot.degraded,
+html[data-motion-budget='medium'] .item-card.data-updated::before {
+  animation: none !important;
+}
+
+html[data-motion-budget='medium'] .item-card {
+  transition-duration: 120ms !important;
+}
+
+html[data-motion-budget='low'] .item-card::before,
+html[data-motion-budget='low'] .item-card::after,
+html[data-motion-budget='low'] .item-card .health-dot,
+html[data-motion-budget='low'] .shell::after,
+html[data-motion-budget='low'] .center-emblem {
+  animation: none !important;
+}
+
+html[data-motion-budget='low'] .item-card {
+  transform: none !important;
+  transition-duration: 90ms !important;
+}

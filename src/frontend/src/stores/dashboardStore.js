@@ -2452,6 +2452,23 @@ export function useDashboardStore() {
     return document.documentElement?.dataset?.fxMode || 'full'
   }
 
+  function applyMotionBudgetProfile(itemCount) {
+    const root = document.documentElement
+    let budget = 'high'
+    let scalar = '1'
+
+    if (itemCount >= 120) {
+      budget = 'low'
+      scalar = '0.42'
+    } else if (itemCount >= 70) {
+      budget = 'medium'
+      scalar = '0.68'
+    }
+
+    root.dataset.motionBudget = budget
+    root.style.setProperty('--motion-budget', scalar)
+  }
+
   function tuneParticlesConfig(config) {
     const mode = fxMode()
     if (mode === 'off') return null
@@ -2578,6 +2595,14 @@ export function useDashboardStore() {
     }
   )
 
+  watch(
+    () => visibleTreeItemIds.value.length,
+    (count) => {
+      applyMotionBudgetProfile(count)
+    },
+    { immediate: true }
+  )
+
   onMounted(async () => {
     window.addEventListener('visibilitychange', handleDocumentVisibilityChange)
     await initSidebarParticles()
@@ -2596,6 +2621,8 @@ export function useDashboardStore() {
       clearTimeout(saveStatusTimer)
       saveStatusTimer = 0
     }
+    delete document.documentElement.dataset.motionBudget
+    document.documentElement.style.removeProperty('--motion-budget')
 
     dashboardStore = null
   })
