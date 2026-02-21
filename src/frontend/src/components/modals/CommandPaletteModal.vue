@@ -29,7 +29,7 @@
     </div>
 
     <ul v-if="commandPaletteResults.length" class="command-palette-list" role="listbox" aria-label="Быстрый поиск сервиса">
-      <li v-for="(entry, index) in commandPaletteResults" :key="entry.id" class="command-palette-row">
+      <li v-for="(entry, index) in commandPaletteResults" :key="entry.id" v-motion="commandPaletteRowMotion(index)" class="command-palette-row">
         <button
           class="command-palette-entry"
           :class="{ active: index === commandPaletteActiveIndex }"
@@ -58,7 +58,7 @@
 </template>
 
 <script setup>
-import { nextTick, ref, watch } from 'vue'
+import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { Copy, Search } from 'lucide-vue-next'
 import BaseModal from '../primitives/BaseModal.vue'
 import { useDashboardStore } from '../../stores/dashboardStore.js'
@@ -80,6 +80,11 @@ const {
 
 const inputRef = ref(null)
 const shortcutLabel = /Mac|iPhone|iPad/i.test(globalThis.navigator?.platform || '') ? '⌘K' : 'Ctrl+K'
+const fxMode = ref(document.documentElement.dataset.fxMode || 'full')
+
+function syncFxMode() {
+  fxMode.value = document.documentElement.dataset.fxMode || 'full'
+}
 
 function handleInputKeydown(event) {
   if (event.key === 'ArrowDown') {
@@ -105,6 +110,36 @@ function handleInputKeydown(event) {
     closeCommandPalette()
   }
 }
+
+function commandPaletteRowMotion(index) {
+  if (fxMode.value === 'off') {
+    return {
+      initial: { opacity: 1, y: 0, scale: 1 },
+      enter: { opacity: 1, y: 0, scale: 1, transition: { duration: 0 } },
+    }
+  }
+
+  return {
+    initial: { opacity: 0, y: 8, scale: 0.985 },
+    enter: {
+      opacity: 1,
+      y: 0,
+      scale: 1,
+      transition: {
+        duration: 220,
+        delay: Math.min(index, 10) * 24,
+      },
+    },
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('oko:fx-mode-change', syncFxMode)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('oko:fx-mode-change', syncFxMode)
+})
 
 watch(
   () => commandPaletteOpen.value,
