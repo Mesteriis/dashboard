@@ -16,6 +16,17 @@ export default defineConfig(({ command }) => ({
   build: {
     outDir: 'dist',
     assetsDir: 'assets',
-    emptyOutDir: true
+    emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules/lucide-vue-next') || id.includes('node_modules/simple-icons')) {
+            return 'vendor-icons'
+          }
+          if (id.includes('node_modules')) return 'vendor'
+          return undefined
+        },
+      },
+    },
   }
 }))

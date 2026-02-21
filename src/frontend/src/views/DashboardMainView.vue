@@ -36,11 +36,13 @@
 </template>
 
 <script setup>
-import IndicatorTabPanel from '../components/main/IndicatorTabPanel.vue'
-import LanPageView from '../components/main/LanPageView.vue'
+import { defineAsyncComponent } from 'vue'
 import ServicesGroupsPanel from '../components/main/ServicesGroupsPanel.vue'
 import ServicesHeroPanel from '../components/main/ServicesHeroPanel.vue'
 import { useDashboardStore } from '../stores/dashboardStore.js'
+
+const IndicatorTabPanel = defineAsyncComponent(() => import('../components/main/IndicatorTabPanel.vue'))
+const LanPageView = defineAsyncComponent(() => import('../components/main/LanPageView.vue'))
 
 const dashboard = useDashboardStore()
 const { activePage, activeIndicatorWidget, loadingConfig, configError, isLanPage, loadConfig } = dashboard

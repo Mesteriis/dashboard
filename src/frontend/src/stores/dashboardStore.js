@@ -8,6 +8,7 @@ import {
   triggerLanScan,
   updateDashboardConfig,
 } from '../services/dashboardApi.js'
+import { ensureParticlesJs } from '../services/particlesLoader.js'
 import { BRAND_ICON_BY_KEY, createBrandIcon } from './dashboard/icons/brandIcons.js'
 import { ICON_BY_KEY, ICON_RULES } from './dashboard/icons/keywordIcons.js'
 import {
@@ -2373,21 +2374,56 @@ export function useDashboardStore() {
     }
   }
 
-  function initParticles(containerId, config) {
-    if (!window.particlesJS) return
+  function fxMode() {
+    return document.documentElement?.dataset?.fxMode || 'full'
+  }
+
+  function tuneParticlesConfig(config) {
+    const mode = fxMode()
+    if (mode === 'off') return null
+
+    const tuned = JSON.parse(JSON.stringify(config))
+    if (mode !== 'lite') return tuned
+
+    tuned.particles.number.value = Math.max(24, Math.round(tuned.particles.number.value * 0.56))
+    tuned.particles.opacity.value = Number((tuned.particles.opacity.value * 0.72).toFixed(2))
+    tuned.particles.move.speed = Number((tuned.particles.move.speed * 0.74).toFixed(2))
+    tuned.particles.line_linked.opacity = Number((tuned.particles.line_linked.opacity * 0.56).toFixed(2))
+    tuned.particles.line_linked.distance = Math.max(80, Math.round(tuned.particles.line_linked.distance * 0.84))
+    return tuned
+  }
+
+  async function initParticles(containerId, baseConfig) {
     const container = document.getElementById(containerId)
     if (!container) return
+
+    const config = tuneParticlesConfig(baseConfig)
+    if (!config) {
+      container.innerHTML = ''
+      delete container.dataset.particlesReady
+      return
+    }
+
+    if (container.dataset.particlesReady === '1') return
+    const isParticlesReady = await ensureParticlesJs()
+    if (!isParticlesReady || !window.particlesJS) return
+    if (!document.getElementById(containerId)) return
+    if (container.dataset.particlesReady === '1') return
+
     container.innerHTML = ''
     window.particlesJS(containerId, config)
+    container.dataset.particlesReady = '1'
   }
 
-  function initSidebarParticles() {
-    initParticles(SIDEBAR_PARTICLES_ID, SIDEBAR_PARTICLES_CONFIG)
+  async function initSidebarParticles() {
+    await initParticles(SIDEBAR_PARTICLES_ID, SIDEBAR_PARTICLES_CONFIG)
   }
 
-  function initHeroParticles() {
-    initParticles(HERO_TITLE_PARTICLES_ID, HERO_PARTICLES_CONFIG)
-    initParticles(HERO_CONTROLS_PARTICLES_ID, HERO_PARTICLES_CONFIG)
+  async function initHeroParticles() {
+    await Promise.all([
+      initParticles(HERO_TITLE_PARTICLES_ID, HERO_PARTICLES_CONFIG),
+      initParticles(HERO_CONTROLS_PARTICLES_ID, HERO_PARTICLES_CONFIG),
+    ])
   }
 
   watch(
@@ -2399,7 +2435,7 @@ export function useDashboardStore() {
       syncTreeGroupsState()
       refreshHealth()
       await nextTick()
-      initHeroParticles()
+      await initHeroParticles()
     }
   )
 
@@ -2407,7 +2443,7 @@ export function useDashboardStore() {
     () => activeIndicatorWidget.value?.id,
     async () => {
       await nextTick()
-      initHeroParticles()
+      await initHeroParticles()
     }
   )
 
@@ -2467,10 +2503,10 @@ export function useDashboardStore() {
   )
 
   onMounted(async () => {
-    initSidebarParticles()
+    await initSidebarParticles()
     await loadConfig()
     await nextTick()
-    initHeroParticles()
+    await initHeroParticles()
   })
 
   onBeforeUnmount(() => {

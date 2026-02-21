@@ -58,7 +58,7 @@
 </template>
 
 <script setup>
-import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { nextTick, ref, watch } from 'vue'
 import { Copy, Search } from 'lucide-vue-next'
 import BaseModal from '../primitives/BaseModal.vue'
 import { useDashboardStore } from '../../stores/dashboardStore.js'
@@ -76,7 +76,6 @@ const {
   moveCommandPaletteSelection,
   setCommandPaletteActiveIndex,
   setCommandPaletteQuery,
-  toggleCommandPalette,
 } = dashboard
 
 const inputRef = ref(null)
@@ -107,22 +106,6 @@ function handleInputKeydown(event) {
   }
 }
 
-function handleWindowKeydown(event) {
-  const isShortcut = (event.metaKey || event.ctrlKey) && !event.altKey && !event.shiftKey && event.key.toLowerCase() === 'k'
-  if (!isShortcut && event.key !== 'Escape') return
-
-  if (isShortcut) {
-    event.preventDefault()
-    toggleCommandPalette()
-    return
-  }
-
-  if (commandPaletteOpen.value && event.key === 'Escape') {
-    event.preventDefault()
-    closeCommandPalette()
-  }
-}
-
 watch(
   () => commandPaletteOpen.value,
   async (isOpen) => {
@@ -132,12 +115,4 @@ watch(
     inputRef.value?.select()
   }
 )
-
-onMounted(() => {
-  window.addEventListener('keydown', handleWindowKeydown)
-})
-
-onBeforeUnmount(() => {
-  window.removeEventListener('keydown', handleWindowKeydown)
-})
 </script>
