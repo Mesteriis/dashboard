@@ -221,3 +221,15 @@
     opacity: 0.82;
   }
 }
+
+.block-wrap[data-offscreen='1'] .item-card::before,
+.block-wrap[data-offscreen='1'] .item-card::after,
+.block-wrap[data-offscreen='1'] .item-card .health-dot.ok,
+.block-wrap[data-offscreen='1'] .item-card .health-dot.degraded,
+.block-wrap[data-offscreen='1'] .item-card .health-dot.down {
+  animation: none !important;
+}
+
+.block-wrap[data-offscreen='1'] .item-card::after {
+  opacity: 0 !important;
+}
