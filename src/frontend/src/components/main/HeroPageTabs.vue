@@ -1,6 +1,6 @@
 <template>
-  <nav class="hero-page-tabs" :class="{ 'hero-page-tabs--intro': shouldPlayIntro }" role="tablist" aria-label="Разделы">
-    <div class="hero-logo-square" aria-hidden="true">
+  <nav class="hero-page-tabs" :class="{ 'hero-page-tabs--intro': shouldPlayIntro, 'has-logo-tile': showLogoTile }" role="tablist" aria-label="Разделы">
+    <div v-if="showLogoTile" class="hero-logo-square" aria-hidden="true">
       <img :src="EMBLEM_SRC" alt="" />
     </div>
 
@@ -26,14 +26,15 @@
 </template>
 
 <script setup>
-import { onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useDashboardStore } from '../../stores/dashboardStore.js'
 
 let hasPlayedHeroTabsIntro = false
 
 const dashboard = useDashboardStore()
-const { EMBLEM_SRC, pages, activePage, activePageId, resolvePageIcon } = dashboard
+const { EMBLEM_SRC, isSidebarHidden, pages, activePage, activePageId, resolvePageIcon } = dashboard
 const shouldPlayIntro = ref(!hasPlayedHeroTabsIntro)
+const showLogoTile = computed(() => isSidebarHidden.value)
 let introTimeoutId = 0
 
 onMounted(() => {

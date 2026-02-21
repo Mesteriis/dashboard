@@ -39,8 +39,18 @@
 }
 
 .brand {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 12px;
   padding: 4px;
+}
+
+.brand img {
+  width: 50px;
+  height: 50px;
+  object-fit: contain;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.22);
 }
 
 .brand-title {

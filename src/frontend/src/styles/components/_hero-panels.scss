@@ -329,6 +329,11 @@
 }
 
 .hero-page-tab-btn:first-of-type {
+  border-top-left-radius: 12px;
+  border-bottom-left-radius: 12px;
+}
+
+.hero-page-tabs.has-logo-tile .hero-page-tab-btn:first-of-type {
   border-top-left-radius: 0;
   border-bottom-left-radius: 0;
 }
