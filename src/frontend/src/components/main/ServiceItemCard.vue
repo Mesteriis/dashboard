@@ -63,7 +63,8 @@
         <span class="health-text" :class="{ 'is-updating': healthFlashActive }">{{ healthLabelText }}</span>
       </div>
 
-      <div v-if="item.tags?.length" class="item-tags">
+      <div v-if="siteLabel || item.tags?.length" class="item-tags">
+        <span v-if="siteLabel" class="tag-pill site-pill">site:{{ siteLabel }}</span>
         <span v-for="tag in item.tags" :key="tag" class="tag-pill">{{ tag }}</span>
       </div>
 
@@ -116,12 +117,14 @@ const {
   resolveItemIcon,
   healthClass,
   healthLabel,
+  itemSite,
   openItem,
   copyUrl,
 } = dashboard
 
 const healthVisualClass = computed(() => healthClass(item.value.id))
 const healthLabelText = computed(() => healthLabel(item.value.id))
+const siteLabel = computed(() => itemSite(item.value, groupKey.value))
 const healthFlashActive = ref(false)
 const dataSweepActive = ref(false)
 let healthFlashTimer = 0

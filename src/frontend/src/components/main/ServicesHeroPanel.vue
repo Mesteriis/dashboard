@@ -51,6 +51,11 @@
                     <GitBranch class="ui-icon hero-dropdown-prefix-icon" aria-hidden="true" />
                   </template>
                 </HeroDropdown>
+                <HeroDropdown v-model="siteFilter" label="Site" aria-label="Фильтр по площадке" :options="siteFilterOptions">
+                  <template #prefix>
+                    <MapPin class="ui-icon hero-dropdown-prefix-icon" aria-hidden="true" />
+                  </template>
+                </HeroDropdown>
               </div>
 
               <IconButton
@@ -106,7 +111,7 @@
 
 <script setup>
 import { ref } from 'vue'
-import { ChevronLeft, Circle, FolderTree, GitBranch, Pencil, Plus, Search, Wrench } from 'lucide-vue-next'
+import { ChevronLeft, Circle, FolderTree, GitBranch, MapPin, Pencil, Plus, Search, Wrench } from 'lucide-vue-next'
 import HeroDropdown from '../primitives/HeroDropdown.vue'
 import HeroPageTabs from './HeroPageTabs.vue'
 import IconButton from '../primitives/IconButton.vue'
@@ -127,6 +132,8 @@ const {
   serviceGroupingMode,
   serviceGroupingOptions,
   servicePresentationOptions,
+  siteFilter,
+  siteFilterOptions,
   toggleEditMode,
   addGroup,
   openCommandPalette,

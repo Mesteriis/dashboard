@@ -115,6 +115,7 @@ class BaseItemConfig(BaseModel):
     title: str = Field(min_length=1)
     url: AnyHttpUrl
     icon: str | None = None
+    site: str | None = Field(default=None, min_length=1)
     tags: list[str] = Field(default_factory=list)
     depends_on: list[str] = Field(default_factory=list)
     open: Literal["new_tab", "same_tab"] = "new_tab"
@@ -148,6 +149,7 @@ class GroupConfig(BaseModel):
     id: str = Field(min_length=1)
     title: str = Field(min_length=1)
     icon: str | None = None
+    site: str | None = Field(default=None, min_length=1)
     description: str | None = None
     layout: Literal["auto", "full", "inline"] = "auto"
     subgroups: list[SubgroupConfig] = Field(min_length=1)

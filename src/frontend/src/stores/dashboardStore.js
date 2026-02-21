@@ -117,6 +117,7 @@ export function useDashboardStore() {
       type: 'link',
       url: DEFAULT_ITEM_URL,
       icon: '',
+      siteInput: '',
       tagsInput: '',
       open: 'new_tab',
       healthcheckEnabled: false,
@@ -140,6 +141,7 @@ export function useDashboardStore() {
   const editMode = ref(false)
   const serviceCardView = ref('detailed')
   const serviceGroupingMode = ref('groups')
+  const siteFilter = ref('all')
   const sidebarView = ref('detailed')
   const saveStatus = ref('idle')
   const saveError = ref('')
@@ -248,6 +250,30 @@ export function useDashboardStore() {
     if (saveStatus.value === 'error') return 'Ошибка сохранения'
     return editMode.value ? 'Готово' : 'Сохранение выключено'
   })
+  const siteFilterOptions = computed(() => {
+    const sitesMap = new Map()
+    for (const group of config.value?.groups || []) {
+      for (const subgroup of group.subgroups || []) {
+        for (const item of subgroup.items || []) {
+          const site = resolveItemSite(item, group)
+          if (!site) continue
+          const normalized = site.toLowerCase()
+          if (!sitesMap.has(normalized)) {
+            sitesMap.set(normalized, site)
+          }
+        }
+      }
+    }
+
+    const sites = Array.from(sitesMap.entries()).sort((left, right) =>
+      left[1].localeCompare(right[1], 'ru', { sensitivity: 'base' }),
+    )
+
+    return [
+      { value: 'all', label: 'Все sites' },
+      ...sites.map(([value, label]) => ({ value, label })),
+    ]
+  })
 
   const widgetById = computed(() => {
     const map = new Map()
@@ -316,7 +342,10 @@ export function useDashboardStore() {
           const host = safeUrlHost(item?.url)
           const ip = itemIpById.value.get(item.id) || ''
           const tags = (item.tags || []).map((tag) => String(tag || '').trim()).filter(Boolean)
-          const site = deriveSiteLabel(item, group, tags)
+          const site = resolveItemSite(item, group)
+          if (siteFilter.value !== 'all' && site.toLowerCase() !== siteFilter.value) {
+            continue
+          }
           const pageId = pageMap.get(group.id) || pageMap.get(subgroup.id) || ''
 
           const title = String(item.title || '').trim()
@@ -421,10 +450,11 @@ export function useDashboardStore() {
   })
 
   const filteredTreeGroups = computed(() => {
+    const bySite = filterGroupsBySite(treeGroups.value)
     const query = treeFilter.value.trim().toLowerCase()
-    if (!query) return treeGroups.value
+    if (!query) return bySite
 
-    return treeGroups.value
+    return bySite
       .map((group) => {
         const groupMatches =
           String(group.title || '').toLowerCase().includes(query) ||
@@ -451,7 +481,8 @@ export function useDashboardStore() {
               const inTitle = String(item.title || '').toLowerCase().includes(query)
               const inUrl = String(item.url || '').toLowerCase().includes(query)
               const inTags = (item.tags || []).some((tag) => String(tag).toLowerCase().includes(query))
-              return inTitle || inUrl || inTags
+              const inSite = resolveItemSite(item, group).toLowerCase().includes(query)
+              return inTitle || inUrl || inTags || inSite
             })
 
             if (!matchedItems.length) return null
@@ -737,6 +768,7 @@ export function useDashboardStore() {
       title,
       url: DEFAULT_ITEM_URL,
       icon: null,
+      site: null,
       tags: [],
       open: 'new_tab',
     }
@@ -884,6 +916,7 @@ export function useDashboardStore() {
       type: item.type,
       url: String(item.url || DEFAULT_ITEM_URL),
       icon: item.icon || '',
+      siteInput: String(item.site || ''),
       tagsInput: (item.tags || []).join(', '),
       open: item.open || 'new_tab',
       healthcheckEnabled: Boolean(item.type === 'link' && item.healthcheck),
@@ -942,6 +975,7 @@ export function useDashboardStore() {
       title,
       url,
       icon: String(form.icon || '').trim() || null,
+      site: String(form.siteInput || '').trim() || null,
       tags: normalizeStringList(form.tagsInput),
       open: openMode,
     }
@@ -1407,6 +1441,52 @@ export function useDashboardStore() {
     return String(siteTag).slice(5).trim()
   }
 
+  function normalizedItemTags(item) {
+    return (item?.tags || []).map((tag) => String(tag || '').trim()).filter(Boolean)
+  }
+
+  function resolveGroupByNodeKey(groupKey) {
+    const key = String(groupKey || '')
+    if (!key.startsWith('group:')) return null
+    return groupById.value.get(key.slice(6)) || null
+  }
+
+  function resolveItemSite(item, group = null) {
+    return deriveSiteLabel(item, group, normalizedItemTags(item))
+  }
+
+  function itemSite(item, groupKey = '') {
+    const resolvedGroup = resolveGroupByNodeKey(item?.__originGroupKey || groupKey)
+    return resolveItemSite(item, resolvedGroup)
+  }
+
+  function filterGroupsBySite(groups = []) {
+    if (siteFilter.value === 'all') return groups
+
+    return groups
+      .map((group) => {
+        const nextSubgroups = (group.subgroups || [])
+          .map((subgroup) => ({
+            ...subgroup,
+            items: (subgroup.items || []).filter((item) => resolveItemSite(item, group).toLowerCase() === siteFilter.value),
+          }))
+          .filter((subgroup) => subgroup.items.length > 0)
+
+        if (!nextSubgroups.length) return null
+        return {
+          ...group,
+          subgroups: nextSubgroups,
+        }
+      })
+      .filter(Boolean)
+  }
+
+  function setSiteFilter(value) {
+    const normalized = String(value || 'all').trim().toLowerCase()
+    const allowed = new Set(siteFilterOptions.value.map((option) => option.value))
+    siteFilter.value = allowed.has(normalized) ? normalized : 'all'
+  }
+
   function openCommandPalette() {
     commandPaletteQuery.value = ''
     commandPaletteActiveIndex.value = 0
@@ -1516,7 +1596,8 @@ export function useDashboardStore() {
 
   function filteredBlockGroups(groupIds = []) {
     const groups = resolveBlockGroups(groupIds)
-    const selectionFiltered = isSidebarHidden.value ? groups : filterGroupsBySelectedNode(groups)
+    const siteFiltered = filterGroupsBySite(groups)
+    const selectionFiltered = isSidebarHidden.value ? siteFiltered : filterGroupsBySelectedNode(siteFiltered)
     const regrouped = applyServiceGroupingMode(selectionFiltered)
     const visibleCount = regrouped.length
     return regrouped.map((group) => ({ ...group, __visibleCount: visibleCount }))
@@ -1532,7 +1613,7 @@ export function useDashboardStore() {
   }
 
   function tagsForItem(item) {
-    const uniqueTags = new Set((item?.tags || []).map((tag) => normalizeTagLabel(tag)).filter(Boolean))
+    const uniqueTags = new Set(normalizedItemTags(item).map((tag) => normalizeTagLabel(tag)).filter(Boolean))
     if (!uniqueTags.size) {
       uniqueTags.add('Без тега')
     }
@@ -2331,6 +2412,15 @@ export function useDashboardStore() {
   )
 
   watch(
+    () => siteFilterOptions.value.map((option) => option.value).join('|'),
+    () => {
+      if (!siteFilterOptions.value.some((option) => option.value === siteFilter.value)) {
+        siteFilter.value = 'all'
+      }
+    }
+  )
+
+  watch(
     () => isLanPage.value,
     (active) => {
       if (active) {
@@ -2472,6 +2562,7 @@ export function useDashboardStore() {
     itemFaviconFailures,
     itemFaviconKey,
     itemFaviconSrc,
+    itemSite,
     lanCidrsLabel,
     lanHostModal,
     lanHosts,
@@ -2543,6 +2634,7 @@ export function useDashboardStore() {
     saveStatusTimer,
     setCommandPaletteActiveIndex,
     setCommandPaletteQuery,
+    setSiteFilter,
     sidebarViewToggleTitle,
     selectItemNode,
     selectSidebarIconNode,
@@ -2550,6 +2642,8 @@ export function useDashboardStore() {
     selectSubgroupNode,
     selectedNode,
     serviceCardView,
+    siteFilter,
+    siteFilterOptions,
     serviceGroupingMode,
     serviceGroupingOptions,
     servicePresentationOptions,

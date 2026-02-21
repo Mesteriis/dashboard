@@ -49,6 +49,17 @@
     </label>
 
     <label class="editor-field">
+      <span>Site</span>
+      <input
+        v-model.trim="itemEditor.form.siteInput"
+        type="text"
+        placeholder="Spain, RF"
+        autocomplete="off"
+        :disabled="itemEditor.submitting"
+      />
+    </label>
+
+    <label class="editor-field">
       <span>Открытие</span>
       <select v-model="itemEditor.form.open" :disabled="itemEditor.submitting">
         <option value="new_tab">new_tab</option>
