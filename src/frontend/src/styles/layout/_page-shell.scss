@@ -6,7 +6,7 @@
   min-width: 0;
   min-height: 0;
   max-width: 100%;
-  height: calc(100vh - 48px);
+  height: calc(100vh - (48px + var(--desktop-drag-strip)));
   overflow-y: auto;
   overflow-x: hidden;
   scrollbar-gutter: stable;

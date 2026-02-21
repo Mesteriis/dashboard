@@ -14,8 +14,7 @@
       {
         "label": "main",
         "title": "Oko — Your Infrastructure in Sight",
-        "hiddenTitle": true,
-        "titleBarStyle": "Overlay",
+        "decorations": false,
         "width": 1560,
         "height": 960,
         "minWidth": 1080,

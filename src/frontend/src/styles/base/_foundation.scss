@@ -13,6 +13,7 @@
   --grid-gap: 14px;
   --layout-columns: 12;
   --glow-enabled: 1;
+  --desktop-drag-strip: 0px;
 }
 
 * {
@@ -42,6 +43,19 @@ body {
   min-height: 100vh;
   overflow: hidden;
   perspective: 1800px;
+}
+
+.shell.shell-desktop {
+  --desktop-drag-strip: 34px;
+}
+
+.desktop-window-drag-strip {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--desktop-drag-strip);
+  z-index: 4;
 }
 
 .shell::before {
@@ -104,7 +118,7 @@ body {
   display: grid;
   grid-template-columns: 420px minmax(0, 1fr);
   gap: var(--grid-gap);
-  padding: 24px clamp(12px, 2.2vw, 28px);
+  padding: calc(24px + var(--desktop-drag-strip)) clamp(12px, 2.2vw, 28px) 24px;
   transition: grid-template-columns 280ms ease;
 }
 

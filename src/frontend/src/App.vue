@@ -1,5 +1,6 @@
 <template>
-  <div class="shell" :class="{ 'shell-motion-static': disableHeroReenterMotion }">
+  <div class="shell" :class="{ 'shell-motion-static': disableHeroReenterMotion, 'shell-desktop': desktopShell }">
+    <div v-if="desktopShell" class="desktop-window-drag-strip" data-tauri-drag-region aria-hidden="true"></div>
     <img class="center-emblem" :src="EMBLEM_SRC" alt="" aria-hidden="true" />
 
     <div class="app-shell" :class="{ 'sidebar-hidden': isSidebarHidden }">
@@ -19,6 +20,7 @@
 import { defineAsyncComponent, onBeforeUnmount, onMounted, ref } from 'vue'
 import DashboardMainView from './views/DashboardMainView.vue'
 import DashboardSidebarView from './views/DashboardSidebarView.vue'
+import { isDesktopShell } from './services/desktopRuntime.js'
 import { useDashboardStore } from './stores/dashboardStore.js'
 
 const loadLanHostModal = () => import('./components/modals/LanHostModal.vue')
@@ -50,6 +52,7 @@ const {
   toggleCommandPalette,
 } = dashboard
 const disableHeroReenterMotion = ref(false)
+const desktopShell = isDesktopShell()
 let motionTimerId = 0
 let idlePrefetchTimerId = 0
 let idlePrefetchCallbackId = 0
