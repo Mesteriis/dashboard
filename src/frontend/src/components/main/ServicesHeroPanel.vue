@@ -120,7 +120,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import { ChevronLeft, Circle, FolderTree, GitBranch, MapPin, Pencil, Plus, Search, SlidersHorizontal, Wrench } from 'lucide-vue-next'
 import HeroDropdown from '../primitives/HeroDropdown.vue'
 import HeroPageTabs from './HeroPageTabs.vue'
@@ -128,6 +128,7 @@ import IconButton from '../primitives/IconButton.vue'
 import { useDashboardStore } from '../../stores/dashboardStore.js'
 
 const dashboard = useDashboardStore()
+const HERO_CONTROLS_OPEN_STORAGE_KEY = 'oko:hero-controls-open:v1'
 const controlsOpen = ref(false)
 
 const {
@@ -150,4 +151,18 @@ const {
   openSettingsPanel,
   toggleSidebarView,
 } = dashboard
+
+onMounted(() => {
+  if (!window.localStorage) return
+  const raw = window.localStorage.getItem(HERO_CONTROLS_OPEN_STORAGE_KEY)
+  controlsOpen.value = raw === '1'
+})
+
+watch(
+  () => controlsOpen.value,
+  (value) => {
+    if (!window.localStorage) return
+    window.localStorage.setItem(HERO_CONTROLS_OPEN_STORAGE_KEY, value ? '1' : '0')
+  }
+)
 </script>

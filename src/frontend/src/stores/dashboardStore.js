@@ -114,6 +114,32 @@ export function useDashboardStore() {
   const SIDEBAR_VIEW_SEQUENCE = ['detailed', 'hidden']
   const COMMAND_PALETTE_LIMIT = 18
   const COMMAND_PALETTE_EMPTY_LIMIT = 10
+  const UI_STATE_STORAGE_KEY = 'oko:dashboard-ui-state:v1'
+  const SERVICE_CARD_VIEW_VALUES = new Set(SERVICE_PRESENTATION_OPTIONS.map((option) => option.value))
+  const SERVICE_GROUPING_VALUES = new Set(SERVICE_GROUPING_OPTIONS.map((option) => option.value))
+
+  function loadPersistedUiState() {
+    if (typeof window === 'undefined' || !window.localStorage) return null
+
+    try {
+      const raw = window.localStorage.getItem(UI_STATE_STORAGE_KEY)
+      if (!raw) return null
+      const parsed = JSON.parse(raw)
+      return parsed && typeof parsed === 'object' ? parsed : null
+    } catch {
+      return null
+    }
+  }
+
+  function savePersistedUiState(snapshot) {
+    if (typeof window === 'undefined' || !window.localStorage) return
+
+    try {
+      window.localStorage.setItem(UI_STATE_STORAGE_KEY, JSON.stringify(snapshot))
+    } catch {
+      // ignore localStorage quota/security errors
+    }
+  }
 
   function defaultItemEditorForm() {
     return {
@@ -191,6 +217,49 @@ export function useDashboardStore() {
     itemId: '',
   })
   const itemFaviconFailures = reactive({})
+  const persistedUiState = loadPersistedUiState()
+
+  if (persistedUiState) {
+    const persistedCardView = String(persistedUiState.serviceCardView || '')
+    if (SERVICE_CARD_VIEW_VALUES.has(persistedCardView)) {
+      serviceCardView.value = persistedCardView
+    }
+
+    const persistedGrouping = String(persistedUiState.serviceGroupingMode || '')
+    if (SERVICE_GROUPING_VALUES.has(persistedGrouping)) {
+      serviceGroupingMode.value = persistedGrouping
+    }
+
+    const persistedSidebarView = String(persistedUiState.sidebarView || '')
+    if (SIDEBAR_VIEW_SEQUENCE.includes(persistedSidebarView)) {
+      sidebarView.value = persistedSidebarView
+    }
+
+    const persistedSiteFilter = String(persistedUiState.siteFilter || '').trim().toLowerCase()
+    siteFilter.value = persistedSiteFilter || 'all'
+    activePageId.value = String(persistedUiState.activePageId || '')
+    treeFilter.value = String(persistedUiState.treeFilter || '')
+    activeIndicatorViewId.value = String(persistedUiState.activeIndicatorViewId || '')
+    statsExpanded.value = Boolean(persistedUiState.statsExpanded)
+    editMode.value = Boolean(persistedUiState.editMode)
+    settingsPanel.open = Boolean(persistedUiState.settingsPanelOpen)
+
+    const persistedSelectedNode = persistedUiState.selectedNode
+    if (persistedSelectedNode && typeof persistedSelectedNode === 'object') {
+      selectedNode.groupKey = String(persistedSelectedNode.groupKey || '')
+      selectedNode.subgroupId = String(persistedSelectedNode.subgroupId || '')
+      selectedNode.itemId = String(persistedSelectedNode.itemId || '')
+    }
+
+    const persistedExpandedGroups = persistedUiState.expandedGroups
+    if (persistedExpandedGroups && typeof persistedExpandedGroups === 'object') {
+      for (const [groupKey, expanded] of Object.entries(persistedExpandedGroups)) {
+        const normalizedGroupKey = String(groupKey || '')
+        if (!normalizedGroupKey) continue
+        expandedGroups[normalizedGroupKey] = Boolean(expanded)
+      }
+    }
+  }
 
   const iframeModal = reactive({
     open: false,
@@ -2252,7 +2321,6 @@ export function useDashboardStore() {
         activePageId.value = pages.value[0]?.id || ''
       }
 
-      clearSelectedNode()
       syncTreeGroupsState()
       applyTheme(data?.ui?.theme)
       applyGrid(data?.ui?.grid)
@@ -2600,12 +2668,18 @@ export function useDashboardStore() {
     ])
   }
 
+  let hasInitializedActivePage = false
+
   watch(
     () => activePage.value?.id,
     async () => {
-      activeIndicatorViewId.value = ''
-      treeFilter.value = ''
-      clearSelectedNode()
+      if (hasInitializedActivePage) {
+        activeIndicatorViewId.value = ''
+        treeFilter.value = ''
+        clearSelectedNode()
+      } else {
+        hasInitializedActivePage = true
+      }
       syncTreeGroupsState()
       refreshHealth()
       await nextTick()
@@ -2684,6 +2758,31 @@ export function useDashboardStore() {
       applyMotionBudgetProfile(count)
     },
     { immediate: true }
+  )
+
+  watch(
+    () => ({
+      activePageId: activePageId.value,
+      treeFilter: treeFilter.value,
+      activeIndicatorViewId: activeIndicatorViewId.value,
+      statsExpanded: statsExpanded.value,
+      editMode: editMode.value,
+      serviceCardView: serviceCardView.value,
+      serviceGroupingMode: serviceGroupingMode.value,
+      siteFilter: siteFilter.value,
+      sidebarView: sidebarView.value,
+      settingsPanelOpen: settingsPanel.open,
+      selectedNode: {
+        groupKey: selectedNode.groupKey,
+        subgroupId: selectedNode.subgroupId,
+        itemId: selectedNode.itemId,
+      },
+      expandedGroups: { ...expandedGroups },
+    }),
+    (snapshot) => {
+      savePersistedUiState(snapshot)
+    },
+    { deep: true }
   )
 
   onMounted(async () => {
