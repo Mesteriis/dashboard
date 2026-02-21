@@ -113,10 +113,6 @@ body {
   min-height: 0;
 }
 
-.app-shell.sidebar-sections {
-  grid-template-columns: 260px minmax(0, 1fr);
-}
-
 .app-shell.sidebar-hidden {
   grid-template-columns: minmax(0, 1fr);
 }

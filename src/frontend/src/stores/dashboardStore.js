@@ -111,7 +111,7 @@ export function useDashboardStore() {
     { value: 'tags', label: 'Только теги' },
     { value: 'flat', label: 'Без групп (плитка)' },
   ])
-  const SIDEBAR_VIEW_SEQUENCE = ['detailed', 'sections', 'hidden']
+  const SIDEBAR_VIEW_SEQUENCE = ['detailed', 'hidden']
   const COMMAND_PALETTE_LIMIT = 18
   const COMMAND_PALETTE_EMPTY_LIMIT = 10
 
@@ -238,13 +238,11 @@ export function useDashboardStore() {
   const isIconCardView = computed(() => serviceCardView.value === 'icon')
   const isTileCardView = computed(() => serviceCardView.value === 'tile')
   const isCompactServiceCardView = computed(() => isIconCardView.value || isTileCardView.value)
-  const isSidebarDetailed = computed(() => sidebarView.value === 'detailed')
-  const isSidebarSectionsOnly = computed(() => sidebarView.value === 'sections')
+  const isSidebarDetailed = computed(() => sidebarView.value !== 'hidden')
   const isSidebarHidden = computed(() => sidebarView.value === 'hidden')
   const isSidebarIconOnly = computed(() => false)
   const sidebarViewToggleTitle = computed(() => {
-    if (isSidebarDetailed.value) return 'Режим меню: полное. Нажмите, чтобы оставить только разделы'
-    if (isSidebarSectionsOnly.value) return 'Режим меню: только разделы. Нажмите, чтобы скрыть меню'
+    if (isSidebarDetailed.value) return 'Режим меню: полное. Нажмите, чтобы скрыть меню'
     return 'Режим меню: скрыто. Нажмите, чтобы вернуть полное меню'
   })
   const lanHosts = computed(() => lanScanState.value?.result?.hosts || [])
@@ -652,6 +650,9 @@ export function useDashboardStore() {
   }
 
   function toggleSidebarView() {
+    if (sidebarView.value !== 'detailed' && sidebarView.value !== 'hidden') {
+      sidebarView.value = 'detailed'
+    }
     const currentIndex = SIDEBAR_VIEW_SEQUENCE.indexOf(sidebarView.value)
     const safeIndex = currentIndex >= 0 ? currentIndex : 0
     const nextIndex = (safeIndex + 1) % SIDEBAR_VIEW_SEQUENCE.length
@@ -2764,7 +2765,6 @@ export function useDashboardStore() {
     isGroupSelected,
     isIconCardView,
     isSidebarDetailed,
-    isSidebarSectionsOnly,
     isSidebarHidden,
     isTileCardView,
     isCompactServiceCardView,

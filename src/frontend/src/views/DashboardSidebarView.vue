@@ -1,8 +1,8 @@
 <template>
-  <aside class="sidebar" :class="{ sections: isSidebarSectionsOnly }">
+  <aside class="sidebar">
     <div id="sidebar-particles" class="sidebar-particles" aria-hidden="true"></div>
 
-    <div class="sidebar-content" :class="{ sections: isSidebarSectionsOnly }">
+    <div class="sidebar-content">
       <SidebarHeaderTabs />
       <SidebarTreePanel v-if="isSidebarDetailed" />
       <SidebarIndicatorsAccordion v-if="isSidebarDetailed" />
@@ -17,5 +17,5 @@ import SidebarTreePanel from '../components/sidebar/SidebarTreePanel.vue'
 import { useDashboardStore } from '../stores/dashboardStore.js'
 
 const dashboard = useDashboardStore()
-const { isSidebarDetailed, isSidebarSectionsOnly } = dashboard
+const { isSidebarDetailed } = dashboard
 </script>

@@ -17,13 +17,6 @@
   transition: width 280ms ease, border-color 280ms ease, box-shadow 280ms ease;
 }
 
-.sidebar.sections {
-  border-color: rgba(96, 247, 223, 0.34);
-  box-shadow:
-    0 24px 54px rgba(2, 7, 14, 0.56),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05);
-}
-
 .sidebar-particles {
   position: absolute;
   inset: 0;
@@ -43,11 +36,6 @@
   align-items: stretch;
   gap: 14px;
   overflow: hidden;
-}
-
-.sidebar-content.sections {
-  grid-template-rows: auto auto;
-  align-content: start;
 }
 
 .brand {

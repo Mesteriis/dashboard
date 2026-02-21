@@ -2,7 +2,7 @@
   <div class="shell" :class="{ 'shell-motion-static': disableHeroReenterMotion }">
     <img class="center-emblem" :src="EMBLEM_SRC" alt="" aria-hidden="true" />
 
-    <div class="app-shell" :class="{ 'sidebar-sections': isSidebarSectionsOnly, 'sidebar-hidden': isSidebarHidden }">
+    <div class="app-shell" :class="{ 'sidebar-hidden': isSidebarHidden }">
       <DashboardSidebarView v-if="!isSidebarHidden" />
       <DashboardMainView />
     </div>
@@ -33,7 +33,7 @@ const ItemEditorModal = defineAsyncComponent(loadItemEditorModal)
 const CommandPaletteModal = defineAsyncComponent(loadCommandPaletteModal)
 
 const dashboard = useDashboardStore()
-const { EMBLEM_SRC, closeCommandPalette, commandPaletteOpen, iframeModal, isSidebarSectionsOnly, isSidebarHidden, itemEditor, lanHostModal, toggleCommandPalette } = dashboard
+const { EMBLEM_SRC, closeCommandPalette, commandPaletteOpen, iframeModal, isSidebarHidden, itemEditor, lanHostModal, toggleCommandPalette } = dashboard
 const disableHeroReenterMotion = ref(false)
 let motionTimerId = 0
 let idlePrefetchTimerId = 0
