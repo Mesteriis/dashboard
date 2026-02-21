@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import os
 import sys
+from pathlib import Path
 
 import uvicorn
 
@@ -18,11 +19,19 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     args = parse_args()
 
-    root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-    src_dir = os.path.join(root_dir, "src")
+    script_path = Path(__file__).resolve()
+    src_candidates = (
+        script_path.parents[2] / "src",
+        script_path.parents[1],
+        Path.cwd() / "src",
+    )
+    src_dir = next((candidate for candidate in src_candidates if (candidate / "main.py").exists()), None)
+    if src_dir is None:
+        raise RuntimeError("Unable to resolve backend source directory with main.py")
 
-    if src_dir not in sys.path:
-        sys.path.insert(0, src_dir)
+    src_dir_raw = os.fspath(src_dir)
+    if src_dir_raw not in sys.path:
+        sys.path.insert(0, src_dir_raw)
 
     from main import app as fastapi_app
 

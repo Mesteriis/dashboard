@@ -1,4 +1,5 @@
 const ADMIN_TOKEN_HEADER = 'X-Dashboard-Token'
+const DESKTOP_EMBEDDED_ADMIN_TOKEN = 'oko-desktop-embedded'
 
 /**
  * @typedef {RequestInit & {
@@ -16,6 +17,10 @@ function getAdminToken() {
   }
   if (String(fromStorage).trim()) {
     return String(fromStorage).trim()
+  }
+  const runtimeProfile = window.__OKO_DESKTOP_RUNTIME__
+  if (runtimeProfile?.desktop && runtimeProfile?.mode === 'embedded') {
+    return DESKTOP_EMBEDDED_ADMIN_TOKEN
   }
   const fromGlobal = window.__DASHBOARD_ADMIN_TOKEN__ || ''
   return String(fromGlobal).trim()

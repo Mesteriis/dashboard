@@ -17,6 +17,8 @@ const DEFAULT_DASHBOARD_RESOURCE: &str = "resources/dashboard.default.yaml";
 const USER_RUNTIME_DIR_NAME: &str = ".oko";
 const USER_CONFIG_FILE_NAME: &str = "dashboard.yaml";
 const USER_LAN_SCAN_RESULT_FILE: &str = "data/lan_scan_result.json";
+const USER_BACKEND_LOG_FILE: &str = "logs/backend.log";
+const EMBEDDED_ADMIN_TOKEN: &str = "oko-desktop-embedded";
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
@@ -164,14 +166,18 @@ fn resolve_default_dashboard_template(app: &AppHandle) -> Option<PathBuf> {
   candidates.into_iter().find(|path| path.exists())
 }
 
-fn ensure_user_runtime_files(app: &AppHandle) -> Result<(PathBuf, PathBuf, PathBuf), String> {
+fn ensure_user_runtime_files(app: &AppHandle) -> Result<(PathBuf, PathBuf, PathBuf, PathBuf), String> {
   let runtime_dir = user_runtime_dir();
   let config_path = runtime_dir.join(USER_CONFIG_FILE_NAME);
   let lan_result_file = runtime_dir.join(USER_LAN_SCAN_RESULT_FILE);
+  let backend_log_file = runtime_dir.join(USER_BACKEND_LOG_FILE);
 
   fs::create_dir_all(&runtime_dir).map_err(|error| format!("Failed to create runtime dir: {error}"))?;
   if let Some(parent) = lan_result_file.parent() {
     fs::create_dir_all(parent).map_err(|error| format!("Failed to create runtime data dir: {error}"))?;
+  }
+  if let Some(parent) = backend_log_file.parent() {
+    fs::create_dir_all(parent).map_err(|error| format!("Failed to create backend log dir: {error}"))?;
   }
 
   if !config_path.exists() {
@@ -185,7 +191,7 @@ fn ensure_user_runtime_files(app: &AppHandle) -> Result<(PathBuf, PathBuf, PathB
     })?;
   }
 
-  Ok((runtime_dir, config_path, lan_result_file))
+  Ok((runtime_dir, config_path, lan_result_file, backend_log_file))
 }
 
 fn resolve_dev_backend_script() -> Option<PathBuf> {
@@ -208,7 +214,7 @@ fn spawn_embedded_backend(app: &AppHandle) -> Result<EmbeddedBackend, String> {
   drop(listener);
 
   let api_base_url = format!("http://127.0.0.1:{port}");
-  let (runtime_dir, config_path, lan_result_file) = ensure_user_runtime_files(app)?;
+  let (runtime_dir, config_path, lan_result_file, backend_log_file) = ensure_user_runtime_files(app)?;
 
   let mut command = if let Some(binary) = resolve_embedded_backend_binary(app) {
     let mut binary_command = Command::new(binary);
@@ -233,9 +239,20 @@ fn spawn_embedded_backend(app: &AppHandle) -> Result<EmbeddedBackend, String> {
     .current_dir(&runtime_dir)
     .env("DASHBOARD_CONFIG_FILE", &config_path)
     .env("LAN_SCAN_RESULT_FILE", &lan_result_file)
-    .env("DASHBOARD_ENABLE_LAN_SCAN", "true");
+    .env("DASHBOARD_ENABLE_LAN_SCAN", "true")
+    .env("DASHBOARD_ADMIN_TOKEN", EMBEDDED_ADMIN_TOKEN)
+    .env("LAN_SCAN_RUN_ON_STARTUP", "true")
+    .env("LAN_SCAN_INTERVAL_SEC", "300");
 
-  command.stdin(Stdio::null()).stdout(Stdio::null()).stderr(Stdio::null());
+  let backend_stdout = fs::File::create(&backend_log_file)
+    .map_err(|error| format!("Failed to open backend log file {}: {error}", backend_log_file.display()))?;
+  let backend_stderr = backend_stdout
+    .try_clone()
+    .map_err(|error| format!("Failed to clone backend log handle {}: {error}", backend_log_file.display()))?;
+  command
+    .stdin(Stdio::null())
+    .stdout(Stdio::from(backend_stdout))
+    .stderr(Stdio::from(backend_stderr));
   let child = command
     .spawn()
     .map_err(|error| format!("Failed to start embedded backend: {error}"))?;

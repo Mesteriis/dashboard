@@ -40,6 +40,7 @@
         Планировщик: {{ lanScanState?.scheduler || 'asyncio' }} · интервал {{ lanScanState?.interval_sec || 1020 }} сек
       </p>
       <p class="subtitle lan-meta-line">Файл результата: {{ lanScanState?.result?.source_file || 'не создан' }}</p>
+      <p v-if="lanScanState?.last_error" class="widget-error">Ошибка сканирования: {{ lanScanState.last_error }}</p>
 
       <LanHostsTable />
     </template>

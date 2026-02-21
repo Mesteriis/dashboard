@@ -82,3 +82,18 @@ test('requestJson falls back to global admin token and supports text response', 
   const payload = await requestJson('/api/text', { requireAdminToken: true })
   assert.equal(payload, 'ok-text')
 })
+
+test('requestJson uses embedded desktop token when runtime is embedded', async () => {
+  globalThis.window = {
+    localStorage: { getItem: () => '' },
+    __DASHBOARD_ADMIN_TOKEN__: '',
+    __OKO_DESKTOP_RUNTIME__: { desktop: true, mode: 'embedded' },
+  }
+  globalThis.fetch = async (_path, options) => {
+    assert.equal(options.headers['X-Dashboard-Token'], 'oko-desktop-embedded')
+    return makeResponse({ jsonBody: { ok: true } })
+  }
+
+  const payload = await requestJson('/api/embedded', { requireAdminToken: true })
+  assert.deepEqual(payload, { ok: true })
+})
