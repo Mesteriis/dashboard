@@ -34,9 +34,26 @@ async def test_get_dashboard_config_returns_current_model(api_client: AsyncClien
     response = await api_client.get("/api/v1/dashboard/config")
 
     assert response.status_code == httpx.codes.OK
+    assert response.headers["cache-control"] == "private, max-age=0, must-revalidate"
+    assert response.headers["etag"].startswith('"cfg-')
     payload = response.json()
     assert payload["app"]["id"] == "demo"
     assert payload["groups"][0]["id"] == "core"
+
+
+async def test_get_dashboard_config_returns_304_for_matching_if_none_match(api_client: AsyncClient) -> None:
+    first = await api_client.get("/api/v1/dashboard/config")
+    assert first.status_code == httpx.codes.OK
+    etag = first.headers["etag"]
+
+    second = await api_client.get(
+        "/api/v1/dashboard/config",
+        headers={"if-none-match": etag},
+    )
+
+    assert second.status_code == httpx.codes.NOT_MODIFIED
+    assert second.text == ""
+    assert second.headers["etag"] == etag
 
 
 async def test_get_container_returns_500_when_container_is_missing() -> None:
@@ -109,6 +126,7 @@ async def test_get_dashboard_health_filters_items_by_item_id(
     monkeypatch.setattr(dashboard_module, "probe_item_health", fake_probe_item_health)
     response = await api_client.get("/api/v1/dashboard/health?item_id=svc-link")
     assert response.status_code == httpx.codes.OK
+    assert response.headers["cache-control"] == "private, max-age=2, stale-while-revalidate=8"
     assert len(response.json()["items"]) == 1
     assert response.json()["items"][0]["item_id"] == "svc-link"
 

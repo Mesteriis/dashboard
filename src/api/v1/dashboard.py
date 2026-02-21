@@ -98,6 +98,27 @@ AdminAuthDep = Annotated[None, Depends(require_admin_token)]
 HealthLevel = Literal["online", "degraded", "down", "unknown", "indirect_failure"]
 DependencyResolution = tuple[HealthLevel, str | None, str | None]
 _HEALTH_HISTORY_BY_ITEM: dict[str, deque[HealthHistoryPoint]] = {}
+CONFIG_CACHE_CONTROL = "private, max-age=0, must-revalidate"
+HEALTH_CACHE_CONTROL = "private, max-age=2, stale-while-revalidate=8"
+
+
+def _config_etag(version: ConfigVersion) -> str:
+    return f'"cfg-{version.sha256}"'
+
+
+def _if_none_match_matches(value: str | None, current_etag: str) -> bool:
+    if not value:
+        return False
+
+    for candidate in value.split(","):
+        token = candidate.strip()
+        if token == "*":
+            return True
+        if token == current_etag:
+            return True
+        if token.startswith("W/") and token[2:] == current_etag:
+            return True
+    return False
 
 
 def _load_iframe_item(item_id: str, config_service: DashboardConfigService) -> IframeItemConfig:
@@ -340,11 +361,31 @@ dashboard_router = APIRouter(prefix="/api/v1")
 
 
 @dashboard_router.get("/dashboard/config", response_model=DashboardConfig)
-async def get_dashboard_config(config_service: ConfigServiceDep) -> DashboardConfig:
+async def get_dashboard_config(
+    request: Request,
+    response: Response,
+    config_service: ConfigServiceDep,
+) -> DashboardConfig | Response:
     try:
-        return config_service.load()
+        version = config_service.get_version()
+        etag = _config_etag(version)
+
+        if _if_none_match_matches(request.headers.get("if-none-match"), etag):
+            return Response(
+                status_code=304,
+                headers={
+                    "etag": etag,
+                    "cache-control": CONFIG_CACHE_CONTROL,
+                },
+            )
+
+        config = config_service.load()
     except DashboardConfigValidationError as exc:
         raise _validation_exception(exc) from exc
+
+    response.headers["etag"] = etag
+    response.headers["cache-control"] = CONFIG_CACHE_CONTROL
+    return config
 
 
 @dashboard_router.get("/dashboard/version", response_model=ConfigVersion)
@@ -384,6 +425,7 @@ async def save_dashboard_config(
 async def get_dashboard_health(
     config_service: ConfigServiceDep,
     settings: SettingsDep,
+    response: Response,
     item_id: Annotated[list[str] | None, Query()] = None,
 ) -> DashboardHealthResponse:
     try:
@@ -448,6 +490,7 @@ async def get_dashboard_health(
         config=config,
         statuses_by_id=status_subset_by_id,
     )
+    response.headers["cache-control"] = HEALTH_CACHE_CONTROL
     return DashboardHealthResponse(items=statuses, aggregates=aggregates)
 
 
