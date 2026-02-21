@@ -8,7 +8,12 @@ const ADMIN_TOKEN_HEADER = 'X-Dashboard-Token'
 
 function getAdminToken() {
   if (typeof window === 'undefined') return ''
-  const fromStorage = window.localStorage?.getItem('dashboard_admin_token') || ''
+  let fromStorage = ''
+  try {
+    fromStorage = window.localStorage?.getItem('dashboard_admin_token') || ''
+  } catch {
+    fromStorage = ''
+  }
   if (String(fromStorage).trim()) {
     return String(fromStorage).trim()
   }

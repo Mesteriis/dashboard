@@ -118,17 +118,27 @@ const {
   toggleSidebarView,
 } = dashboard
 
+function getLocalStorageSafe() {
+  try {
+    return window.localStorage || null
+  } catch {
+    return null
+  }
+}
+
 onMounted(() => {
-  if (!window.localStorage) return
-  const raw = window.localStorage.getItem(HERO_CONTROLS_OPEN_STORAGE_KEY)
+  const storage = getLocalStorageSafe()
+  if (!storage) return
+  const raw = storage.getItem(HERO_CONTROLS_OPEN_STORAGE_KEY)
   controlsOpen.value = raw === '1'
 })
 
 watch(
   () => controlsOpen.value,
   (value) => {
-    if (!window.localStorage) return
-    window.localStorage.setItem(HERO_CONTROLS_OPEN_STORAGE_KEY, value ? '1' : '0')
+    const storage = getLocalStorageSafe()
+    if (!storage) return
+    storage.setItem(HERO_CONTROLS_OPEN_STORAGE_KEY, value ? '1' : '0')
   }
 )
 </script>

@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "node_modules/.bin/vite",
     "build": "node_modules/.bin/vite build && node scripts/build-to-backend.mjs",
+    "build:desktop": "OKO_BUILD_TARGET=desktop node_modules/.bin/vite build",
     "tauri:dev": "node_modules/.bin/tauri dev",
     "tauri:build:arm64": "node_modules/.bin/tauri build --target aarch64-apple-darwin",
     "tauri:build:universal": "node_modules/.bin/tauri build --target universal-apple-darwin",

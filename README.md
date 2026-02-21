@@ -49,6 +49,7 @@ npm run tauri:build:arm64
 
 - Final artifacts are placed in one folder: `artifacts/macos-arm64/output/`
 - Intermediate build files are cleaned automatically after build.
+- Desktop build uses Vite base `/` (separate from web `/static/`) to avoid blank screen in macOS WebView.
 
 ### Build embedded backend sidecar (ARM64)
 

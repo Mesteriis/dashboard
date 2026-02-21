@@ -1,9 +1,15 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 
+function resolveBase(command) {
+  if (command === 'serve') return '/'
+  if (process.env.OKO_BUILD_TARGET === 'desktop') return '/'
+  return '/static/'
+}
+
 export default defineConfig(({ command }) => ({
   plugins: [vue()],
-  base: command === 'serve' ? '/' : '/static/',
+  base: resolveBase(command),
   server: {
     port: 5173,
     proxy: {

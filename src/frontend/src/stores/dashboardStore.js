@@ -118,11 +118,21 @@ export function useDashboardStore() {
   const SERVICE_CARD_VIEW_VALUES = new Set(SERVICE_PRESENTATION_OPTIONS.map((option) => option.value))
   const SERVICE_GROUPING_VALUES = new Set(SERVICE_GROUPING_OPTIONS.map((option) => option.value))
 
+  function getLocalStorageSafe() {
+    if (typeof window === 'undefined') return null
+    try {
+      return window.localStorage || null
+    } catch {
+      return null
+    }
+  }
+
   function loadPersistedUiState() {
-    if (typeof window === 'undefined' || !window.localStorage) return null
+    const storage = getLocalStorageSafe()
+    if (!storage) return null
 
     try {
-      const raw = window.localStorage.getItem(UI_STATE_STORAGE_KEY)
+      const raw = storage.getItem(UI_STATE_STORAGE_KEY)
       if (!raw) return null
       const parsed = JSON.parse(raw)
       return parsed && typeof parsed === 'object' ? parsed : null
@@ -132,10 +142,11 @@ export function useDashboardStore() {
   }
 
   function savePersistedUiState(snapshot) {
-    if (typeof window === 'undefined' || !window.localStorage) return
+    const storage = getLocalStorageSafe()
+    if (!storage) return
 
     try {
-      window.localStorage.setItem(UI_STATE_STORAGE_KEY, JSON.stringify(snapshot))
+      storage.setItem(UI_STATE_STORAGE_KEY, JSON.stringify(snapshot))
     } catch {
       // ignore localStorage quota/security errors
     }
