@@ -193,13 +193,12 @@
 
 .item-grid-transition-enter-active,
 .item-grid-transition-leave-active {
-  transition: opacity 170ms ease, transform 170ms ease;
+  transition: opacity 140ms ease;
 }
 
 .item-grid-transition-enter-from,
 .item-grid-transition-leave-to {
   opacity: 0;
-  transform: translateY(6px) scale(0.99);
 }
 
 .item-grid-transition-move {
