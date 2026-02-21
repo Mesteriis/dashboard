@@ -120,6 +120,11 @@
   transform: translateY(-1px);
 }
 
+.command-palette-entry.is-action {
+  border-color: rgba(118, 236, 214, 0.34);
+  background: linear-gradient(148deg, rgba(11, 40, 54, 0.82), rgba(8, 23, 35, 0.86));
+}
+
 .command-palette-entry-title {
   font-size: 0.83rem;
   font-weight: 600;

@@ -10,6 +10,16 @@
     <aside class="panel hero-control-panel service-hero-controls" :class="{ active: editMode }">
       <div id="hero-controls-particles" class="hero-panel-particles" aria-hidden="true"></div>
       <div class="hero-controls-content">
+        <button
+          class="hero-settings-secret-btn"
+          type="button"
+          title="Панель настроек"
+          aria-label="Открыть панель настроек"
+          @click="openSettingsPanel"
+        >
+          <SlidersHorizontal class="ui-icon hero-action-icon" />
+        </button>
+
         <div class="hero-controls-accordion" :class="{ open: controlsOpen }">
           <Transition name="hero-controls-drawer-transition">
             <div v-if="controlsOpen" id="hero-controls-drawer" class="hero-controls-drawer">
@@ -111,7 +121,7 @@
 
 <script setup>
 import { ref } from 'vue'
-import { ChevronLeft, Circle, FolderTree, GitBranch, MapPin, Pencil, Plus, Search, Wrench } from 'lucide-vue-next'
+import { ChevronLeft, Circle, FolderTree, GitBranch, MapPin, Pencil, Plus, Search, SlidersHorizontal, Wrench } from 'lucide-vue-next'
 import HeroDropdown from '../primitives/HeroDropdown.vue'
 import HeroPageTabs from './HeroPageTabs.vue'
 import IconButton from '../primitives/IconButton.vue'
@@ -137,6 +147,7 @@ const {
   toggleEditMode,
   addGroup,
   openCommandPalette,
+  openSettingsPanel,
   toggleSidebarView,
 } = dashboard
 </script>

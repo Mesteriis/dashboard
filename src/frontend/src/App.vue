@@ -10,6 +10,7 @@
     <LanHostModal v-if="lanHostModal.open" />
     <IframeModal v-if="iframeModal.open" />
     <ItemEditorModal v-if="itemEditor.open" />
+    <DashboardSettingsModal v-if="settingsPanel.open" />
     <CommandPaletteModal v-if="commandPaletteOpen" />
   </div>
 </template>
@@ -23,6 +24,7 @@ import { useDashboardStore } from './stores/dashboardStore.js'
 const loadLanHostModal = () => import('./components/modals/LanHostModal.vue')
 const loadIframeModal = () => import('./components/modals/IframeModal.vue')
 const loadItemEditorModal = () => import('./components/modals/ItemEditorModal.vue')
+const loadDashboardSettingsModal = () => import('./components/modals/DashboardSettingsModal.vue')
 const loadCommandPaletteModal = () => import('./components/modals/CommandPaletteModal.vue')
 const loadIndicatorTabPanel = () => import('./components/main/IndicatorTabPanel.vue')
 const loadLanPageView = () => import('./components/main/LanPageView.vue')
@@ -30,10 +32,22 @@ const loadLanPageView = () => import('./components/main/LanPageView.vue')
 const LanHostModal = defineAsyncComponent(loadLanHostModal)
 const IframeModal = defineAsyncComponent(loadIframeModal)
 const ItemEditorModal = defineAsyncComponent(loadItemEditorModal)
+const DashboardSettingsModal = defineAsyncComponent(loadDashboardSettingsModal)
 const CommandPaletteModal = defineAsyncComponent(loadCommandPaletteModal)
 
 const dashboard = useDashboardStore()
-const { EMBLEM_SRC, closeCommandPalette, commandPaletteOpen, iframeModal, isSidebarHidden, itemEditor, lanHostModal, toggleCommandPalette } = dashboard
+const {
+  EMBLEM_SRC,
+  closeCommandPalette,
+  closeSettingsPanel,
+  commandPaletteOpen,
+  iframeModal,
+  isSidebarHidden,
+  itemEditor,
+  lanHostModal,
+  settingsPanel,
+  toggleCommandPalette,
+} = dashboard
 const disableHeroReenterMotion = ref(false)
 let motionTimerId = 0
 let idlePrefetchTimerId = 0
@@ -44,6 +58,7 @@ function runIdlePrefetch() {
     loadLanHostModal(),
     loadIframeModal(),
     loadItemEditorModal(),
+    loadDashboardSettingsModal(),
     loadCommandPaletteModal(),
     loadIndicatorTabPanel(),
     loadLanPageView(),
@@ -79,6 +94,12 @@ function handleGlobalShortcut(event) {
   if (event.key === 'Escape' && commandPaletteOpen.value) {
     event.preventDefault()
     closeCommandPalette()
+    return
+  }
+
+  if (event.key === 'Escape' && settingsPanel.open) {
+    event.preventDefault()
+    closeSettingsPanel()
   }
 }
 

@@ -10,6 +10,16 @@
     <aside class="panel hero-control-panel service-hero-controls">
       <div id="hero-controls-particles" class="hero-panel-particles" aria-hidden="true"></div>
       <div class="hero-controls-content">
+        <button
+          class="hero-settings-secret-btn"
+          type="button"
+          title="Панель настроек"
+          aria-label="Открыть панель настроек"
+          @click="openSettingsPanel"
+        >
+          <SlidersHorizontal class="ui-icon hero-action-icon" />
+        </button>
+
         <button class="ghost" type="button" :disabled="lanScanActionBusy || Boolean(lanScanState?.running)" @click="runLanScanNow">
           {{ lanScanState?.running ? 'Сканирование...' : lanScanActionBusy ? 'Запуск...' : 'Сканировать сейчас' }}
         </button>
@@ -30,7 +40,7 @@
 </template>
 
 <script setup>
-import { FolderTree } from 'lucide-vue-next'
+import { FolderTree, SlidersHorizontal } from 'lucide-vue-next'
 import LanScanPanel from './LanScanPanel.vue'
 import HeroPageTabs from './HeroPageTabs.vue'
 import IconButton from '../primitives/IconButton.vue'
@@ -41,6 +51,7 @@ const {
   isSidebarDetailed,
   lanScanActionBusy,
   lanScanState,
+  openSettingsPanel,
   runLanScanNow,
   sidebarViewToggleTitle,
   toggleSidebarView,

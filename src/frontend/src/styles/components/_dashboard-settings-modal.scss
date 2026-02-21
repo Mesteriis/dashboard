@@ -1,0 +1,84 @@
+.settings-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 35;
+  display: grid;
+  place-items: center;
+  padding: 14px;
+  background: rgba(2, 8, 14, 0.72);
+  backdrop-filter: blur(6px) saturate(122%);
+}
+
+.settings-modal {
+  width: min(94vw, 860px);
+  max-height: min(88vh, 760px);
+  border: 1px solid rgba(112, 236, 215, 0.3);
+  border-radius: calc(var(--card-radius) + 2px);
+  background: linear-gradient(165deg, rgba(8, 22, 34, 0.98), rgba(5, 14, 23, 0.98));
+  box-shadow:
+    var(--shadow),
+    inset 0 0 0 1px rgba(214, 248, 255, 0.03);
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 0;
+  overflow: hidden;
+}
+
+.settings-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 14px;
+  border-bottom: 1px solid rgba(124, 167, 186, 0.22);
+}
+
+.settings-modal-header h3 {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.settings-modal-header p {
+  margin: 4px 0 0;
+  color: #99b5c8;
+  font-size: 0.75rem;
+}
+
+.settings-modal-grid {
+  padding: 14px;
+  display: grid;
+  gap: 12px;
+  overflow: auto;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+
+.settings-modal-section {
+  border: 1px solid rgba(99, 145, 167, 0.24);
+  border-radius: 12px;
+  background: linear-gradient(155deg, rgba(10, 28, 40, 0.8), rgba(7, 18, 30, 0.82));
+  padding: 12px;
+  display: grid;
+  gap: 10px;
+}
+
+.settings-modal-section h4 {
+  margin: 0;
+  font-size: 0.82rem;
+  letter-spacing: 0.02em;
+  color: #d8ebf8;
+}
+
+.settings-modal-dropdowns {
+  display: grid;
+  gap: 8px;
+}
+
+.settings-modal-actions {
+  display: grid;
+  gap: 8px;
+}
+
+.settings-modal-actions .ghost {
+  justify-content: flex-start;
+  min-height: 38px;
+}

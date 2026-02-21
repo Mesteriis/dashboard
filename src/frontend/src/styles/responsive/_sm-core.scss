@@ -103,4 +103,17 @@
     width: 100%;
     max-height: min(92vh, 920px);
   }
+
+  .settings-modal-backdrop {
+    padding: 10px;
+  }
+
+  .settings-modal {
+    width: 100%;
+    max-height: min(92vh, 920px);
+  }
+
+  .settings-modal-grid {
+    grid-template-columns: 1fr;
+  }
 }

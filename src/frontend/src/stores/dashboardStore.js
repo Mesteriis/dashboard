@@ -158,6 +158,9 @@ export function useDashboardStore() {
   const commandPaletteOpen = ref(false)
   const commandPaletteQuery = ref('')
   const commandPaletteActiveIndex = ref(0)
+  const settingsPanel = reactive({
+    open: false,
+  })
   const lanHostModal = reactive({
     open: false,
     host: null,
@@ -342,6 +345,26 @@ export function useDashboardStore() {
     const entries = []
     const pageMap = pageByBlockGroupId.value
 
+    entries.push({
+      id: 'action:open-settings-panel',
+      type: 'action',
+      action: 'open_settings_panel',
+      item: null,
+      title: 'Открыть панель настроек',
+      titleLower: 'открыть панель настроек',
+      host: '',
+      ip: '',
+      site: '',
+      tagsLower: [],
+      groupId: '',
+      groupKey: '',
+      groupTitle: 'Команда',
+      subgroupId: '',
+      subgroupTitle: 'Интерфейс',
+      pageId: '',
+      searchBlob: 'открыть панель настроек settings ui интерфейс control panel параметры фильтры',
+    })
+
     for (const group of config.value?.groups || []) {
       for (const subgroup of group.subgroups || []) {
         for (const item of subgroup.items || []) {
@@ -371,6 +394,8 @@ export function useDashboardStore() {
 
           entries.push({
             id: item.id,
+            type: 'item',
+            action: '',
             item,
             title,
             titleLower: title.toLowerCase(),
@@ -397,10 +422,12 @@ export function useDashboardStore() {
     const query = String(commandPaletteQuery.value || '').trim().toLowerCase()
     const entries = commandPaletteEntries.value
     if (!query) {
-      return entries
+      const actionEntries = entries.filter((entry) => entry.type === 'action')
+      const itemEntries = entries
+        .filter((entry) => entry.type !== 'action')
         .slice()
         .sort((left, right) => left.title.localeCompare(right.title, 'ru', { sensitivity: 'base' }))
-        .slice(0, COMMAND_PALETTE_EMPTY_LIMIT)
+      return [...actionEntries, ...itemEntries].slice(0, COMMAND_PALETTE_EMPTY_LIMIT)
     }
 
     const tokens = query.split(/\s+/).filter(Boolean)
@@ -1516,6 +1543,18 @@ export function useDashboardStore() {
     openCommandPalette()
   }
 
+  function openSettingsPanel() {
+    settingsPanel.open = true
+  }
+
+  function closeSettingsPanel() {
+    settingsPanel.open = false
+  }
+
+  function toggleSettingsPanel() {
+    settingsPanel.open = !settingsPanel.open
+  }
+
   function setCommandPaletteQuery(value) {
     commandPaletteQuery.value = String(value || '')
     commandPaletteActiveIndex.value = 0
@@ -1552,6 +1591,13 @@ export function useDashboardStore() {
 
   function activateCommandPaletteEntry(entry) {
     if (!entry) return
+
+    if (entry.type === 'action' && entry.action === 'open_settings_panel') {
+      closeCommandPalette()
+      openSettingsPanel()
+      return
+    }
+
     focusCommandPaletteEntry(entry)
     openItem(entry.item)
     closeCommandPalette()
@@ -1562,7 +1608,7 @@ export function useDashboardStore() {
   }
 
   async function copyCommandPaletteEntryUrl(entry) {
-    if (!entry?.item?.url) return
+    if (entry?.type !== 'item' || !entry?.item?.url) return
     await copyUrl(entry.item.url)
   }
 
@@ -2716,6 +2762,7 @@ export function useDashboardStore() {
     closeItemEditor,
     closeLanHostModal,
     closeCommandPalette,
+    closeSettingsPanel,
     commandPaletteActiveIndex,
     commandPaletteOpen,
     commandPaletteQuery,
@@ -2819,6 +2866,7 @@ export function useDashboardStore() {
     activateCommandPaletteEntry,
     activateCommandPaletteSelection,
     openCommandPalette,
+    openSettingsPanel,
     openCreateItemEditor,
     openEditItemEditor,
     openIframeItem,
@@ -2856,6 +2904,7 @@ export function useDashboardStore() {
     setCommandPaletteActiveIndex,
     setCommandPaletteQuery,
     setSiteFilter,
+    settingsPanel,
     sidebarViewToggleTitle,
     selectItemNode,
     selectSidebarIconNode,
@@ -2890,6 +2939,7 @@ export function useDashboardStore() {
     toggleCommandPalette,
     toggleEditMode,
     toggleGroupNode,
+    toggleSettingsPanel,
     toggleServiceCardView,
     toggleSidebarView,
     treeFilter,

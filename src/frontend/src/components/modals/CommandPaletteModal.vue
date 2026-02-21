@@ -8,7 +8,7 @@
     <header class="command-palette-header">
       <div>
         <h3>Быстрый поиск</h3>
-        <p>Имя, IP, tag, site</p>
+        <p>Сервисы и команды: имя, IP, tag, site</p>
       </div>
       <span class="command-palette-shortcut">{{ shortcutLabel }}</span>
     </header>
@@ -21,25 +21,29 @@
         type="text"
         autocomplete="off"
         spellcheck="false"
-        placeholder="Поиск сервиса"
+        placeholder="Поиск сервиса или команды"
         :value="commandPaletteQuery"
         @input="setCommandPaletteQuery($event.target.value)"
         @keydown="handleInputKeydown"
       />
     </div>
 
-    <ul v-if="commandPaletteResults.length" class="command-palette-list" role="listbox" aria-label="Быстрый поиск сервиса">
+    <ul v-if="commandPaletteResults.length" class="command-palette-list" role="listbox" aria-label="Быстрый поиск сервиса или команды">
       <li v-for="(entry, index) in commandPaletteResults" :key="entry.id" v-motion="commandPaletteRowMotion(index)" class="command-palette-row">
         <button
           class="command-palette-entry"
-          :class="{ active: index === commandPaletteActiveIndex }"
+          :class="{ active: index === commandPaletteActiveIndex, 'is-action': entry.type === 'action' }"
           type="button"
           @mouseenter="setCommandPaletteActiveIndex(index)"
           @focus="setCommandPaletteActiveIndex(index)"
           @click="activateCommandPaletteEntry(entry)"
         >
           <span class="command-palette-entry-title">{{ entry.title }}</span>
-          <span class="command-palette-entry-meta">
+          <span v-if="entry.type === 'action'" class="command-palette-entry-meta">
+            <span>Команда</span>
+            <span>{{ entry.subgroupTitle }}</span>
+          </span>
+          <span v-else class="command-palette-entry-meta">
             <span>{{ entry.groupTitle }} / {{ entry.subgroupTitle }}</span>
             <span v-if="entry.host">{{ entry.host }}</span>
             <span v-if="entry.ip">{{ entry.ip }}</span>
@@ -47,7 +51,7 @@
           </span>
         </button>
 
-        <button class="ghost command-palette-copy" type="button" title="Скопировать URL" @click.stop="copyCommandPaletteEntryUrl(entry)">
+        <button v-if="entry.type === 'item'" class="ghost command-palette-copy" type="button" title="Скопировать URL" @click.stop="copyCommandPaletteEntryUrl(entry)">
           <Copy class="ui-icon" />
         </button>
       </li>
@@ -84,6 +88,21 @@ const fxMode = ref(document.documentElement.dataset.fxMode || 'full')
 
 function syncFxMode() {
   fxMode.value = document.documentElement.dataset.fxMode || 'full'
+}
+
+function focusSearchInput() {
+  const applyFocus = () => {
+    if (!inputRef.value) return
+    inputRef.value.focus()
+    inputRef.value.select()
+  }
+
+  void nextTick(() => {
+    applyFocus()
+    window.requestAnimationFrame(() => {
+      applyFocus()
+    })
+  })
 }
 
 function handleInputKeydown(event) {
@@ -135,6 +154,9 @@ function commandPaletteRowMotion(index) {
 
 onMounted(() => {
   window.addEventListener('oko:fx-mode-change', syncFxMode)
+  if (commandPaletteOpen.value) {
+    focusSearchInput()
+  }
 })
 
 onBeforeUnmount(() => {
@@ -143,11 +165,10 @@ onBeforeUnmount(() => {
 
 watch(
   () => commandPaletteOpen.value,
-  async (isOpen) => {
+  (isOpen) => {
     if (!isOpen) return
-    await nextTick()
-    inputRef.value?.focus()
-    inputRef.value?.select()
-  }
+    focusSearchInput()
+  },
+  { flush: 'post' }
 )
 </script>
