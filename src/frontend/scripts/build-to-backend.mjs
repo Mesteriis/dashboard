@@ -35,6 +35,19 @@ if (existsSync(distAssetsDir)) {
 }
 
 for (const entry of readdirSync(distDir, { withFileTypes: true })) {
+  if (entry.name === 'index.html') continue
+  if (entry.name === 'assets') continue
+
+  if (entry.isDirectory()) {
+    const srcFolder = path.join(distDir, entry.name)
+    const dstFolder = path.join(staticDir, entry.name)
+    if (existsSync(dstFolder)) {
+      rmSync(dstFolder, { recursive: true, force: true })
+    }
+    cpSync(srcFolder, dstFolder, { recursive: true })
+    continue
+  }
+
   if (!entry.isFile()) continue
   if (entry.name === 'index.html') continue
   const srcFile = path.join(distDir, entry.name)
