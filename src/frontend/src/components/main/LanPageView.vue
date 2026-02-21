@@ -10,19 +10,17 @@
     <aside class="panel hero-control-panel service-hero-controls">
       <div id="hero-controls-particles" class="hero-panel-particles" aria-hidden="true"></div>
       <div class="hero-controls-content">
-        <button
-          class="hero-settings-secret-btn"
-          type="button"
+        <button class="ghost" type="button" :disabled="lanScanActionBusy || Boolean(lanScanState?.running)" @click="runLanScanNow">
+          {{ lanScanState?.running ? 'Сканирование...' : lanScanActionBusy ? 'Запуск...' : 'Сканировать сейчас' }}
+        </button>
+        <IconButton
+          button-class="hero-icon-btn hero-accordion-action"
           title="Панель настроек"
           aria-label="Открыть панель настроек"
           @click="openSettingsPanel"
         >
           <SlidersHorizontal class="ui-icon hero-action-icon" />
-        </button>
-
-        <button class="ghost" type="button" :disabled="lanScanActionBusy || Boolean(lanScanState?.running)" @click="runLanScanNow">
-          {{ lanScanState?.running ? 'Сканирование...' : lanScanActionBusy ? 'Запуск...' : 'Сканировать сейчас' }}
-        </button>
+        </IconButton>
         <IconButton
           button-class="hero-icon-btn hero-accordion-action"
           :active="!isSidebarDetailed"

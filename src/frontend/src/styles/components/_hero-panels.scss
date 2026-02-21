@@ -24,39 +24,6 @@
   height: 100%;
   overflow: visible;
 }
-
-.hero-settings-secret-btn {
-  position: absolute;
-  top: 4px;
-  right: 42px;
-  width: 24px;
-  height: 24px;
-  border: 1px solid rgba(102, 160, 182, 0.24);
-  border-radius: 8px;
-  background: linear-gradient(148deg, rgba(10, 25, 37, 0.84), rgba(7, 17, 29, 0.82));
-  color: #c8deec;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  opacity: 0.14;
-  transform: translateY(-1px);
-  transition: opacity 160ms ease, border-color 160ms ease, transform 160ms ease, background 160ms ease;
-  z-index: 2;
-}
-
-.hero-control-panel:hover .hero-settings-secret-btn {
-  opacity: 0.68;
-  transform: translateY(0);
-}
-
-.hero-settings-secret-btn:hover,
-.hero-settings-secret-btn:focus-visible {
-  opacity: 0.9;
-  border-color: rgba(118, 236, 214, 0.48);
-  background: linear-gradient(148deg, rgba(12, 35, 50, 0.86), rgba(9, 22, 35, 0.84));
-  outline: none;
-}
 .hero-controls-accordion {
   inline-size: fit-content;
   block-size: 100%;

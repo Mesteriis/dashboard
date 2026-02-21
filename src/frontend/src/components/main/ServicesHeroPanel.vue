@@ -10,16 +10,6 @@
     <aside class="panel hero-control-panel service-hero-controls" :class="{ active: editMode }">
       <div id="hero-controls-particles" class="hero-panel-particles" aria-hidden="true"></div>
       <div class="hero-controls-content">
-        <button
-          class="hero-settings-secret-btn"
-          type="button"
-          title="Панель настроек"
-          aria-label="Открыть панель настроек"
-          @click="openSettingsPanel"
-        >
-          <SlidersHorizontal class="ui-icon hero-action-icon" />
-        </button>
-
         <div class="hero-controls-accordion" :class="{ open: controlsOpen }">
           <Transition name="hero-controls-drawer-transition">
             <div v-if="controlsOpen" id="hero-controls-drawer" class="hero-controls-drawer">
@@ -43,31 +33,6 @@
                 <Plus class="ui-icon hero-action-icon" />
               </IconButton>
 
-              <div class="hero-display-controls">
-                <HeroDropdown
-                  v-model="serviceCardView"
-                  label="Вид"
-                  aria-label="Режим отображения сервисов"
-                  :options="servicePresentationOptions"
-                />
-                <HeroDropdown
-                  v-model="serviceGroupingMode"
-                  label=""
-                  aria-label="Группировка сервисов"
-                  :options="serviceGroupingOptions"
-                  :disabled="isSidebarHidden"
-                >
-                  <template #prefix>
-                    <GitBranch class="ui-icon hero-dropdown-prefix-icon" aria-hidden="true" />
-                  </template>
-                </HeroDropdown>
-                <HeroDropdown v-model="siteFilter" label="Site" aria-label="Фильтр по площадке" :options="siteFilterOptions">
-                  <template #prefix>
-                    <MapPin class="ui-icon hero-dropdown-prefix-icon" aria-hidden="true" />
-                  </template>
-                </HeroDropdown>
-              </div>
-
               <IconButton
                 button-class="hero-icon-btn hero-accordion-action"
                 title="Быстрый поиск сервисов (Ctrl/Cmd+K)"
@@ -75,6 +40,15 @@
                 @click="openCommandPalette"
               >
                 <Search class="ui-icon hero-action-icon" />
+              </IconButton>
+
+              <IconButton
+                button-class="hero-icon-btn hero-accordion-action"
+                title="Панель настроек"
+                aria-label="Открыть панель настроек"
+                @click="openSettingsPanel"
+              >
+                <SlidersHorizontal class="ui-icon hero-action-icon" />
               </IconButton>
 
               <IconButton
@@ -121,8 +95,7 @@
 
 <script setup>
 import { onMounted, ref, watch } from 'vue'
-import { ChevronLeft, Circle, FolderTree, GitBranch, MapPin, Pencil, Plus, Search, SlidersHorizontal, Wrench } from 'lucide-vue-next'
-import HeroDropdown from '../primitives/HeroDropdown.vue'
+import { ChevronLeft, Circle, FolderTree, Pencil, Plus, Search, SlidersHorizontal, Wrench } from 'lucide-vue-next'
 import HeroPageTabs from './HeroPageTabs.vue'
 import IconButton from '../primitives/IconButton.vue'
 import { useDashboardStore } from '../../stores/dashboardStore.js'
@@ -134,17 +107,10 @@ const controlsOpen = ref(false)
 const {
   editMode,
   isSidebarDetailed,
-  isSidebarHidden,
   saveStatus,
   saveStatusLabel,
   saveError,
   sidebarViewToggleTitle,
-  serviceCardView,
-  serviceGroupingMode,
-  serviceGroupingOptions,
-  servicePresentationOptions,
-  siteFilter,
-  siteFilterOptions,
   toggleEditMode,
   addGroup,
   openCommandPalette,
