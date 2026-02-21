@@ -70,6 +70,60 @@
         </div>
       </section>
 
+      <section v-if="desktopRuntime.desktop" class="settings-modal-section settings-modal-section-wide">
+        <h4>Desktop Runtime (macOS Apple Silicon)</h4>
+        <div class="settings-state-group">
+          <p class="settings-state-label">Режим backend</p>
+          <div class="settings-state-switcher" role="radiogroup" aria-label="Режим backend">
+            <button
+              class="settings-state-btn"
+              :class="{ active: desktopRuntimeModeDraft === 'embedded' }"
+              type="button"
+              :disabled="runtimeApplying"
+              :aria-pressed="desktopRuntimeModeDraft === 'embedded'"
+              @click="desktopRuntimeModeDraft = 'embedded'"
+            >
+              Embedded (inside app)
+            </button>
+            <button
+              class="settings-state-btn"
+              :class="{ active: desktopRuntimeModeDraft === 'remote' }"
+              type="button"
+              :disabled="runtimeApplying"
+              :aria-pressed="desktopRuntimeModeDraft === 'remote'"
+              @click="desktopRuntimeModeDraft = 'remote'"
+            >
+              Remote (external server)
+            </button>
+          </div>
+        </div>
+
+        <div class="settings-state-group">
+          <p class="settings-state-label">Remote URL</p>
+          <input
+            v-model.trim="remoteBaseUrlDraft"
+            class="settings-runtime-input"
+            type="text"
+            autocomplete="off"
+            spellcheck="false"
+            placeholder="http://127.0.0.1:8090"
+            :disabled="runtimeApplying || desktopRuntimeModeDraft !== 'remote'"
+          />
+        </div>
+
+        <div class="settings-runtime-actions">
+          <button class="settings-nav-action" type="button" :disabled="runtimeApplying || !runtimeChanged" @click="applyRuntimeMode">
+            <span class="settings-nav-action-main">
+              <Play class="ui-icon settings-nav-action-icon" />
+              <span>{{ runtimeApplying ? 'Применяем...' : 'Применить runtime' }}</span>
+            </span>
+            <ChevronRight class="ui-icon settings-nav-action-caret" />
+          </button>
+        </div>
+
+        <p v-if="runtimeError" class="settings-state-hint settings-state-error">{{ runtimeError }}</p>
+      </section>
+
       <section class="settings-modal-section">
         <h4>Быстрые действия</h4>
         <div class="settings-modal-actions">
@@ -101,8 +155,10 @@
 </template>
 
 <script setup>
-import { ChevronRight, PanelLeft, Pencil, Search } from 'lucide-vue-next'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { ChevronRight, PanelLeft, Pencil, Play, Search } from 'lucide-vue-next'
 import BaseModal from '../primitives/BaseModal.vue'
+import { getRuntimeProfile, initDesktopRuntimeBridge, setDesktopRuntimeProfile } from '../../services/desktopRuntime.js'
 import { useDashboardStore } from '../../stores/dashboardStore.js'
 
 const dashboard = useDashboardStore()
@@ -121,7 +177,28 @@ const {
   setSiteFilter,
   toggleEditMode,
   toggleSidebarView,
+  loadConfig,
 } = dashboard
+
+const desktopRuntime = ref(getRuntimeProfile())
+const desktopRuntimeModeDraft = ref(desktopRuntime.value.mode === 'web' ? 'embedded' : desktopRuntime.value.mode)
+const remoteBaseUrlDraft = ref(desktopRuntime.value.remoteBaseUrl || 'http://127.0.0.1:8090')
+const runtimeApplying = ref(false)
+const runtimeError = ref('')
+
+const runtimeChanged = computed(() => {
+  if (!desktopRuntime.value.desktop) return false
+  const normalizedDraftUrl = String(remoteBaseUrlDraft.value || '').trim()
+  return (
+    desktopRuntimeModeDraft.value !== desktopRuntime.value.mode ||
+    normalizedDraftUrl !== String(desktopRuntime.value.remoteBaseUrl || '').trim()
+  )
+})
+
+function normalizeRuntimeDraft() {
+  desktopRuntimeModeDraft.value = desktopRuntime.value.mode === 'web' ? 'embedded' : desktopRuntime.value.mode
+  remoteBaseUrlDraft.value = desktopRuntime.value.remoteBaseUrl || 'http://127.0.0.1:8090'
+}
 
 function setGroupingMode(value) {
   if (isSidebarHidden.value) return
@@ -131,5 +208,41 @@ function setGroupingMode(value) {
 function openSearchFromSettings() {
   closeSettingsPanel()
   openCommandPalette()
+}
+
+async function applyRuntimeMode() {
+  if (!desktopRuntime.value.desktop || !runtimeChanged.value || runtimeApplying.value) return
+  runtimeApplying.value = true
+  runtimeError.value = ''
+
+  try {
+    const updated = await setDesktopRuntimeProfile({
+      mode: desktopRuntimeModeDraft.value,
+      remoteBaseUrl: remoteBaseUrlDraft.value,
+    })
+    desktopRuntime.value = updated
+    normalizeRuntimeDraft()
+    await loadConfig()
+  } catch (error) {
+    runtimeError.value = error?.message || 'Не удалось применить desktop runtime'
+  } finally {
+    runtimeApplying.value = false
+  }
+}
+
+onMounted(async () => {
+  const profile = await initDesktopRuntimeBridge()
+  desktopRuntime.value = profile
+  normalizeRuntimeDraft()
+  window.addEventListener('oko:api-base-change', syncDesktopRuntimeFromBridge)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('oko:api-base-change', syncDesktopRuntimeFromBridge)
+})
+
+function syncDesktopRuntimeFromBridge() {
+  desktopRuntime.value = getRuntimeProfile()
+  normalizeRuntimeDraft()
 }
 </script>

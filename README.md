@@ -16,6 +16,46 @@ npm ci
 npm run build
 ```
 
+## Desktop (Tauri, macOS Apple Silicon only)
+
+Desktop shell is implemented with Tauri and is intentionally scoped to M-chip Macs (`aarch64-apple-darwin`).
+
+### Runtime modes
+
+- `embedded`: backend runs as a local sidecar process inside the desktop app.
+- `remote`: desktop app uses an external backend URL (default `http://127.0.0.1:8090`).
+
+You can switch modes from `Настройки панели -> Desktop Runtime`.
+
+### Prerequisites (for local desktop build)
+
+- Full Xcode + Command Line Tools
+- Rust toolchain (`rustup`, `cargo`, `rustc`)
+- Node dependencies installed in `src/frontend`
+
+### Commands
+
+```bash
+cd src/frontend
+npm run tauri:dev
+npm run tauri:build:arm64
+```
+
+### Build embedded backend sidecar (ARM64)
+
+```bash
+uv pip install pyinstaller
+./src/desktop/build_sidecar_macos_arm64.sh
+```
+
+This produces `src/frontend/src-tauri/binaries/oko-backend-aarch64-apple-darwin`, which is bundled into the app.
+
+Optional override for local testing:
+
+```bash
+export OKO_DESKTOP_BACKEND_BIN=/absolute/path/to/oko-backend-aarch64-apple-darwin
+```
+
 ## Security and startup flags
 
 - `DASHBOARD_ADMIN_TOKEN`: required for protected actions (`PUT /api/v1/dashboard/config`, `POST /api/v1/dashboard/lan/run`, `GET /api/v1/dashboard/iframe/{item_id}/source`).

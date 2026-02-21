@@ -1,0 +1,38 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Oko",
+  "version": "0.1.0",
+  "identifier": "com.oko.dashboard",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "devUrl": "http://localhost:5173",
+    "beforeBuildCommand": "npm run build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "label": "main",
+        "title": "Oko — Your Infrastructure in Sight",
+        "width": 1560,
+        "height": 960,
+        "minWidth": 1080,
+        "minHeight": 680,
+        "resizable": true,
+        "fullscreen": false
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["app"],
+    "icon": ["icons/icon-512.png"],
+    "resources": ["binaries/oko-backend-aarch64-apple-darwin"],
+    "macOS": {
+      "minimumSystemVersion": "13.0"
+    }
+  }
+}

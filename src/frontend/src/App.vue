@@ -45,6 +45,7 @@ const {
   isSidebarHidden,
   itemEditor,
   lanHostModal,
+  openSettingsPanel,
   settingsPanel,
   toggleCommandPalette,
 } = dashboard
@@ -103,11 +104,26 @@ function handleGlobalShortcut(event) {
   }
 }
 
+function handleDesktopAction(event) {
+  const action = String(event?.detail?.action || '')
+  if (!action) return
+
+  if (action === 'open-search') {
+    toggleCommandPalette()
+    return
+  }
+
+  if (action === 'open-settings') {
+    openSettingsPanel()
+  }
+}
+
 onMounted(() => {
   motionTimerId = globalThis.setTimeout(() => {
     disableHeroReenterMotion.value = true
   }, 1000)
   window.addEventListener('keydown', handleGlobalShortcut)
+  window.addEventListener('oko:desktop-action', handleDesktopAction)
   scheduleIdlePrefetch()
 })
 
@@ -125,5 +141,6 @@ onBeforeUnmount(() => {
     idlePrefetchCallbackId = 0
   }
   window.removeEventListener('keydown', handleGlobalShortcut)
+  window.removeEventListener('oko:desktop-action', handleDesktopAction)
 })
 </script>

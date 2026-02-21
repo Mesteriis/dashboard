@@ -1,6 +1,7 @@
 import { createApp } from 'vue'
 import { MotionPlugin } from '@vueuse/motion'
 import App from './App.vue'
+import { initDesktopRuntimeBridge } from './services/desktopRuntime.js'
 import { initDevPerfTelemetry } from './services/perfTelemetry.js'
 import './styles.scss'
 
@@ -50,4 +51,10 @@ function initFxModeProfile() {
 
 initFxModeProfile()
 initDevPerfTelemetry({ enabled: import.meta.env.DEV })
-createApp(App).use(MotionPlugin).mount('#app')
+
+async function bootstrap() {
+  await initDesktopRuntimeBridge()
+  createApp(App).use(MotionPlugin).mount('#app')
+}
+
+bootstrap()

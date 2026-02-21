@@ -17,6 +17,26 @@ function getAdminToken() {
 }
 
 /**
+ * @param {string} path
+ * @returns {string}
+ */
+function resolveRequestUrl(path) {
+  const inputPath = String(path || '')
+  if (!inputPath) return inputPath
+
+  if (/^https?:\/\//i.test(inputPath)) {
+    return inputPath
+  }
+
+  const runtimeBase = typeof window === 'undefined' ? '' : String(window.__OKO_API_BASE__ || '').trim()
+  if (!runtimeBase) return inputPath
+
+  const normalizedBase = runtimeBase.endsWith('/') ? runtimeBase.slice(0, -1) : runtimeBase
+  const normalizedPath = inputPath.startsWith('/') ? inputPath : `/${inputPath}`
+  return `${normalizedBase}${normalizedPath}`
+}
+
+/**
  * @param {unknown} body
  * @param {boolean} isJson
  * @param {number} status
@@ -74,7 +94,7 @@ export async function requestJson(path, options = {}) {
     }
   }
 
-  const response = await fetch(path, {
+  const response = await fetch(resolveRequestUrl(path), {
     credentials: 'same-origin',
     headers,
     ...fetchOptions,
