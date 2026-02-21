@@ -116,6 +116,7 @@ class BaseItemConfig(BaseModel):
     url: AnyHttpUrl
     icon: str | None = None
     tags: list[str] = Field(default_factory=list)
+    depends_on: list[str] = Field(default_factory=list)
     open: Literal["new_tab", "same_tab"] = "new_tab"
 
 

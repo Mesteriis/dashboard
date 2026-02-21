@@ -13,7 +13,7 @@ import api.v1.dashboard as dashboard_module
 from api.v1.dashboard import dashboard_router
 from config.container import AppContainer
 from config.settings import ADMIN_TOKEN_HEADER
-from scheme.dashboard import ItemHealthStatus, LanScanStateResponse, ValidationIssue
+from scheme.dashboard import ItemHealthStatus, LanScanStateResponse, LinkItemConfig, ValidationIssue
 from service.config_service import DashboardConfigValidationError
 
 pytestmark = pytest.mark.asyncio
@@ -100,6 +100,197 @@ async def test_get_dashboard_health_filters_items_by_item_id(
     assert response.status_code == httpx.codes.OK
     assert len(response.json()["items"]) == 1
     assert response.json()["items"][0]["item_id"] == "svc-link"
+
+
+async def test_get_dashboard_health_marks_indirect_failure_from_dependencies(
+    api_client: AsyncClient,
+    app_container: AppContainer,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    parent = LinkItemConfig(id="svc-parent", type="link", title="Parent", url="https://parent.local/")
+    child = LinkItemConfig(
+        id="svc-child",
+        type="link",
+        title="Child",
+        url="https://child.local/",
+        depends_on=["svc-parent"],
+    )
+    monkeypatch.setattr(app_container.config_service, "list_items", lambda: [parent, child])
+
+    async def fake_probe_item_health(**kwargs: object) -> ItemHealthStatus:
+        item = kwargs["item"]
+        if item.id == "svc-parent":
+            return ItemHealthStatus(
+                item_id=item.id,
+                ok=False,
+                checked_url=str(item.url),
+                status_code=503,
+                latency_ms=12,
+                error="HTTP 503",
+                level="down",
+                reason="http_5xx",
+                error_kind="http_error",
+            )
+        return ItemHealthStatus(
+            item_id=item.id,
+            ok=True,
+            checked_url=str(item.url),
+            status_code=200,
+            latency_ms=8,
+            error=None,
+            level="online",
+            reason="ok",
+            error_kind=None,
+        )
+
+    monkeypatch.setattr(dashboard_module, "probe_item_health", fake_probe_item_health)
+    response = await api_client.get("/api/v1/dashboard/health")
+    assert response.status_code == httpx.codes.OK
+    payload = {entry["item_id"]: entry for entry in response.json()["items"]}
+
+    assert payload["svc-parent"]["level"] == "down"
+    assert payload["svc-child"]["level"] == "indirect_failure"
+    assert payload["svc-child"]["reason"] == "indirect_dependency"
+    assert "svc-parent" in payload["svc-child"]["error"]
+
+
+async def test_get_dashboard_health_marks_missing_dependency_as_degraded(
+    api_client: AsyncClient,
+    app_container: AppContainer,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    item = LinkItemConfig(
+        id="svc-child",
+        type="link",
+        title="Child",
+        url="https://child.local/",
+        depends_on=["svc-missing"],
+    )
+    monkeypatch.setattr(app_container.config_service, "list_items", lambda: [item])
+
+    async def fake_probe_item_health(**kwargs: object) -> ItemHealthStatus:
+        svc = kwargs["item"]
+        return ItemHealthStatus(
+            item_id=svc.id,
+            ok=True,
+            checked_url=str(svc.url),
+            status_code=200,
+            latency_ms=5,
+            error=None,
+            level="online",
+            reason="ok",
+            error_kind=None,
+        )
+
+    monkeypatch.setattr(dashboard_module, "probe_item_health", fake_probe_item_health)
+    response = await api_client.get("/api/v1/dashboard/health")
+    assert response.status_code == httpx.codes.OK
+    payload = response.json()["items"][0]
+    assert payload["level"] == "degraded"
+    assert payload["reason"] == "missing_dependency"
+    assert payload["error_kind"] is None
+    assert "svc-missing" in payload["error"]
+
+
+async def test_get_dashboard_health_marks_dependency_cycle_as_degraded(
+    api_client: AsyncClient,
+    app_container: AppContainer,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    item_a = LinkItemConfig(
+        id="svc-a",
+        type="link",
+        title="A",
+        url="https://a.local/",
+        depends_on=["svc-b"],
+    )
+    item_b = LinkItemConfig(
+        id="svc-b",
+        type="link",
+        title="B",
+        url="https://b.local/",
+        depends_on=["svc-a"],
+    )
+    monkeypatch.setattr(app_container.config_service, "list_items", lambda: [item_a, item_b])
+
+    async def fake_probe_item_health(**kwargs: object) -> ItemHealthStatus:
+        item = kwargs["item"]
+        return ItemHealthStatus(
+            item_id=item.id,
+            ok=True,
+            checked_url=str(item.url),
+            status_code=200,
+            latency_ms=10,
+            error=None,
+            level="online",
+            reason="ok",
+            error_kind=None,
+        )
+
+    monkeypatch.setattr(dashboard_module, "probe_item_health", fake_probe_item_health)
+    response = await api_client.get("/api/v1/dashboard/health")
+    assert response.status_code == httpx.codes.OK
+    payload = {entry["item_id"]: entry for entry in response.json()["items"]}
+    assert payload["svc-a"]["level"] == "degraded"
+    assert payload["svc-a"]["reason"] == "dependency_cycle"
+    assert payload["svc-b"]["level"] == "degraded"
+    assert payload["svc-b"]["reason"] == "dependency_cycle"
+
+
+async def test_get_dashboard_health_item_filter_probes_dependencies_but_returns_requested_only(
+    api_client: AsyncClient,
+    app_container: AppContainer,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    parent = LinkItemConfig(id="svc-parent", type="link", title="Parent", url="https://parent.local/")
+    child = LinkItemConfig(
+        id="svc-child",
+        type="link",
+        title="Child",
+        url="https://child.local/",
+        depends_on=["svc-parent"],
+    )
+    monkeypatch.setattr(app_container.config_service, "list_items", lambda: [parent, child])
+
+    probed_ids: list[str] = []
+
+    async def fake_probe_item_health(**kwargs: object) -> ItemHealthStatus:
+        item = kwargs["item"]
+        probed_ids.append(item.id)
+        if item.id == "svc-parent":
+            return ItemHealthStatus(
+                item_id=item.id,
+                ok=False,
+                checked_url=str(item.url),
+                status_code=503,
+                latency_ms=9,
+                error="HTTP 503",
+                level="down",
+                reason="http_5xx",
+                error_kind="http_error",
+            )
+        return ItemHealthStatus(
+            item_id=item.id,
+            ok=True,
+            checked_url=str(item.url),
+            status_code=200,
+            latency_ms=6,
+            error=None,
+            level="online",
+            reason="ok",
+            error_kind=None,
+        )
+
+    monkeypatch.setattr(dashboard_module, "probe_item_health", fake_probe_item_health)
+    response = await api_client.get("/api/v1/dashboard/health?item_id=svc-child")
+    assert response.status_code == httpx.codes.OK
+    payload = response.json()["items"]
+
+    assert set(probed_ids) == {"svc-parent", "svc-child"}
+    assert len(payload) == 1
+    assert payload[0]["item_id"] == "svc-child"
+    assert payload[0]["level"] == "indirect_failure"
+    assert payload[0]["reason"] == "indirect_dependency"
 
 
 async def test_get_iframe_source_returns_direct_url_for_public_iframe(api_client: AsyncClient) -> None:

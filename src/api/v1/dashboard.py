@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import AsyncIterator
-from typing import Annotated
+from typing import Annotated, Literal
 
 import httpx
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request, Response
@@ -17,6 +17,8 @@ from scheme.dashboard import (
     DashboardHealthResponse,
     IframeItemConfig,
     IframeSourceResponse,
+    ItemConfig,
+    ItemHealthStatus,
     LanScanStateResponse,
     LanScanTriggerResponse,
     SaveConfigResponse,
@@ -86,6 +88,8 @@ def require_admin_token(
 
 
 AdminAuthDep = Annotated[None, Depends(require_admin_token)]
+HealthLevel = Literal["online", "degraded", "down", "unknown", "indirect_failure"]
+DependencyResolution = tuple[HealthLevel, str | None, str | None]
 
 
 def _load_iframe_item(item_id: str, config_service: DashboardConfigService) -> IframeItemConfig:
@@ -98,6 +102,120 @@ def _load_iframe_item(item_id: str, config_service: DashboardConfigService) -> I
     except DashboardConfigValidationError as exc:
         raise _validation_exception(exc) from exc
     return item
+
+
+def _status_level(status: ItemHealthStatus) -> HealthLevel:
+    level = str(status.level or "").lower()
+    if level == "online":
+        return "online"
+    if level == "degraded":
+        return "degraded"
+    if level == "down":
+        return "down"
+    if level == "unknown":
+        return "unknown"
+    if level == "indirect_failure":
+        return "indirect_failure"
+    if status.ok:
+        return "online"
+    return "down"
+
+
+def _expand_requested_with_dependencies(requested_ids: set[str], items_by_id: dict[str, ItemConfig]) -> set[str]:
+    expanded: set[str] = set()
+    stack = list(requested_ids)
+
+    while stack:
+        item_id = stack.pop()
+        if item_id in expanded:
+            continue
+        expanded.add(item_id)
+        item = items_by_id.get(item_id)
+        if not item:
+            continue
+        for dependency_id in item.depends_on:
+            if dependency_id not in expanded:
+                stack.append(dependency_id)
+
+    return expanded
+
+
+def _apply_dependency_awareness(items: list[ItemConfig], statuses_by_id: dict[str, ItemHealthStatus]) -> None:
+    items_by_id = {item.id: item for item in items}
+    memo: dict[str, DependencyResolution] = {}
+    visiting: set[str] = set()
+
+    def resolve(item_id: str) -> DependencyResolution:
+        if item_id in memo:
+            return memo[item_id]
+
+        status = statuses_by_id.get(item_id)
+        if not status:
+            result: DependencyResolution = ("unknown", None, None)
+            memo[item_id] = result
+            return result
+
+        if item_id in visiting:
+            result = ("degraded", "dependency_cycle", "Dependency cycle detected")
+            memo[item_id] = result
+            return result
+
+        item = items_by_id.get(item_id)
+        base_level = _status_level(status)
+        if not item or base_level == "down":
+            result = (base_level, status.reason, status.error)
+            memo[item_id] = result
+            return result
+
+        visiting.add(item_id)
+        try:
+            missing_dependencies = sorted(
+                {
+                    dependency_id
+                    for dependency_id in item.depends_on
+                    if dependency_id not in items_by_id
+                }
+            )
+            if missing_dependencies:
+                result = (
+                    "degraded",
+                    "missing_dependency",
+                    f"Missing dependency: {', '.join(missing_dependencies)}",
+                )
+                memo[item_id] = result
+                return result
+
+            for dependency_id in item.depends_on:
+                dependency_level, dependency_reason, _dependency_error = resolve(dependency_id)
+
+                if dependency_reason == "dependency_cycle":
+                    result = ("degraded", "dependency_cycle", "Dependency cycle detected")
+                    memo[item_id] = result
+                    return result
+
+                if dependency_level in {"down", "indirect_failure"}:
+                    result = ("indirect_failure", "indirect_dependency", f"Blocked by dependency: {dependency_id}")
+                    memo[item_id] = result
+                    return result
+
+            result = (base_level, status.reason, status.error)
+            memo[item_id] = result
+            return result
+        finally:
+            visiting.discard(item_id)
+
+    for item in items:
+        status = statuses_by_id.get(item.id)
+        if not status:
+            continue
+        level, reason, error = resolve(item.id)
+        status.level = level
+        status.reason = reason
+        status.ok = level == "online"
+
+        if reason in {"missing_dependency", "dependency_cycle", "indirect_dependency"}:
+            status.error = error
+            status.error_kind = None
 
 
 dashboard_router = APIRouter(prefix="/api/v1")
@@ -151,13 +269,19 @@ async def get_dashboard_health(
     item_id: Annotated[list[str] | None, Query()] = None,
 ) -> DashboardHealthResponse:
     try:
-        items = config_service.list_items()
+        all_items = config_service.list_items()
     except DashboardConfigValidationError as exc:
         raise _validation_exception(exc) from exc
 
+    items_by_id = {item.id: item for item in all_items}
+    requested_ids: set[str] | None = None
+    probe_ids: set[str] | None = None
+
     if item_id:
-        requested = set(item_id)
-        items = [item for item in items if item.id in requested]
+        requested_ids = set(item_id)
+        probe_ids = _expand_requested_with_dependencies(requested_ids, items_by_id)
+
+    items_to_probe = all_items if probe_ids is None else [item for item in all_items if item.id in probe_ids]
 
     semaphore = asyncio.Semaphore(max(1, settings.healthcheck_max_parallel))
     async with httpx.AsyncClient(
@@ -173,9 +297,21 @@ async def get_dashboard_health(
                     semaphore=semaphore,
                     default_timeout_sec=settings.healthcheck_timeout_sec,
                 )
-                for item in items
+                for item in items_to_probe
             ]
         )
+
+    statuses_by_id = {status.item_id: status for status in statuses}
+    _apply_dependency_awareness(items_to_probe, statuses_by_id)
+
+    if requested_ids is not None:
+        statuses = [
+            statuses_by_id[item.id]
+            for item in all_items
+            if item.id in requested_ids and item.id in statuses_by_id
+        ]
+    else:
+        statuses = [statuses_by_id[item.id] for item in all_items if item.id in statuses_by_id]
 
     return DashboardHealthResponse(items=statuses)
 
