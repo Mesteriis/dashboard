@@ -295,8 +295,35 @@ class ItemHealthStatus(BaseModel):
     error_kind: Literal["timeout", "dns_error", "ssl_error", "connection_error", "http_error", "unknown"] | None = None
 
 
+class AggregateStatus(BaseModel):
+    total: int = Field(ge=0)
+    online: int = Field(ge=0)
+    degraded: int = Field(ge=0)
+    down: int = Field(ge=0)
+    unknown: int = Field(ge=0)
+    indirect_failure: int = Field(ge=0)
+    level: Literal["online", "degraded", "down", "unknown"] = "unknown"
+
+
+class SubgroupHealthAggregate(BaseModel):
+    group_id: str
+    subgroup_id: str
+    status: AggregateStatus
+
+
+class GroupHealthAggregate(BaseModel):
+    group_id: str
+    status: AggregateStatus
+
+
+class DashboardHealthAggregates(BaseModel):
+    groups: list[GroupHealthAggregate] = Field(default_factory=list)
+    subgroups: list[SubgroupHealthAggregate] = Field(default_factory=list)
+
+
 class DashboardHealthResponse(BaseModel):
     items: list[ItemHealthStatus] = Field(default_factory=list)
+    aggregates: DashboardHealthAggregates = Field(default_factory=DashboardHealthAggregates)
 
 
 class IframeSourceResponse(BaseModel):

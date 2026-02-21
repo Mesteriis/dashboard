@@ -12,9 +12,12 @@ from starlette.background import BackgroundTask
 from config.container import AppContainer
 from config.settings import ADMIN_TOKEN_HEADER, AppSettings
 from scheme.dashboard import (
+    AggregateStatus,
     ConfigVersion,
     DashboardConfig,
+    DashboardHealthAggregates,
     DashboardHealthResponse,
+    GroupHealthAggregate,
     IframeItemConfig,
     IframeSourceResponse,
     ItemConfig,
@@ -22,6 +25,7 @@ from scheme.dashboard import (
     LanScanStateResponse,
     LanScanTriggerResponse,
     SaveConfigResponse,
+    SubgroupHealthAggregate,
     ValidateRequest,
     ValidateResponse,
 )
@@ -218,6 +222,80 @@ def _apply_dependency_awareness(items: list[ItemConfig], statuses_by_id: dict[st
             status.error_kind = None
 
 
+def _build_aggregate_status(statuses: list[ItemHealthStatus]) -> AggregateStatus:
+    counts = {
+        "online": 0,
+        "degraded": 0,
+        "down": 0,
+        "unknown": 0,
+        "indirect_failure": 0,
+    }
+
+    for status in statuses:
+        item_level = _status_level(status)
+        counts[item_level] += 1
+
+    total = len(statuses)
+    level: Literal["online", "degraded", "down", "unknown"] = "unknown"
+    if total > 0:
+        if counts["down"] > 0:
+            level = "down"
+        elif counts["degraded"] > 0 or counts["indirect_failure"] > 0:
+            level = "degraded"
+        elif counts["online"] == total:
+            level = "online"
+
+    return AggregateStatus(
+        total=total,
+        online=counts["online"],
+        degraded=counts["degraded"],
+        down=counts["down"],
+        unknown=counts["unknown"],
+        indirect_failure=counts["indirect_failure"],
+        level=level,
+    )
+
+
+def _build_health_aggregates(
+    *,
+    config: DashboardConfig,
+    statuses_by_id: dict[str, ItemHealthStatus],
+) -> DashboardHealthAggregates:
+    group_aggregates: list[GroupHealthAggregate] = []
+    subgroup_aggregates: list[SubgroupHealthAggregate] = []
+
+    for group in config.groups:
+        group_statuses: list[ItemHealthStatus] = []
+
+        for subgroup in group.subgroups:
+            subgroup_statuses = [
+                statuses_by_id[item.id]
+                for item in subgroup.items
+                if item.id in statuses_by_id
+            ]
+            if not subgroup_statuses:
+                continue
+
+            subgroup_aggregates.append(
+                SubgroupHealthAggregate(
+                    group_id=group.id,
+                    subgroup_id=subgroup.id,
+                    status=_build_aggregate_status(subgroup_statuses),
+                )
+            )
+            group_statuses.extend(subgroup_statuses)
+
+        if group_statuses:
+            group_aggregates.append(
+                GroupHealthAggregate(
+                    group_id=group.id,
+                    status=_build_aggregate_status(group_statuses),
+                )
+            )
+
+    return DashboardHealthAggregates(groups=group_aggregates, subgroups=subgroup_aggregates)
+
+
 dashboard_router = APIRouter(prefix="/api/v1")
 
 
@@ -269,9 +347,16 @@ async def get_dashboard_health(
     item_id: Annotated[list[str] | None, Query()] = None,
 ) -> DashboardHealthResponse:
     try:
-        all_items = config_service.list_items()
+        config = config_service.load()
     except DashboardConfigValidationError as exc:
         raise _validation_exception(exc) from exc
+
+    all_items = [
+        item
+        for group in config.groups
+        for subgroup in group.subgroups
+        for item in subgroup.items
+    ]
 
     items_by_id = {item.id: item for item in all_items}
     requested_ids: set[str] | None = None
@@ -313,7 +398,12 @@ async def get_dashboard_health(
     else:
         statuses = [statuses_by_id[item.id] for item in all_items if item.id in statuses_by_id]
 
-    return DashboardHealthResponse(items=statuses)
+    status_subset_by_id = {status.item_id: status for status in statuses}
+    aggregates = _build_health_aggregates(
+        config=config,
+        statuses_by_id=status_subset_by_id,
+    )
+    return DashboardHealthResponse(items=statuses, aggregates=aggregates)
 
 
 @dashboard_router.get("/dashboard/iframe/{item_id}/source", response_model=IframeSourceResponse)
