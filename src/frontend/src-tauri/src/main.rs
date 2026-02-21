@@ -18,6 +18,7 @@ const USER_RUNTIME_DIR_NAME: &str = ".oko";
 const USER_CONFIG_FILE_NAME: &str = "dashboard.yaml";
 const USER_LAN_SCAN_RESULT_FILE: &str = "data/lan_scan_result.json";
 const USER_BACKEND_LOG_FILE: &str = "logs/backend.log";
+const USER_BACKEND_PID_FILE: &str = "backend.pid";
 const EMBEDDED_ADMIN_TOKEN: &str = "oko-desktop-embedded";
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
@@ -141,6 +142,27 @@ fn user_runtime_dir() -> PathBuf {
   home.join(USER_RUNTIME_DIR_NAME)
 }
 
+fn backend_pid_file() -> PathBuf {
+  user_runtime_dir().join(USER_BACKEND_PID_FILE)
+}
+
+fn terminate_stale_backend_by_pid_file() {
+  let pid_path = backend_pid_file();
+  let raw = match fs::read_to_string(&pid_path) {
+    Ok(value) => value,
+    Err(_) => return,
+  };
+
+  let pid = raw.trim();
+  if pid.is_empty() {
+    let _ = fs::remove_file(pid_path);
+    return;
+  }
+
+  let _ = Command::new("kill").arg("-TERM").arg(pid).status();
+  let _ = fs::remove_file(pid_path);
+}
+
 fn resolve_default_dashboard_template(app: &AppHandle) -> Option<PathBuf> {
   if let Ok(explicit) = std::env::var("OKO_DESKTOP_DEFAULT_CONFIG") {
     let explicit_path = PathBuf::from(explicit);
@@ -206,6 +228,8 @@ fn resolve_dev_backend_script() -> Option<PathBuf> {
 }
 
 fn spawn_embedded_backend(app: &AppHandle) -> Result<EmbeddedBackend, String> {
+  terminate_stale_backend_by_pid_file();
+
   let listener = TcpListener::bind("127.0.0.1:0").map_err(|error| format!("Failed to reserve local port: {error}"))?;
   let port = listener
     .local_addr()
@@ -257,6 +281,12 @@ fn spawn_embedded_backend(app: &AppHandle) -> Result<EmbeddedBackend, String> {
     .spawn()
     .map_err(|error| format!("Failed to start embedded backend: {error}"))?;
 
+  let pid_path = backend_pid_file();
+  if let Some(parent) = pid_path.parent() {
+    let _ = fs::create_dir_all(parent);
+  }
+  let _ = fs::write(pid_path, child.id().to_string());
+
   Ok(EmbeddedBackend { child, api_base_url })
 }
 
@@ -266,6 +296,7 @@ fn stop_embedded_backend(state: &DesktopState) {
     let _ = backend.child.kill();
     let _ = backend.child.wait();
   }
+  let _ = fs::remove_file(backend_pid_file());
 }
 
 fn ensure_runtime_mode(app: &AppHandle, state: &DesktopState) -> Result<(), String> {
