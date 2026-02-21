@@ -1,5 +1,6 @@
 import { createApp } from 'vue'
 import App from './App.vue'
+import { initDevPerfTelemetry } from './services/perfTelemetry.js'
 import './styles.scss'
 
 function resolveFxMode() {
@@ -38,4 +39,5 @@ function initFxModeProfile() {
 }
 
 initFxModeProfile()
+initDevPerfTelemetry({ enabled: import.meta.env.DEV })
 createApp(App).mount('#app')
