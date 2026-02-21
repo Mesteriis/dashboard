@@ -91,3 +91,11 @@
 .tab-btn:nth-child(3) {
   animation-delay: 300ms;
 }
+
+.shell.shell-motion-static .page .hero {
+  animation: none;
+  opacity: 1;
+  transform: none;
+  filter: none;
+  will-change: auto;
+}

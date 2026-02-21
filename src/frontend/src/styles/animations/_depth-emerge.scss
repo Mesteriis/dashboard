@@ -74,8 +74,9 @@
     grid-template-columns: 360px minmax(0, 1fr);
   }
 
-  .app-shell.sidebar-compact {
-    grid-template-columns: 88px minmax(0, 1fr);
+  .app-shell.sidebar-sections,
+  .app-shell.sidebar-hidden {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .widget-grid {

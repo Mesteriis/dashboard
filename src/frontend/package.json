@@ -7,7 +7,11 @@
     "dev": "node_modules/.bin/vite",
     "build": "node_modules/.bin/vite build && node scripts/build-to-backend.mjs",
     "preview": "node_modules/.bin/vite preview --port 4173",
-    "test": "node --test tests/*.test.mjs",
+    "lint": "node_modules/.bin/eslint \"src/**/*.{js,vue}\" --max-warnings=0",
+    "typecheck:services": "node_modules/.bin/tsc -p tsconfig.typecheck.services.json --noEmit",
+    "typecheck:app": "node_modules/.bin/vue-tsc -p tsconfig.typecheck.app.json --noEmit",
+    "typecheck": "npm run typecheck:services && npm run typecheck:app",
+    "test": "node --test ../../tests/frontend/*.test.mjs",
     "check:files": "node scripts/check-file-length.mjs"
   },
   "dependencies": {
@@ -16,8 +20,14 @@
     "vue": "^3.5.0"
   },
   "devDependencies": {
+    "@eslint/js": "^9.38.0",
     "@vitejs/plugin-vue": "^5.1.2",
+    "eslint": "^9.38.0",
+    "eslint-plugin-vue": "^9.33.0",
+    "globals": "^16.5.0",
     "sass": "^1.97.3",
-    "vite": "^5.4.8"
+    "typescript": "^5.9.3",
+    "vite": "^5.4.8",
+    "vue-tsc": "^2.2.12"
   }
 }

@@ -13,7 +13,7 @@
         <span class="tree-caret" :class="{ open: isGroupExpanded(group.key) }">▾</span>
         <component :is="resolveGroupIcon(group)" class="ui-icon tree-icon" />
         <span class="tree-text">{{ group.title }}</span>
-        <span class="tree-meta">{{ groupOnlineItems(group) }}/{{ groupTotalItems(group) }}</span>
+        <span class="tree-meta">{{ groupTotalItems(group) }}</span>
       </button>
 
       <div v-if="editMode && isDirectGroupNode(group)" class="tree-inline-actions">
@@ -59,7 +59,6 @@ const {
   toggleGroupNode,
   isGroupExpanded,
   resolveGroupIcon,
-  groupOnlineItems,
   groupTotalItems,
   editGroup,
   addSubgroup,

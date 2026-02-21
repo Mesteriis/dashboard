@@ -22,6 +22,44 @@
     justify-self: stretch;
   }
 
+  .hero-title-panel,
+  .service-hero-controls {
+    padding: 0;
+  }
+
+  .hero-page-tabs {
+    --hero-page-tab-size: 44px;
+    max-width: 100%;
+    overflow-x: auto;
+    scrollbar-width: thin;
+  }
+
+  .hero-page-tab-btn {
+    min-height: 38px;
+  }
+
+  .hero-page-tab-btn.active {
+    padding: 0 24px;
+  }
+
+  .hero-page-tab-label {
+    font-size: 1rem;
+  }
+
+  .hero-page-tab-btn.active .hero-page-tab-label {
+    inline-size: 100%;
+  }
+
+  .hero-display-controls {
+    inline-size: 100%;
+    flex-wrap: wrap;
+  }
+
+  .hero-display-controls .hero-dropdown {
+    min-inline-size: 0;
+    flex: 1 1 100%;
+  }
+
   .lan-summary-grid {
     grid-template-columns: 1fr;
   }

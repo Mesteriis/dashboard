@@ -12,6 +12,7 @@
       <button class="tree-node tree-subgroup" :class="{ active: isSubgroupSelected(group.key, subgroup.id) }" type="button" @click="selectSubgroupNode(group.key, subgroup.id)">
         <component :is="resolveSubgroupIcon(subgroup)" class="ui-icon tree-icon tree-sub-icon" />
         <span class="tree-text">{{ subgroup.title }}</span>
+        <span class="tree-meta">{{ subgroupTotalItems(subgroup) }}</span>
       </button>
       <div v-if="editMode" class="tree-inline-actions">
         <GripVertical class="ui-icon tree-grip" />
@@ -27,16 +28,12 @@
       </div>
     </div>
 
-    <ul class="tree-items">
-      <SidebarTreeItemNode v-for="item in subgroup.items" :key="item.id" :group="group" :subgroup="subgroup" :item="item" />
-    </ul>
   </li>
 </template>
 
 <script setup>
 import { GripVertical, Pencil, Plus, Trash2 } from 'lucide-vue-next'
 import { useDashboardStore } from '../../stores/dashboardStore.js'
-import SidebarTreeItemNode from './SidebarTreeItemNode.vue'
 
 defineProps({
   group: { type: Object, required: true },
@@ -55,6 +52,7 @@ const {
   isSubgroupSelected,
   selectSubgroupNode,
   resolveSubgroupIcon,
+  subgroupTotalItems,
   editSubgroup,
   addItem,
   removeSubgroup,

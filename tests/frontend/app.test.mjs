@@ -2,11 +2,21 @@ import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 import path from 'node:path'
 import test from 'node:test'
-import { compileScript, compileTemplate, parse } from '@vue/compiler-sfc'
+import { pathToFileURL } from 'node:url'
 
 const appPath = path.resolve(process.cwd(), 'src/App.vue')
+let compiler = null
+
+async function loadCompiler() {
+  if (compiler) return compiler
+  const compilerPath = path.resolve(process.cwd(), 'node_modules/@vue/compiler-sfc/dist/compiler-sfc.cjs.js')
+  const imported = await import(pathToFileURL(compilerPath).href)
+  compiler = imported.default || imported
+  return compiler
+}
 
 test('App.vue parses and compiles without SFC errors', async () => {
+  const { compileScript, compileTemplate, parse } = await loadCompiler()
   const source = await readFile(appPath, 'utf8')
   const { descriptor, errors } = parse(source, { filename: appPath })
 
@@ -29,6 +39,7 @@ test('App.vue parses and compiles without SFC errors', async () => {
 })
 
 test('App.vue template is composed from views and modal components', async () => {
+  const { parse } = await loadCompiler()
   const source = await readFile(appPath, 'utf8')
   const { descriptor } = parse(source, { filename: appPath })
   const template = descriptor.template?.content || ''

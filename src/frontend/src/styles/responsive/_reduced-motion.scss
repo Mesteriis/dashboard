@@ -5,6 +5,12 @@
     animation: none;
   }
 
+  .shell::after,
+  .health-dot,
+  .health-text.is-updating {
+    animation: none !important;
+  }
+
   .sidebar,
   .tab-btn,
   .sidebar-tree,
@@ -15,11 +21,25 @@
   .page .block-wrap,
   .item-card,
   .widget-card,
+  .hero-page-tabs,
+  .hero-page-tab-btn,
   .editor-modal,
   .lan-host-modal {
     opacity: 1;
     transform: none;
     filter: none;
     animation: none;
+  }
+
+  .item-card::before,
+  .item-card::after {
+    animation: none !important;
+    transition: none;
+  }
+
+  .item-grid-transition-enter-active,
+  .item-grid-transition-leave-active,
+  .item-grid-transition-move {
+    transition: none !important;
   }
 }

@@ -1,0 +1,41 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: check-merge-conflict
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: check-yaml
+
+  - repo: local
+    hooks:
+      - id: backend-ruff
+        name: backend ruff (strict)
+        entry: uv run --group dev ruff check src tests/backend
+        language: system
+        pass_filenames: false
+      - id: backend-mypy
+        name: backend mypy (strict)
+        entry: uv run --group dev mypy
+        language: system
+        pass_filenames: false
+      - id: backend-pytest
+        name: backend pytest
+        entry: uv run --group dev pytest tests/backend
+        language: system
+        pass_filenames: false
+      - id: frontend-eslint
+        name: frontend eslint (strict)
+        entry: bash -lc 'cd src/frontend && npm run lint'
+        language: system
+        pass_filenames: false
+      - id: frontend-typecheck
+        name: frontend typecheck (strict)
+        entry: bash -lc 'cd src/frontend && npm run typecheck'
+        language: system
+        pass_filenames: false
+      - id: frontend-tests
+        name: frontend tests
+        entry: bash -lc 'cd src/frontend && npm test'
+        language: system
+        pass_filenames: false

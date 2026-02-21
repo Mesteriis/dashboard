@@ -11,7 +11,7 @@ from urllib.parse import urlparse
 import yaml
 from pydantic import ValidationError
 
-from .models import (
+from scheme.dashboard import (
     AuthProfileConfig,
     BasicAuthProfile,
     BearerAuthProfile,
@@ -68,8 +68,8 @@ class DashboardConfigService:
         return config
 
     def get_version(self) -> ConfigVersion:
-        if self._state is None:
-            self.load()
+        # Always call load() so we refresh version when the file changed on disk.
+        self.load()
         assert self._state is not None
         return self._state.version
 
@@ -161,7 +161,7 @@ class DashboardConfigService:
         if isinstance(profile, BasicAuthProfile):
             username = self._read_env(profile.username_env)
             password = self._read_env(profile.password_env)
-            token = base64.b64encode(f"{username}:{password}".encode("utf-8")).decode("ascii")
+            token = base64.b64encode(f"{username}:{password}".encode()).decode("ascii")
             headers["Authorization"] = f"Basic {token}"
             return headers, query_params
 

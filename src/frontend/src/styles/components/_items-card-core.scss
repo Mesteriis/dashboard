@@ -15,12 +15,53 @@
   width: 42px;
   height: 42px;
   border-radius: 9px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.24);
 }
 
 .compact-health-dot {
   position: absolute;
   right: 8px;
   bottom: 8px;
+}
+
+.item-card.tile {
+  place-items: stretch;
+  align-content: start;
+  gap: 8px;
+}
+
+.item-tile-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.tile-item-icon,
+.tile-item-favicon {
+  width: 18px;
+  height: 18px;
+}
+
+.tile-item-favicon {
+  border-radius: 5px;
+  box-shadow: 0 2px 7px rgba(0, 0, 0, 0.22);
+}
+
+.tile-health-dot {
+  margin-left: auto;
+}
+
+.item-tile-title {
+  margin: 0;
+  font-size: 0.82rem;
+  color: #dceaf4;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .item-head {
@@ -42,16 +83,22 @@
 
 .item-icon {
   color: #9cc8e1;
+  transition: color 220ms ease, filter 220ms ease;
 }
 
 .item-favicon {
   width: 16px;
   height: 16px;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(2, 10, 18, 0.3);
 }
 
 .item-head h4 {
   margin: 0;
-  font-size: 0.97rem;
+  font-size: 0.98rem;
+  color: #e6f1fb;
+  font-weight: 560;
+  letter-spacing: 0.005em;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -61,19 +108,20 @@
 .item-type {
   display: inline-flex;
   align-items: center;
-  border: 1px solid rgba(102, 237, 214, 0.36);
-  background: rgba(20, 82, 82, 0.34);
+  border: 1px solid rgba(102, 237, 214, 0.28);
+  background: rgba(20, 82, 82, 0.26);
   border-radius: 999px;
   padding: 2px 8px;
-  font-size: 0.72rem;
-  color: #d2fdf3;
+  font-size: 0.71rem;
+  color: #c0e9df;
+  letter-spacing: 0.02em;
   white-space: nowrap;
 }
 
 .item-url {
   margin: 0;
-  color: #bdd0e0;
-  font-size: 0.8rem;
+  color: #99b0c2;
+  font-size: 0.78rem;
   overflow-wrap: anywhere;
   word-break: break-word;
   min-width: 0;
@@ -87,10 +135,84 @@
 }
 
 .health-dot {
+  position: relative;
   width: 8px;
   height: 8px;
   border-radius: 50%;
   flex: 0 0 auto;
   background: #9baebf;
-  box-shadow: 0 0 0 3px rgba(138, 160, 176, 0.16);
+  box-shadow:
+    0 0 0 3px rgba(138, 160, 176, 0.16),
+    0 0 10px rgba(138, 160, 176, 0.24);
+}
+
+.health-dot::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(5, 12, 18, 0.56);
+}
+
+.health-dot.ok::after {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+}
+
+.health-dot.degraded::after {
+  width: 3px;
+  height: 3px;
+  border-radius: 1px;
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.health-dot.down::after {
+  width: 5px;
+  height: 2px;
+  border-radius: 2px;
+}
+
+.health-dot.unknown::after {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  opacity: 0.66;
+}
+
+.item-card.status-ok .item-icon {
+  color: #88dbc8;
+}
+
+.item-card.status-degraded .item-icon {
+  color: #e1c08d;
+}
+
+.item-card.status-down .item-icon {
+  color: #e5a2a8;
+}
+
+.health-text.is-updating {
+  animation: health-value-flash 860ms cubic-bezier(0.2, 0.72, 0.2, 1);
+}
+
+@keyframes health-value-flash {
+  0% {
+    color: #eaf7ff;
+    text-shadow: 0 0 0 rgba(143, 242, 229, 0);
+    transform: translateY(0);
+  }
+
+  35% {
+    color: #c8fff0;
+    text-shadow: 0 0 12px rgba(143, 242, 229, 0.38);
+    transform: translateY(-0.5px);
+  }
+
+  100% {
+    color: var(--muted);
+    text-shadow: 0 0 0 rgba(143, 242, 229, 0);
+    transform: translateY(0);
+  }
 }

@@ -12,7 +12,8 @@
     min-height: unset;
   }
 
-  .app-shell.sidebar-compact {
+  .app-shell.sidebar-sections,
+  .app-shell.sidebar-hidden {
     grid-template-columns: 1fr;
   }
 

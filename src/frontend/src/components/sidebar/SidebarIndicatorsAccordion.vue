@@ -1,5 +1,5 @@
 <template>
-  <div v-if="!isSidebarIconOnly" class="sidebar-stats-accordion" aria-label="Индикаторы">
+  <div class="sidebar-stats-accordion" aria-label="Индикаторы">
     <button class="sidebar-stats-toggle" type="button" aria-controls="sidebar-stats-panel" :aria-expanded="statsExpanded" @click="statsExpanded = !statsExpanded">
       <span class="sidebar-stats-toggle-text">Индикаторы</span>
       <span class="sidebar-stats-toggle-values">{{ sidebarIndicatorSummary }}</span>
@@ -76,7 +76,6 @@ import { useDashboardStore } from '../../stores/dashboardStore.js'
 const dashboard = useDashboardStore()
 
 const {
-  isSidebarIconOnly,
   statsExpanded,
   sidebarIndicatorSummary,
   sidebarIndicators,

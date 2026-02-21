@@ -1,27 +1,54 @@
 
 .health-dot.ok {
   background: #35d8aa;
-  box-shadow: 0 0 0 3px rgba(53, 216, 170, 0.2);
+  box-shadow:
+    0 0 0 3px rgba(53, 216, 170, 0.2),
+    0 0 13px rgba(53, 216, 170, 0.4);
+}
+
+.health-dot.degraded {
+  background: #ffbe73;
+  box-shadow:
+    0 0 0 3px rgba(255, 190, 115, 0.22),
+    0 0 14px rgba(255, 190, 115, 0.34);
 }
 
 .health-dot.down {
   background: #ff7f87;
-  box-shadow: 0 0 0 3px rgba(255, 127, 135, 0.2);
+  box-shadow:
+    0 0 0 3px rgba(255, 127, 135, 0.2),
+    0 0 12px rgba(255, 127, 135, 0.28);
 }
 
 .health-dot.unknown {
   background: #b8cad8;
-  box-shadow: 0 0 0 3px rgba(184, 202, 216, 0.18);
+  box-shadow:
+    0 0 0 3px rgba(184, 202, 216, 0.18),
+    0 0 8px rgba(184, 202, 216, 0.2);
+}
+
+.item-card .health-dot.ok {
+  animation: health-ok-pulse 3.8s ease-in-out infinite;
+}
+
+.item-card .health-dot.degraded {
+  animation: health-degraded-wave 2.9s ease-in-out infinite;
+}
+
+.item-card .health-dot.down {
+  animation: health-down-alert 420ms ease-out 1;
 }
 
 .health-text {
   color: var(--muted);
   font-size: 0.74rem;
+  letter-spacing: 0.01em;
   white-space: nowrap;
   flex: 1 1 auto;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
+  transition: color 220ms ease, text-shadow 220ms ease;
 }
 
 .item-tags {
@@ -57,10 +84,78 @@
   justify-content: center;
 }
 
+.item-actions .icon-btn:focus-visible {
+  outline: none;
+  border-color: rgba(120, 248, 226, 0.62);
+  box-shadow:
+    0 0 0 2px rgba(120, 248, 226, 0.22),
+    0 0 12px rgba(86, 232, 209, 0.32);
+}
+
 .item-action-icon {
   width: 15px;
   height: 15px;
   stroke-width: 2;
+}
+
+@keyframes health-ok-pulse {
+  0%,
+  74%,
+  100% {
+    box-shadow:
+      0 0 0 3px rgba(53, 216, 170, 0.2),
+      0 0 12px rgba(53, 216, 170, 0.28);
+  }
+
+  84% {
+    box-shadow:
+      0 0 0 4px rgba(53, 216, 170, 0.28),
+      0 0 18px rgba(53, 216, 170, 0.44);
+  }
+}
+
+@keyframes health-degraded-wave {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 3px rgba(255, 190, 115, 0.22),
+      0 0 12px rgba(255, 190, 115, 0.26);
+  }
+
+  40% {
+    box-shadow:
+      0 0 0 3px rgba(255, 190, 115, 0.3),
+      0 0 18px rgba(255, 173, 84, 0.42);
+  }
+
+  65% {
+    box-shadow:
+      0 0 0 4px rgba(255, 190, 115, 0.24),
+      0 0 11px rgba(255, 163, 64, 0.24);
+  }
+}
+
+@keyframes health-down-alert {
+  0% {
+    transform: scale(0.85);
+    box-shadow:
+      0 0 0 1px rgba(255, 127, 135, 0.32),
+      0 0 4px rgba(255, 127, 135, 0.32);
+  }
+
+  65% {
+    transform: scale(1.08);
+    box-shadow:
+      0 0 0 5px rgba(255, 127, 135, 0.16),
+      0 0 18px rgba(255, 127, 135, 0.36);
+  }
+
+  100% {
+    transform: scale(1);
+    box-shadow:
+      0 0 0 3px rgba(255, 127, 135, 0.2),
+      0 0 12px rgba(255, 127, 135, 0.28);
+  }
 }
 
 .widget-block {

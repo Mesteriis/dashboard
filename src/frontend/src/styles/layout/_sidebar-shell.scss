@@ -17,7 +17,7 @@
   transition: width 280ms ease, border-color 280ms ease, box-shadow 280ms ease;
 }
 
-.sidebar.compact {
+.sidebar.sections {
   border-color: rgba(96, 247, 223, 0.34);
   box-shadow:
     0 24px 54px rgba(2, 7, 14, 0.56),
@@ -45,9 +45,9 @@
   overflow: hidden;
 }
 
-.sidebar-content.compact {
-  padding: 10px 6px;
-  gap: 8px;
+.sidebar-content.sections {
+  grid-template-rows: auto auto;
+  align-content: start;
 }
 
 .brand {
@@ -57,23 +57,12 @@
   padding: 4px;
 }
 
-.brand.compact {
-  justify-content: center;
-  padding: 2px;
-}
-
 .brand img {
   width: 50px;
   height: 50px;
   object-fit: contain;
   border-radius: 12px;
   background: rgba(0, 0, 0, 0.22);
-}
-
-.brand.compact img {
-  width: 44px;
-  height: 44px;
-  border-radius: 11px;
 }
 
 .brand-title {

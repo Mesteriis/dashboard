@@ -28,6 +28,11 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --no-dev
 
 COPY src/main.py /app/src/main.py
+COPY src/api/ /app/src/api/
+COPY src/config/ /app/src/config/
+COPY src/scheme/ /app/src/scheme/
+COPY src/service/ /app/src/service/
+COPY src/tools/ /app/src/tools/
 COPY dashboard.yaml /app/dashboard.yaml
 COPY src/templates/ /app/src/templates/
 COPY src/static/ /app/src/static/
@@ -35,22 +40,13 @@ COPY src/static/ /app/src/static/
 COPY --from=frontend_builder /frontend/dist/ /app/src/static/
 COPY --from=frontend_builder /frontend/dist/index.html /app/src/templates/index.html
 
-RUN mkdir -p /data/caddy /data/cloudflare /data/settings /data/vpn
-
 ENV PYTHONUNBUFFERED=1 \
-    ROUTES_FILE=/data/caddy/routes.json \
-    CADDYFILE_PATH=/data/caddy/Caddyfile \
-    SETTINGS_JSON_FILE=/data/settings/app_settings.json \
-    CLOUDFLARE_API_TOKEN_FILE=/data/cloudflare/api_token.txt \
-    CLOUDFLARE_DEFAULT_SERVICE=http://172.17.0.1:80 \
-    CADDY_RUNTIME_HTTP_PORT=80 \
-    CADDY_RUNTIME_HTTPS_PORT=443 \
-    CF_TUNNEL_DIR= \
-    FEATURE_TUNNEL_ENABLED=true \
-    FEATURE_VPN_ENABLED=true \
-    VPN_DATA_DIR=/data/vpn \
-    VPN_STATE_FILE=/data/vpn/state.json \
-    DASHBOARD_PORT=8090
+    PYTHONPATH=/app/src \
+    DASHBOARD_PORT=8090 \
+    LAN_SCAN_ENABLED=false \
+    LAN_SCAN_RUN_ON_STARTUP=false \
+    DASHBOARD_HEALTHCHECK_VERIFY_TLS=true \
+    LAN_SCAN_HTTP_VERIFY_TLS=true
 
 EXPOSE 8090
-CMD ["uv", "run", "uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8090"]
+CMD ["uv", "run", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8090"]

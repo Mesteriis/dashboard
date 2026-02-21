@@ -3,50 +3,91 @@
     <header class="hero panel hero-title-panel">
       <div id="hero-title-particles" class="hero-panel-particles" aria-hidden="true"></div>
       <div class="hero-title-content">
-        <h1>{{ activePage.title }}</h1>
+        <HeroPageTabs />
       </div>
     </header>
 
     <aside class="panel hero-control-panel service-hero-controls" :class="{ active: editMode }">
       <div id="hero-controls-particles" class="hero-panel-particles" aria-hidden="true"></div>
       <div class="hero-controls-content">
-        <IconButton
-          button-class="hero-icon-btn editor-toggle"
-          :active="editMode"
-          :title="editMode ? 'Выключить режим редактирования' : 'Включить режим редактирования'"
-          :aria-label="editMode ? 'Выключить режим редактирования' : 'Включить режим редактирования'"
-          @click="toggleEditMode"
-        >
-          <Pencil class="ui-icon hero-action-icon" />
-        </IconButton>
+        <div class="hero-controls-accordion" :class="{ open: controlsOpen }">
+          <Transition name="hero-controls-drawer-transition">
+            <div v-if="controlsOpen" id="hero-controls-drawer" class="hero-controls-drawer">
+              <IconButton
+                button-class="hero-icon-btn hero-accordion-action editor-toggle"
+                :active="editMode"
+                :title="editMode ? 'Выключить режим редактирования' : 'Включить режим редактирования'"
+                :aria-label="editMode ? 'Выключить режим редактирования' : 'Включить режим редактирования'"
+                @click="toggleEditMode"
+              >
+                <Pencil class="ui-icon hero-action-icon" />
+              </IconButton>
 
-        <IconButton v-if="editMode" button-class="hero-icon-btn" title="Добавить группу" aria-label="Добавить группу" @click="addGroup">
-          <Plus class="ui-icon hero-action-icon" />
-        </IconButton>
+              <IconButton
+                v-if="editMode"
+                button-class="hero-icon-btn hero-accordion-action"
+                title="Добавить группу"
+                aria-label="Добавить группу"
+                @click="addGroup"
+              >
+                <Plus class="ui-icon hero-action-icon" />
+              </IconButton>
 
-        <IconButton
-          button-class="hero-icon-btn"
-          :active="isIconCardView"
-          :title="isIconCardView ? 'Переключить на карточки' : 'Переключить на иконки'"
-          :aria-label="isIconCardView ? 'Переключить на карточки' : 'Переключить на иконки'"
-          @click="toggleServiceCardView"
-        >
-          <Layers class="ui-icon hero-action-icon" />
-        </IconButton>
+              <div class="hero-display-controls">
+                <HeroDropdown
+                  v-model="serviceCardView"
+                  label="Вид"
+                  aria-label="Режим отображения сервисов"
+                  :options="servicePresentationOptions"
+                />
+                <HeroDropdown
+                  v-model="serviceGroupingMode"
+                  label=""
+                  aria-label="Группировка сервисов"
+                  :options="serviceGroupingOptions"
+                  :disabled="isSidebarHidden"
+                >
+                  <template #prefix>
+                    <GitBranch class="ui-icon hero-dropdown-prefix-icon" aria-hidden="true" />
+                  </template>
+                </HeroDropdown>
+              </div>
 
-        <IconButton
-          button-class="hero-icon-btn"
-          :active="isSidebarIconOnly"
-          :title="isSidebarIconOnly ? 'Показать полную боковую панель' : 'Показать только иконки в боковой панели'"
-          :aria-label="isSidebarIconOnly ? 'Показать полную боковую панель' : 'Показать только иконки в боковой панели'"
-          @click="toggleSidebarView"
-        >
-          <FolderTree class="ui-icon hero-action-icon" />
-        </IconButton>
+              <IconButton
+                button-class="hero-icon-btn hero-accordion-action"
+                :active="!isSidebarDetailed"
+                :title="sidebarViewToggleTitle"
+                :aria-label="sidebarViewToggleTitle"
+                @click="toggleSidebarView"
+              >
+                <FolderTree class="ui-icon hero-action-icon" />
+              </IconButton>
 
-        <span v-if="editMode" class="hero-save-indicator" :class="saveStatus" role="status" :title="saveStatusLabel" :aria-label="saveStatusLabel">
-          <Circle class="ui-icon hero-save-icon" />
-        </span>
+              <span
+                v-if="editMode"
+                class="hero-save-indicator hero-accordion-status"
+                :class="saveStatus"
+                role="status"
+                :title="saveStatusLabel"
+                :aria-label="saveStatusLabel"
+              >
+                <Circle class="ui-icon hero-save-icon" />
+              </span>
+            </div>
+          </Transition>
+
+          <button
+            class="hero-controls-trigger"
+            type="button"
+            :aria-expanded="controlsOpen"
+            aria-controls="hero-controls-drawer"
+            :title="controlsOpen ? 'Скрыть панель действий' : 'Показать панель действий'"
+            @click="controlsOpen = !controlsOpen"
+          >
+            <Wrench class="ui-icon hero-action-icon" />
+            <ChevronLeft class="ui-icon hero-accordion-caret" :class="{ open: controlsOpen }" />
+          </button>
+        </div>
 
         <p v-if="editMode && saveError" class="editor-error hero-editor-error">{{ saveError }}</p>
       </div>
@@ -55,23 +96,30 @@
 </template>
 
 <script setup>
-import { Circle, FolderTree, Layers, Pencil, Plus } from 'lucide-vue-next'
+import { ref } from 'vue'
+import { ChevronLeft, Circle, FolderTree, GitBranch, Pencil, Plus, Wrench } from 'lucide-vue-next'
+import HeroDropdown from '../primitives/HeroDropdown.vue'
+import HeroPageTabs from './HeroPageTabs.vue'
 import IconButton from '../primitives/IconButton.vue'
 import { useDashboardStore } from '../../stores/dashboardStore.js'
 
 const dashboard = useDashboardStore()
+const controlsOpen = ref(false)
 
 const {
-  activePage,
   editMode,
-  isIconCardView,
-  isSidebarIconOnly,
+  isSidebarDetailed,
+  isSidebarHidden,
   saveStatus,
   saveStatusLabel,
   saveError,
+  sidebarViewToggleTitle,
+  serviceCardView,
+  serviceGroupingMode,
+  serviceGroupingOptions,
+  servicePresentationOptions,
   toggleEditMode,
   addGroup,
-  toggleServiceCardView,
   toggleSidebarView,
 } = dashboard
 </script>

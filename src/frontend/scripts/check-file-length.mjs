@@ -3,7 +3,7 @@ import path from 'node:path'
 
 const ROOT = process.cwd()
 const THRESHOLD = 100
-const SCAN_DIRS = ['src', 'tests']
+const SCAN_DIRS = ['src', '../../tests/frontend']
 const EXTENSIONS = new Set(['.js', '.mjs', '.vue', '.css', '.scss'])
 
 // Temporary exception while store logic is being split into domain modules.
@@ -29,10 +29,20 @@ async function walk(dir) {
   return files
 }
 
+async function pathExists(target) {
+  try {
+    await stat(target)
+    return true
+  } catch {
+    return false
+  }
+}
+
 async function main() {
   const files = []
   for (const dir of SCAN_DIRS) {
     const fullDir = path.join(ROOT, dir)
+    if (!(await pathExists(fullDir))) continue
     files.push(...(await walk(fullDir)))
   }
 
