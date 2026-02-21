@@ -73,13 +73,27 @@
       <section class="settings-modal-section">
         <h4>Быстрые действия</h4>
         <div class="settings-modal-actions">
-          <button class="ghost" type="button" @click="toggleSidebarView">
-            {{ isSidebarHidden ? 'Показать меню' : 'Скрыть меню' }}
+          <button class="settings-nav-action" type="button" @click="toggleSidebarView">
+            <span class="settings-nav-action-main">
+              <PanelLeft class="ui-icon settings-nav-action-icon" />
+              <span>{{ isSidebarHidden ? 'Показать меню' : 'Скрыть меню' }}</span>
+            </span>
+            <ChevronRight class="ui-icon settings-nav-action-caret" />
           </button>
-          <button class="ghost" type="button" @click="toggleEditMode">
-            {{ editMode ? 'Выключить edit mode' : 'Включить edit mode' }}
+          <button class="settings-nav-action" type="button" @click="toggleEditMode">
+            <span class="settings-nav-action-main">
+              <Pencil class="ui-icon settings-nav-action-icon" />
+              <span>{{ editMode ? 'Выключить edit mode' : 'Включить edit mode' }}</span>
+            </span>
+            <ChevronRight class="ui-icon settings-nav-action-caret" />
           </button>
-          <button class="ghost" type="button" @click="openSearchFromSettings">Открыть поиск (Ctrl/Cmd+K)</button>
+          <button class="settings-nav-action" type="button" @click="openSearchFromSettings">
+            <span class="settings-nav-action-main">
+              <Search class="ui-icon settings-nav-action-icon" />
+              <span>Открыть поиск (Ctrl/Cmd+K)</span>
+            </span>
+            <ChevronRight class="ui-icon settings-nav-action-caret" />
+          </button>
         </div>
       </section>
     </div>
@@ -87,6 +101,7 @@
 </template>
 
 <script setup>
+import { ChevronRight, PanelLeft, Pencil, Search } from 'lucide-vue-next'
 import BaseModal from '../primitives/BaseModal.vue'
 import { useDashboardStore } from '../../stores/dashboardStore.js'
 
