@@ -54,11 +54,21 @@ npm run tauri:build:arm64
 ### Build embedded backend sidecar (ARM64)
 
 ```bash
-uv pip install pyinstaller
 ./src/desktop/build_sidecar_macos_arm64.sh
 ```
 
 This produces `src/frontend/src-tauri/binaries/oko-backend-aarch64-apple-darwin`, which is bundled into the app.
+
+`uv` is used automatically (recommended) to build the sidecar with project dependencies.
+
+### Desktop runtime files (`~/.oko`)
+
+Embedded desktop backend stores runtime files in the user home directory:
+
+- `~/.oko/dashboard.yaml` (auto-created from bundled template on first run)
+- `~/.oko/data/lan_scan_result.json`
+
+This keeps desktop state/config outside the app bundle and survives app updates.
 
 Optional override for local testing:
 

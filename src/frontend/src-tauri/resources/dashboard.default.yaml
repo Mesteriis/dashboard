@@ -1,0 +1,745 @@
+version: 1
+app:
+  id: oko
+  title: OKO
+  tagline: Your Infrastructure in Sight
+  locale: ru-RU
+ui:
+  theme:
+    mode: dark
+    accent: '#2dd4bf'
+    background: '#050a0f'
+    card: rgba(255,255,255,0.04)
+    border: rgba(255,255,255,0.08)
+    glow: true
+  grid:
+    columns: 12
+    gap: 12
+    card_radius: 14
+layout:
+  pages:
+  - id: home
+    title: Дом
+    icon: home
+    blocks:
+    - type: groups
+      group_ids:
+      - infra
+      - apps
+      - media
+      - iot
+  - id: ops
+    title: Операции
+    icon: briefcase
+    blocks:
+    - type: groups
+      group_ids:
+      - ai
+      - print
+      - edge
+groups:
+- id: infra
+  title: Инфраструктура
+  icon: server
+  description: 'Базовая инфраструктура: гипервизор, NAS, БД, storage.'
+  layout: auto
+  subgroups:
+  - id: infra-h-192-168-1-2
+    title: 192.168.1.2 (Hypervisor)
+    items:
+    - id: h-192-168-1-2-p-8006
+      title: pve - Proxmox Virtual Environment
+      url: https://192.168.1.2:8006/
+      tags:
+      - ip:192.168.1.2
+      - status:200
+      - device:hypervisor
+      open: new_tab
+      type: link
+    - id: h-192-168-1-2-p-8080-2
+      title: File Browser
+      url: http://192.168.1.2:8080/
+      tags:
+      - ip:192.168.1.2
+      - status:200
+      - device:hypervisor
+      open: new_tab
+      type: link
+    - id: h-192-168-1-2-p-11434-3
+      title: Ollama
+      url: http://192.168.1.2:11434/
+      tags:
+      - ip:192.168.1.2
+      - status:200
+      - device:hypervisor
+      open: new_tab
+      type: link
+    - id: h-192-168-1-2-p-19999-4
+      title: Netdata
+      url: http://192.168.1.2:19999/
+      tags:
+      - ip:192.168.1.2
+      - status:200
+      - device:hypervisor
+      open: new_tab
+      type: link
+  - id: infra-h-192-168-1-23
+    title: 192.168.1.23 (NAS/File Server)
+    items:
+    - id: h-192-168-1-23-p-80
+      title: openmediavault Workbench
+      url: http://192.168.1.23/
+      tags:
+      - ip:192.168.1.23
+      - status:200
+      - device:nas-file-server
+      open: new_tab
+      type: link
+  - id: infra-h-192-168-1-25
+    title: 192.168.1.25 (Database Server)
+    items:
+    - id: h-192-168-1-25-p-80
+      title: PostgreSQL 18 Dashboard - postgres18
+      url: http://192.168.1.25/
+      tags:
+      - ip:192.168.1.25
+      - status:200
+      - device:database-server
+      open: new_tab
+      type: link
+- id: apps
+  title: Сервисы
+  icon: layout-grid
+  description: Основные прикладные сервисы и инструменты.
+  layout: auto
+  subgroups:
+  - id: apps-h-192-168-1-3
+    title: 192.168.1.3 (Linux/Unix Host)
+    items:
+    - id: h-192-168-1-3-p-19999
+      title: Netdata
+      url: http://192.168.1.3:19999/
+      tags:
+      - ip:192.168.1.3
+      - status:200
+      - device:linux-unix-host
+      open: new_tab
+      type: link
+  - id: apps-h-192-168-1-5
+    title: 192.168.1.5 (Linux/Unix Host)
+    items:
+    - id: h-192-168-1-5-p-3000
+      title: Personal Git Server
+      url: http://192.168.1.5:3000/
+      tags:
+      - ip:192.168.1.5
+      - status:200
+      - device:linux-unix-host
+      open: new_tab
+      type: link
+  - id: apps-h-192-168-1-6
+    title: 192.168.1.6 (Linux/Unix Host)
+    items:
+    - id: h-192-168-1-6-p-3000
+      title: DbGate
+      url: http://192.168.1.6:3000/
+      tags:
+      - ip:192.168.1.6
+      - status:200
+      - device:linux-unix-host
+      open: new_tab
+      type: link
+    - id: h-192-168-1-6-p-5001-2
+      title: Dockge
+      url: http://192.168.1.6:5001/
+      tags:
+      - ip:192.168.1.6
+      - status:200
+      - device:linux-unix-host
+      open: new_tab
+      type: link
+    - id: h-192-168-1-6-p-7575-3
+      title: Onboard • Homarr
+      url: http://192.168.1.6:7575/onboard
+      tags:
+      - ip:192.168.1.6
+      - status:200
+      - device:linux-unix-host
+      open: new_tab
+      type: link
+    - id: h-192-168-1-6-p-8000-4
+      title: GlitchTip
+      url: http://192.168.1.6:8000/
+      tags:
+      - ip:192.168.1.6
+      - status:200
+      - device:linux-unix-host
+      open: new_tab
+      type: link
+    - id: h-192-168-1-6-p-9090-5
+      title: Console
+      url: http://192.168.1.6:9090/
+      tags:
+      - ip:192.168.1.6
+      - status:200
+      - device:linux-unix-host
+      open: new_tab
+      type: link
+  - id: apps-h-192-168-1-9
+    title: 192.168.1.9 (Linux/Unix Host)
+    items:
+    - id: h-192-168-1-9-p-4321
+      title: Dashboard - Gitea Mirror
+      url: http://192.168.1.9:4321/
+      tags:
+      - ip:192.168.1.9
+      - status:200
+      - device:linux-unix-host
+      open: new_tab
+      type: link
+  - id: apps-h-192-168-1-26
+    title: 192.168.1.26 (Linux/Unix Host)
+    items:
+    - id: h-192-168-1-26-p-6333
+      title: Qdrant
+      url: http://192.168.1.26:6333/
+      tags:
+      - ip:192.168.1.26
+      - status:200
+      - device:linux-unix-host
+      open: new_tab
+      type: link
+  - id: apps-h-192-168-1-28
+    title: 192.168.1.28 (Linux/Unix Host)
+    items:
+    - id: h-192-168-1-28-p-9000
+      title: 192.168.1.28:9000
+      url: http://192.168.1.28:9000/
+      tags:
+      - ip:192.168.1.28
+      - status:403
+      - device:linux-unix-host
+      open: new_tab
+      type: link
+    - id: h-192-168-1-28-p-9001-2
+      title: MinIO Console
+      url: http://192.168.1.28:9001/
+      tags:
+      - ip:192.168.1.28
+      - status:200
+      - device:linux-unix-host
+      open: new_tab
+      type: link
+  - id: apps-h-192-168-1-159
+    title: 192.168.1.159 (Linux/Unix Host)
+    items:
+    - id: h-192-168-1-159-p-3000
+      title: 192.168.1.159:3000
+      url: http://192.168.1.159:3000/
+      tags:
+      - ip:192.168.1.159
+      - status:200
+      - device:linux-unix-host
+      open: new_tab
+      type: link
+- id: media
+  title: Медиа
+  icon: tv
+  description: Медиастек и контент-сервисы.
+  layout: auto
+  subgroups:
+  - id: media-h-192-168-1-24
+    title: 192.168.1.24 (Linux/Unix Host)
+    items:
+    - id: h-192-168-1-24-p-6969
+      title: 192.168.1.24:6969
+      url: http://192.168.1.24:6969/
+      tags:
+      - ip:192.168.1.24
+      - status:401
+      - device:linux-unix-host
+      open: new_tab
+      type: link
+    - id: h-192-168-1-24-p-7878-2
+      title: Radarr
+      url: http://192.168.1.24:7878/radarr/
+      tags:
+      - ip:192.168.1.24
+      - status:200
+      - device:linux-unix-host
+      open: new_tab
+      type: link
+    - id: h-192-168-1-24-p-8080-3
+      title: qBittorrent WebUI
+      url: http://192.168.1.24:8080/
+      tags:
+      - ip:192.168.1.24
+      - status:200
+      - device:linux-unix-host
+      open: new_tab
+      type: link
+    - id: h-192-168-1-24-p-8191-4
+      title: FlareSolverr
+      url: http://192.168.1.24:8191/
+      tags:
+      - ip:192.168.1.24
+      - status:200
+      - device:linux-unix-host
+      open: new_tab
+      type: link
+    - id: h-192-168-1-24-p-8265-5
+      title: Tdarr
+      url: http://192.168.1.24:8265/
+      tags:
+      - ip:192.168.1.24
+      - status:200
+      - device:linux-unix-host
+      open: new_tab
+      type: link
+    - id: h-192-168-1-24-p-8686-6
+      title: Lidarr
+      url: http://192.168.1.24:8686/lidarr/
+      tags:
+      - ip:192.168.1.24
+      - status:200
+      - device:linux-unix-host
+      open: new_tab
+      type: link
+    - id: h-192-168-1-24-p-8787-7
+      title: Readarr
+      url: http://192.168.1.24:8787/readarr/
+      tags:
+      - ip:192.168.1.24
+      - status:200
+      - device:linux-unix-host
+      open: new_tab
+      type: link
+    - id: h-192-168-1-24-p-8888-8
+      title: Organizr V2
+      url: http://192.168.1.24:8888/
+      tags:
+      - ip:192.168.1.24
+      - status:200
+      - device:linux-unix-host
+      open: new_tab
+      type: link
+    - id: h-192-168-1-24-p-8989-9
+      title: Sonarr
+      url: http://192.168.1.24:8989/sonarr/
+      tags:
+      - ip:192.168.1.24
+      - status:200
+      - device:linux-unix-host
+      open: new_tab
+      type: link
+    - id: h-192-168-1-24-p-9001-10
+      title: Dozzle
+      url: http://192.168.1.24:9001/
+      tags:
+      - ip:192.168.1.24
+      - status:200
+      - device:linux-unix-host
+      open: new_tab
+      type: link
+    - id: h-192-168-1-24-p-9696-11
+      title: Prowlarr
+      url: http://192.168.1.24:9696/prowlarr/
+      tags:
+      - ip:192.168.1.24
+      - status:200
+      - device:linux-unix-host
+      open: new_tab
+      type: link
+    - id: h-192-168-1-24-p-9999-12
+      title: Stash
+      url: http://192.168.1.24:9999/
+      tags:
+      - ip:192.168.1.24
+      - status:200
+      - device:linux-unix-host
+      open: new_tab
+      type: link
+    - id: h-192-168-1-24-p-13378-13
+      title: Audiobookshelf
+      url: http://192.168.1.24:13378/
+      tags:
+      - ip:192.168.1.24
+      - status:200
+      - device:linux-unix-host
+      open: new_tab
+      type: link
+- id: iot
+  title: IoT
+  icon: home-assistant
+  description: Домашняя автоматизация и IoT.
+  layout: auto
+  subgroups:
+  - id: iot-h-192-168-1-4
+    title: 192.168.1.4 (IoT Hub)
+    items:
+    - id: h-192-168-1-4-p-4357
+      title: Home Assistant observer
+      url: http://192.168.1.4:4357/
+      tags:
+      - ip:192.168.1.4
+      - status:200
+      - device:iot-hub
+      open: new_tab
+      type: link
+    - id: h-192-168-1-4-p-8123-2
+      title: Home Assistant
+      url: http://192.168.1.4:8123/
+      tags:
+      - ip:192.168.1.4
+      - status:200
+      - device:iot-hub
+      open: new_tab
+      type: link
+    - id: h-192-168-1-4-p-9090-3
+      title: Mealie
+      url: http://192.168.1.4:9090/
+      tags:
+      - ip:192.168.1.4
+      - status:200
+      - device:iot-hub
+      open: new_tab
+      type: link
+    - id: h-192-168-1-4-p-9999-4
+      title: Crypto Inspect
+      url: http://192.168.1.4:9999/
+      tags:
+      - ip:192.168.1.4
+      - status:200
+      - device:iot-hub
+      open: new_tab
+      type: link
+- id: ai
+  title: AI
+  icon: cpu
+  description: LLM/AI инструменты и интерфейсы.
+  layout: auto
+  subgroups:
+  - id: ai-h-192-168-1-130
+    title: 192.168.1.130 (Server/Host)
+    items:
+    - id: h-192-168-1-130-p-3000
+      title: Open WebUI
+      url: http://192.168.1.130:3000/
+      tags:
+      - ip:192.168.1.130
+      - status:200
+      - device:server-host
+      open: new_tab
+      type: link
+    - id: h-192-168-1-130-p-7861-2
+      title: 192.168.1.130:7861
+      url: http://192.168.1.130:7861/
+      tags:
+      - ip:192.168.1.130
+      - status:200
+      - device:server-host
+      open: new_tab
+      type: link
+    - id: h-192-168-1-130-p-8188-3
+      title: ComfyUI
+      url: http://192.168.1.130:8188/
+      tags:
+      - ip:192.168.1.130
+      - status:200
+      - device:server-host
+      open: new_tab
+      type: link
+- id: print
+  title: 3D Печать
+  icon: printer
+  description: Панели управления 3D-печатью.
+  layout: auto
+  subgroups:
+  - id: print-h-192-168-1-164
+    title: 192.168.1.164 (Server/Host)
+    items:
+    - id: h-192-168-1-164-p-80
+      title: 3D Printing Dashboard
+      url: http://192.168.1.164/
+      tags:
+      - ip:192.168.1.164
+      - status:200
+      - device:server-host
+      open: new_tab
+      type: link
+    - id: h-192-168-1-164-p-3000-2
+      title: 192.168.1.164:3000
+      url: http://192.168.1.164:3000/
+      tags:
+      - ip:192.168.1.164
+      - status:200
+      - device:server-host
+      open: new_tab
+      type: link
+    - id: h-192-168-1-164-p-3010-3
+      title: 192.168.1.164:3010
+      url: http://192.168.1.164:3010/
+      tags:
+      - ip:192.168.1.164
+      - status:200
+      - device:server-host
+      open: new_tab
+      type: link
+    - id: h-192-168-1-164-p-3030-4
+      title: 192.168.1.164:3030
+      url: http://192.168.1.164:3030/
+      tags:
+      - ip:192.168.1.164
+      - status:200
+      - device:server-host
+      open: new_tab
+      type: link
+    - id: h-192-168-1-164-p-3040-5
+      title: 192.168.1.164:3040
+      url: http://192.168.1.164:3040/
+      tags:
+      - ip:192.168.1.164
+      - status:200
+      - device:server-host
+      open: new_tab
+      type: link
+    - id: h-192-168-1-164-p-7912-6
+      title: Spoolman
+      url: http://192.168.1.164:7912/
+      tags:
+      - ip:192.168.1.164
+      - status:200
+      - device:server-host
+      open: new_tab
+      type: link
+    - id: h-192-168-1-164-p-8080-7
+      title: fluidd
+      url: http://192.168.1.164:8080/
+      tags:
+      - ip:192.168.1.164
+      - status:200
+      - device:server-host
+      open: new_tab
+      type: link
+    - id: h-192-168-1-164-p-8081-8
+      title: Mainsail
+      url: http://192.168.1.164:8081/
+      tags:
+      - ip:192.168.1.164
+      - status:200
+      - device:server-host
+      open: new_tab
+      type: link
+- id: edge
+  title: Сеть и Edge
+  icon: network
+  description: Пограничные сервисы, шлюзы и сетевые узлы.
+  layout: auto
+  subgroups:
+  - id: edge-h-192-168-1-29
+    title: 192.168.1.29 (Web Device)
+    items:
+    - id: h-192-168-1-29-p-80
+      title: 192.168.1.29:80
+      url: http://192.168.1.29/
+      tags:
+      - ip:192.168.1.29
+      - status:200
+      - device:web-device
+      open: new_tab
+      type: link
+    - id: h-192-168-1-29-p-8080-2
+      title: File Browser
+      url: http://192.168.1.29:8080/
+      tags:
+      - ip:192.168.1.29
+      - status:200
+      - device:web-device
+      open: new_tab
+      type: link
+  - id: edge-h-192-168-1-58
+    title: 192.168.1.58 (Linux/Unix Host)
+    items:
+    - id: h-192-168-1-58-p-80
+      title: 192.168.1.58:80
+      url: http://192.168.1.58/
+      tags:
+      - ip:192.168.1.58
+      - status:200
+      - device:linux-unix-host
+      open: new_tab
+      type: link
+    - id: h-192-168-1-58-p-5000-2
+      title: 192.168.1.58:5000
+      url: http://192.168.1.58:5000/
+      tags:
+      - ip:192.168.1.58
+      - status:403
+      - device:linux-unix-host
+      open: new_tab
+      type: link
+    - id: h-192-168-1-58-p-7000-3
+      title: 192.168.1.58:7000
+      url: http://192.168.1.58:7000/
+      tags:
+      - ip:192.168.1.58
+      - status:403
+      - device:linux-unix-host
+      open: new_tab
+      type: link
+    - id: h-192-168-1-58-p-8090-4
+      title: Janus
+      url: http://192.168.1.58:8090/
+      tags:
+      - ip:192.168.1.58
+      - status:200
+      - device:linux-unix-host
+      open: new_tab
+      type: link
+  - id: edge-h-192-168-1-94
+    title: 192.168.1.94 (Server/Host)
+    items:
+    - id: h-192-168-1-94-p-1961
+      title: 192.168.1.94:1961
+      url: https://192.168.1.94:1961/
+      tags:
+      - ip:192.168.1.94
+      - status:426
+      - device:server-host
+      open: new_tab
+      type: link
+  - id: edge-h-192-168-1-107
+    title: 192.168.1.107 (Server/Host)
+    items:
+    - id: h-192-168-1-107-p-80
+      title: 192.168.1.107:80
+      url: http://192.168.1.107/
+      tags:
+      - ip:192.168.1.107
+      - status:200
+      - device:server-host
+      open: new_tab
+      type: link
+    - id: h-192-168-1-107-p-8443-2
+      title: 192.168.1.107:8443
+      url: https://192.168.1.107:8443/
+      tags:
+      - ip:192.168.1.107
+      - status:200
+      - device:server-host
+      open: new_tab
+      type: link
+  - id: edge-h-192-168-1-157
+    title: 192.168.1.157 (Web Device)
+    items:
+    - id: h-192-168-1-157-p-80
+      title: Termix
+      url: http://192.168.1.157/
+      tags:
+      - ip:192.168.1.157
+      - status:200
+      - device:web-device
+      open: new_tab
+      type: link
+  - id: edge-h-192-168-1-165
+    title: 192.168.1.165 (Web Device)
+    items:
+    - id: h-192-168-1-165-p-80
+      title: Войти | OPNsense
+      url: https://192.168.1.165/
+      tags:
+      - ip:192.168.1.165
+      - status:200
+      - device:web-device
+      open: new_tab
+      type: link
+  - id: edge-h-192-168-1-168
+    title: 192.168.1.168 (Linux/Unix Host)
+    items:
+    - id: h-192-168-1-168-p-80
+      title: Homarr
+      url: http://192.168.1.168/
+      tags:
+      - ip:192.168.1.168
+      - status:200
+      - device:linux-unix-host
+      open: new_tab
+      type: link
+    - id: h-192-168-1-168-p-3001-2
+      title: 192.168.1.168:3001
+      url: http://192.168.1.168:3001/
+      tags:
+      - ip:192.168.1.168
+      - status:426
+      - device:linux-unix-host
+      open: new_tab
+      type: link
+  - id: edge-h-192-168-1-170
+    title: 192.168.1.170 (Server/Host)
+    items:
+    - id: h-192-168-1-170-p-80
+      title: Default Page
+      url: http://192.168.1.170/
+      tags:
+      - ip:192.168.1.170
+      - status:200
+      - device:server-host
+      open: new_tab
+      type: link
+    - id: h-192-168-1-170-p-81-2
+      title: NPMplus
+      url: https://192.168.1.170:81/
+      tags:
+      - ip:192.168.1.170
+      - status:200
+      - device:server-host
+      open: new_tab
+      type: link
+    - id: h-192-168-1-170-p-91-3
+      title: Server Statistics
+      url: https://192.168.1.170:91/
+      tags:
+      - ip:192.168.1.170
+      - status:200
+      - device:server-host
+      open: new_tab
+      type: link
+    - id: h-192-168-1-170-p-443-4
+      title: Default Page
+      url: https://192.168.1.170/
+      tags:
+      - ip:192.168.1.170
+      - status:200
+      - device:server-host
+      open: new_tab
+      type: link
+  - id: edge-h-192-168-1-172
+    title: 192.168.1.172 (Server/Host)
+    items:
+    - id: h-192-168-1-172-p-7100
+      title: 192.168.1.172:7100
+      url: http://192.168.1.172:7100/
+      tags:
+      - ip:192.168.1.172
+      - status:403
+      - device:server-host
+      open: new_tab
+      type: link
+  - id: edge-h-192-168-1-173
+    title: 192.168.1.173 (Server/Host)
+    items:
+    - id: h-192-168-1-173-p-1961
+      title: 192.168.1.173:1961
+      url: https://192.168.1.173:1961/
+      tags:
+      - ip:192.168.1.173
+      - status:426
+      - device:server-host
+      open: new_tab
+      type: link
+widgets: []
+security:
+  iframe:
+    default_sandbox: true
+    allowed_domains: []
+  auth_profiles: []

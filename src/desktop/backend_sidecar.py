@@ -24,8 +24,10 @@ def main() -> None:
     if src_dir not in sys.path:
         sys.path.insert(0, src_dir)
 
+    from main import app as fastapi_app
+
     uvicorn.run(
-        "main:app",
+        fastapi_app,
         host=args.host,
         port=args.port,
         log_level=args.log_level,

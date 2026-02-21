@@ -13,6 +13,10 @@ use tauri::{AppHandle, Emitter, Manager, State, Wry};
 const PROFILE_FILE_NAME: &str = "desktop-runtime.json";
 const DEFAULT_REMOTE_BASE_URL: &str = "http://127.0.0.1:8090";
 const EMBEDDED_BACKEND_RESOURCE: &str = "binaries/oko-backend-aarch64-apple-darwin";
+const DEFAULT_DASHBOARD_RESOURCE: &str = "resources/dashboard.default.yaml";
+const USER_RUNTIME_DIR_NAME: &str = ".oko";
+const USER_CONFIG_FILE_NAME: &str = "dashboard.yaml";
+const USER_LAN_SCAN_RESULT_FILE: &str = "data/lan_scan_result.json";
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
@@ -128,6 +132,62 @@ fn resolve_embedded_backend_binary(app: &AppHandle) -> Option<PathBuf> {
   None
 }
 
+fn user_runtime_dir() -> PathBuf {
+  let home = std::env::var_os("HOME")
+    .map(PathBuf::from)
+    .unwrap_or_else(std::env::temp_dir);
+  home.join(USER_RUNTIME_DIR_NAME)
+}
+
+fn resolve_default_dashboard_template(app: &AppHandle) -> Option<PathBuf> {
+  if let Ok(explicit) = std::env::var("OKO_DESKTOP_DEFAULT_CONFIG") {
+    let explicit_path = PathBuf::from(explicit);
+    if explicit_path.exists() {
+      return Some(explicit_path);
+    }
+  }
+
+  if let Ok(resource_dir) = app.path().resource_dir() {
+    let bundled = resource_dir.join(DEFAULT_DASHBOARD_RESOURCE);
+    if bundled.exists() {
+      return Some(bundled);
+    }
+  }
+
+  let cwd = std::env::current_dir().ok()?;
+  let candidates = [
+    cwd.join("../../dashboard.yaml"),
+    cwd.join("../dashboard.yaml"),
+    cwd.join("dashboard.yaml"),
+  ];
+
+  candidates.into_iter().find(|path| path.exists())
+}
+
+fn ensure_user_runtime_files(app: &AppHandle) -> Result<(PathBuf, PathBuf, PathBuf), String> {
+  let runtime_dir = user_runtime_dir();
+  let config_path = runtime_dir.join(USER_CONFIG_FILE_NAME);
+  let lan_result_file = runtime_dir.join(USER_LAN_SCAN_RESULT_FILE);
+
+  fs::create_dir_all(&runtime_dir).map_err(|error| format!("Failed to create runtime dir: {error}"))?;
+  if let Some(parent) = lan_result_file.parent() {
+    fs::create_dir_all(parent).map_err(|error| format!("Failed to create runtime data dir: {error}"))?;
+  }
+
+  if !config_path.exists() {
+    let template = resolve_default_dashboard_template(app)
+      .ok_or_else(|| "Default dashboard template not found for first desktop run".to_string())?;
+    fs::copy(&template, &config_path).map_err(|error| {
+      format!(
+        "Failed to create user dashboard config from template {}: {error}",
+        template.display()
+      )
+    })?;
+  }
+
+  Ok((runtime_dir, config_path, lan_result_file))
+}
+
 fn resolve_dev_backend_script() -> Option<PathBuf> {
   let cwd = std::env::current_dir().ok()?;
   let candidates = [
@@ -148,6 +208,7 @@ fn spawn_embedded_backend(app: &AppHandle) -> Result<EmbeddedBackend, String> {
   drop(listener);
 
   let api_base_url = format!("http://127.0.0.1:{port}");
+  let (runtime_dir, config_path, lan_result_file) = ensure_user_runtime_files(app)?;
 
   let mut command = if let Some(binary) = resolve_embedded_backend_binary(app) {
     let mut binary_command = Command::new(binary);
@@ -167,6 +228,12 @@ fn spawn_embedded_backend(app: &AppHandle) -> Result<EmbeddedBackend, String> {
       "Embedded backend binary not found. Build sidecar and place it into src/frontend/src-tauri/binaries".to_string(),
     );
   };
+
+  command
+    .current_dir(&runtime_dir)
+    .env("DASHBOARD_CONFIG_FILE", &config_path)
+    .env("LAN_SCAN_RESULT_FILE", &lan_result_file)
+    .env("DASHBOARD_ENABLE_LAN_SCAN", "true");
 
   command.stdin(Stdio::null()).stdout(Stdio::null()).stderr(Stdio::null());
   let child = command

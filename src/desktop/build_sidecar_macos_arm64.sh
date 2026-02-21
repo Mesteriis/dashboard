@@ -12,13 +12,11 @@ PYINSTALLER_CMD=(pyinstaller)
 
 cd "$ROOT_DIR"
 
-if ! command -v pyinstaller >/dev/null 2>&1; then
-  if command -v uv >/dev/null 2>&1; then
-    PYINSTALLER_CMD=(uv tool run pyinstaller)
-  else
-    echo "pyinstaller is required. Install with: uv tool install pyinstaller"
-    exit 1
-  fi
+if command -v uv >/dev/null 2>&1; then
+  PYINSTALLER_CMD=(uv run --with pyinstaller pyinstaller)
+elif ! command -v pyinstaller >/dev/null 2>&1; then
+  echo "pyinstaller is required. Install with: uv tool install pyinstaller (recommended)"
+  exit 1
 fi
 
 rm -rf "$SIDE_DIST_DIR" "$SIDE_BUILD_DIR" "$SIDE_SPEC_DIR"
@@ -27,6 +25,8 @@ mkdir -p "$SIDE_DIST_DIR" "$SIDE_BUILD_DIR" "$SIDE_SPEC_DIR"
 "${PYINSTALLER_CMD[@]}" \
   --onefile \
   --name oko-backend-aarch64-apple-darwin \
+  --paths "$ROOT_DIR/src" \
+  --hidden-import main \
   --distpath "$SIDE_DIST_DIR" \
   --workpath "$SIDE_BUILD_DIR" \
   --specpath "$SIDE_SPEC_DIR" \
