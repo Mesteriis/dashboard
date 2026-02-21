@@ -3,12 +3,12 @@
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::net::TcpListener;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::process::{Child, Command, Stdio};
 use std::sync::Mutex;
 use tauri::menu::{Menu, MenuItem, PredefinedMenuItem, Submenu};
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
-use tauri::{App, AppHandle, Emitter, Manager, RunEvent, State, Wry};
+use tauri::{AppHandle, Emitter, Manager, State, Wry};
 
 const PROFILE_FILE_NAME: &str = "desktop-runtime.json";
 const DEFAULT_REMOTE_BASE_URL: &str = "http://127.0.0.1:8090";
@@ -346,12 +346,16 @@ fn ensure_apple_silicon() -> Result<(), String> {
 fn main() {
   let builder = tauri::Builder::default()
     .setup(|app| {
-      ensure_apple_silicon().map_err(tauri::Error::Setup)?;
+      if let Err(error) = ensure_apple_silicon() {
+        return Err(std::io::Error::other(error).into());
+      }
 
       let profile = load_runtime_profile(&app.handle());
       let state = DesktopState::new(profile);
 
-      ensure_runtime_mode(&app.handle(), &state).map_err(tauri::Error::Setup)?;
+      if let Err(error) = ensure_runtime_mode(&app.handle(), &state) {
+        return Err(std::io::Error::other(error).into());
+      }
       app.manage(state);
 
       let menu = build_native_menu(app.handle())?;

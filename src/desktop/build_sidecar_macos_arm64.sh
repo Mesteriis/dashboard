@@ -3,17 +3,22 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "$0")/../.." && pwd)"
 OUT_BIN="$ROOT_DIR/src/frontend/src-tauri/binaries/oko-backend-aarch64-apple-darwin"
+PYINSTALLER_CMD=(pyinstaller)
 
 cd "$ROOT_DIR"
 
 if ! command -v pyinstaller >/dev/null 2>&1; then
-  echo "pyinstaller is required. Install with: uv pip install pyinstaller"
-  exit 1
+  if command -v uv >/dev/null 2>&1; then
+    PYINSTALLER_CMD=(uv tool run pyinstaller)
+  else
+    echo "pyinstaller is required. Install with: uv tool install pyinstaller"
+    exit 1
+  fi
 fi
 
 rm -rf "$ROOT_DIR/dist/desktop-sidecar" "$ROOT_DIR/build/desktop-sidecar"
 
-pyinstaller \
+"${PYINSTALLER_CMD[@]}" \
   --onefile \
   --name oko-backend-aarch64-apple-darwin \
   --distpath "$ROOT_DIR/dist/desktop-sidecar" \
