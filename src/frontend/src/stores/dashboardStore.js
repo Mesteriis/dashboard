@@ -107,6 +107,8 @@ export function useDashboardStore() {
     { value: 'flat', label: 'Без групп (плитка)' },
   ])
   const SIDEBAR_VIEW_SEQUENCE = ['detailed', 'sections', 'hidden']
+  const COMMAND_PALETTE_LIMIT = 18
+  const COMMAND_PALETTE_EMPTY_LIMIT = 10
 
   function defaultItemEditorForm() {
     return {
@@ -145,6 +147,9 @@ export function useDashboardStore() {
   const lanScanLoading = ref(false)
   const lanScanActionBusy = ref(false)
   const lanScanError = ref('')
+  const commandPaletteOpen = ref(false)
+  const commandPaletteQuery = ref('')
+  const commandPaletteActiveIndex = ref(0)
   const lanHostModal = reactive({
     open: false,
     host: null,
@@ -269,6 +274,135 @@ export function useDashboardStore() {
     }
     return map
   })
+
+  const pageByBlockGroupId = computed(() => {
+    const map = new Map()
+    for (const page of pages.value) {
+      for (const block of page.blocks || []) {
+        if (block?.type !== 'groups') continue
+        for (const blockGroupId of block.group_ids || []) {
+          if (!map.has(blockGroupId)) {
+            map.set(blockGroupId, page.id)
+          }
+        }
+      }
+    }
+    return map
+  })
+
+  const itemIpById = computed(() => {
+    const map = new Map()
+    for (const host of lanHosts.value || []) {
+      const ip = String(host?.ip || '').trim()
+      if (!ip) continue
+
+      for (const mappedItem of host?.dashboard_items || []) {
+        const itemId = String(mappedItem?.id || '').trim()
+        if (itemId && !map.has(itemId)) {
+          map.set(itemId, ip)
+        }
+      }
+    }
+    return map
+  })
+
+  const commandPaletteEntries = computed(() => {
+    const entries = []
+    const pageMap = pageByBlockGroupId.value
+
+    for (const group of config.value?.groups || []) {
+      for (const subgroup of group.subgroups || []) {
+        for (const item of subgroup.items || []) {
+          const host = safeUrlHost(item?.url)
+          const ip = itemIpById.value.get(item.id) || ''
+          const tags = (item.tags || []).map((tag) => String(tag || '').trim()).filter(Boolean)
+          const site = deriveSiteLabel(item, group, tags)
+          const pageId = pageMap.get(group.id) || pageMap.get(subgroup.id) || ''
+
+          const title = String(item.title || '').trim()
+          const searchBlob = [
+            title,
+            String(item.id || ''),
+            String(item.url || ''),
+            host,
+            ip,
+            site,
+            String(group.title || ''),
+            String(subgroup.title || ''),
+            ...tags,
+          ]
+            .join(' ')
+            .toLowerCase()
+
+          entries.push({
+            id: item.id,
+            item,
+            title,
+            titleLower: title.toLowerCase(),
+            host: host.toLowerCase(),
+            ip: ip.toLowerCase(),
+            site: site.toLowerCase(),
+            tagsLower: tags.map((tag) => tag.toLowerCase()),
+            groupId: group.id,
+            groupKey: `group:${group.id}`,
+            groupTitle: String(group.title || ''),
+            subgroupId: subgroup.id,
+            subgroupTitle: String(subgroup.title || ''),
+            pageId,
+            searchBlob,
+          })
+        }
+      }
+    }
+
+    return entries
+  })
+
+  const commandPaletteResults = computed(() => {
+    const query = String(commandPaletteQuery.value || '').trim().toLowerCase()
+    const entries = commandPaletteEntries.value
+    if (!query) {
+      return entries
+        .slice()
+        .sort((left, right) => left.title.localeCompare(right.title, 'ru', { sensitivity: 'base' }))
+        .slice(0, COMMAND_PALETTE_EMPTY_LIMIT)
+    }
+
+    const tokens = query.split(/\s+/).filter(Boolean)
+    const scored = []
+    for (const entry of entries) {
+      let score = 0
+      let matched = true
+
+      for (const token of tokens) {
+        if (!entry.searchBlob.includes(token)) {
+          matched = false
+          break
+        }
+
+        if (entry.titleLower.startsWith(token)) score += 12
+        else if (entry.titleLower.includes(token)) score += 8
+        if (entry.host.startsWith(token)) score += 7
+        else if (entry.host.includes(token)) score += 4
+        if (entry.ip === token) score += 14
+        else if (entry.ip.includes(token)) score += 6
+        if (entry.site && entry.site.includes(token)) score += 5
+        if (entry.tagsLower.some((tag) => tag.includes(token))) score += 3
+      }
+
+      if (matched) {
+        scored.push({ entry, score })
+      }
+    }
+
+    scored.sort((left, right) => {
+      if (right.score !== left.score) return right.score - left.score
+      return left.entry.title.localeCompare(right.entry.title, 'ru', { sensitivity: 'base' })
+    })
+    return scored.slice(0, COMMAND_PALETTE_LIMIT).map((record) => record.entry)
+  })
+
+  const activeCommandPaletteEntry = computed(() => commandPaletteResults.value[commandPaletteActiveIndex.value] || null)
 
   const activePage = computed(() => pages.value.find((page) => page.id === activePageId.value) || pages.value[0] || null)
   const isLanPage = computed(() => activePage.value?.id === LAN_PAGE_ID)
@@ -1253,6 +1387,96 @@ export function useDashboardStore() {
     selectedNode.itemId = ''
   }
 
+  function safeUrlHost(rawValue) {
+    try {
+      return new URL(String(rawValue || '')).hostname || ''
+    } catch {
+      return ''
+    }
+  }
+
+  function deriveSiteLabel(item, group, tags) {
+    const itemSite = String(item?.site || '').trim()
+    if (itemSite) return itemSite
+
+    const groupSite = String(group?.site || '').trim()
+    if (groupSite) return groupSite
+
+    const siteTag = (tags || []).find((tag) => String(tag || '').toLowerCase().startsWith('site:'))
+    if (!siteTag) return ''
+    return String(siteTag).slice(5).trim()
+  }
+
+  function openCommandPalette() {
+    commandPaletteQuery.value = ''
+    commandPaletteActiveIndex.value = 0
+    commandPaletteOpen.value = true
+  }
+
+  function closeCommandPalette() {
+    commandPaletteOpen.value = false
+    commandPaletteQuery.value = ''
+    commandPaletteActiveIndex.value = 0
+  }
+
+  function toggleCommandPalette() {
+    if (commandPaletteOpen.value) {
+      closeCommandPalette()
+      return
+    }
+    openCommandPalette()
+  }
+
+  function setCommandPaletteQuery(value) {
+    commandPaletteQuery.value = String(value || '')
+    commandPaletteActiveIndex.value = 0
+  }
+
+  function setCommandPaletteActiveIndex(index) {
+    const lastIndex = commandPaletteResults.value.length - 1
+    if (lastIndex < 0) {
+      commandPaletteActiveIndex.value = 0
+      return
+    }
+    commandPaletteActiveIndex.value = Math.min(Math.max(index, 0), lastIndex)
+  }
+
+  function moveCommandPaletteSelection(step) {
+    const resultsCount = commandPaletteResults.value.length
+    if (!resultsCount) {
+      commandPaletteActiveIndex.value = 0
+      return
+    }
+
+    const start = commandPaletteActiveIndex.value
+    const next = (start + step + resultsCount) % resultsCount
+    commandPaletteActiveIndex.value = next
+  }
+
+  function focusCommandPaletteEntry(entry) {
+    if (!entry) return
+    if (entry.pageId) {
+      activePageId.value = entry.pageId
+    }
+    selectItemNode(entry.groupKey, entry.subgroupId, entry.item.id)
+  }
+
+  function activateCommandPaletteEntry(entry) {
+    if (!entry) return
+    focusCommandPaletteEntry(entry)
+    openItem(entry.item)
+    closeCommandPalette()
+  }
+
+  function activateCommandPaletteSelection() {
+    activateCommandPaletteEntry(activeCommandPaletteEntry.value)
+  }
+
+  async function copyCommandPaletteEntryUrl(entry) {
+    if (!entry?.item?.url) return
+    await copyUrl(entry.item.url)
+  }
+
   function toggleGroupNode(groupKey) {
     expandedGroups[groupKey] = !isGroupExpanded(groupKey)
     selectedNode.groupKey = groupKey
@@ -2093,6 +2317,20 @@ export function useDashboardStore() {
   )
 
   watch(
+    () => commandPaletteResults.value.length,
+    (length) => {
+      if (!length) {
+        commandPaletteActiveIndex.value = 0
+        return
+      }
+
+      if (commandPaletteActiveIndex.value >= length) {
+        commandPaletteActiveIndex.value = length - 1
+      }
+    }
+  )
+
+  watch(
     () => isLanPage.value,
     (active) => {
       if (active) {
@@ -2142,6 +2380,7 @@ export function useDashboardStore() {
     SIDEBAR_PARTICLES_ID,
     actionBusy,
     actionKey,
+    activeCommandPaletteEntry,
     activeIndicatorViewId,
     activeIndicatorWidget,
     activePage,
@@ -2169,8 +2408,14 @@ export function useDashboardStore() {
     closeIframeModal,
     closeItemEditor,
     closeLanHostModal,
+    closeCommandPalette,
+    commandPaletteActiveIndex,
+    commandPaletteOpen,
+    commandPaletteQuery,
+    commandPaletteResults,
     config,
     configError,
+    copyCommandPaletteEntryUrl,
     copyUrl,
     createBrandIcon,
     defaultItemEditorForm,
@@ -2242,6 +2487,7 @@ export function useDashboardStore() {
     makeUniqueId,
     markItemFaviconFailed,
     moveGroup,
+    moveCommandPaletteSelection,
     moveItemBefore,
     moveItemToSubgroupEnd,
     moveSubgroup,
@@ -2260,6 +2506,9 @@ export function useDashboardStore() {
     onSubgroupDragOver,
     onSubgroupDragStart,
     onSubgroupDrop,
+    activateCommandPaletteEntry,
+    activateCommandPaletteSelection,
+    openCommandPalette,
     openCreateItemEditor,
     openEditItemEditor,
     openIframeItem,
@@ -2292,6 +2541,8 @@ export function useDashboardStore() {
     saveStatus,
     saveStatusLabel,
     saveStatusTimer,
+    setCommandPaletteActiveIndex,
+    setCommandPaletteQuery,
     sidebarViewToggleTitle,
     selectItemNode,
     selectSidebarIconNode,
@@ -2321,6 +2572,7 @@ export function useDashboardStore() {
     submitItemEditor,
     syncTreeGroupsState,
     tableRows,
+    toggleCommandPalette,
     toggleEditMode,
     toggleGroupNode,
     toggleServiceCardView,

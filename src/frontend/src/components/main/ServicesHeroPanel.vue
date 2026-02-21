@@ -55,6 +55,15 @@
 
               <IconButton
                 button-class="hero-icon-btn hero-accordion-action"
+                title="Быстрый поиск сервисов (Ctrl/Cmd+K)"
+                aria-label="Быстрый поиск сервисов"
+                @click="openCommandPalette"
+              >
+                <Search class="ui-icon hero-action-icon" />
+              </IconButton>
+
+              <IconButton
+                button-class="hero-icon-btn hero-accordion-action"
                 :active="!isSidebarDetailed"
                 :title="sidebarViewToggleTitle"
                 :aria-label="sidebarViewToggleTitle"
@@ -97,7 +106,7 @@
 
 <script setup>
 import { ref } from 'vue'
-import { ChevronLeft, Circle, FolderTree, GitBranch, Pencil, Plus, Wrench } from 'lucide-vue-next'
+import { ChevronLeft, Circle, FolderTree, GitBranch, Pencil, Plus, Search, Wrench } from 'lucide-vue-next'
 import HeroDropdown from '../primitives/HeroDropdown.vue'
 import HeroPageTabs from './HeroPageTabs.vue'
 import IconButton from '../primitives/IconButton.vue'
@@ -120,6 +129,7 @@ const {
   servicePresentationOptions,
   toggleEditMode,
   addGroup,
+  openCommandPalette,
   toggleSidebarView,
 } = dashboard
 </script>

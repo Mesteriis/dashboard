@@ -10,11 +10,13 @@
     <LanHostModal />
     <IframeModal />
     <ItemEditorModal />
+    <CommandPaletteModal />
   </div>
 </template>
 
 <script setup>
 import { onBeforeUnmount, onMounted, ref } from 'vue'
+import CommandPaletteModal from './components/modals/CommandPaletteModal.vue'
 import IframeModal from './components/modals/IframeModal.vue'
 import ItemEditorModal from './components/modals/ItemEditorModal.vue'
 import LanHostModal from './components/modals/LanHostModal.vue'
