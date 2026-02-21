@@ -1,7 +1,7 @@
 <template>
   <section ref="blocksRootRef" class="page-stack">
     <section v-for="(block, index) in activePageGroupBlocks" :key="`${activePage.id}:${index}:groups`" class="block-wrap">
-      <section class="groups-grid">
+      <section v-auto-animate="groupsAutoAnimateOptions" class="groups-grid">
         <ServiceGroupCard v-for="group in filteredBlockGroups(block.group_ids)" :key="group.key" :group="group" />
 
         <article v-if="!filteredBlockGroups(block.group_ids).length" class="panel group-panel group-empty">
@@ -20,6 +20,7 @@
 
 <script setup>
 import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { vAutoAnimate } from '@formkit/auto-animate/vue'
 import ServiceGroupCard from './ServiceGroupCard.vue'
 import { useDashboardStore } from '../../stores/dashboardStore.js'
 
@@ -27,6 +28,10 @@ const dashboard = useDashboardStore()
 const { activePage, activePageGroupBlocks, filteredBlockGroups } = dashboard
 const blocksRootRef = ref(null)
 let visibilityObserver = null
+const groupsAutoAnimateOptions = {
+  duration: 180,
+  easing: 'cubic-bezier(0.22, 0.72, 0.14, 1)',
+}
 
 function observeVisibleBlocks() {
   if (!visibilityObserver || !blocksRootRef.value) return

@@ -1,6 +1,6 @@
 <template>
   <section v-if="treeGroups.length" class="sidebar-tree" aria-label="Дерево сервисов">
-    <ul v-if="filteredTreeGroups.length" class="tree-root">
+    <ul v-if="filteredTreeGroups.length" v-auto-animate="treeAutoAnimateOptions" class="tree-root">
       <SidebarTreeGroupNode v-for="group in filteredTreeGroups" :key="group.key" :group="group" />
     </ul>
 
@@ -9,6 +9,7 @@
 </template>
 
 <script setup>
+import { vAutoAnimate } from '@formkit/auto-animate/vue'
 import { useDashboardStore } from '../../stores/dashboardStore.js'
 import SidebarTreeGroupNode from './SidebarTreeGroupNode.vue'
 
@@ -18,4 +19,9 @@ const {
   treeGroups,
   filteredTreeGroups,
 } = dashboard
+
+const treeAutoAnimateOptions = {
+  duration: 160,
+  easing: 'cubic-bezier(0.22, 0.72, 0.14, 1)',
+}
 </script>
