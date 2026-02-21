@@ -1,5 +1,9 @@
 <template>
   <nav class="hero-page-tabs" :class="{ 'hero-page-tabs--intro': shouldPlayIntro }" role="tablist" aria-label="Разделы">
+    <div class="hero-logo-square" aria-hidden="true">
+      <img :src="EMBLEM_SRC" alt="" />
+    </div>
+
     <button
       v-for="page in pages"
       :key="page.id"
@@ -28,7 +32,7 @@ import { useDashboardStore } from '../../stores/dashboardStore.js'
 let hasPlayedHeroTabsIntro = false
 
 const dashboard = useDashboardStore()
-const { pages, activePage, activePageId, resolvePageIcon } = dashboard
+const { EMBLEM_SRC, pages, activePage, activePageId, resolvePageIcon } = dashboard
 const shouldPlayIntro = ref(!hasPlayedHeroTabsIntro)
 let introTimeoutId = 0
 
