@@ -14,26 +14,17 @@
         <span>{{ subgroup.title }}</span>
       </h3>
 
-      <TransitionGroup
-        name="item-grid-transition"
-        tag="div"
-        class="item-grid"
-        :class="{ 'icon-card-grid': isIconCardView, 'tile-card-grid': isTileCardView }"
-      >
-        <ServiceItemCard
-          v-for="item in subgroup.items"
-          :key="item.id"
-          :group-key="item.__originGroupKey || group.key"
-          :subgroup-id="item.__originSubgroupId || subgroup.id"
-          :item="item"
-        />
-      </TransitionGroup>
+      <VirtualizedItemGrid
+        :items="subgroup.items"
+        :group-key="group.key"
+        :subgroup-id="subgroup.id"
+      />
     </section>
   </article>
 </template>
 
 <script setup>
-import ServiceItemCard from './ServiceItemCard.vue'
+import VirtualizedItemGrid from './VirtualizedItemGrid.vue'
 import { useDashboardStore } from '../../stores/dashboardStore.js'
 
 defineProps({
@@ -44,5 +35,5 @@ defineProps({
 })
 
 const dashboard = useDashboardStore()
-const { isInlineGroupLayout, resolveGroupIcon, resolveSubgroupIcon, isIconCardView, isTileCardView } = dashboard
+const { isInlineGroupLayout, resolveGroupIcon, resolveSubgroupIcon } = dashboard
 </script>

@@ -206,6 +206,16 @@
   transition: transform 220ms ease;
 }
 
+.virtual-item-grid {
+  min-width: 0;
+}
+
+.item-grid-sentinel {
+  height: 1px;
+  width: 100%;
+  pointer-events: none;
+}
+
 @keyframes card-data-scan {
   0% {
     background-position:
