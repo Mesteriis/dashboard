@@ -46,6 +46,8 @@ export function useDashboardStore() {
   }
   const EMBLEM_SRC = '/static/img/emblem-mark.png'
   const HEALTH_REFRESH_MS = 30000
+  const HEALTH_REFRESH_DEGRADED_MS = 16000
+  const HEALTH_REFRESH_DOWN_MS = 9000
   const DEGRADED_LATENCY_MS = 700
   const LAN_SCAN_POLL_MS = 10000
   const LAN_PAGE_ID = 'lan'
@@ -1965,7 +1967,7 @@ export function useDashboardStore() {
 
   function stopHealthPolling() {
     if (healthPollTimer) {
-      clearInterval(healthPollTimer)
+      clearTimeout(healthPollTimer)
       healthPollTimer = 0
     }
   }
@@ -2078,10 +2080,38 @@ export function useDashboardStore() {
   async function startHealthPolling() {
     stopHealthPolling()
     await refreshHealth()
+    scheduleNextHealthPoll()
+  }
 
-    healthPollTimer = window.setInterval(() => {
-      refreshHealth()
-    }, HEALTH_REFRESH_MS)
+  function nextHealthPollDelayMs() {
+    let hasDown = false
+    let hasDegraded = false
+
+    for (const itemId of visibleTreeItemIds.value) {
+      const level = resolvedHealthLevel(healthState(itemId))
+      if (level === 'down' || level === 'indirect_failure') {
+        hasDown = true
+        break
+      }
+      if (level === 'degraded') {
+        hasDegraded = true
+      }
+    }
+
+    if (hasDown) return HEALTH_REFRESH_DOWN_MS
+    if (hasDegraded) return HEALTH_REFRESH_DEGRADED_MS
+    return HEALTH_REFRESH_MS
+  }
+
+  function scheduleNextHealthPoll() {
+    stopHealthPolling()
+    if (!isDocumentVisible.value) return
+
+    const delayMs = nextHealthPollDelayMs()
+    healthPollTimer = window.setTimeout(async () => {
+      await refreshHealth()
+      scheduleNextHealthPoll()
+    }, delayMs)
   }
 
   async function refreshWidget(widgetId) {
