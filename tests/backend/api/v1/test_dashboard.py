@@ -25,6 +25,11 @@ def _config_with_items(base_config: DashboardConfig, items: list[LinkItemConfig]
     return config
 
 
+@pytest.fixture(autouse=True)
+def clear_health_history() -> None:
+    dashboard_module._HEALTH_HISTORY_BY_ITEM.clear()
+
+
 async def test_get_dashboard_config_returns_current_model(api_client: AsyncClient) -> None:
     response = await api_client.get("/api/v1/dashboard/config")
 
@@ -203,6 +208,133 @@ async def test_get_dashboard_health_filtered_items_return_filtered_aggregates(
     assert payload["aggregates"]["groups"][0]["status"]["total"] == 1
     assert payload["aggregates"]["groups"][0]["status"]["level"] == "online"
     assert payload["aggregates"]["subgroups"][0]["status"]["total"] == 1
+
+
+async def test_get_dashboard_health_includes_item_status_history(
+    api_client: AsyncClient,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    seen_count: dict[str, int] = {}
+
+    async def fake_probe_item_health(**kwargs: object) -> ItemHealthStatus:
+        item = kwargs["item"]
+        count = seen_count.get(item.id, 0) + 1
+        seen_count[item.id] = count
+
+        if item.id == "svc-link" and count >= 2:
+            return ItemHealthStatus(
+                item_id=item.id,
+                ok=False,
+                checked_url=str(item.url),
+                status_code=503,
+                latency_ms=21,
+                error="HTTP 503",
+                level="down",
+                reason="http_5xx",
+                error_kind="http_error",
+            )
+
+        return ItemHealthStatus(
+            item_id=item.id,
+            ok=True,
+            checked_url=str(item.url),
+            status_code=200,
+            latency_ms=9,
+            error=None,
+            level="online",
+            reason="ok",
+            error_kind=None,
+        )
+
+    monkeypatch.setattr(dashboard_module, "probe_item_health", fake_probe_item_health)
+
+    first = await api_client.get("/api/v1/dashboard/health?item_id=svc-link")
+    assert first.status_code == httpx.codes.OK
+    assert len(first.json()["items"][0]["history"]) == 1
+
+    second = await api_client.get("/api/v1/dashboard/health?item_id=svc-link")
+    assert second.status_code == httpx.codes.OK
+    item_payload = second.json()["items"][0]
+
+    assert len(item_payload["history"]) == 2
+    assert item_payload["history"][0]["level"] == "online"
+    assert item_payload["history"][1]["level"] == "down"
+    assert "ts" in item_payload["history"][1]
+
+
+async def test_get_dashboard_health_history_respects_max_points(
+    api_client: AsyncClient,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    sequence = ["online", "degraded", "down"]
+    seen_count = 0
+
+    async def fake_probe_item_health(**kwargs: object) -> ItemHealthStatus:
+        nonlocal seen_count
+        item = kwargs["item"]
+
+        if item.id != "svc-link":
+            return ItemHealthStatus(
+                item_id=item.id,
+                ok=True,
+                checked_url=str(item.url),
+                status_code=200,
+                latency_ms=5,
+                error=None,
+                level="online",
+                reason="ok",
+                error_kind=None,
+            )
+
+        seen_count += 1
+        level = sequence[min(seen_count - 1, len(sequence) - 1)]
+        if level == "online":
+            return ItemHealthStatus(
+                item_id=item.id,
+                ok=True,
+                checked_url=str(item.url),
+                status_code=200,
+                latency_ms=7,
+                error=None,
+                level="online",
+                reason="ok",
+                error_kind=None,
+            )
+        if level == "degraded":
+            return ItemHealthStatus(
+                item_id=item.id,
+                ok=False,
+                checked_url=str(item.url),
+                status_code=429,
+                latency_ms=1300,
+                error="HTTP 429",
+                level="degraded",
+                reason="http_4xx",
+                error_kind="http_error",
+            )
+        return ItemHealthStatus(
+            item_id=item.id,
+            ok=False,
+            checked_url=str(item.url),
+            status_code=503,
+            latency_ms=25,
+            error="HTTP 503",
+            level="down",
+            reason="http_5xx",
+            error_kind="http_error",
+        )
+
+    monkeypatch.setattr(dashboard_module, "_health_history_size", lambda _settings: 2)
+    monkeypatch.setattr(dashboard_module, "probe_item_health", fake_probe_item_health)
+
+    await api_client.get("/api/v1/dashboard/health?item_id=svc-link")
+    await api_client.get("/api/v1/dashboard/health?item_id=svc-link")
+    third = await api_client.get("/api/v1/dashboard/health?item_id=svc-link")
+    assert third.status_code == httpx.codes.OK
+
+    history = third.json()["items"][0]["history"]
+    assert len(history) == 2
+    assert [point["level"] for point in history] == ["degraded", "down"]
 
 
 async def test_get_dashboard_health_marks_indirect_failure_from_dependencies(

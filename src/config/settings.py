@@ -18,6 +18,7 @@ class AppSettings:
     healthcheck_timeout_sec: float
     healthcheck_max_parallel: int
     healthcheck_verify_tls: bool
+    health_history_size: int
     admin_token: str
     admin_token_header: str
     proxy_access_cookie: str
@@ -76,6 +77,7 @@ def load_app_settings(base_dir: Path | None = None) -> AppSettings:
         healthcheck_timeout_sec=_env_float("DASHBOARD_HEALTHCHECK_TIMEOUT_SEC", 4.0, minimum=0.2),
         healthcheck_max_parallel=_env_int("DASHBOARD_HEALTHCHECK_MAX_PARALLEL", 8, minimum=1),
         healthcheck_verify_tls=_env_bool("DASHBOARD_HEALTHCHECK_VERIFY_TLS", True),
+        health_history_size=_env_int("DASHBOARD_HEALTH_HISTORY_SIZE", 20, minimum=1),
         admin_token=admin_token,
         admin_token_header=ADMIN_TOKEN_HEADER,
         proxy_access_cookie=PROXY_ACCESS_COOKIE,

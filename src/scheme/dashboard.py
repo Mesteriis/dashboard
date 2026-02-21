@@ -283,6 +283,13 @@ class SaveConfigResponse(BaseModel):
     version: ConfigVersion
 
 
+class HealthHistoryPoint(BaseModel):
+    ts: datetime
+    level: Literal["online", "degraded", "down", "unknown", "indirect_failure"]
+    latency_ms: int | None = None
+    status_code: int | None = None
+
+
 class ItemHealthStatus(BaseModel):
     item_id: str
     ok: bool
@@ -293,6 +300,7 @@ class ItemHealthStatus(BaseModel):
     level: Literal["online", "degraded", "down", "unknown", "indirect_failure"] = "unknown"
     reason: str | None = None
     error_kind: Literal["timeout", "dns_error", "ssl_error", "connection_error", "http_error", "unknown"] | None = None
+    history: list[HealthHistoryPoint] = Field(default_factory=list)
 
 
 class AggregateStatus(BaseModel):

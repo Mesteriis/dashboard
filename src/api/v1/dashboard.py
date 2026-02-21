@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import asyncio
+from collections import deque
 from collections.abc import AsyncIterator
+from datetime import UTC, datetime
 from typing import Annotated, Literal
 
 import httpx
@@ -18,6 +20,7 @@ from scheme.dashboard import (
     DashboardHealthAggregates,
     DashboardHealthResponse,
     GroupHealthAggregate,
+    HealthHistoryPoint,
     IframeItemConfig,
     IframeSourceResponse,
     ItemConfig,
@@ -94,6 +97,7 @@ def require_admin_token(
 AdminAuthDep = Annotated[None, Depends(require_admin_token)]
 HealthLevel = Literal["online", "degraded", "down", "unknown", "indirect_failure"]
 DependencyResolution = tuple[HealthLevel, str | None, str | None]
+_HEALTH_HISTORY_BY_ITEM: dict[str, deque[HealthHistoryPoint]] = {}
 
 
 def _load_iframe_item(item_id: str, config_service: DashboardConfigService) -> IframeItemConfig:
@@ -296,6 +300,42 @@ def _build_health_aggregates(
     return DashboardHealthAggregates(groups=group_aggregates, subgroups=subgroup_aggregates)
 
 
+def _health_history_size(settings: AppSettings) -> int:
+    return max(1, settings.health_history_size)
+
+
+def _record_health_history(
+    *,
+    statuses_by_id: dict[str, ItemHealthStatus],
+    max_points: int,
+) -> None:
+    timestamp = datetime.now(UTC)
+
+    for status in statuses_by_id.values():
+        history_buffer = _HEALTH_HISTORY_BY_ITEM.get(status.item_id)
+        if history_buffer is None:
+            history_buffer = deque(maxlen=max_points)
+            _HEALTH_HISTORY_BY_ITEM[status.item_id] = history_buffer
+        elif history_buffer.maxlen != max_points:
+            history_buffer = deque(history_buffer, maxlen=max_points)
+            _HEALTH_HISTORY_BY_ITEM[status.item_id] = history_buffer
+
+        history_buffer.append(
+            HealthHistoryPoint(
+                ts=timestamp,
+                level=_status_level(status),
+                latency_ms=status.latency_ms,
+                status_code=status.status_code,
+            )
+        )
+
+
+def _attach_health_history(statuses: list[ItemHealthStatus]) -> None:
+    for status in statuses:
+        history_buffer = _HEALTH_HISTORY_BY_ITEM.get(status.item_id)
+        status.history = list(history_buffer) if history_buffer else []
+
+
 dashboard_router = APIRouter(prefix="/api/v1")
 
 
@@ -388,6 +428,10 @@ async def get_dashboard_health(
 
     statuses_by_id = {status.item_id: status for status in statuses}
     _apply_dependency_awareness(items_to_probe, statuses_by_id)
+    _record_health_history(
+        statuses_by_id=statuses_by_id,
+        max_points=_health_history_size(settings),
+    )
 
     if requested_ids is not None:
         statuses = [
@@ -398,6 +442,7 @@ async def get_dashboard_health(
     else:
         statuses = [statuses_by_id[item.id] for item in all_items if item.id in statuses_by_id]
 
+    _attach_health_history(statuses)
     status_subset_by_id = {status.item_id: status for status in statuses}
     aggregates = _build_health_aggregates(
         config=config,

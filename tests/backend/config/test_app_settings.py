@@ -40,6 +40,7 @@ def test_load_app_settings_applies_env_and_minimums(monkeypatch: pytest.MonkeyPa
     monkeypatch.setenv("DASHBOARD_CONFIG_FILE", str(config_file))
     monkeypatch.setenv("DASHBOARD_HEALTHCHECK_TIMEOUT_SEC", "0.01")
     monkeypatch.setenv("DASHBOARD_HEALTHCHECK_MAX_PARALLEL", "0")
+    monkeypatch.setenv("DASHBOARD_HEALTH_HISTORY_SIZE", "0")
     monkeypatch.setenv("DASHBOARD_PROXY_TOKEN_TTL_SEC", "1")
     monkeypatch.setenv("DASHBOARD_HEALTHCHECK_VERIFY_TLS", "off")
 
@@ -47,5 +48,6 @@ def test_load_app_settings_applies_env_and_minimums(monkeypatch: pytest.MonkeyPa
     assert app_settings.config_file == config_file
     assert app_settings.healthcheck_timeout_sec == 0.2
     assert app_settings.healthcheck_max_parallel == 1
+    assert app_settings.health_history_size == 1
     assert app_settings.proxy_token_ttl_sec == 30
     assert app_settings.healthcheck_verify_tls is False
