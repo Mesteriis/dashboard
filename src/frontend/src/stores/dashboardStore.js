@@ -140,6 +140,7 @@ export function useDashboardStore() {
   const statsExpanded = ref(false)
   const activeIndicatorViewId = ref('')
   const editMode = ref(false)
+  const isDocumentVisible = ref(typeof document === 'undefined' ? true : document.visibilityState !== 'hidden')
   const serviceCardView = ref('detailed')
   const serviceGroupingMode = ref('groups')
   const siteFilter = ref('all')
@@ -165,6 +166,7 @@ export function useDashboardStore() {
   let saveStatusTimer = 0
   let lanScanPollTimer = 0
   let lanScanRefreshInFlight = false
+  let visibilitySyncInFlight = false
 
   const selectedNode = reactive({
     groupKey: '',
@@ -2046,6 +2048,8 @@ export function useDashboardStore() {
   }
 
   async function refreshHealth(itemIds = null) {
+    if (!Array.isArray(itemIds) && !isDocumentVisible.value) return
+
     const sourceIds = Array.isArray(itemIds) && itemIds.length ? itemIds : visibleTreeItemIds.value
     const ids = Array.from(new Set(sourceIds.map((value) => String(value || '').trim()).filter(Boolean)))
     if (!ids.length) return
@@ -2174,6 +2178,9 @@ export function useDashboardStore() {
       applyGrid(data?.ui?.grid)
       await initWidgetPolling()
       await startHealthPolling()
+      if (!isDocumentVisible.value) {
+        pauseBackgroundPolling()
+      }
     } catch (error) {
       configError.value = error?.message || 'Не удалось загрузить dashboard-конфигурацию'
       config.value = null
@@ -2358,6 +2365,43 @@ export function useDashboardStore() {
     }, LAN_SCAN_POLL_MS)
   }
 
+  function pauseBackgroundPolling() {
+    stopHealthPolling()
+    stopLanScanPolling()
+    resetWidgetPolling()
+  }
+
+  async function resumeBackgroundPolling() {
+    if (!config.value || loadingConfig.value) return
+    await initWidgetPolling()
+    await startHealthPolling()
+
+    if (isLanPage.value) {
+      await refreshLanScanState({ silent: true })
+      startLanScanPolling()
+    }
+  }
+
+  async function syncPollingWithVisibility() {
+    if (visibilitySyncInFlight) return
+    visibilitySyncInFlight = true
+
+    try {
+      if (isDocumentVisible.value) {
+        await resumeBackgroundPolling()
+      } else {
+        pauseBackgroundPolling()
+      }
+    } finally {
+      visibilitySyncInFlight = false
+    }
+  }
+
+  function handleDocumentVisibilityChange() {
+    isDocumentVisible.value = document.visibilityState !== 'hidden'
+    syncPollingWithVisibility()
+  }
+
   async function runLanScanNow() {
     if (lanScanActionBusy.value) return
     lanScanActionBusy.value = true
@@ -2493,8 +2537,10 @@ export function useDashboardStore() {
     () => isLanPage.value,
     (active) => {
       if (active) {
-        refreshLanScanState()
-        startLanScanPolling()
+        if (isDocumentVisible.value) {
+          refreshLanScanState()
+          startLanScanPolling()
+        }
         return
       }
       closeLanHostModal()
@@ -2503,6 +2549,7 @@ export function useDashboardStore() {
   )
 
   onMounted(async () => {
+    window.addEventListener('visibilitychange', handleDocumentVisibilityChange)
     await initSidebarParticles()
     await loadConfig()
     await nextTick()
@@ -2514,6 +2561,7 @@ export function useDashboardStore() {
     stopHealthPolling()
     stopLanScanPolling()
     closeLanHostModal()
+    window.removeEventListener('visibilitychange', handleDocumentVisibilityChange)
     if (saveStatusTimer) {
       clearTimeout(saveStatusTimer)
       saveStatusTimer = 0
