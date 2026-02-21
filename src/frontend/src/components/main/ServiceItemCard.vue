@@ -72,17 +72,33 @@
         <IconButton :title="item.type === 'iframe' ? 'Открыть iframe' : 'Открыть'" :aria-label="item.type === 'iframe' ? 'Открыть iframe' : 'Открыть'" @click.stop="openItem(item)">
           <component :is="item.type === 'iframe' ? Globe : Link2" class="ui-icon item-action-icon" />
         </IconButton>
+        <IconButton title="Открыть в новой вкладке" aria-label="Открыть в новой вкладке" @click.stop="openItemInNewTab(item)">
+          <ExternalLink class="ui-icon item-action-icon" />
+        </IconButton>
+        <IconButton title="Recheck health" aria-label="Recheck health" @click.stop="recheckItem(item.id)">
+          <RefreshCw class="ui-icon item-action-icon" />
+        </IconButton>
+        <IconButton v-if="itemIpValue" title="Копировать IP" aria-label="Копировать IP" @click.stop="copyItemIp(item.id)">
+          <Server class="ui-icon item-action-icon" />
+        </IconButton>
+        <IconButton v-if="itemIpValue" title="Копировать SSH shortcut" aria-label="Копировать SSH shortcut" @click.stop="copyItemSshShortcut(item.id)">
+          <Terminal class="ui-icon item-action-icon" />
+        </IconButton>
         <IconButton title="Копировать URL" aria-label="Копировать URL" @click.stop="copyUrl(item.url)">
           <Copy class="ui-icon item-action-icon" />
         </IconButton>
       </div>
+
+      <p v-if="itemIpValue" class="item-ssh-shortcut">
+        SSH: <code>{{ sshShortcut }}</code>
+      </p>
     </template>
   </article>
 </template>
 
 <script setup>
 import { computed, onBeforeUnmount, ref, toRef, watch } from 'vue'
-import { Copy, Globe, Link2 } from 'lucide-vue-next'
+import { Copy, ExternalLink, Globe, Link2, RefreshCw, Server, Terminal } from 'lucide-vue-next'
 import IconButton from '../primitives/IconButton.vue'
 import { useDashboardStore } from '../../stores/dashboardStore.js'
 
@@ -117,13 +133,20 @@ const {
   resolveItemIcon,
   healthClass,
   healthLabel,
+  itemIp,
   itemSite,
+  copyItemIp,
+  copyItemSshShortcut,
   openItem,
+  openItemInNewTab,
+  recheckItem,
   copyUrl,
 } = dashboard
 
 const healthVisualClass = computed(() => healthClass(item.value.id))
 const healthLabelText = computed(() => healthLabel(item.value.id))
+const itemIpValue = computed(() => itemIp(item.value.id))
+const sshShortcut = computed(() => `ssh ${itemIpValue.value}`)
 const siteLabel = computed(() => itemSite(item.value, groupKey.value))
 const healthFlashActive = ref(false)
 const dataSweepActive = ref(false)

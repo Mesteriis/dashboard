@@ -2044,8 +2044,9 @@ export function useDashboardStore() {
     return 'Unknown'
   }
 
-  async function refreshHealth() {
-    const ids = visibleTreeItemIds.value
+  async function refreshHealth(itemIds = null) {
+    const sourceIds = Array.isArray(itemIds) && itemIds.length ? itemIds : visibleTreeItemIds.value
+    const ids = Array.from(new Set(sourceIds.map((value) => String(value || '').trim()).filter(Boolean)))
     if (!ids.length) return
 
     try {
@@ -2224,6 +2225,11 @@ export function useDashboardStore() {
     window.open(item.url, '_blank', 'noopener,noreferrer')
   }
 
+  function openItemInNewTab(item) {
+    if (!item?.url) return
+    window.open(item.url, '_blank', 'noopener,noreferrer')
+  }
+
   function openItem(item) {
     if (item.type === 'iframe') {
       openIframeItem(item)
@@ -2233,14 +2239,41 @@ export function useDashboardStore() {
     openLinkItem(item)
   }
 
-  async function copyUrl(url) {
+  function itemIp(itemId) {
+    return itemIpById.value.get(String(itemId || '')) || ''
+  }
+
+  async function copyText(value) {
+    const text = String(value || '')
+    if (!text) return
     if (!navigator.clipboard?.writeText) return
 
     try {
-      await navigator.clipboard.writeText(url)
+      await navigator.clipboard.writeText(text)
     } catch {
       // ignore clipboard errors
     }
+  }
+
+  async function copyUrl(url) {
+    await copyText(url)
+  }
+
+  async function copyItemIp(itemId) {
+    const ip = itemIp(itemId)
+    if (!ip) return
+    await copyText(ip)
+  }
+
+  async function copyItemSshShortcut(itemId) {
+    const ip = itemIp(itemId)
+    if (!ip) return
+    await copyText(`ssh ${ip}`)
+  }
+
+  async function recheckItem(itemId) {
+    if (!itemId) return
+    await refreshHealth([itemId])
   }
 
   function formatLanMoment(value) {
@@ -2505,6 +2538,8 @@ export function useDashboardStore() {
     commandPaletteResults,
     config,
     configError,
+    copyItemIp,
+    copyItemSshShortcut,
     copyCommandPaletteEntryUrl,
     copyUrl,
     createBrandIcon,
@@ -2562,6 +2597,7 @@ export function useDashboardStore() {
     itemFaviconFailures,
     itemFaviconKey,
     itemFaviconSrc,
+    itemIp,
     itemSite,
     lanCidrsLabel,
     lanHostModal,
@@ -2605,6 +2641,7 @@ export function useDashboardStore() {
     openIframeItem,
     openIndicatorView,
     openItem,
+    openItemInNewTab,
     openLanHostModal,
     openLinkItem,
     pageHealthSummary,
@@ -2612,6 +2649,7 @@ export function useDashboardStore() {
     persistConfig,
     pickSemanticIcon,
     refreshHealth,
+    recheckItem,
     refreshLanScanState,
     refreshWidget,
     removeGroup,
