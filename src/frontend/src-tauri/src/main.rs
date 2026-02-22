@@ -159,7 +159,17 @@ fn terminate_stale_backend_by_pid_file() {
     return;
   }
 
-  let _ = Command::new("kill").arg("-TERM").arg(pid).status();
+  let parsed_pid = match pid.parse::<u32>() {
+    Ok(value) if value > 0 => value,
+    _ => {
+      let _ = fs::remove_file(pid_path);
+      return;
+    }
+  };
+
+  // TODO(security): verify process identity before sending SIGTERM to PID from file.
+  // Current implementation assumes PID file points to an old embedded backend process.
+  let _ = Command::new("kill").arg("-TERM").arg(parsed_pid.to_string()).status();
   let _ = fs::remove_file(pid_path);
 }
 
