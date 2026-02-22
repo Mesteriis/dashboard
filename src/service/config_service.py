@@ -2,8 +2,10 @@ from __future__ import annotations
 
 import base64
 import hashlib
+import json
 import os
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
@@ -12,6 +14,7 @@ import yaml
 from pydantic import ValidationError
 from sqlalchemy.orm import Session, sessionmaker
 
+from db.models import DashboardConfigRecord, DashboardConfigRevision
 from scheme.dashboard import (
     AuthProfileConfig,
     BasicAuthProfile,
@@ -55,22 +58,20 @@ class DashboardConfigService:
         return list(self._last_issues)
 
     def load(self, *, force: bool = False) -> DashboardConfig:
-        file_hash, file_mtime, raw_document = self._read_document()
-        if not force and self._state and self._state.version.sha256 == file_hash:
-            return self._state.config
-
         try:
-            config = self._validate_document(raw_document)
+            if self.db_session_factory is not None:
+                state = self._load_from_db(force=force)
+            else:
+                state = self._load_from_file(force=force)
         except DashboardConfigValidationError as exc:
             self._last_issues = exc.issues
             raise
 
-        self._state = DashboardConfigState(config=config, version=ConfigVersion(sha256=file_hash, mtime=file_mtime))
+        self._state = state
         self._last_issues = []
-        return config
+        return state.config
 
     def get_version(self) -> ConfigVersion:
-        # Always call load() so we refresh version when the file changed on disk.
         self.load()
         assert self._state is not None
         return self._state.version
@@ -88,32 +89,31 @@ class DashboardConfigService:
             return None, exc.issues
         return config, []
 
-    def save(self, raw_document: Any) -> DashboardConfigState:
+    def save(self, raw_document: Any, *, source: str = "api") -> DashboardConfigState:
         try:
             config = self._validate_document(raw_document)
         except DashboardConfigValidationError as exc:
             self._last_issues = exc.issues
             raise
 
-        serialized = yaml.safe_dump(
-            config.model_dump(mode="json", exclude_none=True),
-            sort_keys=False,
-            allow_unicode=True,
-            width=120,
-        )
+        if self.db_session_factory is not None:
+            state = self._save_config_to_db(config=config, source=source)
+        else:
+            state = self._save_to_file(config)
 
-        if not serialized.endswith("\n"):
-            serialized += "\n"
-
-        self._write_document(serialized)
-
-        file_hash = hashlib.sha256(serialized.encode("utf-8")).hexdigest()
-        file_mtime = self.config_path.stat().st_mtime
-
-        state = DashboardConfigState(config=config, version=ConfigVersion(sha256=file_hash, mtime=file_mtime))
         self._state = state
         self._last_issues = []
         return state
+
+    def export_yaml(self, config: DashboardConfig | None = None) -> str:
+        target_config = config or self.load()
+        return self._serialize_yaml(target_config)
+
+    def import_yaml(self, yaml_text: str, *, source: str = "restore") -> DashboardConfigState:
+        config, issues = self.validate_yaml(yaml_text)
+        if config is None:
+            raise DashboardConfigValidationError(issues)
+        return self.save(config.model_dump(mode="json", exclude_none=True), source=source)
 
     def get_item(self, item_id: str) -> ItemConfig:
         config = self.load()
@@ -178,6 +178,150 @@ class DashboardConfigService:
             return headers, query_params
 
         return headers, query_params
+
+    def _load_from_db(self, *, force: bool) -> DashboardConfigState:
+        state = self._fetch_db_state()
+        if state is None:
+            state = self._bootstrap_from_yaml_to_db()
+
+        if not force and self._state and self._state.version.sha256 == state.version.sha256:
+            return self._state
+        return state
+
+    def _load_from_file(self, *, force: bool) -> DashboardConfigState:
+        file_hash, file_mtime, raw_document = self._read_document()
+        if not force and self._state and self._state.version.sha256 == file_hash:
+            return self._state
+
+        config = self._validate_document(raw_document)
+        return DashboardConfigState(config=config, version=ConfigVersion(sha256=file_hash, mtime=file_mtime))
+
+    def _fetch_db_state(self) -> DashboardConfigState | None:
+        if self.db_session_factory is None:
+            return None
+
+        with self.db_session_factory() as session:
+            record = session.get(DashboardConfigRecord, 1)
+            if record is None:
+                return None
+            return self._state_from_record(record)
+
+    def _state_from_record(self, record: DashboardConfigRecord) -> DashboardConfigState:
+        try:
+            raw_document = json.loads(record.payload_json)
+        except json.JSONDecodeError as exc:
+            raise DashboardConfigValidationError(
+                [
+                    ValidationIssue(
+                        code="invalid_stored_payload",
+                        path="$.dashboard_config.payload_json",
+                        message=str(exc),
+                    )
+                ]
+            ) from exc
+
+        config = self._validate_document(raw_document)
+        mtime = record.updated_at.timestamp() if record.updated_at else 0.0
+        return DashboardConfigState(
+            config=config,
+            version=ConfigVersion(sha256=record.payload_sha256, mtime=mtime),
+        )
+
+    def _bootstrap_from_yaml_to_db(self) -> DashboardConfigState:
+        _file_hash, _file_mtime, raw_document = self._read_document()
+        config = self._validate_document(raw_document)
+        state = self._save_config_to_db(config=config, source="bootstrap")
+        self._delete_bootstrap_file()
+        return state
+
+    def _save_config_to_db(self, *, config: DashboardConfig, source: str) -> DashboardConfigState:
+        if self.db_session_factory is None:
+            raise RuntimeError("DB session factory is required for DB-backed save")
+
+        payload_json = self._serialize_json(config)
+        payload_sha256 = hashlib.sha256(payload_json.encode("utf-8")).hexdigest()
+        now = datetime.now(UTC)
+
+        with self.db_session_factory() as session:
+            record = session.get(DashboardConfigRecord, 1)
+            if record is None:
+                revision = 1
+                record = DashboardConfigRecord(
+                    id=1,
+                    revision=revision,
+                    payload_json=payload_json,
+                    payload_sha256=payload_sha256,
+                    source=source,
+                    created_at=now,
+                    updated_at=now,
+                )
+                session.add(record)
+            else:
+                revision = max(1, int(record.revision) + 1)
+                record.revision = revision
+                record.payload_json = payload_json
+                record.payload_sha256 = payload_sha256
+                record.source = source
+                record.updated_at = now
+
+            session.add(
+                DashboardConfigRevision(
+                    revision=revision,
+                    payload_json=payload_json,
+                    payload_sha256=payload_sha256,
+                    source=source,
+                    created_at=now,
+                )
+            )
+            session.commit()
+
+        return DashboardConfigState(
+            config=config,
+            version=ConfigVersion(sha256=payload_sha256, mtime=now.timestamp()),
+        )
+
+    def _save_to_file(self, config: DashboardConfig) -> DashboardConfigState:
+        serialized = self._serialize_yaml(config)
+        self._write_document(serialized)
+
+        file_hash = hashlib.sha256(serialized.encode("utf-8")).hexdigest()
+        file_mtime = self.config_path.stat().st_mtime
+        return DashboardConfigState(config=config, version=ConfigVersion(sha256=file_hash, mtime=file_mtime))
+
+    @staticmethod
+    def _serialize_json(config: DashboardConfig) -> str:
+        return json.dumps(
+            config.model_dump(mode="json", exclude_none=True),
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+        )
+
+    @staticmethod
+    def _serialize_yaml(config: DashboardConfig) -> str:
+        serialized = yaml.safe_dump(
+            config.model_dump(mode="json", exclude_none=True),
+            sort_keys=False,
+            allow_unicode=True,
+            width=120,
+        )
+        return serialized if serialized.endswith("\n") else f"{serialized}\n"
+
+    def _delete_bootstrap_file(self) -> None:
+        try:
+            self.config_path.unlink()
+        except FileNotFoundError:
+            return
+        except OSError as exc:
+            raise DashboardConfigValidationError(
+                [
+                    ValidationIssue(
+                        code="bootstrap_cleanup_failed",
+                        path=str(self.config_path),
+                        message=f"Imported config into database, but failed to delete bootstrap file: {exc}",
+                    )
+                ]
+            ) from exc
 
     def _read_env(self, key: str) -> str:
         value = os.getenv(key)

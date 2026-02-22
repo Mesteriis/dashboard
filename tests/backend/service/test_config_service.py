@@ -4,12 +4,16 @@ from pathlib import Path
 
 import pytest
 from faker import Faker
+from sqlalchemy import func, select
+from sqlalchemy.orm import Session, sessionmaker
 from support.factories import (
     build_dashboard_config,
     build_dashboard_config_with_basic_auth,
     write_dashboard_yaml,
 )
 
+from db.models import DashboardConfigRecord, DashboardConfigRevision
+from db.session import build_sqlite_engine
 from scheme.dashboard import (
     BearerAuthProfile,
     IframeItemConfig,
@@ -17,6 +21,12 @@ from scheme.dashboard import (
     ValidationIssue,
 )
 from service.config_service import DashboardConfigService, DashboardConfigValidationError
+
+
+def _build_db_session_factory(tmp_path: Path) -> sessionmaker[Session]:
+    engine = build_sqlite_engine((tmp_path / "dashboard.sqlite3").resolve())
+    DashboardConfigRecord.metadata.create_all(engine)
+    return sessionmaker(bind=engine, autoflush=False, autocommit=False, expire_on_commit=False)
 
 
 def test_get_version_refreshes_after_external_file_change(tmp_path: Path, fake: Faker) -> None:
@@ -197,3 +207,38 @@ def test_save_writes_normalized_yaml_with_trailing_newline(tmp_path: Path, fake:
     assert state.version.sha256
     raw = service.config_path.read_text(encoding="utf-8")
     assert raw.endswith("\n")
+
+
+def test_db_bootstrap_imports_yaml_and_deletes_file(tmp_path: Path, fake: Faker) -> None:
+    config = build_dashboard_config(fake)
+    config_path = write_dashboard_yaml((tmp_path / "dashboard.yaml").resolve(), config)
+    session_factory = _build_db_session_factory(tmp_path)
+    service = DashboardConfigService(config_path=config_path, db_session_factory=session_factory)
+
+    loaded = service.load()
+
+    assert loaded.app.id == config.app.id
+    assert not config_path.exists()
+    with session_factory() as session:
+        row = session.get(DashboardConfigRecord, 1)
+        assert row is not None
+        assert row.revision == 1
+
+
+def test_db_save_updates_active_config_and_revision_history(tmp_path: Path, fake: Faker) -> None:
+    config = build_dashboard_config(fake, title="First")
+    config_path = write_dashboard_yaml((tmp_path / "dashboard.yaml").resolve(), config)
+    session_factory = _build_db_session_factory(tmp_path)
+    service = DashboardConfigService(config_path=config_path, db_session_factory=session_factory)
+    service.load()
+
+    updated = build_dashboard_config(fake, title="Second")
+    state = service.save(updated.model_dump(mode="json", exclude_none=True), source="api")
+
+    assert state.config.app.title == "Second"
+    with session_factory() as session:
+        active_row = session.get(DashboardConfigRecord, 1)
+        assert active_row is not None
+        assert active_row.revision == 2
+        history_count = session.scalar(select(func.count()).select_from(DashboardConfigRevision))
+        assert history_count == 2
