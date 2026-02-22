@@ -13,6 +13,7 @@ from starlette.background import BackgroundTask
 
 from config.container import AppContainer
 from config.settings import AppSettings
+from db.repositories import HealthSampleRepository, HealthSampleWrite
 from scheme.dashboard import (
     AggregateStatus,
     ConfigVersion,
@@ -74,10 +75,17 @@ def get_proxy_signer(container: Annotated[AppContainer, Depends(get_container)])
     return container.proxy_signer
 
 
+def get_health_sample_repository(
+    container: Annotated[AppContainer, Depends(get_container)],
+) -> HealthSampleRepository:
+    return container.health_sample_repository
+
+
 SettingsDep = Annotated[AppSettings, Depends(get_settings)]
 ConfigServiceDep = Annotated[DashboardConfigService, Depends(get_config_service)]
 LanScanServiceDep = Annotated[LanScanService, Depends(get_lan_scan_service)]
 ProxySignerDep = Annotated[ProxyAccessSigner, Depends(get_proxy_signer)]
+HealthSampleRepositoryDep = Annotated[HealthSampleRepository, Depends(get_health_sample_repository)]
 HealthLevel = Literal["online", "degraded", "down", "unknown", "indirect_failure"]
 DependencyResolution = tuple[HealthLevel, str | None, str | None]
 _HEALTH_HISTORY_BY_ITEM: dict[str, deque[HealthHistoryPoint]] = {}
@@ -312,8 +320,10 @@ def _record_health_history(
     *,
     statuses_by_id: dict[str, ItemHealthStatus],
     max_points: int,
+    health_sample_repository: HealthSampleRepository | None = None,
 ) -> None:
     timestamp = datetime.now(UTC)
+    persisted_samples: list[HealthSampleWrite] = []
 
     for status in statuses_by_id.values():
         history_buffer = _HEALTH_HISTORY_BY_ITEM.get(status.item_id)
@@ -332,6 +342,23 @@ def _record_health_history(
                 status_code=status.status_code,
             )
         )
+        persisted_samples.append(
+            HealthSampleWrite(
+                item_id=status.item_id,
+                ts=timestamp,
+                level=_status_level(status),
+                latency_ms=status.latency_ms,
+                status_code=status.status_code,
+            )
+        )
+
+    if health_sample_repository is None:
+        return
+    try:
+        health_sample_repository.append_samples(persisted_samples)
+    except Exception:
+        # Health endpoint should still return live probe data even if persistence fails.
+        return
 
 
 def _attach_health_history(statuses: list[ItemHealthStatus]) -> None:
@@ -340,10 +367,21 @@ def _attach_health_history(statuses: list[ItemHealthStatus]) -> None:
         status.history = list(history_buffer) if history_buffer else []
 
 
-def _prune_health_history(valid_item_ids: set[str]) -> None:
+def _prune_health_history(
+    valid_item_ids: set[str],
+    *,
+    health_sample_repository: HealthSampleRepository | None = None,
+) -> None:
     stale_item_ids = [item_id for item_id in _HEALTH_HISTORY_BY_ITEM if item_id not in valid_item_ids]
     for item_id in stale_item_ids:
         _HEALTH_HISTORY_BY_ITEM.pop(item_id, None)
+
+    if health_sample_repository is None:
+        return
+    try:
+        health_sample_repository.delete_samples_not_in_item_ids(valid_item_ids)
+    except Exception:
+        return
 
 
 dashboard_router = APIRouter(prefix="/api/v1")
@@ -442,6 +480,7 @@ async def restore_dashboard_config(
 async def get_dashboard_health(
     config_service: ConfigServiceDep,
     settings: SettingsDep,
+    health_sample_repository: HealthSampleRepositoryDep,
     response: Response,
     item_id: Annotated[list[str] | None, Query()] = None,
 ) -> DashboardHealthResponse:
@@ -458,7 +497,10 @@ async def get_dashboard_health(
     ]
 
     items_by_id = {item.id: item for item in all_items}
-    _prune_health_history(set(items_by_id))
+    _prune_health_history(
+        set(items_by_id),
+        health_sample_repository=health_sample_repository,
+    )
     requested_ids: set[str] | None = None
     probe_ids: set[str] | None = None
 
@@ -491,6 +533,7 @@ async def get_dashboard_health(
     _record_health_history(
         statuses_by_id=statuses_by_id,
         max_points=_health_history_size(settings),
+        health_sample_repository=health_sample_repository,
     )
 
     if requested_ids is not None:

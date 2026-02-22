@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from config.settings import AppSettings, load_app_settings
 from db.migrations import run_alembic_upgrade
-from db.repositories import DashboardConfigRepository
+from db.repositories import DashboardConfigRepository, HealthSampleRepository, LanScanSnapshotRepository
 from db.session import build_sqlite_engine, sqlite_url_from_path
 from service.config_service import DashboardConfigService
 from service.lan_scan import LanScanService, lan_scan_settings_from_env
@@ -21,6 +21,8 @@ class AppContainer:
     db_engine: Engine
     db_session_factory: sessionmaker[Session]
     config_repository: DashboardConfigRepository
+    health_sample_repository: HealthSampleRepository
+    lan_scan_snapshot_repository: LanScanSnapshotRepository
     config_service: DashboardConfigService
     lan_scan_service: LanScanService
     proxy_signer: ProxyAccessSigner
@@ -35,6 +37,8 @@ def build_container(base_dir: Path | None = None) -> AppContainer:
         db_url=sqlite_url_from_path(settings.db_file),
     )
     config_repository = DashboardConfigRepository(db_session_factory)
+    health_sample_repository = HealthSampleRepository(db_session_factory)
+    lan_scan_snapshot_repository = LanScanSnapshotRepository(db_session_factory)
 
     config_service = DashboardConfigService(
         config_path=settings.config_file,
@@ -43,6 +47,7 @@ def build_container(base_dir: Path | None = None) -> AppContainer:
     lan_scan_service = LanScanService(
         config_service=config_service,
         settings=lan_scan_settings_from_env(settings.base_dir),
+        snapshot_repository=lan_scan_snapshot_repository,
     )
     proxy_signer = ProxyAccessSigner(
         secret=settings.proxy_token_secret,
@@ -53,6 +58,8 @@ def build_container(base_dir: Path | None = None) -> AppContainer:
         db_engine=db_engine,
         db_session_factory=db_session_factory,
         config_repository=config_repository,
+        health_sample_repository=health_sample_repository,
+        lan_scan_snapshot_repository=lan_scan_snapshot_repository,
         config_service=config_service,
         lan_scan_service=lan_scan_service,
         proxy_signer=proxy_signer,

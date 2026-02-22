@@ -3,9 +3,11 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import ipaddress
+import json
 from datetime import UTC, datetime, timedelta
 from time import perf_counter
 
+from db.repositories import LanScanSnapshotRepository
 from scheme.dashboard import LanScanHost, LanScanResult, LanScanStateResponse
 from service.config_service import DashboardConfigService
 
@@ -30,16 +32,23 @@ def _utc_now() -> datetime:
 
 
 class LanScanService:
-    def __init__(self, *, config_service: DashboardConfigService, settings: LanScanSettings):
+    def __init__(
+        self,
+        *,
+        config_service: DashboardConfigService,
+        settings: LanScanSettings,
+        snapshot_repository: LanScanSnapshotRepository | None = None,
+    ):
         self._config_service = config_service
         self._settings = settings
+        self._snapshot_repository = snapshot_repository
 
         self._running = False
         self._last_started_at: datetime | None = None
         self._last_finished_at: datetime | None = None
         self._next_run_at: datetime | None = None
         self._last_error: str | None = None
-        self._last_result: LanScanResult | None = load_last_result(settings.result_file)
+        self._last_result: LanScanResult | None = self._load_last_result()
 
         self._periodic_task: asyncio.Task[None] | None = None
         self._run_task: asyncio.Task[None] | None = None
@@ -160,6 +169,7 @@ class LanScanService:
                 source_file=str(self._settings.result_file),
             )
             self._last_result = result
+            self._save_snapshot_to_db(result)
             save_result(self._settings.result_file, result)
         except Exception as exc:
             self._last_error = str(exc)
@@ -169,6 +179,35 @@ class LanScanService:
             if self._pending_trigger and self._settings.enabled:
                 self._pending_trigger = False
                 self._run_task = asyncio.create_task(self._run_scan(), name="lan-scan-run")
+
+    def _load_last_result(self) -> LanScanResult | None:
+        if self._snapshot_repository is None:
+            return load_last_result(self._settings.result_file)
+
+        stored = self._snapshot_repository.fetch_latest()
+        if stored is not None:
+            with contextlib.suppress(Exception):
+                data = json.loads(stored.payload_json)
+                result = LanScanResult.model_validate(data)
+                result.source_file = str(self._settings.result_file)
+                return result
+
+        return load_last_result(self._settings.result_file)
+
+    def _save_snapshot_to_db(self, result: LanScanResult) -> None:
+        if self._snapshot_repository is None:
+            return
+        with contextlib.suppress(Exception):
+            payload_json = json.dumps(
+                result.model_dump(mode="json"),
+                ensure_ascii=False,
+                separators=(",", ":"),
+            )
+            self._snapshot_repository.save_snapshot(
+                generated_at=result.generated_at,
+                payload_json=payload_json,
+            )
+            self._snapshot_repository.prune_old(keep_last=20)
 
 
 __all__ = ["LanScanService"]

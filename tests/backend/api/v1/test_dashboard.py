@@ -8,11 +8,13 @@ import pytest
 from faker import Faker
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
+from sqlalchemy import select
 from support.factories import build_dashboard_config, dump_dashboard_yaml
 
 import api.v1.dashboard as dashboard_module
 from api.v1.dashboard import dashboard_router
 from config.container import AppContainer
+from db.models import HealthSample
 from scheme.dashboard import DashboardConfig, ItemHealthStatus, LanScanStateResponse, LinkItemConfig, ValidationIssue
 from service.config_service import DashboardConfigValidationError
 
@@ -292,6 +294,35 @@ async def test_get_dashboard_health_includes_item_status_history(
     assert item_payload["history"][0]["level"] == "online"
     assert item_payload["history"][1]["level"] == "down"
     assert "ts" in item_payload["history"][1]
+
+
+async def test_get_dashboard_health_persists_health_samples_in_db(
+    api_client: AsyncClient,
+    app_container: AppContainer,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    async def fake_probe_item_health(**kwargs: object) -> ItemHealthStatus:
+        item = kwargs["item"]
+        return ItemHealthStatus(
+            item_id=item.id,
+            ok=True,
+            checked_url=str(item.url),
+            status_code=200,
+            latency_ms=4,
+            error=None,
+            level="online",
+            reason="ok",
+            error_kind=None,
+        )
+
+    monkeypatch.setattr(dashboard_module, "probe_item_health", fake_probe_item_health)
+    response = await api_client.get("/api/v1/dashboard/health?item_id=svc-link")
+    assert response.status_code == httpx.codes.OK
+
+    with app_container.db_session_factory() as session:
+        samples = session.scalars(select(HealthSample).where(HealthSample.item_id == "svc-link")).all()
+    assert len(samples) == 1
+    assert samples[0].level == "online"
 
 
 async def test_get_dashboard_health_history_respects_max_points(
