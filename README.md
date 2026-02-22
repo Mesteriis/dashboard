@@ -43,6 +43,8 @@ npm run tauri:dev
 npm run tauri:build:arm64
 ```
 
+`npm run tauri:dev` и `npm run tauri:build:arm64` автоматически соберут sidecar, если бинарник ещё не подготовлен.
+
 ### One-command clean desktop build (recommended)
 
 ```bash
