@@ -340,6 +340,12 @@ def _attach_health_history(statuses: list[ItemHealthStatus]) -> None:
         status.history = list(history_buffer) if history_buffer else []
 
 
+def _prune_health_history(valid_item_ids: set[str]) -> None:
+    stale_item_ids = [item_id for item_id in _HEALTH_HISTORY_BY_ITEM if item_id not in valid_item_ids]
+    for item_id in stale_item_ids:
+        _HEALTH_HISTORY_BY_ITEM.pop(item_id, None)
+
+
 dashboard_router = APIRouter(prefix="/api/v1")
 
 
@@ -422,6 +428,7 @@ async def get_dashboard_health(
     ]
 
     items_by_id = {item.id: item for item in all_items}
+    _prune_health_history(set(items_by_id))
     requested_ids: set[str] | None = None
     probe_ids: set[str] | None = None
 

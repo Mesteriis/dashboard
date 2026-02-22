@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections import deque
 from collections.abc import AsyncIterator
 
 import httpx
@@ -337,6 +338,35 @@ async def test_get_dashboard_health_history_respects_max_points(
     history = third.json()["items"][0]["history"]
     assert len(history) == 2
     assert [point["level"] for point in history] == ["degraded", "down"]
+
+
+async def test_get_dashboard_health_prunes_history_for_removed_items(
+    api_client: AsyncClient,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    dashboard_module._HEALTH_HISTORY_BY_ITEM["stale-item"] = deque(maxlen=3)
+
+    async def fake_probe_item_health(**kwargs: object) -> ItemHealthStatus:
+        item = kwargs["item"]
+        return ItemHealthStatus(
+            item_id=item.id,
+            ok=True,
+            checked_url=str(item.url),
+            status_code=200,
+            latency_ms=7,
+            error=None,
+            level="online",
+            reason="ok",
+            error_kind=None,
+        )
+
+    monkeypatch.setattr(dashboard_module, "probe_item_health", fake_probe_item_health)
+
+    response = await api_client.get("/api/v1/dashboard/health?item_id=svc-link")
+    assert response.status_code == httpx.codes.OK
+
+    assert "stale-item" not in dashboard_module._HEALTH_HISTORY_BY_ITEM
+    assert "svc-link" in dashboard_module._HEALTH_HISTORY_BY_ITEM
 
 
 async def test_get_dashboard_health_marks_indirect_failure_from_dependencies(
