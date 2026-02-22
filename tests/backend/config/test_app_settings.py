@@ -3,21 +3,22 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
 import config.settings as settings_module
 from config.settings import load_app_settings
 
 
-def test_env_int_raises_for_invalid_value(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("BAD_INT", "abc")
-    with pytest.raises(ValueError):
-        settings_module._env_int("BAD_INT", 1, minimum=1)
+def test_load_app_settings_raises_for_invalid_int(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    monkeypatch.setenv("DASHBOARD_HEALTHCHECK_MAX_PARALLEL", "abc")
+    with pytest.raises(ValidationError):
+        load_app_settings(base_dir=tmp_path.resolve())
 
 
-def test_env_float_raises_for_invalid_value(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("BAD_FLOAT", "abc")
-    with pytest.raises(ValueError):
-        settings_module._env_float("BAD_FLOAT", 1.0, minimum=0.1)
+def test_load_app_settings_raises_for_invalid_float(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    monkeypatch.setenv("DASHBOARD_HEALTHCHECK_TIMEOUT_SEC", "abc")
+    with pytest.raises(ValidationError):
+        load_app_settings(base_dir=tmp_path.resolve())
 
 
 def test_load_app_settings_uses_explicit_proxy_secret(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:

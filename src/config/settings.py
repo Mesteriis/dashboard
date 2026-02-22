@@ -1,83 +1,75 @@
 from __future__ import annotations
 
-import os
 import secrets
-from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
+
+from pydantic import Field, model_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 PROXY_ACCESS_COOKIE = "dashboard_proxy_access"
 
 
-@dataclass(frozen=True)
-class AppSettings:
-    base_dir: Path
-    static_dir: Path
-    index_file: Path
-    config_file: Path
-    db_file: Path
-    healthcheck_timeout_sec: float
-    healthcheck_max_parallel: int
-    healthcheck_verify_tls: bool
-    health_history_size: int
-    proxy_access_cookie: str
-    proxy_token_secret: str
-    proxy_token_ttl_sec: int
+def _default_base_dir() -> Path:
+    return Path(__file__).resolve().parents[1]
 
 
-def _env_bool(name: str, default: bool) -> bool:
-    raw = os.getenv(name)
-    if raw is None:
-        return default
-    return raw.strip().lower() in {"1", "true", "yes", "on"}
+class AppSettings(BaseSettings):
+    model_config = SettingsConfigDict(
+        extra="ignore",
+        env_file=None,
+        populate_by_name=True,
+    )
 
+    base_dir: Path = Field(default_factory=_default_base_dir)
+    static_dir: Path = Field(default_factory=lambda: _default_base_dir() / "static")
+    index_file: Path = Field(default_factory=lambda: _default_base_dir() / "templates" / "index.html")
+    config_file: Path = Field(
+        default_factory=lambda: _default_base_dir().parent / "dashboard.yaml",
+        validation_alias="DASHBOARD_CONFIG_FILE",
+    )
+    db_file: Path = Field(
+        default_factory=lambda: _default_base_dir().parent / "data" / "dashboard.sqlite3",
+        validation_alias="DASHBOARD_DB_FILE",
+    )
+    healthcheck_timeout_sec: float = Field(default=4.0, validation_alias="DASHBOARD_HEALTHCHECK_TIMEOUT_SEC")
+    healthcheck_max_parallel: int = Field(default=8, validation_alias="DASHBOARD_HEALTHCHECK_MAX_PARALLEL")
+    healthcheck_verify_tls: bool = Field(default=True, validation_alias="DASHBOARD_HEALTHCHECK_VERIFY_TLS")
+    health_history_size: int = Field(default=20, validation_alias="DASHBOARD_HEALTH_HISTORY_SIZE")
+    proxy_access_cookie: str = Field(default=PROXY_ACCESS_COOKIE)
+    proxy_token_secret: str = Field(default="", validation_alias="DASHBOARD_PROXY_TOKEN_SECRET")
+    proxy_token_ttl_sec: int = Field(default=3600, validation_alias="DASHBOARD_PROXY_TOKEN_TTL_SEC")
 
-def _env_int(name: str, default: int, *, minimum: int) -> int:
-    raw = os.getenv(name)
-    if raw is None:
-        return default
-    try:
-        value = int(raw)
-    except ValueError as exc:
-        raise ValueError(f"Environment variable {name} must be an integer") from exc
-    return max(minimum, value)
+    @model_validator(mode="before")
+    @classmethod
+    def _populate_paths_and_secret(cls, data: Any) -> Any:
+        values = dict(data) if isinstance(data, dict) else {}
 
+        base_dir_raw = values.get("base_dir")
+        base_dir = Path(base_dir_raw).resolve() if base_dir_raw is not None else _default_base_dir().resolve()
+        values["base_dir"] = base_dir
 
-def _env_float(name: str, default: float, *, minimum: float) -> float:
-    raw = os.getenv(name)
-    if raw is None:
-        return default
-    try:
-        value = float(raw)
-    except ValueError as exc:
-        raise ValueError(f"Environment variable {name} must be a float") from exc
-    return max(minimum, value)
+        values.setdefault("static_dir", base_dir / "static")
+        values.setdefault("index_file", base_dir / "templates" / "index.html")
+        values.setdefault("config_file", base_dir.parent / "dashboard.yaml")
+        values.setdefault("db_file", base_dir.parent / "data" / "dashboard.sqlite3")
+
+        proxy_secret = str(values.get("proxy_token_secret") or "").strip()
+        values["proxy_token_secret"] = proxy_secret or secrets.token_urlsafe(32)
+        values.setdefault("proxy_access_cookie", PROXY_ACCESS_COOKIE)
+
+        return values
+
+    @model_validator(mode="after")
+    def _apply_minimums(self) -> AppSettings:
+        object.__setattr__(self, "healthcheck_timeout_sec", max(0.2, float(self.healthcheck_timeout_sec)))
+        object.__setattr__(self, "healthcheck_max_parallel", max(1, int(self.healthcheck_max_parallel)))
+        object.__setattr__(self, "health_history_size", max(1, int(self.health_history_size)))
+        object.__setattr__(self, "proxy_token_ttl_sec", max(30, int(self.proxy_token_ttl_sec)))
+        return self
 
 
 def load_app_settings(base_dir: Path | None = None) -> AppSettings:
-    resolved_base_dir = base_dir or Path(__file__).resolve().parents[1]
-    proxy_secret = os.getenv("DASHBOARD_PROXY_TOKEN_SECRET", "").strip() or secrets.token_urlsafe(32)
-
-    return AppSettings(
-        base_dir=resolved_base_dir,
-        static_dir=resolved_base_dir / "static",
-        index_file=resolved_base_dir / "templates" / "index.html",
-        config_file=Path(
-            os.getenv(
-                "DASHBOARD_CONFIG_FILE",
-                str(resolved_base_dir.parent / "dashboard.yaml"),
-            )
-        ),
-        db_file=Path(
-            os.getenv(
-                "DASHBOARD_DB_FILE",
-                str(resolved_base_dir.parent / "data" / "dashboard.sqlite3"),
-            )
-        ),
-        healthcheck_timeout_sec=_env_float("DASHBOARD_HEALTHCHECK_TIMEOUT_SEC", 4.0, minimum=0.2),
-        healthcheck_max_parallel=_env_int("DASHBOARD_HEALTHCHECK_MAX_PARALLEL", 8, minimum=1),
-        healthcheck_verify_tls=_env_bool("DASHBOARD_HEALTHCHECK_VERIFY_TLS", True),
-        health_history_size=_env_int("DASHBOARD_HEALTH_HISTORY_SIZE", 20, minimum=1),
-        proxy_access_cookie=PROXY_ACCESS_COOKIE,
-        proxy_token_secret=proxy_secret,
-        proxy_token_ttl_sec=_env_int("DASHBOARD_PROXY_TOKEN_TTL_SEC", 3600, minimum=30),
-    )
+    if base_dir is None:
+        return AppSettings()
+    return AppSettings(base_dir=base_dir.resolve())

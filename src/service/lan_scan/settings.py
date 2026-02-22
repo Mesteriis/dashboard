@@ -2,9 +2,11 @@ from __future__ import annotations
 
 import contextlib
 import ipaddress
-import os
-from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
+
+from pydantic import AliasChoices, Field, field_validator, model_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 DEFAULT_PORT_SCAN_MAX = 65_535
 SAFE_DEFAULT_SCAN_PORTS: tuple[int, ...] = ()
@@ -197,43 +199,6 @@ HTTP_EXPECTED_PORTS = {
 }
 
 
-def _env_bool(name: str, default: bool) -> bool:
-    raw = os.getenv(name)
-    if raw is None:
-        return default
-    return raw.strip().lower() in {"1", "true", "yes", "on"}
-
-
-def _env_bool_any(names: tuple[str, ...], default: bool) -> bool:
-    for name in names:
-        raw = os.getenv(name)
-        if raw is not None:
-            return raw.strip().lower() in {"1", "true", "yes", "on"}
-    return default
-
-
-def _env_int(name: str, default: int, *, minimum: int) -> int:
-    raw = os.getenv(name)
-    if raw is None:
-        return default
-    try:
-        value = int(raw)
-    except ValueError:
-        return default
-    return max(minimum, value)
-
-
-def _env_float(name: str, default: float, *, minimum: float) -> float:
-    raw = os.getenv(name)
-    if raw is None:
-        return default
-    try:
-        value = float(raw)
-    except ValueError:
-        return default
-    return max(minimum, value)
-
-
 def _parse_ports(raw: str | None) -> tuple[int, ...]:
     if not raw:
         return SAFE_DEFAULT_SCAN_PORTS
@@ -286,36 +251,110 @@ def _parse_cidrs(raw: str | None) -> tuple[str, ...]:
     return tuple(dict.fromkeys(cidrs))
 
 
-@dataclass(frozen=True)
-class LanScanSettings:
-    enabled: bool
-    run_on_startup: bool
-    interval_sec: int
-    connect_timeout_sec: float
-    http_verify_tls: bool
-    max_parallel: int
-    max_hosts: int
-    ports: tuple[int, ...]
-    cidrs: tuple[str, ...]
-    result_file: Path
+def _default_base_dir() -> Path:
+    return Path(__file__).resolve().parents[2]
+
+
+class LanScanSettings(BaseSettings):
+    model_config = SettingsConfigDict(
+        extra="ignore",
+        env_file=None,
+        populate_by_name=True,
+    )
+
+    base_dir: Path = Field(default_factory=_default_base_dir)
+    enabled: bool = Field(
+        default=False,
+        validation_alias=AliasChoices("LAN_SCAN_ENABLED", "DASHBOARD_ENABLE_LAN_SCAN"),
+    )
+    run_on_startup: bool = Field(default=False, validation_alias="LAN_SCAN_RUN_ON_STARTUP")
+    interval_sec: int = Field(default=1020, validation_alias="LAN_SCAN_INTERVAL_SEC")
+    connect_timeout_sec: float = Field(default=0.25, validation_alias="LAN_SCAN_CONNECT_TIMEOUT_SEC")
+    http_verify_tls: bool = Field(default=True, validation_alias="LAN_SCAN_HTTP_VERIFY_TLS")
+    max_parallel: int = Field(default=128, validation_alias="LAN_SCAN_MAX_PARALLEL")
+    max_hosts: int = Field(default=512, validation_alias="LAN_SCAN_MAX_HOSTS")
+    ports: tuple[int, ...] = Field(default_factory=lambda: SAFE_DEFAULT_SCAN_PORTS, validation_alias="LAN_SCAN_PORTS")
+    cidrs: tuple[str, ...] = Field(default_factory=tuple, validation_alias="LAN_SCAN_CIDRS")
+    result_file: Path = Field(
+        default_factory=lambda: _default_base_dir().parent / "data" / "lan_scan_result.json",
+        validation_alias="LAN_SCAN_RESULT_FILE",
+    )
+
+    @model_validator(mode="before")
+    @classmethod
+    def _populate_paths(cls, data: Any) -> Any:
+        values = dict(data) if isinstance(data, dict) else {}
+        base_dir_raw = values.get("base_dir")
+        base_dir = Path(base_dir_raw).resolve() if base_dir_raw is not None else _default_base_dir().resolve()
+        values["base_dir"] = base_dir
+        values.setdefault("result_file", base_dir.parent / "data" / "lan_scan_result.json")
+        return values
+
+    @field_validator("ports", mode="before")
+    @classmethod
+    def _validate_ports(cls, value: Any) -> tuple[int, ...]:
+        if value is None:
+            return SAFE_DEFAULT_SCAN_PORTS
+        if isinstance(value, str):
+            return _parse_ports(value)
+        if isinstance(value, (list, tuple, set)):
+            return _parse_ports(",".join(str(item) for item in value))
+        return _parse_ports(str(value))
+
+    @field_validator("cidrs", mode="before")
+    @classmethod
+    def _validate_cidrs(cls, value: Any) -> tuple[str, ...]:
+        if value is None:
+            return ()
+        if isinstance(value, str):
+            return _parse_cidrs(value)
+        if isinstance(value, (list, tuple, set)):
+            return _parse_cidrs(",".join(str(item) for item in value))
+        return _parse_cidrs(str(value))
+
+    @field_validator("interval_sec", mode="before")
+    @classmethod
+    def _coerce_interval(cls, value: Any) -> int:
+        try:
+            return int(value)
+        except (TypeError, ValueError):
+            return 1020
+
+    @field_validator("max_parallel", mode="before")
+    @classmethod
+    def _coerce_max_parallel(cls, value: Any) -> int:
+        try:
+            return int(value)
+        except (TypeError, ValueError):
+            return 128
+
+    @field_validator("max_hosts", mode="before")
+    @classmethod
+    def _coerce_max_hosts(cls, value: Any) -> int:
+        try:
+            return int(value)
+        except (TypeError, ValueError):
+            return 512
+
+    @field_validator("connect_timeout_sec", mode="before")
+    @classmethod
+    def _coerce_connect_timeout(cls, value: Any) -> float:
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            return 0.25
+
+    @model_validator(mode="after")
+    def _apply_minimums(self) -> LanScanSettings:
+        object.__setattr__(self, "interval_sec", max(30, int(self.interval_sec)))
+        object.__setattr__(self, "connect_timeout_sec", max(0.1, float(self.connect_timeout_sec)))
+        object.__setattr__(self, "max_parallel", max(16, int(self.max_parallel)))
+        object.__setattr__(self, "max_hosts", max(32, int(self.max_hosts)))
+        return self
 
 
 def lan_scan_settings_from_env(base_dir: Path) -> LanScanSettings:
-    result_file = Path(
-        os.getenv("LAN_SCAN_RESULT_FILE", str(base_dir.parent / "data" / "lan_scan_result.json"))
-    )
-    return LanScanSettings(
-        enabled=_env_bool_any(("LAN_SCAN_ENABLED", "DASHBOARD_ENABLE_LAN_SCAN"), False),
-        run_on_startup=_env_bool("LAN_SCAN_RUN_ON_STARTUP", False),
-        interval_sec=_env_int("LAN_SCAN_INTERVAL_SEC", 1020, minimum=30),
-        connect_timeout_sec=_env_float("LAN_SCAN_CONNECT_TIMEOUT_SEC", 0.25, minimum=0.1),
-        http_verify_tls=_env_bool("LAN_SCAN_HTTP_VERIFY_TLS", True),
-        max_parallel=_env_int("LAN_SCAN_MAX_PARALLEL", 128, minimum=16),
-        max_hosts=_env_int("LAN_SCAN_MAX_HOSTS", 512, minimum=32),
-        ports=_parse_ports(os.getenv("LAN_SCAN_PORTS")),
-        cidrs=_parse_cidrs(os.getenv("LAN_SCAN_CIDRS")),
-        result_file=result_file,
-    )
+    return LanScanSettings(base_dir=base_dir.resolve())
 
 
 __all__ = [
