@@ -30,7 +30,7 @@
 
     <section v-else class="panel status-panel">
       <h2>Нет доступных страниц</h2>
-      <p class="subtitle">Проверьте `layout.pages` в `dashboard.yaml`.</p>
+      <p class="subtitle">Проверьте `layout.pages` в конфигурации панели.</p>
     </section>
   </main>
 </template>
