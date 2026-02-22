@@ -16,6 +16,7 @@ const EMBEDDED_BACKEND_RESOURCE: &str = "binaries/oko-backend-aarch64-apple-darw
 const DEFAULT_DASHBOARD_RESOURCE: &str = "resources/dashboard.default.yaml";
 const USER_RUNTIME_DIR_NAME: &str = ".oko";
 const USER_CONFIG_FILE_NAME: &str = "dashboard.yaml";
+const USER_BACKEND_DB_FILE: &str = "data/dashboard.sqlite3";
 const USER_LAN_SCAN_RESULT_FILE: &str = "data/lan_scan_result.json";
 const USER_BACKEND_LOG_FILE: &str = "logs/backend.log";
 const USER_BACKEND_PID_FILE: &str = "backend.pid";
@@ -306,13 +307,21 @@ fn resolve_default_dashboard_template(app: &AppHandle) -> Option<PathBuf> {
   candidates.into_iter().find(|path| path.exists())
 }
 
-fn ensure_user_runtime_files(app: &AppHandle) -> Result<(PathBuf, PathBuf, PathBuf, PathBuf), String> {
+fn should_create_bootstrap_config(config_exists: bool, db_exists: bool) -> bool {
+  !config_exists && !db_exists
+}
+
+fn ensure_user_runtime_files(app: &AppHandle) -> Result<(PathBuf, PathBuf, PathBuf, PathBuf, PathBuf), String> {
   let runtime_dir = user_runtime_dir();
   let config_path = runtime_dir.join(USER_CONFIG_FILE_NAME);
+  let db_file = runtime_dir.join(USER_BACKEND_DB_FILE);
   let lan_result_file = runtime_dir.join(USER_LAN_SCAN_RESULT_FILE);
   let backend_log_file = runtime_dir.join(USER_BACKEND_LOG_FILE);
 
   fs::create_dir_all(&runtime_dir).map_err(|error| format!("Failed to create runtime dir: {error}"))?;
+  if let Some(parent) = db_file.parent() {
+    fs::create_dir_all(parent).map_err(|error| format!("Failed to create runtime DB dir: {error}"))?;
+  }
   if let Some(parent) = lan_result_file.parent() {
     fs::create_dir_all(parent).map_err(|error| format!("Failed to create runtime data dir: {error}"))?;
   }
@@ -320,7 +329,7 @@ fn ensure_user_runtime_files(app: &AppHandle) -> Result<(PathBuf, PathBuf, PathB
     fs::create_dir_all(parent).map_err(|error| format!("Failed to create backend log dir: {error}"))?;
   }
 
-  if !config_path.exists() {
+  if should_create_bootstrap_config(config_path.exists(), db_file.exists()) {
     let template = resolve_default_dashboard_template(app)
       .ok_or_else(|| "Default dashboard template not found for first desktop run".to_string())?;
     fs::copy(&template, &config_path).map_err(|error| {
@@ -331,7 +340,7 @@ fn ensure_user_runtime_files(app: &AppHandle) -> Result<(PathBuf, PathBuf, PathB
     })?;
   }
 
-  Ok((runtime_dir, config_path, lan_result_file, backend_log_file))
+  Ok((runtime_dir, config_path, db_file, lan_result_file, backend_log_file))
 }
 
 fn resolve_dev_backend_script() -> Option<PathBuf> {
@@ -356,7 +365,7 @@ fn spawn_embedded_backend(app: &AppHandle) -> Result<EmbeddedBackend, String> {
   drop(listener);
 
   let api_base_url = format!("http://127.0.0.1:{port}");
-  let (runtime_dir, config_path, lan_result_file, backend_log_file) = ensure_user_runtime_files(app)?;
+  let (runtime_dir, config_path, db_file, lan_result_file, backend_log_file) = ensure_user_runtime_files(app)?;
 
   let (mut command, command_hint) = if let Some(binary) = resolve_embedded_backend_binary(app) {
     let hint = binary.to_string_lossy().to_string();
@@ -382,6 +391,7 @@ fn spawn_embedded_backend(app: &AppHandle) -> Result<EmbeddedBackend, String> {
   command
     .current_dir(&runtime_dir)
     .env("DASHBOARD_CONFIG_FILE", &config_path)
+    .env("DASHBOARD_DB_FILE", &db_file)
     .env("LAN_SCAN_RESULT_FILE", &lan_result_file)
     .env("DASHBOARD_ENABLE_LAN_SCAN", "true")
     .env("LAN_SCAN_RUN_ON_STARTUP", "true")
@@ -598,7 +608,7 @@ fn ensure_apple_silicon() -> Result<(), String> {
 
 #[cfg(test)]
 mod tests {
-  use super::{command_hint_matches, is_embedded_backend_command};
+  use super::{command_hint_matches, is_embedded_backend_command, should_create_bootstrap_config};
 
   #[test]
   fn command_hint_matches_uses_basename() {
@@ -626,6 +636,14 @@ mod tests {
   fn embedded_backend_command_rejects_hint_mismatch() {
     let command_line = "python3 /tmp/backend_sidecar.py --host 127.0.0.1 --port 8090";
     assert!(!is_embedded_backend_command(command_line, Some("/tmp/other_script.py")));
+  }
+
+  #[test]
+  fn bootstrap_config_created_only_for_first_run_without_db() {
+    assert!(should_create_bootstrap_config(false, false));
+    assert!(!should_create_bootstrap_config(true, false));
+    assert!(!should_create_bootstrap_config(false, true));
+    assert!(!should_create_bootstrap_config(true, true));
   }
 }
 

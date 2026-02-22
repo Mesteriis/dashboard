@@ -69,7 +69,8 @@ This produces `src/frontend/src-tauri/binaries/oko-backend-aarch64-apple-darwin`
 
 Embedded desktop backend stores runtime files in the user home directory:
 
-- `~/.oko/dashboard.yaml` (auto-created from bundled template on first run)
+- `~/.oko/data/dashboard.sqlite3`
+- `~/.oko/dashboard.yaml` (bootstrap-only: created on first run if DB is absent, then imported and removed)
 - `~/.oko/data/lan_scan_result.json`
 
 This keeps desktop state/config outside the app bundle and survives app updates.
