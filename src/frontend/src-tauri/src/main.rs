@@ -146,30 +146,138 @@ fn backend_pid_file() -> PathBuf {
   user_runtime_dir().join(USER_BACKEND_PID_FILE)
 }
 
-fn terminate_stale_backend_by_pid_file() {
-  let pid_path = backend_pid_file();
-  let raw = match fs::read_to_string(&pid_path) {
-    Ok(value) => value,
-    Err(_) => return,
-  };
+#[derive(Clone, Debug, Serialize, Deserialize)]
+struct BackendPidRecord {
+  pid: u32,
+  #[serde(default)]
+  started_at: Option<String>,
+  #[serde(default)]
+  command_hint: Option<String>,
+}
 
-  let pid = raw.trim();
-  if pid.is_empty() {
-    let _ = fs::remove_file(pid_path);
-    return;
+fn read_backend_pid_record(pid_path: &PathBuf) -> Option<BackendPidRecord> {
+  let raw = fs::read_to_string(pid_path).ok()?;
+
+  if let Ok(record) = serde_json::from_str::<BackendPidRecord>(&raw) {
+    if record.pid > 0 {
+      return Some(record);
+    }
+    return None;
   }
 
-  let parsed_pid = match pid.parse::<u32>() {
-    Ok(value) if value > 0 => value,
-    _ => {
+  let legacy_pid = raw.trim().parse::<u32>().ok().filter(|value| *value > 0)?;
+  Some(BackendPidRecord {
+    pid: legacy_pid,
+    started_at: None,
+    command_hint: None,
+  })
+}
+
+fn read_process_field(pid: u32, field: &str) -> Option<String> {
+  let output = Command::new("ps")
+    .arg("-p")
+    .arg(pid.to_string())
+    .arg("-o")
+    .arg(field)
+    .output()
+    .ok()?;
+
+  if !output.status.success() {
+    return None;
+  }
+
+  let raw = String::from_utf8(output.stdout).ok()?;
+  let value = raw.trim();
+  if value.is_empty() {
+    return None;
+  }
+  Some(value.to_string())
+}
+
+fn read_process_start_signature(pid: u32) -> Option<String> {
+  read_process_field(pid, "lstart=")
+}
+
+fn read_process_command_line(pid: u32) -> Option<String> {
+  read_process_field(pid, "command=")
+}
+
+fn command_hint_matches(command_line_lower: &str, command_hint: Option<&str>) -> bool {
+  match command_hint {
+    None => true,
+    Some(value) if value.trim().is_empty() => true,
+    Some(value) => {
+      let hint_basename = PathBuf::from(value)
+        .file_name()
+        .and_then(|name| name.to_str())
+        .unwrap_or(value)
+        .to_lowercase();
+      !hint_basename.is_empty() && command_line_lower.contains(&hint_basename)
+    }
+  }
+}
+
+fn is_embedded_backend_command(command_line: &str, command_hint: Option<&str>) -> bool {
+  let command_line_lower = command_line.to_lowercase();
+  let has_known_identity = command_line_lower.contains("oko-backend-aarch64-apple-darwin")
+    || command_line_lower.contains("backend_sidecar.py");
+  let has_expected_flags = command_line_lower.contains("--host")
+    && command_line_lower.contains("127.0.0.1")
+    && command_line_lower.contains("--port");
+
+  has_known_identity
+    && has_expected_flags
+    && command_hint_matches(&command_line_lower, command_hint)
+}
+
+fn should_terminate_stale_backend(record: &BackendPidRecord) -> bool {
+  let command_line = match read_process_command_line(record.pid) {
+    Some(value) => value,
+    None => return false,
+  };
+
+  if !is_embedded_backend_command(&command_line, record.command_hint.as_deref()) {
+    return false;
+  }
+
+  match record.started_at.as_deref() {
+    None => true,
+    Some(expected_start) if expected_start.trim().is_empty() => true,
+    Some(expected_start) => match read_process_start_signature(record.pid) {
+      Some(actual_start) => actual_start == expected_start,
+      None => false,
+    },
+  }
+}
+
+fn persist_backend_pid_record(pid_path: &PathBuf, record: &BackendPidRecord) {
+  if let Some(parent) = pid_path.parent() {
+    let _ = fs::create_dir_all(parent);
+  }
+
+  if let Ok(serialized) = serde_json::to_string(record) {
+    let _ = fs::write(pid_path, serialized);
+  } else {
+    let _ = fs::write(pid_path, record.pid.to_string());
+  }
+}
+
+fn terminate_stale_backend_by_pid_file() {
+  let pid_path = backend_pid_file();
+  let record = match read_backend_pid_record(&pid_path) {
+    Some(value) => value,
+    None => {
       let _ = fs::remove_file(pid_path);
       return;
     }
   };
 
-  // TODO(security): verify process identity before sending SIGTERM to PID from file.
-  // Current implementation assumes PID file points to an old embedded backend process.
-  let _ = Command::new("kill").arg("-TERM").arg(parsed_pid.to_string()).status();
+  if !should_terminate_stale_backend(&record) {
+    let _ = fs::remove_file(pid_path);
+    return;
+  }
+
+  let _ = Command::new("kill").arg("-TERM").arg(record.pid.to_string()).status();
   let _ = fs::remove_file(pid_path);
 }
 
@@ -250,11 +358,13 @@ fn spawn_embedded_backend(app: &AppHandle) -> Result<EmbeddedBackend, String> {
   let api_base_url = format!("http://127.0.0.1:{port}");
   let (runtime_dir, config_path, lan_result_file, backend_log_file) = ensure_user_runtime_files(app)?;
 
-  let mut command = if let Some(binary) = resolve_embedded_backend_binary(app) {
+  let (mut command, command_hint) = if let Some(binary) = resolve_embedded_backend_binary(app) {
+    let hint = binary.to_string_lossy().to_string();
     let mut binary_command = Command::new(binary);
     binary_command.arg("--host").arg("127.0.0.1").arg("--port").arg(port.to_string());
-    binary_command
+    (binary_command, hint)
   } else if let Some(script) = resolve_dev_backend_script() {
+    let hint = script.to_string_lossy().to_string();
     let mut script_command = Command::new("python3");
     script_command
       .arg(script)
@@ -262,7 +372,7 @@ fn spawn_embedded_backend(app: &AppHandle) -> Result<EmbeddedBackend, String> {
       .arg("127.0.0.1")
       .arg("--port")
       .arg(port.to_string());
-    script_command
+    (script_command, hint)
   } else {
     return Err(
       "Embedded backend binary not found. Build sidecar and place it into src/frontend/src-tauri/binaries".to_string(),
@@ -291,10 +401,12 @@ fn spawn_embedded_backend(app: &AppHandle) -> Result<EmbeddedBackend, String> {
     .map_err(|error| format!("Failed to start embedded backend: {error}"))?;
 
   let pid_path = backend_pid_file();
-  if let Some(parent) = pid_path.parent() {
-    let _ = fs::create_dir_all(parent);
-  }
-  let _ = fs::write(pid_path, child.id().to_string());
+  let pid_record = BackendPidRecord {
+    pid: child.id(),
+    started_at: read_process_start_signature(child.id()),
+    command_hint: Some(command_hint),
+  };
+  persist_backend_pid_record(&pid_path, &pid_record);
 
   Ok(EmbeddedBackend { child, api_base_url })
 }
@@ -482,6 +594,39 @@ fn ensure_apple_silicon() -> Result<(), String> {
   }
 
   Err("This desktop target is configured only for macOS Apple Silicon (aarch64).".to_string())
+}
+
+#[cfg(test)]
+mod tests {
+  use super::{command_hint_matches, is_embedded_backend_command};
+
+  #[test]
+  fn command_hint_matches_uses_basename() {
+    let command_line = "python3 /tmp/project/src/desktop/backend_sidecar.py --host 127.0.0.1 --port 5000";
+    assert!(command_hint_matches(command_line, Some("/Users/test/src/desktop/backend_sidecar.py")));
+  }
+
+  #[test]
+  fn embedded_backend_command_accepts_known_binary() {
+    let command_line =
+      "/Applications/Oko.app/Contents/Resources/binaries/oko-backend-aarch64-apple-darwin --host 127.0.0.1 --port 8090";
+    assert!(is_embedded_backend_command(
+      command_line,
+      Some("/Applications/Oko.app/Contents/Resources/binaries/oko-backend-aarch64-apple-darwin")
+    ));
+  }
+
+  #[test]
+  fn embedded_backend_command_rejects_missing_flags() {
+    let command_line = "python3 /tmp/backend_sidecar.py";
+    assert!(!is_embedded_backend_command(command_line, Some("/tmp/backend_sidecar.py")));
+  }
+
+  #[test]
+  fn embedded_backend_command_rejects_hint_mismatch() {
+    let command_line = "python3 /tmp/backend_sidecar.py --host 127.0.0.1 --port 8090";
+    assert!(!is_embedded_backend_command(command_line, Some("/tmp/other_script.py")));
+  }
 }
 
 fn main() {
