@@ -4,6 +4,7 @@ import base64
 import hashlib
 import json
 import os
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
@@ -39,6 +40,13 @@ class DashboardConfigState:
     version: ConfigVersion
 
 
+@dataclass(frozen=True)
+class DashboardConfigSavedEvent:
+    source: str
+    config: DashboardConfig
+    version: ConfigVersion
+
+
 def _join_path(path: tuple[Any, ...]) -> str:
     if not path:
         return "$"
@@ -46,9 +54,15 @@ def _join_path(path: tuple[Any, ...]) -> str:
 
 
 class DashboardConfigService:
-    def __init__(self, config_path: Path, config_repository: DashboardConfigRepository | None = None):
+    def __init__(
+        self,
+        config_path: Path,
+        config_repository: DashboardConfigRepository | None = None,
+        post_save_handlers: Iterable[Callable[[DashboardConfigSavedEvent], None]] = (),
+    ):
         self.config_path = config_path
         self.config_repository = config_repository
+        self._post_save_handlers = tuple(post_save_handlers)
         self._state: DashboardConfigState | None = None
         self._last_issues: list[ValidationIssue] = []
 
@@ -102,6 +116,13 @@ class DashboardConfigService:
 
         self._state = state
         self._last_issues = []
+        self._emit_post_save(
+            DashboardConfigSavedEvent(
+                source=source,
+                config=state.config,
+                version=state.version,
+            )
+        )
         return state
 
     def export_yaml(self, config: DashboardConfig | None = None) -> str:
@@ -502,3 +523,7 @@ class DashboardConfigService:
             if host == normalized or host.endswith(f".{normalized}"):
                 return True
         return False
+
+    def _emit_post_save(self, event: DashboardConfigSavedEvent) -> None:
+        for handler in self._post_save_handlers:
+            handler(event)

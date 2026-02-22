@@ -21,7 +21,11 @@ from scheme.dashboard import (
     QueryTokenAuthProfile,
     ValidationIssue,
 )
-from service.config_service import DashboardConfigService, DashboardConfigValidationError
+from service.config_service import (
+    DashboardConfigSavedEvent,
+    DashboardConfigService,
+    DashboardConfigValidationError,
+)
 
 
 def _build_config_repository(tmp_path: Path) -> tuple[DashboardConfigRepository, Engine]:
@@ -249,3 +253,38 @@ def test_db_save_updates_active_config_and_revision_history(tmp_path: Path, fake
         assert reloaded_service.get_version().sha256 == state.version.sha256
     finally:
         engine.dispose()
+
+
+def test_db_save_is_idempotent_for_same_payload(tmp_path: Path, fake: Faker) -> None:
+    config = build_dashboard_config(fake, title="Stable")
+    config_path = write_dashboard_yaml((tmp_path / "dashboard.yaml").resolve(), config)
+    repository, engine = _build_config_repository(tmp_path)
+    try:
+        service = DashboardConfigService(config_path=config_path, config_repository=repository)
+        initial = service.load()
+
+        saved = service.save(initial.model_dump(mode="json", exclude_none=True), source="api")
+        repeated = service.save(initial.model_dump(mode="json", exclude_none=True), source="restore")
+
+        assert saved.version.sha256 == repeated.version.sha256
+        assert len(repository.list_revisions()) == 1
+    finally:
+        engine.dispose()
+
+
+def test_post_save_handlers_are_called_with_saved_state(tmp_path: Path, fake: Faker) -> None:
+    config = build_dashboard_config(fake, title="Handler")
+    config_path = (tmp_path / "dashboard.yaml").resolve()
+    captured: list[tuple[str, str]] = []
+
+    def on_saved(event: DashboardConfigSavedEvent) -> None:
+        captured.append((event.source, event.version.sha256))
+
+    service = DashboardConfigService(
+        config_path=config_path,
+        post_save_handlers=[on_saved],
+    )
+
+    state = service.save(config.model_dump(mode="json", exclude_none=True), source="api")
+
+    assert captured == [("api", state.version.sha256)]

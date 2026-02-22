@@ -90,3 +90,26 @@ def test_save_active_increments_revision_and_appends_history(config_repository: 
     assert [row.source for row in revisions] == ["bootstrap", "api"]
     assert revisions[0].created_at == first_now
     assert revisions[1].created_at == second_now
+
+
+def test_save_active_is_idempotent_for_same_payload(config_repository: DashboardConfigRepository) -> None:
+    now = datetime(2026, 2, 22, 12, 0, 0, tzinfo=UTC)
+
+    first = config_repository.save_active(
+        payload_json='{"version":1}',
+        payload_sha256=_sha("a"),
+        source="bootstrap",
+        now=now,
+    )
+    second = config_repository.save_active(
+        payload_json='{"version":1}',
+        payload_sha256=_sha("a"),
+        source="restore",
+        now=datetime(2026, 2, 22, 12, 5, 0, tzinfo=UTC),
+    )
+
+    assert first.revision == 1
+    assert second.revision == 1
+    assert second.source == "bootstrap"
+    assert second.updated_at == now
+    assert len(config_repository.list_revisions()) == 1

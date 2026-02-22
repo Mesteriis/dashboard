@@ -67,6 +67,8 @@ class DashboardConfigRepository:
                     )
                     session.add(record)
                 else:
+                    if record.payload_sha256 == payload_sha256 and record.payload_json == payload_json:
+                        return _to_stored_record(record)
                     revision = max(1, int(record.revision) + 1)
                     record.revision = revision
                     record.payload_json = payload_json
