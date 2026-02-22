@@ -30,7 +30,7 @@ function getAdminToken() {
  * @param {string} path
  * @returns {string}
  */
-function resolveRequestUrl(path) {
+export function resolveRequestUrl(path) {
   const inputPath = String(path || '')
   if (!inputPath) return inputPath
 
@@ -105,7 +105,7 @@ export async function requestJson(path, options = {}) {
   }
 
   const response = await fetch(resolveRequestUrl(path), {
-    credentials: 'same-origin',
+    credentials: 'include',
     headers,
     ...fetchOptions,
   })

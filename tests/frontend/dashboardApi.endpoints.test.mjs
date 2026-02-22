@@ -75,18 +75,25 @@ test('updateDashboardConfig uses PUT, JSON body, and admin token header', async 
 })
 
 test('fetchIframeSource and triggerLanScan require admin token and proper methods', async () => {
-  setAdminToken('run-token')
+  globalThis.window = {
+    localStorage: { getItem: () => 'run-token' },
+    __OKO_API_BASE__: 'http://127.0.0.1:9000',
+  }
   const calls = []
   globalThis.fetch = async (path, options) => {
     calls.push({ path, options })
+    if (calls.length === 1) {
+      return jsonResponse({ src: '/api/v1/dashboard/iframe/item%2Fid/proxy', proxied: true })
+    }
     return jsonResponse({ ok: true })
   }
 
-  await fetchIframeSource('item/id')
+  const iframeSource = await fetchIframeSource('item/id')
   await triggerLanScan()
-  assert.equal(calls[0].path, '/api/v1/dashboard/iframe/item%2Fid/source')
+  assert.equal(calls[0].path, 'http://127.0.0.1:9000/api/v1/dashboard/iframe/item%2Fid/source')
   assert.equal(calls[0].options.headers['X-Dashboard-Token'], 'run-token')
-  assert.equal(calls[1].path, '/api/v1/dashboard/lan/run')
+  assert.equal(iframeSource.src, 'http://127.0.0.1:9000/api/v1/dashboard/iframe/item%2Fid/proxy')
+  assert.equal(calls[1].path, 'http://127.0.0.1:9000/api/v1/dashboard/lan/run')
   assert.equal(calls[1].options.method, 'POST')
   assert.equal(calls[1].options.headers['X-Dashboard-Token'], 'run-token')
 })

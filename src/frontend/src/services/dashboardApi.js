@@ -1,4 +1,4 @@
-import { requestJson } from './requestJson.js'
+import { requestJson, resolveRequestUrl } from './requestJson.js'
 
 const DASHBOARD_API_BASE = '/api/v1/dashboard'
 
@@ -16,7 +16,17 @@ export function fetchDashboardConfig() {
  * @returns {Promise<unknown>}
  */
 export function fetchIframeSource(itemId) {
-  return requestJson(`${DASHBOARD_API_BASE}/iframe/${encodeURIComponent(itemId)}/source`, { requireAdminToken: true })
+  return requestJson(`${DASHBOARD_API_BASE}/iframe/${encodeURIComponent(itemId)}/source`, { requireAdminToken: true }).then(
+    (payload) => {
+      if (!payload || typeof payload !== 'object') return payload
+      const sourcePayload = /** @type {{ src?: unknown }} */ (payload)
+      if (typeof sourcePayload.src !== 'string') return payload
+      return {
+        ...payload,
+        src: resolveRequestUrl(sourcePayload.src),
+      }
+    }
+  )
 }
 
 /**

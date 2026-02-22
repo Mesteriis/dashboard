@@ -35,7 +35,7 @@ test('requestJson returns parsed JSON and sends default headers', async () => {
   const payload = await requestJson('/api/ping')
   assert.deepEqual(payload, { ok: true })
   assert.equal(call.path, '/api/ping')
-  assert.equal(call.options.credentials, 'same-origin')
+  assert.equal(call.options.credentials, 'include')
   assert.equal(call.options.headers.Accept, 'application/json')
 })
 
