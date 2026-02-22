@@ -12,6 +12,32 @@ export function fetchDashboardConfig() {
 }
 
 /**
+ * @returns {Promise<{ yaml: string; filename: string }>}
+ */
+export async function fetchDashboardConfigBackup() {
+  const response = await fetch(resolveRequestUrl(`${DASHBOARD_API_BASE}/config/backup`), {
+    credentials: 'include',
+    headers: {
+      Accept: 'application/x-yaml, text/yaml, text/plain, */*',
+    },
+  })
+
+  const body = await response.text()
+  if (!response.ok) {
+    throw new Error(body || `Request failed: ${response.status}`)
+  }
+
+  const disposition = String(response.headers.get('content-disposition') || '')
+  const filenameMatch = disposition.match(/filename="?([^";]+)"?/i)
+  const fallbackName = `dashboard-backup-${new Date().toISOString().slice(0, 19).replaceAll(':', '-')}.yaml`
+
+  return {
+    yaml: body,
+    filename: filenameMatch?.[1] || fallbackName,
+  }
+}
+
+/**
  * @param {string} itemId
  * @returns {Promise<unknown>}
  */
@@ -53,6 +79,20 @@ export function updateDashboardConfig(config) {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify(config),
+  })
+}
+
+/**
+ * @param {string} yamlText
+ * @returns {Promise<unknown>}
+ */
+export function restoreDashboardConfig(yamlText) {
+  return requestJson(`${DASHBOARD_API_BASE}/config/restore`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ yaml: String(yamlText || '') }),
   })
 }
 

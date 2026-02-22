@@ -402,7 +402,37 @@ async def save_dashboard_config(
     config_service: ConfigServiceDep,
 ) -> SaveConfigResponse:
     try:
-        state = config_service.save(payload.model_dump(mode="json", exclude_none=True))
+        state = config_service.save(payload.model_dump(mode="json", exclude_none=True), source="api")
+        return SaveConfigResponse(config=state.config, version=state.version)
+    except DashboardConfigValidationError as exc:
+        raise _validation_exception(exc) from exc
+
+
+@dashboard_router.get("/dashboard/config/backup")
+async def download_dashboard_config_backup(config_service: ConfigServiceDep) -> Response:
+    try:
+        backup_yaml = config_service.export_yaml()
+    except DashboardConfigValidationError as exc:
+        raise _validation_exception(exc) from exc
+
+    timestamp = datetime.now(UTC).strftime("%Y%m%d-%H%M%S")
+    return Response(
+        content=backup_yaml,
+        media_type="application/x-yaml",
+        headers={
+            "content-disposition": f'attachment; filename=\"dashboard-backup-{timestamp}.yaml\"',
+            "cache-control": CONFIG_CACHE_CONTROL,
+        },
+    )
+
+
+@dashboard_router.post("/dashboard/config/restore", response_model=SaveConfigResponse)
+async def restore_dashboard_config(
+    payload: ValidateRequest,
+    config_service: ConfigServiceDep,
+) -> SaveConfigResponse:
+    try:
+        state = config_service.import_yaml(payload.yaml, source="restore")
         return SaveConfigResponse(config=state.config, version=state.version)
     except DashboardConfigValidationError as exc:
         raise _validation_exception(exc) from exc

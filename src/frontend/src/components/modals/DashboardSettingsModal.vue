@@ -150,14 +150,35 @@
           </button>
         </div>
       </section>
+
+      <section class="settings-modal-section">
+        <h4>Backup конфигурации</h4>
+        <div class="settings-modal-actions">
+          <button class="settings-nav-action" type="button" :disabled="backupBusy" @click="downloadConfigBackup">
+            <span class="settings-nav-action-main">
+              <Download class="ui-icon settings-nav-action-icon" />
+              <span>{{ backupBusy ? 'Готовим backup...' : 'Скачать backup (.yaml)' }}</span>
+            </span>
+            <ChevronRight class="ui-icon settings-nav-action-caret" />
+          </button>
+          <label class="settings-runtime-input settings-file-input">
+            <Upload class="ui-icon settings-nav-action-icon" />
+            <span>{{ restoreBusy ? 'Импортируем backup...' : 'Импортировать backup (.yaml)' }}</span>
+            <input type="file" accept=".yaml,.yml,text/yaml" :disabled="restoreBusy" @change="restoreConfigBackup" />
+          </label>
+        </div>
+        <p v-if="backupError" class="settings-state-hint settings-state-error">{{ backupError }}</p>
+        <p v-else-if="backupSuccess" class="settings-state-hint">{{ backupSuccess }}</p>
+      </section>
     </div>
   </BaseModal>
 </template>
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
-import { ChevronRight, PanelLeft, Pencil, Play, Search } from 'lucide-vue-next'
+import { ChevronRight, Download, PanelLeft, Pencil, Play, Search, Upload } from 'lucide-vue-next'
 import BaseModal from '../primitives/BaseModal.vue'
+import { fetchDashboardConfigBackup, restoreDashboardConfig } from '../../services/dashboardApi.js'
 import { getRuntimeProfile, initDesktopRuntimeBridge, setDesktopRuntimeProfile } from '../../services/desktopRuntime.js'
 import { useDashboardStore } from '../../stores/dashboardStore.js'
 
@@ -185,6 +206,10 @@ const desktopRuntimeModeDraft = ref(desktopRuntime.value.mode === 'web' ? 'embed
 const remoteBaseUrlDraft = ref(desktopRuntime.value.remoteBaseUrl || 'http://127.0.0.1:8090')
 const runtimeApplying = ref(false)
 const runtimeError = ref('')
+const backupBusy = ref(false)
+const restoreBusy = ref(false)
+const backupError = ref('')
+const backupSuccess = ref('')
 
 const runtimeChanged = computed(() => {
   if (!desktopRuntime.value.desktop) return false
@@ -227,6 +252,56 @@ async function applyRuntimeMode() {
     runtimeError.value = error?.message || 'Не удалось применить desktop runtime'
   } finally {
     runtimeApplying.value = false
+  }
+}
+
+async function downloadConfigBackup() {
+  if (backupBusy.value) return
+  backupBusy.value = true
+  backupError.value = ''
+  backupSuccess.value = ''
+
+  try {
+    const payload = await fetchDashboardConfigBackup()
+    const blob = new Blob([payload.yaml], { type: 'application/x-yaml;charset=utf-8' })
+    const blobUrl = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = blobUrl
+    link.download = payload.filename || 'dashboard-backup.yaml'
+    link.style.display = 'none'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(blobUrl)
+    backupSuccess.value = `Backup сохранен: ${link.download}`
+  } catch (error) {
+    backupError.value = error?.message || 'Не удалось скачать backup'
+  } finally {
+    backupBusy.value = false
+  }
+}
+
+async function restoreConfigBackup(event) {
+  const input = /** @type {HTMLInputElement | null} */ (event?.target || null)
+  const file = input?.files?.[0]
+  if (!file || restoreBusy.value) return
+
+  restoreBusy.value = true
+  backupError.value = ''
+  backupSuccess.value = ''
+
+  try {
+    const yamlText = await file.text()
+    await restoreDashboardConfig(yamlText)
+    await loadConfig()
+    backupSuccess.value = `Backup импортирован: ${file.name}`
+  } catch (error) {
+    backupError.value = error?.message || 'Не удалось импортировать backup'
+  } finally {
+    restoreBusy.value = false
+    if (input) {
+      input.value = ''
+    }
   }
 }
 

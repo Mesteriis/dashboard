@@ -170,6 +170,21 @@
   grid-template-columns: minmax(220px, 340px);
 }
 
+.settings-file-input {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.settings-file-input input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
 .settings-modal-actions {
   display: grid;
   gap: 8px;

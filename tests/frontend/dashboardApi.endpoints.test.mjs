@@ -2,9 +2,11 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import {
   fetchDashboardConfig,
+  fetchDashboardConfigBackup,
   fetchDashboardHealth,
   fetchIframeSource,
   fetchLanScanState,
+  restoreDashboardConfig,
   triggerLanScan,
   updateDashboardConfig,
 } from '../../src/frontend/src/services/dashboardApi.js'
@@ -20,6 +22,16 @@ function jsonResponse(body = {}) {
     headers: new Headers({ 'content-type': 'application/json' }),
     json: async () => body,
     text: async () => JSON.stringify(body),
+  }
+}
+
+function textResponse(body = '', headers = {}) {
+  return {
+    ok: true,
+    status: 200,
+    headers: new Headers(headers),
+    json: async () => ({ value: body }),
+    text: async () => body,
   }
 }
 
@@ -87,4 +99,32 @@ test('fetchIframeSource resolves runtime URL and triggerLanScan uses POST', asyn
   assert.equal(iframeSource.src, 'http://127.0.0.1:9000/api/v1/dashboard/iframe/item%2Fid/proxy')
   assert.equal(calls[1].path, 'http://127.0.0.1:9000/api/v1/dashboard/lan/run')
   assert.equal(calls[1].options.method, 'POST')
+})
+
+test('fetchDashboardConfigBackup returns yaml payload with filename from content-disposition', async () => {
+  globalThis.fetch = async (path) => {
+    assert.equal(path, '/api/v1/dashboard/config/backup')
+    return textResponse('version: 1\n', {
+      'content-disposition': 'attachment; filename="dashboard-backup.yaml"',
+      'content-type': 'application/x-yaml',
+    })
+  }
+
+  const payload = await fetchDashboardConfigBackup()
+  assert.equal(payload.yaml, 'version: 1\n')
+  assert.equal(payload.filename, 'dashboard-backup.yaml')
+})
+
+test('restoreDashboardConfig posts yaml payload', async () => {
+  let call = null
+  globalThis.fetch = async (path, options) => {
+    call = { path, options }
+    return jsonResponse({ ok: true })
+  }
+
+  await restoreDashboardConfig('version: 1\n')
+  assert.equal(call.path, '/api/v1/dashboard/config/restore')
+  assert.equal(call.options.method, 'POST')
+  assert.equal(call.options.headers['Content-Type'], 'application/json')
+  assert.equal(call.options.body, JSON.stringify({ yaml: 'version: 1\n' }))
 })

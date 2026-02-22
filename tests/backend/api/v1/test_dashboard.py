@@ -8,7 +8,7 @@ import pytest
 from faker import Faker
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
-from support.factories import build_dashboard_config
+from support.factories import build_dashboard_config, dump_dashboard_yaml
 
 import api.v1.dashboard as dashboard_module
 from api.v1.dashboard import dashboard_router
@@ -91,6 +91,35 @@ async def test_put_dashboard_config_is_open_without_admin_token(
     response_payload = response.json()
     assert response_payload["config"]["app"]["title"] == "Config Without Token"
     assert response_payload["version"]["sha256"]
+
+
+async def test_download_dashboard_config_backup_returns_yaml_attachment(api_client: AsyncClient) -> None:
+    response = await api_client.get("/api/v1/dashboard/config/backup")
+
+    assert response.status_code == httpx.codes.OK
+    assert response.headers["cache-control"] == "private, max-age=0, must-revalidate"
+    assert "application/x-yaml" in response.headers["content-type"]
+    assert response.headers["content-disposition"].startswith('attachment; filename="dashboard-backup-')
+    assert response.headers["content-disposition"].endswith('.yaml"')
+    assert "version: 1" in response.text
+
+
+async def test_restore_dashboard_config_is_open_without_admin_token(
+    api_client: AsyncClient,
+    fake: Faker,
+) -> None:
+    payload = {"yaml": dump_dashboard_yaml(build_dashboard_config(fake, title="Restored From Backup"))}
+
+    restore_response = await api_client.post("/api/v1/dashboard/config/restore", json=payload)
+
+    assert restore_response.status_code == httpx.codes.OK
+    restore_payload = restore_response.json()
+    assert restore_payload["config"]["app"]["title"] == "Restored From Backup"
+    assert restore_payload["version"]["sha256"]
+
+    persisted_response = await api_client.get("/api/v1/dashboard/config")
+    assert persisted_response.status_code == httpx.codes.OK
+    assert persisted_response.json()["app"]["title"] == "Restored From Backup"
 
 
 async def test_get_dashboard_health_filters_items_by_item_id(
