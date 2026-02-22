@@ -8,7 +8,7 @@ use std::process::{Child, Command, Stdio};
 use std::sync::Mutex;
 use tauri::menu::{Menu, MenuItem, PredefinedMenuItem, Submenu};
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
-use tauri::{AppHandle, Emitter, Manager, State, Wry};
+use tauri::{AppHandle, Emitter, Manager, RunEvent, State, Wry};
 
 const PROFILE_FILE_NAME: &str = "desktop-runtime.json";
 const DEFAULT_REMOTE_BASE_URL: &str = "http://127.0.0.1:8090";
@@ -300,6 +300,14 @@ fn stop_embedded_backend(state: &DesktopState) {
   let _ = fs::remove_file(backend_pid_file());
 }
 
+fn embedded_backend_is_alive(backend: &mut EmbeddedBackend) -> bool {
+  match backend.child.try_wait() {
+    Ok(None) => true,
+    Ok(Some(_)) => false,
+    Err(_) => false,
+  }
+}
+
 fn ensure_runtime_mode(app: &AppHandle, state: &DesktopState) -> Result<(), String> {
   let mode = {
     let profile = state.profile.lock().expect("runtime profile lock poisoned");
@@ -309,7 +317,11 @@ fn ensure_runtime_mode(app: &AppHandle, state: &DesktopState) -> Result<(), Stri
   match mode {
     RuntimeMode::Embedded => {
       let mut backend_guard = state.embedded_backend.lock().expect("embedded backend lock poisoned");
-      if backend_guard.is_none() {
+      let needs_spawn = match backend_guard.as_mut() {
+        Some(existing) => !embedded_backend_is_alive(existing),
+        None => true,
+      };
+      if needs_spawn {
         *backend_guard = Some(spawn_embedded_backend(app)?);
       }
       Ok(())
@@ -323,9 +335,14 @@ fn ensure_runtime_mode(app: &AppHandle, state: &DesktopState) -> Result<(), Stri
 
 fn build_runtime_payload(state: &DesktopState) -> RuntimeProfilePayload {
   let profile = state.profile.lock().expect("runtime profile lock poisoned").clone();
-  let backend_guard = state.embedded_backend.lock().expect("embedded backend lock poisoned");
+  let mut backend_guard = state.embedded_backend.lock().expect("embedded backend lock poisoned");
 
-  let embedded_running = backend_guard.is_some();
+  let embedded_running = backend_guard
+    .as_mut()
+    .is_some_and(embedded_backend_is_alive);
+  if !embedded_running {
+    *backend_guard = None;
+  }
   let api_base_url = if profile.mode == RuntimeMode::Embedded {
     backend_guard
       .as_ref()
@@ -497,11 +514,15 @@ fn main() {
       handle_menu_action(app, event.id().as_ref());
     });
 
-  builder
-    .run(tauri::generate_context!())
-    .unwrap_or_else(|error| panic!("error while running Oko desktop: {error}"));
+  let app = builder
+    .build(tauri::generate_context!())
+    .unwrap_or_else(|error| panic!("error while building Oko desktop: {error}"));
 
-  // Ensure spawned backend process does not leak on app shutdown.
-  // Accessing managed state is not available after run(), so this is a no-op marker.
-  // Process cleanup happens on mode switches and OS process teardown.
+  app.run(|app_handle, event| {
+    if let RunEvent::Exit = event {
+      if let Some(state_ref) = app_handle.try_state::<DesktopState>() {
+        stop_embedded_backend(state_ref.inner());
+      }
+    }
+  });
 }
