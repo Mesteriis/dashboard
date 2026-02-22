@@ -1,17 +1,17 @@
 from __future__ import annotations
 
+import asyncio
 import ipaddress
 from pathlib import Path
 from types import SimpleNamespace
 
 import httpx
 import pytest
-from support.factories import LAN_SCAN_PORT_FACTORY, VALIDATION_ISSUE_FACTORY
-
 import service.lan_scan.clients as clients_module
 from scheme.dashboard import LanHttpService, LanScanResult, LinkItemConfig
 from service.config_service import DashboardConfigValidationError
 from service.lan_scan.settings import LanScanSettings
+from support.factories import LAN_SCAN_PORT_FACTORY, VALIDATION_ISSUE_FACTORY
 
 
 def _settings(tmp_path: Path) -> LanScanSettings:
@@ -48,6 +48,73 @@ async def test_scan_open_ports_detects_open_ports(monkeypatch: pytest.MonkeyPatc
     result = await clients_module.scan_open_ports(["192.168.1.10"], _settings(tmp_path))
     assert list(result) == ["192.168.1.10"]
     assert [entry.port for entry in result["192.168.1.10"]] == [80]
+
+
+@pytest.mark.asyncio
+async def test_scan_open_ports_invokes_progress_callback(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    class DummyWriter:
+        async def wait_closed(self) -> None:
+            return None
+
+        def close(self) -> None:
+            return None
+
+    async def fake_open_connection(ip: str, port: int) -> tuple[object, DummyWriter]:
+        if ip.endswith(".10") and port == 80:
+            return object(), DummyWriter()
+        raise OSError("closed")
+
+    scanned: list[tuple[str, list[int]]] = []
+
+    async def on_host_scanned(ip: str, ports: list) -> None:
+        scanned.append((ip, [entry.port for entry in ports]))
+
+    monkeypatch.setattr(clients_module.asyncio, "open_connection", fake_open_connection)
+
+    await clients_module.scan_open_ports(
+        ["192.168.1.10", "192.168.1.11"],
+        _settings(tmp_path),
+        on_host_scanned=on_host_scanned,
+    )
+    assert dict(scanned) == {
+        "192.168.1.10": [80],
+        "192.168.1.11": [],
+    }
+
+
+@pytest.mark.asyncio
+async def test_scan_open_ports_reports_hosts_as_completed(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    class DummyWriter:
+        async def wait_closed(self) -> None:
+            return None
+
+        def close(self) -> None:
+            return None
+
+    async def fake_open_connection(ip: str, port: int) -> tuple[object, DummyWriter]:
+        if ip.endswith(".10"):
+            await asyncio.sleep(0.03)
+        if port == 80:
+            return object(), DummyWriter()
+        raise OSError("closed")
+
+    progress_order: list[str] = []
+
+    async def on_host_scanned(ip: str, _ports: list) -> None:
+        progress_order.append(ip)
+
+    monkeypatch.setattr(clients_module.asyncio, "open_connection", fake_open_connection)
+
+    await clients_module.scan_open_ports(
+        ["192.168.1.10", "192.168.1.11"],
+        _settings(tmp_path),
+        on_host_scanned=on_host_scanned,
+    )
+
+    assert progress_order == ["192.168.1.11", "192.168.1.10"]
 
 
 @pytest.mark.asyncio
@@ -160,6 +227,9 @@ def test_hostname_from_tls_services_uses_https_ports_only(monkeypatch: pytest.Mo
 
 
 def test_detect_default_cidrs_success_and_fallback(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(clients_module, "_detect_cidrs_from_ip_addr", lambda: ())
+    monkeypatch.setattr(clients_module, "_detect_cidrs_from_ifconfig", lambda: ())
+
     class SocketOK:
         def __enter__(self) -> SocketOK:
             return self
@@ -173,7 +243,7 @@ def test_detect_default_cidrs_success_and_fallback(monkeypatch: pytest.MonkeyPat
         def getsockname(self) -> tuple[str, int]:
             return ("192.168.5.7", 1000)
 
-    monkeypatch.setattr(clients_module.socket, "socket", lambda *args, **kwargs: SocketOK())
+    monkeypatch.setattr(clients_module.socket, "socket", lambda *_args, **_kwargs: SocketOK())
     assert clients_module.detect_default_cidrs() == ("192.168.5.0/24",)
 
     class SocketFail:
@@ -183,8 +253,24 @@ def test_detect_default_cidrs_success_and_fallback(monkeypatch: pytest.MonkeyPat
         def __exit__(self, _exc_type: object, exc: object, _tb: object) -> None:
             return None
 
-    monkeypatch.setattr(clients_module.socket, "socket", lambda *args, **kwargs: SocketFail())
+    monkeypatch.setattr(clients_module.socket, "socket", lambda *_args, **_kwargs: SocketFail())
     assert clients_module.detect_default_cidrs() == ("192.168.1.0/24",)
+
+
+def test_detect_default_cidrs_merges_multiple_sources(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(clients_module, "_detect_cidrs_from_ip_addr", lambda: ("192.168.1.0/24", "10.0.0.0/24"))
+    monkeypatch.setattr(
+        clients_module,
+        "_detect_cidrs_from_ifconfig",
+        lambda: ("10.0.0.0/24", "172.16.0.0/24"),
+    )
+    monkeypatch.setattr(clients_module, "_detect_cidrs_from_udp_probe", lambda: ("192.168.1.0/24",))
+
+    assert clients_module.detect_default_cidrs() == (
+        "192.168.1.0/24",
+        "10.0.0.0/24",
+        "172.16.0.0/24",
+    )
 
 
 def test_resolve_networks_and_enumerate_hosts() -> None:
@@ -193,6 +279,15 @@ def test_resolve_networks_and_enumerate_hosts() -> None:
     assert clients_module.resolve_networks(("bad",)) == [ipaddress.IPv4Network("192.168.1.0/24")]
     hosts = clients_module.enumerate_hosts(networks, max_hosts=1)
     assert hosts == ["192.168.1.1"]
+
+
+def test_enumerate_hosts_balances_across_multiple_networks() -> None:
+    networks = [
+        ipaddress.ip_network("192.168.1.0/30"),
+        ipaddress.ip_network("10.0.0.0/30"),
+    ]
+    hosts = clients_module.enumerate_hosts(networks, max_hosts=3)
+    assert hosts == ["192.168.1.1", "10.0.0.1", "192.168.1.2"]
 
 
 def test_read_arp_table_parses_ip_neigh_and_arp(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -211,7 +306,7 @@ def test_read_arp_table_ignores_command_failures(monkeypatch: pytest.MonkeyPatch
     monkeypatch.setattr(
         clients_module.subprocess,
         "run",
-        lambda *args, **kwargs: (_ for _ in ()).throw(FileNotFoundError("missing")),
+        lambda *_args, **_kwargs: (_ for _ in ()).throw(FileNotFoundError("missing")),
     )
     assert clients_module.read_arp_table() == {}
 

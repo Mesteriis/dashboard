@@ -60,29 +60,29 @@ python_version = "3.14"
 strict = true
 show_error_codes = true
 explicit_package_bases = true
-mypy_path = "src"
-files = ["src"]
+mypy_path = "backend"
+files = ["backend"]
 exclude = [
-    "^src/frontend/",
-    "^src/static/",
+    "^frontend/",
+    "^backend/static/",
 ]
 
 [tool.pytest.ini_options]
-testpaths = ["tests/backend"]
+testpaths = ["tests"]
 python_files = ["test_*.py"]
 asyncio_mode = "auto"
-pythonpath = ["src", "tests/backend"]
+pythonpath = ["backend", "tests"]
 addopts = [
-    "--cov=src",
+    "--cov=backend",
     "--cov-report=term-missing:skip-covered",
     "--cov-fail-under=90",
 ]
 
 [tool.coverage.run]
-source = ["src"]
+source = ["backend"]
 omit = [
-    "src/frontend/*",
-    "src/static/*",
+    "frontend/*",
+    "backend/static/*",
 ]
 
 [tool.coverage.report]

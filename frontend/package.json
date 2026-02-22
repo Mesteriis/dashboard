@@ -1,0 +1,64 @@
+{
+  "name": "oko-dashboard-frontend",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build:web": "vite build",
+    "build": "vite build && node scripts/build-to-backend.mjs",
+    "build:desktop": "node scripts/sync-default-config.mjs && OKO_BUILD_TARGET=desktop vite build && node scripts/build-desktop-assets.mjs",
+    "tauri:dev": "node scripts/sync-default-config.mjs && node scripts/ensure-sidecar.mjs && tauri dev --config ../tauri/tauri.conf.json",
+    "tauri:build:arm64": "node scripts/sync-default-config.mjs && node scripts/ensure-sidecar.mjs && tauri build --config ../tauri/tauri.conf.json --target aarch64-apple-darwin",
+    "tauri:build:universal": "node scripts/sync-default-config.mjs && node scripts/ensure-sidecar.mjs && tauri build --config ../tauri/tauri.conf.json --target universal-apple-darwin",
+    "preview": "vite preview --port 4173",
+    "format:check": "prettier --check \"src/**/*.{js,vue,scss}\" \"scripts/**/*.mjs\" \"*.js\" \"*.json\" \"*.md\" \"*.html\"",
+    "format:write": "prettier --write \"src/**/*.{js,vue,scss}\" \"scripts/**/*.mjs\" \"*.js\" \"*.json\" \"*.md\" \"*.html\"",
+    "lint": "eslint \"src/**/*.{js,vue}\" --max-warnings=0",
+    "typecheck:services": "tsc -p tsconfig.typecheck.services.json --noEmit",
+    "typecheck:app": "vue-tsc -p tsconfig.typecheck.app.json --noEmit",
+    "typecheck": "npm run typecheck:services && npm run typecheck:app",
+    "test": "node --test ../tests/frontend/*.test.mjs",
+    "check:files": "node scripts/check-file-length.mjs"
+  },
+  "dependencies": {
+    "@formkit/auto-animate": "0.9.0",
+    "@tauri-apps/api": "2.8.0",
+    "@tsparticles/engine": "^3.9.1",
+    "@tsparticles/slim": "^3.9.1",
+    "@vueuse/motion": "3.0.3",
+    "lucide-vue-next": "0.575.0",
+    "simple-icons": "16.9.0",
+    "vue": "3.5.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.38.0",
+    "@tauri-apps/cli": "2.8.0",
+    "@vitejs/plugin-vue": "5.1.2",
+    "eslint": "9.38.0",
+    "eslint-plugin-vue": "9.33.0",
+    "globals": "16.5.0",
+    "knip": "5.63.1",
+    "prettier": "3.6.2",
+    "sass": "1.97.3",
+    "typescript": "5.9.3",
+    "vite": "5.4.8",
+    "vue-tsc": "2.2.12",
+    "web-vitals": "5.1.0"
+  },
+  "knip": {
+    "ignore": [
+      "src/components/primitives/HeroDropdown.vue",
+      "src/components/sidebar/SidebarIconRail.vue",
+      "src/components/sidebar/SidebarTreeItemNode.vue",
+      "src/services/globals.d.ts"
+    ],
+    "ignoreDependencies": [
+      "prettier"
+    ]
+  },
+  "overrides": {
+    "esbuild": "0.25.11",
+    "minimatch": "10.2.1"
+  }
+}

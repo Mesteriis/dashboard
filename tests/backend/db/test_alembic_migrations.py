@@ -18,7 +18,7 @@ def alembic_cfg(project_root: Path, temp_db_path: Path) -> Config:
     """Create Alembic config for tests."""
     ini_path = project_root / "alembic.ini"
     cfg = Config(ini_path)
-    cfg.set_main_option("script_location", str(project_root / "alembic"))
+    cfg.set_main_option("script_location", str(project_root / "backend" / "alembic"))
     cfg.set_main_option("sqlalchemy.url", f"sqlite:///{temp_db_path}")
     return cfg
 
@@ -105,14 +105,7 @@ class TestAlembicMigrations:
         from alembic.script import ScriptDirectory
 
         script = ScriptDirectory.from_config(alembic_cfg)
-
-        # Collect all revisions and their dependencies
-        revisions = list(script.walk_revisions())
-
-        # Check each revision has exactly one previous (except first)
-        for i, rev in enumerate(revisions):
-            if i > 0:
-                assert len(rev.down_revision) == 1 or rev.down_revision is None
+        assert len(script.get_heads()) == 1
 
     @pytest.mark.usefixtures("clean_db")
     def test_alembic_version_table_tracks_migrations(

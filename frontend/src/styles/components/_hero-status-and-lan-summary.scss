@@ -1,0 +1,145 @@
+.hero-save-indicator.saved {
+  color: #5de4c3;
+  border-color: rgba(93, 228, 195, 0.52);
+}
+
+.hero-save-indicator.saving {
+  color: #ccf0ff;
+  border-color: rgba(117, 223, 255, 0.5);
+  animation: hero-status-pulse 1.1s ease-in-out infinite;
+}
+
+.hero-save-indicator.error {
+  color: #ff8d96;
+  border-color: rgba(255, 141, 150, 0.54);
+}
+
+.hero-save-icon {
+  width: 12px;
+  height: 12px;
+  stroke-width: 2.2;
+}
+
+@keyframes hero-status-pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.08);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.page-stack {
+  display: grid;
+  gap: var(--grid-gap);
+}
+
+.lan-scan-panel {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  height: 100%;
+  min-height: 0;
+}
+
+.lan-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px;
+}
+
+.lan-summary-card {
+  border: 1px solid rgba(133, 176, 197, 0.24);
+  border-radius: 12px;
+  background: linear-gradient(
+    156deg,
+    rgba(11, 24, 37, 0.78),
+    rgba(8, 18, 30, 0.8)
+  );
+  padding: 10px 12px;
+  display: grid;
+  gap: 4px;
+}
+
+.lan-summary-card p {
+  margin: 0;
+  font-size: 0.74rem;
+  color: #9ab6c8;
+}
+
+.lan-summary-card strong {
+  font-size: 0.94rem;
+  color: #def1fb;
+}
+
+.lan-meta-line {
+  margin: 0;
+}
+
+.lan-table-wrap {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: clamp(280px, 58vh, 760px);
+  height: 100%;
+  overflow-x: auto;
+  overflow-y: auto;
+  max-width: 100%;
+  border: 1px solid rgba(129, 170, 190, 0.22);
+  border-radius: 12px;
+  background: rgba(7, 17, 28, 0.56);
+  scrollbar-gutter: stable;
+}
+
+.lan-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+  table-layout: fixed;
+}
+
+.lan-event-popup {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 44;
+  width: min(420px, calc(100vw - 26px));
+  border: 1px solid rgba(124, 200, 255, 0.45);
+  border-radius: 12px;
+  background: linear-gradient(
+    164deg,
+    rgba(10, 27, 42, 0.96),
+    rgba(7, 17, 29, 0.97)
+  );
+  box-shadow: var(--shadow);
+  padding: 12px;
+  display: grid;
+  gap: 8px;
+}
+
+.lan-event-popup-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.lan-event-popup-header strong {
+  font-size: 0.9rem;
+  color: #dff6ff;
+}
+
+.lan-event-popup-message {
+  margin: 0;
+  color: #cee7f4;
+  font-size: 0.84rem;
+}
+
+.lan-event-popup-details {
+  margin: 0;
+  color: #9ec5d8;
+  font-size: 0.74rem;
+}

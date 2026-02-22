@@ -10,12 +10,13 @@ __pycache__/
 .coverage.*
 
 # Node build artifacts
-src/frontend/node_modules/
-src/frontend/dist/
-artifacts/
-src/frontend/src-tauri/target/
-src/frontend/src-tauri/gen/
-src/frontend/src-tauri/binaries/oko-backend-aarch64-apple-darwin
+node_modules/
+dist/
+tauri/target/
+tauri/gen/
+tauri/binaries/oko-backend-aarch64-apple-darwin
+static/assets/
+templates/index.html
 
 # Local runtime data
-data/
+.data/

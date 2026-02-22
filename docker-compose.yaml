@@ -8,21 +8,21 @@ services:
       args:
         PYTHON_VERSION: 3.14-slim
         NODE_VERSION: 20-alpine
-    image: janus-dashboard:latest
+    image: oko:latest
     container_name: janus-dashboard
     restart: unless-stopped
     ports:
-      - "0.0.0.0:${DASHBOARD_PORT:-8090}:8090"
+      - "0.0.0.0:${DASHBOARD_PORT:-8000}:8000"
     environment:
       DASHBOARD_HEALTHCHECK_VERIFY_TLS: ${DASHBOARD_HEALTHCHECK_VERIFY_TLS:-true}
       LAN_SCAN_ENABLED: ${LAN_SCAN_ENABLED:-false}
       LAN_SCAN_RUN_ON_STARTUP: ${LAN_SCAN_RUN_ON_STARTUP:-false}
       LAN_SCAN_HTTP_VERIFY_TLS: ${LAN_SCAN_HTTP_VERIFY_TLS:-true}
     volumes:
-      - ./data:/app/data
+      - ./.data:/app/.data
 
     healthcheck:
-      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8090/', timeout=2)\" || exit 1"]
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/', timeout=2)\" || exit 1"]
       interval: 15s
       timeout: 3s
       retries: 5

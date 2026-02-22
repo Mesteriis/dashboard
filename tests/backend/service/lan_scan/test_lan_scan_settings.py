@@ -3,7 +3,6 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-
 import service.lan_scan.settings as lan_settings
 from service.lan_scan import lan_scan_settings_from_env
 
@@ -44,6 +43,16 @@ def test_parse_ports_and_cidrs_helpers() -> None:
     assert cidrs == ("192.168.1.0/24", "10.0.0.0/24")
 
 
+def test_lan_scan_networks_alias_parses_multiple_cidrs(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    monkeypatch.delenv("LAN_SCAN_CIDRS", raising=False)
+    monkeypatch.setenv("LAN_SCAN_NETWORKS", "192.168.1.0/24,10.0.0.0/24")
+    settings = lan_scan_settings_from_env((tmp_path / "project" / "src").resolve())
+    assert settings.cidrs == ("192.168.1.0/24", "10.0.0.0/24")
+
+
 def test_parse_ports_falls_back_to_safe_defaults() -> None:
     assert lan_settings._parse_ports(None) == lan_settings.SAFE_DEFAULT_SCAN_PORTS
     assert lan_settings._parse_ports("bad") == lan_settings.SAFE_DEFAULT_SCAN_PORTS
@@ -67,3 +76,13 @@ def test_minimums_are_enforced(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) 
     assert settings.connect_timeout_sec == 0.1
     assert settings.max_parallel == 16
     assert settings.max_hosts == 32
+
+
+def test_default_result_file_is_under_project_root(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    monkeypatch.delenv("LAN_SCAN_RESULT_FILE", raising=False)
+    base_dir = (tmp_path / "project" / "backend").resolve()
+    settings = lan_scan_settings_from_env(base_dir)
+    assert settings.result_file == (base_dir.parent / "data" / "lan_scan_result.json")

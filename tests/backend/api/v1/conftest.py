@@ -5,15 +5,14 @@ from pathlib import Path
 
 import pytest
 import pytest_asyncio
-from faker import Faker
-from fastapi import FastAPI
-from httpx import ASGITransport, AsyncClient
-from support.factories import build_dashboard_config, write_dashboard_yaml
-
 from api.v1 import v1_router as dashboard_router
 from config.container import AppContainer, build_container
 from depens.v1.health_runtime import start_health_runtime, stop_health_runtime
+from faker import Faker
+from fastapi import FastAPI
+from httpx import ASGITransport, AsyncClient
 from scheme.dashboard import DashboardConfig
+from support.factories import build_dashboard_config, write_dashboard_yaml
 from tools.events import build_lifespan
 
 
@@ -42,7 +41,7 @@ def app_container(
     monkeypatch.setenv("DASHBOARD_HEALTH_REFRESH_SEC", "0")
     monkeypatch.setenv("LAN_SCAN_ENABLED", "false")
 
-    container = build_container(base_dir=(project_root / "src").resolve())
+    container = build_container(base_dir=(project_root / "backend" / "src").resolve())
     try:
         yield container
     finally:

@@ -1,0 +1,1125 @@
+{
+  "generated_at": "2026-02-22T20:31:11.959175Z",
+  "duration_ms": 2773,
+  "scanned_hosts": 254,
+  "scanned_ports": 762,
+  "scanned_cidrs": [
+    "192.168.1.0/24"
+  ],
+  "hosts": [
+    {
+      "ip": "192.168.1.1",
+      "hostname": "openwrt",
+      "mac_address": null,
+      "mac_vendor": null,
+      "device_type": "Web Device",
+      "open_ports": [
+        {
+          "port": 22,
+          "service": "ssh"
+        },
+        {
+          "port": 80,
+          "service": "http"
+        },
+        {
+          "port": 443,
+          "service": "https"
+        }
+      ],
+      "http_services": [
+        {
+          "port": 80,
+          "scheme": "http",
+          "url": "http://192.168.1.1/",
+          "status_code": 200,
+          "title": null,
+          "description": null,
+          "server": null,
+          "error": null
+        },
+        {
+          "port": 443,
+          "scheme": "https",
+          "url": "https://192.168.1.1:443/",
+          "status_code": null,
+          "title": null,
+          "description": null,
+          "server": null,
+          "error": "https: ConnectError"
+        }
+      ],
+      "dashboard_items": []
+    },
+    {
+      "ip": "192.168.1.2",
+      "hostname": null,
+      "mac_address": null,
+      "mac_vendor": null,
+      "device_type": "Hypervisor",
+      "open_ports": [
+        {
+          "port": 22,
+          "service": "ssh"
+        }
+      ],
+      "http_services": [],
+      "dashboard_items": [
+        {
+          "id": "h-192-168-1-2-p-8080-2",
+          "title": "File Browser",
+          "url": "http://192.168.1.2:8080/"
+        },
+        {
+          "id": "h-192-168-1-2-p-19999-4",
+          "title": "Netdata",
+          "url": "http://192.168.1.2:19999/"
+        },
+        {
+          "id": "h-192-168-1-2-p-11434-3",
+          "title": "Ollama",
+          "url": "http://192.168.1.2:11434/"
+        },
+        {
+          "id": "h-192-168-1-2-p-8006",
+          "title": "pve - Proxmox Virtual Environment",
+          "url": "https://192.168.1.2:8006/"
+        }
+      ]
+    },
+    {
+      "ip": "192.168.1.3",
+      "hostname": null,
+      "mac_address": "BC:24:11:9F:39:14",
+      "mac_vendor": null,
+      "device_type": "Linux/Unix Host",
+      "open_ports": [
+        {
+          "port": 22,
+          "service": "ssh"
+        }
+      ],
+      "http_services": [],
+      "dashboard_items": [
+        {
+          "id": "h-192-168-1-3-p-19999",
+          "title": "Netdata",
+          "url": "http://192.168.1.3:19999/"
+        }
+      ]
+    },
+    {
+      "ip": "192.168.1.4",
+      "hostname": null,
+      "mac_address": "BC:24:11:50:EB:7D",
+      "mac_vendor": null,
+      "device_type": "IoT Hub",
+      "open_ports": [
+        {
+          "port": 22,
+          "service": "ssh"
+        }
+      ],
+      "http_services": [],
+      "dashboard_items": [
+        {
+          "id": "h-192-168-1-4-p-9999-4",
+          "title": "Crypto Inspect",
+          "url": "http://192.168.1.4:9999/"
+        },
+        {
+          "id": "h-192-168-1-4-p-8123-2",
+          "title": "Home Assistant",
+          "url": "http://192.168.1.4:8123/"
+        },
+        {
+          "id": "h-192-168-1-4-p-4357",
+          "title": "Home Assistant observer",
+          "url": "http://192.168.1.4:4357/"
+        },
+        {
+          "id": "h-192-168-1-4-p-9090-3",
+          "title": "Mealie",
+          "url": "http://192.168.1.4:9090/"
+        }
+      ]
+    },
+    {
+      "ip": "192.168.1.5",
+      "hostname": null,
+      "mac_address": "BC:24:11:69:1D:DD",
+      "mac_vendor": null,
+      "device_type": "Linux/Unix Host",
+      "open_ports": [
+        {
+          "port": 22,
+          "service": "ssh"
+        }
+      ],
+      "http_services": [],
+      "dashboard_items": [
+        {
+          "id": "h-192-168-1-5-p-3000",
+          "title": "Personal Git Server",
+          "url": "http://192.168.1.5:3000/"
+        }
+      ]
+    },
+    {
+      "ip": "192.168.1.6",
+      "hostname": null,
+      "mac_address": "BC:24:11:E6:37:9C",
+      "mac_vendor": null,
+      "device_type": "Linux/Unix Host",
+      "open_ports": [
+        {
+          "port": 22,
+          "service": "ssh"
+        }
+      ],
+      "http_services": [],
+      "dashboard_items": [
+        {
+          "id": "h-192-168-1-6-p-9090-5",
+          "title": "Console",
+          "url": "http://192.168.1.6:9090/"
+        },
+        {
+          "id": "h-192-168-1-6-p-3000",
+          "title": "DbGate",
+          "url": "http://192.168.1.6:3000/"
+        },
+        {
+          "id": "h-192-168-1-6-p-5001-2",
+          "title": "Dockge",
+          "url": "http://192.168.1.6:5001/"
+        },
+        {
+          "id": "h-192-168-1-6-p-8000-4",
+          "title": "GlitchTip",
+          "url": "http://192.168.1.6:8000/"
+        },
+        {
+          "id": "h-192-168-1-6-p-7575-3",
+          "title": "Onboard • Homarr",
+          "url": "http://192.168.1.6:7575/onboard"
+        }
+      ]
+    },
+    {
+      "ip": "192.168.1.7",
+      "hostname": null,
+      "mac_address": null,
+      "mac_vendor": null,
+      "device_type": "Linux/Unix Host",
+      "open_ports": [
+        {
+          "port": 22,
+          "service": "ssh"
+        }
+      ],
+      "http_services": [],
+      "dashboard_items": []
+    },
+    {
+      "ip": "192.168.1.8",
+      "hostname": null,
+      "mac_address": "BC:24:11:3B:6F:DD",
+      "mac_vendor": null,
+      "device_type": "Linux/Unix Host",
+      "open_ports": [
+        {
+          "port": 22,
+          "service": "ssh"
+        }
+      ],
+      "http_services": [],
+      "dashboard_items": []
+    },
+    {
+      "ip": "192.168.1.9",
+      "hostname": null,
+      "mac_address": "BC:24:11:26:90:96",
+      "mac_vendor": null,
+      "device_type": "Linux/Unix Host",
+      "open_ports": [
+        {
+          "port": 22,
+          "service": "ssh"
+        }
+      ],
+      "http_services": [],
+      "dashboard_items": [
+        {
+          "id": "h-192-168-1-9-p-4321",
+          "title": "Dashboard - Gitea Mirror",
+          "url": "http://192.168.1.9:4321/"
+        }
+      ]
+    },
+    {
+      "ip": "192.168.1.23",
+      "hostname": null,
+      "mac_address": null,
+      "mac_vendor": null,
+      "device_type": "Web Device",
+      "open_ports": [
+        {
+          "port": 22,
+          "service": "ssh"
+        },
+        {
+          "port": 80,
+          "service": "http"
+        }
+      ],
+      "http_services": [
+        {
+          "port": 80,
+          "scheme": "http",
+          "url": "http://192.168.1.23/",
+          "status_code": 200,
+          "title": "openmediavault Workbench",
+          "description": null,
+          "server": "nginx",
+          "error": null
+        }
+      ],
+      "dashboard_items": [
+        {
+          "id": "h-192-168-1-23-p-80",
+          "title": "openmediavault Workbench",
+          "url": "http://192.168.1.23/"
+        }
+      ]
+    },
+    {
+      "ip": "192.168.1.24",
+      "hostname": null,
+      "mac_address": "BC:24:11:46:A2:B5",
+      "mac_vendor": null,
+      "device_type": "Web Device",
+      "open_ports": [
+        {
+          "port": 22,
+          "service": "ssh"
+        },
+        {
+          "port": 80,
+          "service": "http"
+        }
+      ],
+      "http_services": [
+        {
+          "port": 80,
+          "scheme": "http",
+          "url": "http://192.168.1.24/",
+          "status_code": 200,
+          "title": "Media Stack Dashboard",
+          "description": null,
+          "server": "Werkzeug/3.1.5 Python/3.11.14",
+          "error": null
+        }
+      ],
+      "dashboard_items": [
+        {
+          "id": "h-192-168-1-24-p-6969",
+          "title": "192.168.1.24:6969",
+          "url": "http://192.168.1.24:6969/"
+        },
+        {
+          "id": "h-192-168-1-24-p-13378-13",
+          "title": "Audiobookshelf",
+          "url": "http://192.168.1.24:13378/"
+        },
+        {
+          "id": "h-192-168-1-24-p-9001-10",
+          "title": "Dozzle",
+          "url": "http://192.168.1.24:9001/"
+        },
+        {
+          "id": "h-192-168-1-24-p-8191-4",
+          "title": "FlareSolverr",
+          "url": "http://192.168.1.24:8191/"
+        },
+        {
+          "id": "h-192-168-1-24-p-8686-6",
+          "title": "Lidarr",
+          "url": "http://192.168.1.24:8686/lidarr/"
+        },
+        {
+          "id": "h-192-168-1-24-p-8888-8",
+          "title": "Organizr V2",
+          "url": "http://192.168.1.24:8888/"
+        },
+        {
+          "id": "h-192-168-1-24-p-9696-11",
+          "title": "Prowlarr",
+          "url": "http://192.168.1.24:9696/prowlarr/"
+        },
+        {
+          "id": "h-192-168-1-24-p-8080-3",
+          "title": "qBittorrent WebUI",
+          "url": "http://192.168.1.24:8080/"
+        },
+        {
+          "id": "h-192-168-1-24-p-7878-2",
+          "title": "Radarr",
+          "url": "http://192.168.1.24:7878/radarr/"
+        },
+        {
+          "id": "h-192-168-1-24-p-8787-7",
+          "title": "Readarr",
+          "url": "http://192.168.1.24:8787/readarr/"
+        },
+        {
+          "id": "h-192-168-1-24-p-8989-9",
+          "title": "Sonarr",
+          "url": "http://192.168.1.24:8989/sonarr/"
+        },
+        {
+          "id": "h-192-168-1-24-p-9999-12",
+          "title": "Stash",
+          "url": "http://192.168.1.24:9999/"
+        },
+        {
+          "id": "h-192-168-1-24-p-8265-5",
+          "title": "Tdarr",
+          "url": "http://192.168.1.24:8265/"
+        }
+      ]
+    },
+    {
+      "ip": "192.168.1.25",
+      "hostname": null,
+      "mac_address": "BC:24:11:71:32:A9",
+      "mac_vendor": null,
+      "device_type": "Web Device",
+      "open_ports": [
+        {
+          "port": 22,
+          "service": "ssh"
+        },
+        {
+          "port": 80,
+          "service": "http"
+        }
+      ],
+      "http_services": [
+        {
+          "port": 80,
+          "scheme": "http",
+          "url": "http://192.168.1.25/",
+          "status_code": 200,
+          "title": "PostgreSQL 18 Dashboard - postgres18",
+          "description": null,
+          "server": "nginx",
+          "error": null
+        }
+      ],
+      "dashboard_items": [
+        {
+          "id": "h-192-168-1-25-p-80",
+          "title": "PostgreSQL 18 Dashboard - postgres18",
+          "url": "http://192.168.1.25/"
+        }
+      ]
+    },
+    {
+      "ip": "192.168.1.26",
+      "hostname": null,
+      "mac_address": "BC:24:11:B9:9F:4E",
+      "mac_vendor": null,
+      "device_type": "Linux/Unix Host",
+      "open_ports": [
+        {
+          "port": 22,
+          "service": "ssh"
+        }
+      ],
+      "http_services": [],
+      "dashboard_items": [
+        {
+          "id": "h-192-168-1-26-p-6333",
+          "title": "Qdrant",
+          "url": "http://192.168.1.26:6333/"
+        }
+      ]
+    },
+    {
+      "ip": "192.168.1.27",
+      "hostname": null,
+      "mac_address": null,
+      "mac_vendor": null,
+      "device_type": "Linux/Unix Host",
+      "open_ports": [
+        {
+          "port": 22,
+          "service": "ssh"
+        }
+      ],
+      "http_services": [],
+      "dashboard_items": []
+    },
+    {
+      "ip": "192.168.1.28",
+      "hostname": null,
+      "mac_address": null,
+      "mac_vendor": null,
+      "device_type": "Linux/Unix Host",
+      "open_ports": [
+        {
+          "port": 22,
+          "service": "ssh"
+        }
+      ],
+      "http_services": [],
+      "dashboard_items": [
+        {
+          "id": "h-192-168-1-28-p-9000",
+          "title": "192.168.1.28:9000",
+          "url": "http://192.168.1.28:9000/"
+        },
+        {
+          "id": "h-192-168-1-28-p-9001-2",
+          "title": "MinIO Console",
+          "url": "http://192.168.1.28:9001/"
+        }
+      ]
+    },
+    {
+      "ip": "192.168.1.29",
+      "hostname": null,
+      "mac_address": "BC:24:11:E3:7D:CE",
+      "mac_vendor": null,
+      "device_type": "Web Device",
+      "open_ports": [
+        {
+          "port": 80,
+          "service": "http"
+        }
+      ],
+      "http_services": [
+        {
+          "port": 80,
+          "scheme": "http",
+          "url": "http://192.168.1.29/",
+          "status_code": 200,
+          "title": null,
+          "description": null,
+          "server": "Caddy",
+          "error": null
+        }
+      ],
+      "dashboard_items": [
+        {
+          "id": "h-192-168-1-29-p-80",
+          "title": "192.168.1.29:80",
+          "url": "http://192.168.1.29/"
+        },
+        {
+          "id": "h-192-168-1-29-p-8080-2",
+          "title": "File Browser",
+          "url": "http://192.168.1.29:8080/"
+        }
+      ]
+    },
+    {
+      "ip": "192.168.1.30",
+      "hostname": null,
+      "mac_address": "BC:24:11:9A:7F:52",
+      "mac_vendor": null,
+      "device_type": "Linux/Unix Host",
+      "open_ports": [
+        {
+          "port": 22,
+          "service": "ssh"
+        }
+      ],
+      "http_services": [],
+      "dashboard_items": []
+    },
+    {
+      "ip": "192.168.1.31",
+      "hostname": null,
+      "mac_address": "BC:24:11:AB:BC:EC",
+      "mac_vendor": null,
+      "device_type": "Web Device",
+      "open_ports": [
+        {
+          "port": 22,
+          "service": "ssh"
+        },
+        {
+          "port": 80,
+          "service": "http"
+        }
+      ],
+      "http_services": [
+        {
+          "port": 80,
+          "scheme": "http",
+          "url": "http://192.168.1.31/",
+          "status_code": 200,
+          "title": "3D Printing Dashboard",
+          "description": null,
+          "server": "nginx/1.29.4",
+          "error": null
+        }
+      ],
+      "dashboard_items": []
+    },
+    {
+      "ip": "192.168.1.32",
+      "hostname": null,
+      "mac_address": "BC:24:11:4D:F5:13",
+      "mac_vendor": null,
+      "device_type": "Web Device",
+      "open_ports": [
+        {
+          "port": 22,
+          "service": "ssh"
+        },
+        {
+          "port": 80,
+          "service": "http"
+        }
+      ],
+      "http_services": [
+        {
+          "port": 80,
+          "scheme": "http",
+          "url": "http://192.168.1.32/",
+          "status_code": 200,
+          "title": "Termix",
+          "description": null,
+          "server": "nginx/1.26.3",
+          "error": null
+        }
+      ],
+      "dashboard_items": []
+    },
+    {
+      "ip": "192.168.1.33",
+      "hostname": null,
+      "mac_address": "BC:24:11:F8:BC:57",
+      "mac_vendor": null,
+      "device_type": "Web Device",
+      "open_ports": [
+        {
+          "port": 22,
+          "service": "ssh"
+        },
+        {
+          "port": 80,
+          "service": "http"
+        },
+        {
+          "port": 443,
+          "service": "https"
+        }
+      ],
+      "http_services": [
+        {
+          "port": 80,
+          "scheme": "http",
+          "url": "http://192.168.1.33/",
+          "status_code": 404,
+          "title": null,
+          "description": null,
+          "server": null,
+          "error": null
+        },
+        {
+          "port": 443,
+          "scheme": "http",
+          "url": "http://192.168.1.33:443/",
+          "status_code": 404,
+          "title": null,
+          "description": null,
+          "server": null,
+          "error": null
+        }
+      ],
+      "dashboard_items": []
+    },
+    {
+      "ip": "192.168.1.58",
+      "hostname": null,
+      "mac_address": "C8:89:F3:E6:66:70",
+      "mac_vendor": null,
+      "device_type": "Web Device",
+      "open_ports": [
+        {
+          "port": 22,
+          "service": "ssh"
+        },
+        {
+          "port": 80,
+          "service": "http"
+        },
+        {
+          "port": 443,
+          "service": "https"
+        }
+      ],
+      "http_services": [
+        {
+          "port": 80,
+          "scheme": "http",
+          "url": "http://192.168.1.58/",
+          "status_code": 200,
+          "title": null,
+          "description": null,
+          "server": "Caddy",
+          "error": null
+        },
+        {
+          "port": 443,
+          "scheme": "https",
+          "url": "https://192.168.1.58:443/",
+          "status_code": null,
+          "title": null,
+          "description": null,
+          "server": null,
+          "error": "https: ConnectError"
+        }
+      ],
+      "dashboard_items": [
+        {
+          "id": "h-192-168-1-58-p-5000-2",
+          "title": "192.168.1.58:5000",
+          "url": "http://192.168.1.58:5000/"
+        },
+        {
+          "id": "h-192-168-1-58-p-7000-3",
+          "title": "192.168.1.58:7000",
+          "url": "http://192.168.1.58:7000/"
+        },
+        {
+          "id": "h-192-168-1-58-p-80",
+          "title": "192.168.1.58:80",
+          "url": "http://192.168.1.58/"
+        },
+        {
+          "id": "h-192-168-1-58-p-8090-4",
+          "title": "Janus",
+          "url": "http://192.168.1.58:8090/"
+        }
+      ]
+    },
+    {
+      "ip": "192.168.1.94",
+      "hostname": null,
+      "mac_address": null,
+      "mac_vendor": null,
+      "device_type": "Unknown",
+      "open_ports": [],
+      "http_services": [],
+      "dashboard_items": [
+        {
+          "id": "h-192-168-1-94-p-1961",
+          "title": "192.168.1.94:1961",
+          "url": "https://192.168.1.94:1961/"
+        }
+      ]
+    },
+    {
+      "ip": "192.168.1.107",
+      "hostname": null,
+      "mac_address": "10:7C:61:CD:30:A8",
+      "mac_vendor": null,
+      "device_type": "Web Device",
+      "open_ports": [
+        {
+          "port": 80,
+          "service": "http"
+        }
+      ],
+      "http_services": [
+        {
+          "port": 80,
+          "scheme": "http",
+          "url": "http://192.168.1.107/",
+          "status_code": 200,
+          "title": null,
+          "description": null,
+          "server": "httpd/3.0",
+          "error": null
+        }
+      ],
+      "dashboard_items": [
+        {
+          "id": "h-192-168-1-107-p-80",
+          "title": "192.168.1.107:80",
+          "url": "http://192.168.1.107/"
+        },
+        {
+          "id": "h-192-168-1-107-p-8443-2",
+          "title": "192.168.1.107:8443",
+          "url": "https://192.168.1.107:8443/"
+        }
+      ]
+    },
+    {
+      "ip": "192.168.1.130",
+      "hostname": null,
+      "mac_address": "BC:24:11:30:5C:D0",
+      "mac_vendor": null,
+      "device_type": "Web Device",
+      "open_ports": [
+        {
+          "port": 22,
+          "service": "ssh"
+        },
+        {
+          "port": 80,
+          "service": "http"
+        }
+      ],
+      "http_services": [
+        {
+          "port": 80,
+          "scheme": "http",
+          "url": "http://192.168.1.130/",
+          "status_code": 200,
+          "title": "AI WebUI Hub",
+          "description": null,
+          "server": "nginx/1.22.1",
+          "error": null
+        }
+      ],
+      "dashboard_items": [
+        {
+          "id": "h-192-168-1-130-p-7861-2",
+          "title": "192.168.1.130:7861",
+          "url": "http://192.168.1.130:7861/"
+        },
+        {
+          "id": "h-192-168-1-130-p-8188-3",
+          "title": "ComfyUI",
+          "url": "http://192.168.1.130:8188/"
+        },
+        {
+          "id": "h-192-168-1-130-p-3000",
+          "title": "Open WebUI",
+          "url": "http://192.168.1.130:3000/"
+        }
+      ]
+    },
+    {
+      "ip": "192.168.1.157",
+      "hostname": null,
+      "mac_address": null,
+      "mac_vendor": null,
+      "device_type": "Unknown",
+      "open_ports": [],
+      "http_services": [],
+      "dashboard_items": [
+        {
+          "id": "h-192-168-1-157-p-80",
+          "title": "Termix",
+          "url": "http://192.168.1.157/"
+        }
+      ]
+    },
+    {
+      "ip": "192.168.1.159",
+      "hostname": null,
+      "mac_address": "BC:24:11:BC:BB:60",
+      "mac_vendor": null,
+      "device_type": "Linux/Unix Host",
+      "open_ports": [
+        {
+          "port": 22,
+          "service": "ssh"
+        }
+      ],
+      "http_services": [],
+      "dashboard_items": [
+        {
+          "id": "h-192-168-1-159-p-3000",
+          "title": "192.168.1.159:3000",
+          "url": "http://192.168.1.159:3000/"
+        }
+      ]
+    },
+    {
+      "ip": "192.168.1.164",
+      "hostname": null,
+      "mac_address": null,
+      "mac_vendor": null,
+      "device_type": "Unknown",
+      "open_ports": [],
+      "http_services": [],
+      "dashboard_items": [
+        {
+          "id": "h-192-168-1-164-p-3000-2",
+          "title": "192.168.1.164:3000",
+          "url": "http://192.168.1.164:3000/"
+        },
+        {
+          "id": "h-192-168-1-164-p-3010-3",
+          "title": "192.168.1.164:3010",
+          "url": "http://192.168.1.164:3010/"
+        },
+        {
+          "id": "h-192-168-1-164-p-3030-4",
+          "title": "192.168.1.164:3030",
+          "url": "http://192.168.1.164:3030/"
+        },
+        {
+          "id": "h-192-168-1-164-p-3040-5",
+          "title": "192.168.1.164:3040",
+          "url": "http://192.168.1.164:3040/"
+        },
+        {
+          "id": "h-192-168-1-164-p-80",
+          "title": "3D Printing Dashboard",
+          "url": "http://192.168.1.164/"
+        },
+        {
+          "id": "h-192-168-1-164-p-8080-7",
+          "title": "fluidd",
+          "url": "http://192.168.1.164:8080/"
+        },
+        {
+          "id": "h-192-168-1-164-p-8081-8",
+          "title": "Mainsail",
+          "url": "http://192.168.1.164:8081/"
+        },
+        {
+          "id": "h-192-168-1-164-p-7912-6",
+          "title": "Spoolman",
+          "url": "http://192.168.1.164:7912/"
+        }
+      ]
+    },
+    {
+      "ip": "192.168.1.165",
+      "hostname": "opnsense.internal",
+      "mac_address": null,
+      "mac_vendor": null,
+      "device_type": "Web Device",
+      "open_ports": [
+        {
+          "port": 80,
+          "service": "http"
+        },
+        {
+          "port": 443,
+          "service": "https"
+        }
+      ],
+      "http_services": [
+        {
+          "port": 80,
+          "scheme": "http",
+          "url": "http://192.168.1.165:80/",
+          "status_code": null,
+          "title": null,
+          "description": null,
+          "server": null,
+          "error": "http: ConnectError"
+        },
+        {
+          "port": 443,
+          "scheme": "https",
+          "url": "https://192.168.1.165:443/",
+          "status_code": null,
+          "title": null,
+          "description": null,
+          "server": null,
+          "error": "https: ConnectError"
+        }
+      ],
+      "dashboard_items": [
+        {
+          "id": "h-192-168-1-165-p-80",
+          "title": "Войти | OPNsense",
+          "url": "https://192.168.1.165/"
+        }
+      ]
+    },
+    {
+      "ip": "192.168.1.168",
+      "hostname": null,
+      "mac_address": "BC:24:11:9C:41:AE",
+      "mac_vendor": null,
+      "device_type": "Web Device",
+      "open_ports": [
+        {
+          "port": 22,
+          "service": "ssh"
+        },
+        {
+          "port": 80,
+          "service": "http"
+        }
+      ],
+      "http_services": [
+        {
+          "port": 80,
+          "scheme": "http",
+          "url": "http://192.168.1.168/",
+          "status_code": 200,
+          "title": "Homarr",
+          "description": "Simplify the management of your server with Homarr - a sleek, modern dashboard that puts all of your apps and services at your fingertips.",
+          "server": "nginx/1.26.3",
+          "error": null
+        }
+      ],
+      "dashboard_items": [
+        {
+          "id": "h-192-168-1-168-p-3001-2",
+          "title": "192.168.1.168:3001",
+          "url": "http://192.168.1.168:3001/"
+        },
+        {
+          "id": "h-192-168-1-168-p-80",
+          "title": "Homarr",
+          "url": "http://192.168.1.168/"
+        }
+      ]
+    },
+    {
+      "ip": "192.168.1.170",
+      "hostname": "*",
+      "mac_address": null,
+      "mac_vendor": null,
+      "device_type": "Web Device",
+      "open_ports": [
+        {
+          "port": 22,
+          "service": "ssh"
+        },
+        {
+          "port": 80,
+          "service": "http"
+        },
+        {
+          "port": 443,
+          "service": "https"
+        }
+      ],
+      "http_services": [
+        {
+          "port": 80,
+          "scheme": "http",
+          "url": "http://192.168.1.170/",
+          "status_code": 200,
+          "title": "Default Page",
+          "description": "Default Page of NPMplus",
+          "server": null,
+          "error": null
+        },
+        {
+          "port": 443,
+          "scheme": "https",
+          "url": "https://192.168.1.170:443/",
+          "status_code": null,
+          "title": null,
+          "description": null,
+          "server": null,
+          "error": "https: ConnectError"
+        }
+      ],
+      "dashboard_items": [
+        {
+          "id": "h-192-168-1-170-p-80",
+          "title": "Default Page",
+          "url": "http://192.168.1.170/"
+        },
+        {
+          "id": "h-192-168-1-170-p-443-4",
+          "title": "Default Page",
+          "url": "https://192.168.1.170/"
+        },
+        {
+          "id": "h-192-168-1-170-p-81-2",
+          "title": "NPMplus",
+          "url": "https://192.168.1.170:81/"
+        },
+        {
+          "id": "h-192-168-1-170-p-91-3",
+          "title": "Server Statistics",
+          "url": "https://192.168.1.170:91/"
+        }
+      ]
+    },
+    {
+      "ip": "192.168.1.172",
+      "hostname": null,
+      "mac_address": "40:ED:CF:76:6E:33",
+      "mac_vendor": null,
+      "device_type": "Unknown",
+      "open_ports": [],
+      "http_services": [],
+      "dashboard_items": [
+        {
+          "id": "h-192-168-1-172-p-7100",
+          "title": "192.168.1.172:7100",
+          "url": "http://192.168.1.172:7100/"
+        }
+      ]
+    },
+    {
+      "ip": "192.168.1.173",
+      "hostname": null,
+      "mac_address": null,
+      "mac_vendor": null,
+      "device_type": "Unknown",
+      "open_ports": [],
+      "http_services": [],
+      "dashboard_items": [
+        {
+          "id": "h-192-168-1-173-p-1961",
+          "title": "192.168.1.173:1961",
+          "url": "https://192.168.1.173:1961/"
+        }
+      ]
+    },
+    {
+      "ip": "192.168.1.176",
+      "hostname": null,
+      "mac_address": "BC:FC:E7:5B:53:A9",
+      "mac_vendor": null,
+      "device_type": "Web Device",
+      "open_ports": [
+        {
+          "port": 80,
+          "service": "http"
+        }
+      ],
+      "http_services": [
+        {
+          "port": 80,
+          "scheme": "http",
+          "url": "http://192.168.1.176/",
+          "status_code": 200,
+          "title": null,
+          "description": null,
+          "server": "httpd/3.0",
+          "error": null
+        }
+      ],
+      "dashboard_items": []
+    },
+    {
+      "ip": "192.168.1.181",
+      "hostname": null,
+      "mac_address": "BC:24:11:60:B8:48",
+      "mac_vendor": null,
+      "device_type": "Linux/Unix Host",
+      "open_ports": [
+        {
+          "port": 22,
+          "service": "ssh"
+        }
+      ],
+      "http_services": [],
+      "dashboard_items": []
+    }
+  ],
+  "source_file": "/Users/avm/projects/Personal/dashboard/data/lan_scan_result.json"
+}

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { requestJson } from '../../src/frontend/src/services/dashboardApi.js'
+import { requestJson } from '../../frontend/src/services/dashboardApi.js'
 
 const originalFetch = globalThis.fetch
 const hadWindow = 'window' in globalThis
@@ -73,4 +73,40 @@ test('requestJson supports text response bodies', async () => {
   globalThis.fetch = async () => makeResponse({ contentType: 'text/plain', textBody: 'ok-text' })
   const payload = await requestJson('/api/text')
   assert.equal(payload, 'ok-text')
+})
+
+test('requestJson returns human readable message for backend 500 errors', async () => {
+  globalThis.fetch = async () =>
+    makeResponse({ ok: false, status: 500, contentType: 'text/plain', textBody: '' })
+
+  await assert.rejects(
+    () => requestJson('/api/fail'),
+    (error) => {
+      assert.equal(
+        error.message,
+        'Не удалось связаться с backend. Проверьте, что сервер запущен и порт настроен корректно.',
+      )
+      assert.equal(error.status, 500)
+      return true
+    }
+  )
+})
+
+test('requestJson returns human readable message for network errors', async () => {
+  globalThis.fetch = async () => {
+    throw new TypeError('Failed to fetch')
+  }
+
+  await assert.rejects(
+    () => requestJson('/api/fail'),
+    (error) => {
+      assert.equal(
+        error.message,
+        'Не удалось подключиться к backend. Проверьте, что сервер запущен и порт совпадает.',
+      )
+      assert.equal(error.status, 0)
+      assert.equal(error.body, null)
+      return true
+    }
+  )
 })

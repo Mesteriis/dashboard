@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import {
+  createLanScanStream,
   fetchDashboardConfig,
   fetchDashboardConfigBackup,
   fetchDashboardHealth,
@@ -9,11 +10,13 @@ import {
   restoreDashboardConfig,
   triggerLanScan,
   updateDashboardConfig,
-} from '../../src/frontend/src/services/dashboardApi.js'
+} from '../../frontend/src/services/dashboardApi.js'
 
 const originalFetch = globalThis.fetch
 const hadWindow = 'window' in globalThis
 const originalWindow = globalThis.window
+const hadEventSource = 'EventSource' in globalThis
+const originalEventSource = globalThis.EventSource
 
 function jsonResponse(body = {}) {
   return {
@@ -37,6 +40,11 @@ function textResponse(body = '', headers = {}) {
 
 test.afterEach(() => {
   globalThis.fetch = originalFetch
+  if (hadEventSource) {
+    globalThis.EventSource = originalEventSource
+  } else {
+    delete globalThis.EventSource
+  }
   if (hadWindow) {
     globalThis.window = originalWindow
   } else {
@@ -99,6 +107,25 @@ test('fetchIframeSource resolves runtime URL and triggerLanScan uses POST', asyn
   assert.equal(iframeSource.src, 'http://127.0.0.1:9000/api/v1/dashboard/iframe/item%2Fid/proxy')
   assert.equal(calls[1].path, 'http://127.0.0.1:9000/api/v1/dashboard/lan/run')
   assert.equal(calls[1].options.method, 'POST')
+})
+
+test('createLanScanStream builds EventSource against runtime api base', () => {
+  class FakeEventSource {
+    constructor(url, options) {
+      this.url = url
+      this.options = options
+    }
+  }
+
+  globalThis.EventSource = FakeEventSource
+  globalThis.window = {
+    __OKO_API_BASE__: 'http://127.0.0.1:9000',
+  }
+
+  const stream = createLanScanStream()
+  assert.ok(stream instanceof FakeEventSource)
+  assert.equal(stream.url, 'http://127.0.0.1:9000/api/v1/dashboard/lan/stream')
+  assert.equal(stream.options.withCredentials, true)
 })
 
 test('fetchDashboardConfigBackup returns yaml payload with filename from content-disposition', async () => {

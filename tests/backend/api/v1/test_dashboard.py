@@ -5,21 +5,20 @@ import json
 from collections import deque
 from collections.abc import AsyncIterator
 
+import depens.v1.health_runtime as dashboard_module
 import httpx
 import pytest
-from faker import Faker
-from fastapi import FastAPI
-from httpx import ASGITransport, AsyncClient
-from sqlalchemy import select
-from support.factories import build_dashboard_config, dump_dashboard_yaml
-
-import depens.v1.health_runtime as dashboard_module
 from api.v1 import health as health_router_module
 from api.v1 import v1_router as dashboard_router
 from config.container import AppContainer
 from db.models import HealthSample
+from faker import Faker
+from fastapi import FastAPI
+from httpx import ASGITransport, AsyncClient
 from scheme.dashboard import DashboardConfig, ItemHealthStatus, LanScanStateResponse, LinkItemConfig, ValidationIssue
 from service.config_service import DashboardConfigValidationError
+from sqlalchemy import select
+from support.factories import build_dashboard_config, dump_dashboard_yaml
 
 pytestmark = pytest.mark.asyncio
 
@@ -640,7 +639,7 @@ async def test_get_dashboard_health_marks_indirect_failure_from_dependencies(
         depends_on=["svc-parent"],
     )
     config = _config_with_items(dashboard_config, [parent, child])
-    monkeypatch.setattr(app_container.config_service, "load", lambda *args, **kwargs: config)
+    monkeypatch.setattr(app_container.config_service, "load", lambda *_args, **_kwargs: config)
 
     async def fake_probe_item_health(**kwargs: object) -> ItemHealthStatus:
         item = kwargs["item"]
@@ -693,7 +692,7 @@ async def test_get_dashboard_health_marks_missing_dependency_as_degraded(
         depends_on=["svc-missing"],
     )
     config = _config_with_items(dashboard_config, [item])
-    monkeypatch.setattr(app_container.config_service, "load", lambda *args, **kwargs: config)
+    monkeypatch.setattr(app_container.config_service, "load", lambda *_args, **_kwargs: config)
 
     async def fake_probe_item_health(**kwargs: object) -> ItemHealthStatus:
         svc = kwargs["item"]
@@ -740,7 +739,7 @@ async def test_get_dashboard_health_marks_dependency_cycle_as_degraded(
         depends_on=["svc-a"],
     )
     config = _config_with_items(dashboard_config, [item_a, item_b])
-    monkeypatch.setattr(app_container.config_service, "load", lambda *args, **kwargs: config)
+    monkeypatch.setattr(app_container.config_service, "load", lambda *_args, **_kwargs: config)
 
     async def fake_probe_item_health(**kwargs: object) -> ItemHealthStatus:
         item = kwargs["item"]
@@ -781,7 +780,7 @@ async def test_get_dashboard_health_item_filter_probes_dependencies_but_returns_
         depends_on=["svc-parent"],
     )
     config = _config_with_items(dashboard_config, [parent, child])
-    monkeypatch.setattr(app_container.config_service, "load", lambda *args, **kwargs: config)
+    monkeypatch.setattr(app_container.config_service, "load", lambda *_args, **_kwargs: config)
 
     probed_ids: list[str] = []
 

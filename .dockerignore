@@ -14,12 +14,12 @@ __pycache__/
 .aiassistant/
 
 dist/
+node_modules/
+frontend/node_modules/
 tests/
-src/frontend/tests/
-src/frontend/node_modules/
-src/frontend/dist/
-artifacts/
-data/
-src/frontend/src-tauri/target/
-src/frontend/src-tauri/gen/
-src/frontend/src-tauri/binaries/
+.data/
+tauri/target/
+tauri/gen/
+tauri/binaries/
+static/assets/
+templates/index.html
