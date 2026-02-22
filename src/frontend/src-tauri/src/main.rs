@@ -44,6 +44,7 @@ impl Default for RuntimeProfile {
 }
 
 #[derive(Clone, Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
 struct RuntimeProfilePayload {
   desktop: bool,
   mode: RuntimeMode,

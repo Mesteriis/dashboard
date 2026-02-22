@@ -42,17 +42,30 @@ function normalizeBaseUrl(rawValue) {
 }
 
 /**
+ * @param {Record<string, unknown> | null | undefined} payload
+ * @param {string} camelKey
+ * @param {string} snakeKey
+ * @returns {unknown}
+ */
+function readProfileField(payload, camelKey, snakeKey) {
+  if (!payload || typeof payload !== 'object') return undefined
+  if (camelKey in payload) return payload[camelKey]
+  if (snakeKey in payload) return payload[snakeKey]
+  return undefined
+}
+
+/**
  * @param {unknown} nextProfile
  * @returns {RuntimeProfile}
  */
 function applyRuntimeProfile(nextProfile) {
   const payload = /** @type {Partial<RuntimeProfile> | null | undefined} */ (nextProfile)
   const normalized = {
-    desktop: Boolean(payload?.desktop),
+    desktop: Boolean(readProfileField(payload, 'desktop', 'desktop')),
     mode: /** @type {RuntimeMode} */ (String(payload?.mode || 'web')),
-    apiBaseUrl: normalizeBaseUrl(payload?.apiBaseUrl),
-    remoteBaseUrl: normalizeBaseUrl(payload?.remoteBaseUrl) || DEFAULT_REMOTE_BASE_URL,
-    embeddedRunning: Boolean(payload?.embeddedRunning),
+    apiBaseUrl: normalizeBaseUrl(readProfileField(payload, 'apiBaseUrl', 'api_base_url')),
+    remoteBaseUrl: normalizeBaseUrl(readProfileField(payload, 'remoteBaseUrl', 'remote_base_url')) || DEFAULT_REMOTE_BASE_URL,
+    embeddedRunning: Boolean(readProfileField(payload, 'embeddedRunning', 'embedded_running')),
   }
 
   runtimeProfile = normalized
