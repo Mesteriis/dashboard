@@ -10,6 +10,18 @@ from support.factories import build_dashboard_config, write_dashboard_yaml
 pytestmark = pytest.mark.asyncio
 
 
+def _dispose_container(container: object) -> None:
+    db_engine = getattr(container, "db_engine", None)
+    if db_engine is not None:
+        db_engine.dispose()
+
+
+def _reload_main_module():
+    module = importlib.import_module("main")
+    _dispose_container(getattr(module, "container", None))
+    return importlib.reload(module)
+
+
 async def test_root_returns_503_when_index_is_missing(
     fake,
     monkeypatch: pytest.MonkeyPatch,
@@ -21,8 +33,7 @@ async def test_root_returns_503_when_index_is_missing(
     monkeypatch.setenv("DASHBOARD_CONFIG_FILE", str(config_path))
     monkeypatch.setenv("DASHBOARD_DB_FILE", str(db_path))
 
-    main_module = importlib.import_module("main")
-    main_module = importlib.reload(main_module)
+    main_module = _reload_main_module()
     original_container = main_module.container
     missing_index = (tmp_path / "missing.html").resolve()
     try:
@@ -35,9 +46,7 @@ async def test_root_returns_503_when_index_is_missing(
         response = await main_module.root()
         assert response.status_code == 503
     finally:
-        db_engine = getattr(original_container, "db_engine", None)
-        if db_engine is not None:
-            db_engine.dispose()
+        _dispose_container(original_container)
 
 
 async def test_root_returns_file_response_when_index_exists(
@@ -51,8 +60,7 @@ async def test_root_returns_file_response_when_index_exists(
     monkeypatch.setenv("DASHBOARD_CONFIG_FILE", str(config_path))
     monkeypatch.setenv("DASHBOARD_DB_FILE", str(db_path))
 
-    main_module = importlib.import_module("main")
-    main_module = importlib.reload(main_module)
+    main_module = _reload_main_module()
     original_container = main_module.container
     index_file = (tmp_path / "index.html").resolve()
     index_file.write_text("<html></html>", encoding="utf-8")
@@ -63,6 +71,4 @@ async def test_root_returns_file_response_when_index_exists(
         assert response.status_code == 200
         assert "app" in main_module.__all__
     finally:
-        db_engine = getattr(original_container, "db_engine", None)
-        if db_engine is not None:
-            db_engine.dispose()
+        _dispose_container(original_container)
