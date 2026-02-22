@@ -23,11 +23,21 @@ async def test_root_returns_503_when_index_is_missing(
 
     main_module = importlib.import_module("main")
     main_module = importlib.reload(main_module)
+    original_container = main_module.container
     missing_index = (tmp_path / "missing.html").resolve()
-    monkeypatch.setattr(main_module, "container", SimpleNamespace(settings=SimpleNamespace(index_file=missing_index)))
+    try:
+        monkeypatch.setattr(
+            main_module,
+            "container",
+            SimpleNamespace(settings=SimpleNamespace(index_file=missing_index)),
+        )
 
-    response = await main_module.root()
-    assert response.status_code == 503
+        response = await main_module.root()
+        assert response.status_code == 503
+    finally:
+        db_engine = getattr(original_container, "db_engine", None)
+        if db_engine is not None:
+            db_engine.dispose()
 
 
 async def test_root_returns_file_response_when_index_exists(
@@ -43,10 +53,16 @@ async def test_root_returns_file_response_when_index_exists(
 
     main_module = importlib.import_module("main")
     main_module = importlib.reload(main_module)
+    original_container = main_module.container
     index_file = (tmp_path / "index.html").resolve()
     index_file.write_text("<html></html>", encoding="utf-8")
-    monkeypatch.setattr(main_module, "container", SimpleNamespace(settings=SimpleNamespace(index_file=index_file)))
+    try:
+        monkeypatch.setattr(main_module, "container", SimpleNamespace(settings=SimpleNamespace(index_file=index_file)))
 
-    response = await main_module.root()
-    assert response.status_code == 200
-    assert "app" in main_module.__all__
+        response = await main_module.root()
+        assert response.status_code == 200
+        assert "app" in main_module.__all__
+    finally:
+        db_engine = getattr(original_container, "db_engine", None)
+        if db_engine is not None:
+            db_engine.dispose()

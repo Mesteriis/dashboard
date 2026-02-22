@@ -45,7 +45,12 @@ def app_container(
 
 @pytest.fixture()
 def api_app(app_container: AppContainer) -> FastAPI:
-    app = FastAPI(lifespan=build_lifespan(app_container.lan_scan_service))
+    app = FastAPI(
+        lifespan=build_lifespan(
+            app_container.lan_scan_service,
+            shutdown_callbacks=[app_container.db_engine.dispose],
+        )
+    )
     app.state.container = app_container
     app.include_router(dashboard_router)
     return app

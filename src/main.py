@@ -16,7 +16,10 @@ container = build_container(base_dir=BASE_DIR)
 
 app = FastAPI(
     title="oko-dashboard",
-    lifespan=build_lifespan(container.lan_scan_service),
+    lifespan=build_lifespan(
+        container.lan_scan_service,
+        shutdown_callbacks=[container.db_engine.dispose],
+    ),
 )
 app.state.container = container
 
