@@ -84,6 +84,8 @@ export OKO_DESKTOP_BACKEND_BIN=/absolute/path/to/oko-backend-aarch64-apple-darwi
 ## Security and startup flags
 
 - `DASHBOARD_HEALTHCHECK_VERIFY_TLS` (`true`/`false`, default `true`): TLS verification for service health checks.
+- `DASHBOARD_HEALTH_REFRESH_SEC` (`float`, default `5`): shared backend probe interval for centralized health snapshot refresh.
+- `DASHBOARD_HEALTH_SSE_KEEPALIVE_SEC` (`float`, default `15`): keepalive interval for `/api/v1/dashboard/health/stream`.
 - `DASHBOARD_ENABLE_LAN_SCAN` (`true`/`false`, default `false`): startup flag to enable LAN scan.
 - `LAN_SCAN_ENABLED` (`true`/`false`, default `false`): explicit LAN scan switch (overrides startup flag).
 - `LAN_SCAN_RUN_ON_STARTUP` (`true`/`false`, default `false`): trigger LAN scan immediately after app start.

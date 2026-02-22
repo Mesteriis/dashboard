@@ -10,7 +10,7 @@ from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
 from support.factories import build_dashboard_config, write_dashboard_yaml
 
-from api.v1.dashboard import dashboard_router
+from api.v1.dashboard import dashboard_router, start_health_runtime, stop_health_runtime
 from config.container import AppContainer, build_container
 from scheme.dashboard import DashboardConfig
 from tools.events import build_lifespan
@@ -38,6 +38,7 @@ def app_container(
     monkeypatch.setenv("DASHBOARD_CONFIG_FILE", str(dashboard_config_path.resolve()))
     monkeypatch.setenv("DASHBOARD_DB_FILE", str(db_path))
     monkeypatch.setenv("DASHBOARD_PROXY_TOKEN_SECRET", "test-proxy-secret")
+    monkeypatch.setenv("DASHBOARD_HEALTH_REFRESH_SEC", "0")
     monkeypatch.setenv("LAN_SCAN_ENABLED", "false")
 
     container = build_container(base_dir=(project_root / "src").resolve())
@@ -52,7 +53,8 @@ def api_app(app_container: AppContainer) -> FastAPI:
     app = FastAPI(
         lifespan=build_lifespan(
             app_container.lan_scan_service,
-            shutdown_callbacks=[app_container.db_engine.dispose],
+            startup_callbacks=[lambda: start_health_runtime(app_container)],
+            shutdown_callbacks=[stop_health_runtime, app_container.db_engine.dispose],
         )
     )
     app.state.container = app_container

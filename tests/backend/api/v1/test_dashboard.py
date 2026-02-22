@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import asyncio
+import json
 from collections import deque
 from collections.abc import AsyncIterator
 
@@ -29,7 +31,7 @@ def _config_with_items(base_config: DashboardConfig, items: list[LinkItemConfig]
 
 @pytest.fixture(autouse=True)
 def clear_health_history() -> None:
-    dashboard_module._HEALTH_HISTORY_BY_ITEM.clear()
+    dashboard_module.reset_health_runtime_state()
 
 
 async def test_get_dashboard_config_returns_current_model(api_client: AsyncClient) -> None:
@@ -242,6 +244,124 @@ async def test_get_dashboard_health_filtered_items_return_filtered_aggregates(
     assert payload["aggregates"]["groups"][0]["status"]["total"] == 1
     assert payload["aggregates"]["groups"][0]["status"]["level"] == "online"
     assert payload["aggregates"]["subgroups"][0]["status"]["total"] == 1
+
+
+async def test_get_dashboard_health_uses_cached_snapshot_when_refresh_interval_is_positive(
+    api_client: AsyncClient,
+    app_container: AppContainer,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    app_container.settings.health_refresh_sec = 60
+    probe_calls = 0
+
+    async def fake_probe_item_health(**kwargs: object) -> ItemHealthStatus:
+        nonlocal probe_calls
+        probe_calls += 1
+        item = kwargs["item"]
+        return ItemHealthStatus(
+            item_id=item.id,
+            ok=True,
+            checked_url=str(item.url),
+            status_code=200,
+            latency_ms=6,
+            error=None,
+            level="online",
+            reason="ok",
+            error_kind=None,
+        )
+
+    monkeypatch.setattr(dashboard_module, "probe_item_health", fake_probe_item_health)
+
+    first = await api_client.get("/api/v1/dashboard/health")
+    assert first.status_code == httpx.codes.OK
+    assert probe_calls == 3
+
+    second = await api_client.get("/api/v1/dashboard/health")
+    assert second.status_code == httpx.codes.OK
+    assert probe_calls == 3
+    assert second.json()["items"][0]["level"] == "online"
+
+
+async def test_dashboard_health_stream_returns_initial_snapshot_event(
+    api_client: AsyncClient,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    async def fake_probe_item_health(**kwargs: object) -> ItemHealthStatus:
+        item = kwargs["item"]
+        return ItemHealthStatus(
+            item_id=item.id,
+            ok=True,
+            checked_url=str(item.url),
+            status_code=200,
+            latency_ms=8,
+            error=None,
+            level="online",
+            reason="ok",
+            error_kind=None,
+        )
+
+    monkeypatch.setattr(dashboard_module, "probe_item_health", fake_probe_item_health)
+
+    async with api_client.stream("GET", "/api/v1/dashboard/health/stream?item_id=svc-link&once=true") as response:
+        assert response.status_code == httpx.codes.OK
+        chunks = []
+        async for chunk in response.aiter_text():
+            chunks.append(chunk)
+            if "\n\n" in chunk or "\n\n" in "".join(chunks):
+                break
+
+    payload = "".join(chunks)
+    assert "event: snapshot" in payload
+    assert "id:" in payload
+    data_lines = [line for line in payload.splitlines() if line.startswith("data: ")]
+    assert data_lines
+    decoded = json.loads(data_lines[0].removeprefix("data: "))
+    assert decoded["items"][0]["item_id"] == "svc-link"
+
+
+async def test_health_runtime_background_loop_supports_manual_refresh_signal(
+    app_container: AppContainer,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    app_container.settings.health_refresh_sec = 60
+
+    async def fake_probe_item_health(**kwargs: object) -> ItemHealthStatus:
+        item = kwargs["item"]
+        return ItemHealthStatus(
+            item_id=item.id,
+            ok=True,
+            checked_url=str(item.url),
+            status_code=200,
+            latency_ms=4,
+            error=None,
+            level="online",
+            reason="ok",
+            error_kind=None,
+        )
+
+    monkeypatch.setattr(dashboard_module, "probe_item_health", fake_probe_item_health)
+
+    await dashboard_module.start_health_runtime(app_container)
+    try:
+        # Allow loop to build the initial snapshot.
+        await asyncio.sleep(0.05)
+        first = dashboard_module._HEALTH_RUNTIME.snapshot()
+        assert first is not None
+
+        timed_out_revision = await dashboard_module._HEALTH_RUNTIME.wait_for_revision_after(
+            revision=first.revision,
+            timeout_sec=0.01,
+        )
+        assert timed_out_revision == first.revision
+
+        await dashboard_module._HEALTH_RUNTIME.request_refresh()
+        updated_revision = await dashboard_module._HEALTH_RUNTIME.wait_for_revision_after(
+            revision=first.revision,
+            timeout_sec=0.5,
+        )
+        assert updated_revision > first.revision
+    finally:
+        await dashboard_module.stop_health_runtime()
 
 
 async def test_get_dashboard_health_includes_item_status_history(

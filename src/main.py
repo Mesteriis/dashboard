@@ -6,7 +6,11 @@ from fastapi import FastAPI, Response
 from fastapi.responses import FileResponse, PlainTextResponse
 from fastapi.staticfiles import StaticFiles
 
-from api.v1.dashboard import dashboard_router
+from api.v1.dashboard import (
+    dashboard_router,
+    start_health_runtime,
+    stop_health_runtime,
+)
 from config.container import build_container
 from tools.events import build_lifespan
 from tools.proxy import build_upstream_url, rewrite_location, rewrite_set_cookie
@@ -18,7 +22,8 @@ app = FastAPI(
     title="oko-dashboard",
     lifespan=build_lifespan(
         container.lan_scan_service,
-        shutdown_callbacks=[container.db_engine.dispose],
+        startup_callbacks=[lambda: start_health_runtime(container)],
+        shutdown_callbacks=[stop_health_runtime, container.db_engine.dispose],
     ),
 )
 app.state.container = container

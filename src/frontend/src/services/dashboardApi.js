@@ -69,6 +69,22 @@ export function fetchDashboardHealth(itemIds = []) {
 }
 
 /**
+ * @param {string[]} [itemIds]
+ * @returns {EventSource | null}
+ */
+export function createDashboardHealthStream(itemIds = []) {
+  if (typeof EventSource === 'undefined') return null
+
+  const params = new URLSearchParams()
+  for (const id of itemIds) {
+    params.append('item_id', id)
+  }
+  const query = params.toString()
+  const streamUrl = `${DASHBOARD_API_BASE}/health/stream${query ? `?${query}` : ''}`
+  return new EventSource(resolveRequestUrl(streamUrl), { withCredentials: true })
+}
+
+/**
  * @param {unknown} config
  * @returns {Promise<unknown>}
  */

@@ -35,6 +35,8 @@ class AppSettings(BaseSettings):
     healthcheck_timeout_sec: float = Field(default=4.0, validation_alias="DASHBOARD_HEALTHCHECK_TIMEOUT_SEC")
     healthcheck_max_parallel: int = Field(default=8, validation_alias="DASHBOARD_HEALTHCHECK_MAX_PARALLEL")
     healthcheck_verify_tls: bool = Field(default=True, validation_alias="DASHBOARD_HEALTHCHECK_VERIFY_TLS")
+    health_refresh_sec: float = Field(default=5.0, validation_alias="DASHBOARD_HEALTH_REFRESH_SEC")
+    health_sse_keepalive_sec: float = Field(default=15.0, validation_alias="DASHBOARD_HEALTH_SSE_KEEPALIVE_SEC")
     health_history_size: int = Field(default=20, validation_alias="DASHBOARD_HEALTH_HISTORY_SIZE")
     proxy_access_cookie: str = Field(default=PROXY_ACCESS_COOKIE)
     proxy_token_secret: str = Field(default="", validation_alias="DASHBOARD_PROXY_TOKEN_SECRET")
@@ -64,6 +66,8 @@ class AppSettings(BaseSettings):
     def _apply_minimums(self) -> AppSettings:
         object.__setattr__(self, "healthcheck_timeout_sec", max(0.2, float(self.healthcheck_timeout_sec)))
         object.__setattr__(self, "healthcheck_max_parallel", max(1, int(self.healthcheck_max_parallel)))
+        object.__setattr__(self, "health_refresh_sec", max(0.0, float(self.health_refresh_sec)))
+        object.__setattr__(self, "health_sse_keepalive_sec", max(2.0, float(self.health_sse_keepalive_sec)))
         object.__setattr__(self, "health_history_size", max(1, int(self.health_history_size)))
         object.__setattr__(self, "proxy_token_ttl_sec", max(30, int(self.proxy_token_ttl_sec)))
         return self

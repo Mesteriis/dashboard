@@ -3,6 +3,8 @@ from __future__ import annotations
 import asyncio
 from collections import deque
 from collections.abc import AsyncIterator
+from contextlib import suppress
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Annotated, Literal
 
@@ -91,6 +93,179 @@ DependencyResolution = tuple[HealthLevel, str | None, str | None]
 _HEALTH_HISTORY_BY_ITEM: dict[str, deque[HealthHistoryPoint]] = {}
 CONFIG_CACHE_CONTROL = "private, max-age=0, must-revalidate"
 HEALTH_CACHE_CONTROL = "private, max-age=2, stale-while-revalidate=8"
+HEALTH_STREAM_CACHE_CONTROL = "no-cache"
+HEALTH_STREAM_MEDIA_TYPE = "text/event-stream"
+
+
+@dataclass(frozen=True)
+class HealthSnapshot:
+    config: DashboardConfig
+    statuses_by_id: dict[str, ItemHealthStatus]
+    updated_at: datetime
+    revision: int
+
+
+class HealthRuntime:
+    def __init__(self) -> None:
+        self._snapshot: HealthSnapshot | None = None
+        self._snapshot_lock = asyncio.Lock()
+        self._revision_condition = asyncio.Condition()
+        self._refresh_task: asyncio.Task[None] | None = None
+        self._stop_event: asyncio.Event | None = None
+        self._wake_event: asyncio.Event | None = None
+
+    def reset_for_tests(self) -> None:
+        if self._refresh_task is not None:
+            raise RuntimeError("Health runtime cannot be reset while background loop is running")
+        self._snapshot = None
+
+    async def start(
+        self,
+        *,
+        config_service: DashboardConfigService,
+        settings: AppSettings,
+        health_sample_repository: HealthSampleRepository,
+    ) -> None:
+        if settings.health_refresh_sec <= 0:
+            return
+        if self._refresh_task is not None and not self._refresh_task.done():
+            return
+
+        self._stop_event = asyncio.Event()
+        self._wake_event = asyncio.Event()
+        self._refresh_task = asyncio.create_task(
+            self._run_refresh_loop(
+                config_service=config_service,
+                settings=settings,
+                health_sample_repository=health_sample_repository,
+            ),
+            name="dashboard-health-refresh-loop",
+        )
+
+    async def stop(self) -> None:
+        task = self._refresh_task
+        if task is None:
+            return
+
+        if self._stop_event is not None:
+            self._stop_event.set()
+        if self._wake_event is not None:
+            self._wake_event.set()
+        task.cancel()
+        with suppress(asyncio.CancelledError):
+            await task
+        self._refresh_task = None
+        self._stop_event = None
+        self._wake_event = None
+
+    async def request_refresh(self) -> None:
+        if self._wake_event is not None:
+            self._wake_event.set()
+
+    def snapshot(self) -> HealthSnapshot | None:
+        return self._snapshot
+
+    async def ensure_snapshot(
+        self,
+        *,
+        config_service: DashboardConfigService,
+        settings: AppSettings,
+        health_sample_repository: HealthSampleRepository,
+        force_refresh: bool,
+    ) -> HealthSnapshot:
+        current = self._snapshot
+        snapshot_stale = current is not None and settings.health_refresh_sec > 0 and (
+            (datetime.now(UTC) - current.updated_at).total_seconds() > settings.health_refresh_sec * 3
+        )
+
+        if force_refresh or current is None or snapshot_stale:
+            return await self.refresh_snapshot(
+                config_service=config_service,
+                settings=settings,
+                health_sample_repository=health_sample_repository,
+            )
+        return current
+
+    async def refresh_snapshot(
+        self,
+        *,
+        config_service: DashboardConfigService,
+        settings: AppSettings,
+        health_sample_repository: HealthSampleRepository,
+    ) -> HealthSnapshot:
+        async with self._snapshot_lock:
+            config, statuses_by_id = await _probe_health_snapshot(
+                config_service=config_service,
+                settings=settings,
+                health_sample_repository=health_sample_repository,
+            )
+            current_revision = 0 if self._snapshot is None else self._snapshot.revision
+            snapshot = HealthSnapshot(
+                config=config,
+                statuses_by_id={item_id: status.model_copy(deep=True) for item_id, status in statuses_by_id.items()},
+                updated_at=datetime.now(UTC),
+                revision=current_revision + 1,
+            )
+            self._snapshot = snapshot
+            async with self._revision_condition:
+                self._revision_condition.notify_all()
+            return snapshot
+
+    async def wait_for_revision_after(self, *, revision: int, timeout_sec: float) -> int:
+        current = self._snapshot
+        if current is not None and current.revision > revision:
+            return current.revision
+
+        timeout = max(0.1, float(timeout_sec))
+        async with self._revision_condition:
+            with suppress(TimeoutError):
+                await asyncio.wait_for(
+                    self._revision_condition.wait_for(
+                        lambda: self._snapshot is not None and self._snapshot.revision > revision
+                    ),
+                    timeout=timeout,
+                )
+
+        latest = self._snapshot
+        return 0 if latest is None else latest.revision
+
+    async def _run_refresh_loop(
+        self,
+        *,
+        config_service: DashboardConfigService,
+        settings: AppSettings,
+        health_sample_repository: HealthSampleRepository,
+    ) -> None:
+        if self._stop_event is None or self._wake_event is None:
+            return
+
+        refresh_timeout = max(0.2, float(settings.health_refresh_sec))
+        while not self._stop_event.is_set():
+            try:
+                await self.refresh_snapshot(
+                    config_service=config_service,
+                    settings=settings,
+                    health_sample_repository=health_sample_repository,
+                )
+            except DashboardConfigValidationError:
+                # Keep previous snapshot until config is fixed.
+                pass
+            except Exception:
+                # Health loop is best effort and must not crash the application.
+                pass
+
+            if self._stop_event.is_set():
+                break
+
+            try:
+                await asyncio.wait_for(self._wake_event.wait(), timeout=refresh_timeout)
+            except TimeoutError:
+                continue
+            finally:
+                self._wake_event.clear()
+
+
+_HEALTH_RUNTIME = HealthRuntime()
 
 
 def _config_etag(version: ConfigVersion) -> str:
@@ -436,6 +611,129 @@ def _hydrate_health_history_from_db(
         _HEALTH_HISTORY_BY_ITEM[item_id] = buffer
 
 
+def _all_config_items(config: DashboardConfig) -> list[ItemConfig]:
+    return [
+        item
+        for group in config.groups
+        for subgroup in group.subgroups
+        for item in subgroup.items
+    ]
+
+
+async def _probe_health_snapshot(
+    *,
+    config_service: DashboardConfigService,
+    settings: AppSettings,
+    health_sample_repository: HealthSampleRepository,
+) -> tuple[DashboardConfig, dict[str, ItemHealthStatus]]:
+    config = config_service.load()
+    all_items = _all_config_items(config)
+    items_by_id = {item.id: item for item in all_items}
+    _prune_health_history(
+        set(items_by_id),
+        health_sample_repository=health_sample_repository,
+    )
+    _hydrate_health_history_from_db(
+        item_ids=set(items_by_id),
+        max_points=_health_history_size(settings),
+        health_sample_repository=health_sample_repository,
+    )
+
+    semaphore = asyncio.Semaphore(max(1, settings.healthcheck_max_parallel))
+    async with httpx.AsyncClient(
+        follow_redirects=True,
+        timeout=max(0.2, settings.healthcheck_timeout_sec),
+        verify=settings.healthcheck_verify_tls,
+    ) as client:
+        statuses = await asyncio.gather(
+            *[
+                probe_item_health(
+                    item=item,
+                    client=client,
+                    semaphore=semaphore,
+                    default_timeout_sec=settings.healthcheck_timeout_sec,
+                )
+                for item in all_items
+            ]
+        )
+
+    statuses_by_id = {status.item_id: status for status in statuses}
+    _apply_dependency_awareness(all_items, statuses_by_id)
+    _record_health_history(
+        statuses_by_id=statuses_by_id,
+        max_points=_health_history_size(settings),
+        health_sample_repository=health_sample_repository,
+    )
+    return config, statuses_by_id
+
+
+def _build_health_response_from_snapshot(
+    *,
+    snapshot: HealthSnapshot,
+    item_ids: list[str] | None = None,
+) -> DashboardHealthResponse:
+    all_items = _all_config_items(snapshot.config)
+    requested_ids = set(item_ids or [])
+
+    if requested_ids:
+        statuses = [
+            snapshot.statuses_by_id[item.id].model_copy(deep=True)
+            for item in all_items
+            if item.id in requested_ids and item.id in snapshot.statuses_by_id
+        ]
+    else:
+        statuses = [
+            snapshot.statuses_by_id[item.id].model_copy(deep=True)
+            for item in all_items
+            if item.id in snapshot.statuses_by_id
+        ]
+
+    _attach_health_history(statuses)
+    status_subset_by_id = {status.item_id: status for status in statuses}
+    aggregates = _build_health_aggregates(
+        config=snapshot.config,
+        statuses_by_id=status_subset_by_id,
+    )
+    return DashboardHealthResponse(items=statuses, aggregates=aggregates)
+
+
+def _format_sse_snapshot_message(*, payload: DashboardHealthResponse, revision: int) -> str:
+    body = payload.model_dump_json(exclude_none=True)
+    return f"id: {revision}\nevent: snapshot\ndata: {body}\n\n"
+
+
+async def _ensure_health_snapshot_for_request(
+    *,
+    config_service: DashboardConfigService,
+    settings: AppSettings,
+    health_sample_repository: HealthSampleRepository,
+) -> HealthSnapshot:
+    force_refresh = settings.health_refresh_sec <= 0
+    return await _HEALTH_RUNTIME.ensure_snapshot(
+        config_service=config_service,
+        settings=settings,
+        health_sample_repository=health_sample_repository,
+        force_refresh=force_refresh,
+    )
+
+
+async def start_health_runtime(container: AppContainer) -> None:
+    await _HEALTH_RUNTIME.start(
+        config_service=container.config_service,
+        settings=container.settings,
+        health_sample_repository=container.health_sample_repository,
+    )
+
+
+async def stop_health_runtime() -> None:
+    await _HEALTH_RUNTIME.stop()
+
+
+def reset_health_runtime_state() -> None:
+    _HEALTH_RUNTIME.reset_for_tests()
+    _HEALTH_HISTORY_BY_ITEM.clear()
+
+
 dashboard_router = APIRouter(prefix="/api/v1")
 
 
@@ -537,79 +835,85 @@ async def get_dashboard_health(
     item_id: Annotated[list[str] | None, Query()] = None,
 ) -> DashboardHealthResponse:
     try:
-        config = config_service.load()
+        snapshot = await _ensure_health_snapshot_for_request(
+            config_service=config_service,
+            settings=settings,
+            health_sample_repository=health_sample_repository,
+        )
     except DashboardConfigValidationError as exc:
         raise _validation_exception(exc) from exc
 
-    all_items = [
-        item
-        for group in config.groups
-        for subgroup in group.subgroups
-        for item in subgroup.items
-    ]
-
-    items_by_id = {item.id: item for item in all_items}
-    _prune_health_history(
-        set(items_by_id),
-        health_sample_repository=health_sample_repository,
-    )
-    _hydrate_health_history_from_db(
-        item_ids=set(items_by_id),
-        max_points=_health_history_size(settings),
-        health_sample_repository=health_sample_repository,
-    )
-    requested_ids: set[str] | None = None
-    probe_ids: set[str] | None = None
-
-    if item_id:
-        requested_ids = set(item_id)
-        probe_ids = _expand_requested_with_dependencies(requested_ids, items_by_id)
-
-    items_to_probe = all_items if probe_ids is None else [item for item in all_items if item.id in probe_ids]
-
-    semaphore = asyncio.Semaphore(max(1, settings.healthcheck_max_parallel))
-    async with httpx.AsyncClient(
-        follow_redirects=True,
-        timeout=max(0.2, settings.healthcheck_timeout_sec),
-        verify=settings.healthcheck_verify_tls,
-    ) as client:
-        statuses = await asyncio.gather(
-            *[
-                probe_item_health(
-                    item=item,
-                    client=client,
-                    semaphore=semaphore,
-                    default_timeout_sec=settings.healthcheck_timeout_sec,
-                )
-                for item in items_to_probe
-            ]
-        )
-
-    statuses_by_id = {status.item_id: status for status in statuses}
-    _apply_dependency_awareness(items_to_probe, statuses_by_id)
-    _record_health_history(
-        statuses_by_id=statuses_by_id,
-        max_points=_health_history_size(settings),
-        health_sample_repository=health_sample_repository,
-    )
-
-    if requested_ids is not None:
-        statuses = [
-            statuses_by_id[item.id]
-            for item in all_items
-            if item.id in requested_ids and item.id in statuses_by_id
-        ]
-    else:
-        statuses = [statuses_by_id[item.id] for item in all_items if item.id in statuses_by_id]
-
-    _attach_health_history(statuses)
-    status_subset_by_id = {status.item_id: status for status in statuses}
-    aggregates = _build_health_aggregates(
-        config=config,
-        statuses_by_id=status_subset_by_id,
-    )
     response.headers["cache-control"] = HEALTH_CACHE_CONTROL
-    return DashboardHealthResponse(items=statuses, aggregates=aggregates)
+    return _build_health_response_from_snapshot(snapshot=snapshot, item_ids=item_id)
+
+
+@dashboard_router.get("/dashboard/health/stream")
+async def stream_dashboard_health(
+    request: Request,
+    config_service: ConfigServiceDep,
+    settings: SettingsDep,
+    health_sample_repository: HealthSampleRepositoryDep,
+    item_id: Annotated[list[str] | None, Query()] = None,
+    once: Annotated[bool, Query()] = False,
+) -> StreamingResponse:
+    try:
+        snapshot = await _ensure_health_snapshot_for_request(
+            config_service=config_service,
+            settings=settings,
+            health_sample_repository=health_sample_repository,
+        )
+    except DashboardConfigValidationError as exc:
+        raise _validation_exception(exc) from exc
+
+    keepalive_sec = max(2.0, settings.health_sse_keepalive_sec)
+
+    async def _stream() -> AsyncIterator[str]:
+        local_revision = snapshot.revision
+        initial_payload = _build_health_response_from_snapshot(snapshot=snapshot, item_ids=item_id)
+        yield _format_sse_snapshot_message(payload=initial_payload, revision=local_revision)
+        if once:
+            return
+
+        while True:
+            if await request.is_disconnected():
+                return
+
+            revision = await _HEALTH_RUNTIME.wait_for_revision_after(
+                revision=local_revision,
+                timeout_sec=keepalive_sec,
+            )
+            if await request.is_disconnected():
+                return
+
+            if revision <= local_revision:
+                # Keep idle streams alive through reverse proxies.
+                yield ": keepalive\n\n"
+                continue
+
+            current = _HEALTH_RUNTIME.snapshot()
+            if current is None:
+                try:
+                    current = await _ensure_health_snapshot_for_request(
+                        config_service=config_service,
+                        settings=settings,
+                        health_sample_repository=health_sample_repository,
+                    )
+                except DashboardConfigValidationError:
+                    continue
+
+            local_revision = current.revision
+            payload = _build_health_response_from_snapshot(snapshot=current, item_ids=item_id)
+            yield _format_sse_snapshot_message(payload=payload, revision=local_revision)
+
+    return StreamingResponse(
+        _stream(),
+        media_type=HEALTH_STREAM_MEDIA_TYPE,
+        headers={
+            "cache-control": HEALTH_STREAM_CACHE_CONTROL,
+            "connection": "keep-alive",
+            "x-accel-buffering": "no",
+        },
+    )
 
 
 @dashboard_router.get("/dashboard/iframe/{item_id}/source", response_model=IframeSourceResponse)
@@ -768,4 +1072,9 @@ async def proxy_iframe(
     return response
 
 
-__all__ = ["dashboard_router"]
+__all__ = [
+    "dashboard_router",
+    "reset_health_runtime_state",
+    "start_health_runtime",
+    "stop_health_runtime",
+]

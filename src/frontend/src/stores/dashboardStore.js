@@ -1,5 +1,6 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import {
+  createDashboardHealthStream,
   fetchDashboardConfig,
   fetchDashboardHealth,
   fetchIframeSource,
@@ -48,6 +49,7 @@ export function useDashboardStore() {
   const HEALTH_REFRESH_MS = 30000
   const HEALTH_REFRESH_DEGRADED_MS = 16000
   const HEALTH_REFRESH_DOWN_MS = 9000
+  const HEALTH_STREAM_RECONNECT_MS = 3000
   const DEGRADED_LATENCY_MS = 700
   const LAN_SCAN_POLL_MS = 10000
   const LAN_PAGE_ID = 'lan'
@@ -207,6 +209,8 @@ export function useDashboardStore() {
   const actionBusy = reactive({})
   const widgetIntervals = new Map()
   let healthPollTimer = 0
+  let healthStream = null
+  let healthStreamReconnectTimer = 0
   let saveStatusTimer = 0
   let lanScanPollTimer = 0
   let lanScanRefreshInFlight = false
@@ -2100,6 +2104,14 @@ export function useDashboardStore() {
       clearTimeout(healthPollTimer)
       healthPollTimer = 0
     }
+    if (healthStreamReconnectTimer) {
+      clearTimeout(healthStreamReconnectTimer)
+      healthStreamReconnectTimer = 0
+    }
+    if (healthStream) {
+      healthStream.close()
+      healthStream = null
+    }
   }
 
   function healthState(itemId) {
@@ -2179,6 +2191,69 @@ export function useDashboardStore() {
     return 'Unknown'
   }
 
+  function applyHealthPayload(payload, ids = []) {
+    const incomingById = new Map()
+    for (const itemStatus of payload?.items || []) {
+      const status = itemStatus && typeof itemStatus === 'object' ? itemStatus : null
+      const statusItemId = String(status?.item_id || '').trim()
+      if (!statusItemId) continue
+      incomingById.set(statusItemId, status)
+      healthStates[statusItemId] = status
+    }
+
+    for (const id of ids) {
+      const normalizedId = String(id || '').trim()
+      if (!normalizedId || incomingById.has(normalizedId)) continue
+      if (!healthStates[normalizedId]) {
+        healthStates[normalizedId] = {
+          item_id: normalizedId,
+          ok: false,
+          checked_url: '',
+          status_code: null,
+          latency_ms: null,
+          error: 'healthcheck unavailable',
+        }
+      }
+    }
+  }
+
+  function startHealthStreaming() {
+    const stream = createDashboardHealthStream()
+    if (!stream) return false
+
+    healthStream = stream
+    const fallbackIds = visibleTreeItemIds.value
+
+    const handleSnapshot = (event) => {
+      if (!event?.data) return
+      try {
+        const payload = JSON.parse(event.data)
+        applyHealthPayload(payload, fallbackIds)
+      } catch {
+        // Ignore malformed stream events and keep connection alive.
+      }
+    }
+
+    stream.addEventListener('snapshot', handleSnapshot)
+    stream.onmessage = handleSnapshot
+    stream.onerror = () => {
+      if (healthStream !== stream) return
+      stream.close()
+      healthStream = null
+
+      if (!isDocumentVisible.value) return
+      healthStreamReconnectTimer = window.setTimeout(async () => {
+        healthStreamReconnectTimer = 0
+        if (!startHealthStreaming()) {
+          await refreshHealth()
+          scheduleNextHealthPoll()
+        }
+      }, HEALTH_STREAM_RECONNECT_MS)
+    }
+
+    return true
+  }
+
   async function refreshHealth(itemIds = null) {
     if (!Array.isArray(itemIds) && !isDocumentVisible.value) return
 
@@ -2188,27 +2263,18 @@ export function useDashboardStore() {
 
     try {
       const payload = await fetchDashboardHealth(ids)
-      for (const itemStatus of payload.items || []) {
-        healthStates[itemStatus.item_id] = itemStatus
-      }
+      applyHealthPayload(payload, ids)
     } catch {
-      for (const id of ids) {
-        if (!healthStates[id]) {
-          healthStates[id] = {
-            item_id: id,
-            ok: false,
-            checked_url: '',
-            status_code: null,
-            latency_ms: null,
-            error: 'healthcheck unavailable',
-          }
-        }
-      }
+      applyHealthPayload({ items: [] }, ids)
     }
   }
 
   async function startHealthPolling() {
     stopHealthPolling()
+    if (startHealthStreaming()) {
+      return
+    }
+
     await refreshHealth()
     scheduleNextHealthPoll()
   }
