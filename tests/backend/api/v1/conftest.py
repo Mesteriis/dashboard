@@ -30,10 +30,13 @@ def dashboard_config_path(tmp_path: Path, dashboard_config: DashboardConfig) -> 
 @pytest.fixture()
 def app_container(
     project_root: Path,
+    tmp_path: Path,
     dashboard_config_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> AppContainer:
+    db_path = (tmp_path / "dashboard.sqlite3").resolve()
     monkeypatch.setenv("DASHBOARD_CONFIG_FILE", str(dashboard_config_path.resolve()))
+    monkeypatch.setenv("DASHBOARD_DB_FILE", str(db_path))
     monkeypatch.setenv("DASHBOARD_PROXY_TOKEN_SECRET", "test-proxy-secret")
     monkeypatch.setenv("LAN_SCAN_ENABLED", "false")
 

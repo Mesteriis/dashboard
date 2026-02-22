@@ -10,6 +10,7 @@ from urllib.parse import urlparse
 
 import yaml
 from pydantic import ValidationError
+from sqlalchemy.orm import Session, sessionmaker
 
 from scheme.dashboard import (
     AuthProfileConfig,
@@ -43,8 +44,9 @@ def _join_path(path: tuple[Any, ...]) -> str:
 
 
 class DashboardConfigService:
-    def __init__(self, config_path: Path):
+    def __init__(self, config_path: Path, db_session_factory: sessionmaker[Session] | None = None):
         self.config_path = config_path
+        self.db_session_factory = db_session_factory
         self._state: DashboardConfigState | None = None
         self._last_issues: list[ValidationIssue] = []
 

@@ -16,8 +16,10 @@ async def test_root_returns_503_when_index_is_missing(
     tmp_path: Path,
 ) -> None:
     config_path = (tmp_path / "dashboard.yaml").resolve()
+    db_path = (tmp_path / "dashboard.sqlite3").resolve()
     write_dashboard_yaml(config_path, build_dashboard_config(fake))
     monkeypatch.setenv("DASHBOARD_CONFIG_FILE", str(config_path))
+    monkeypatch.setenv("DASHBOARD_DB_FILE", str(db_path))
 
     main_module = importlib.import_module("main")
     main_module = importlib.reload(main_module)
@@ -34,8 +36,10 @@ async def test_root_returns_file_response_when_index_exists(
     tmp_path: Path,
 ) -> None:
     config_path = (tmp_path / "dashboard.yaml").resolve()
+    db_path = (tmp_path / "dashboard.sqlite3").resolve()
     write_dashboard_yaml(config_path, build_dashboard_config(fake))
     monkeypatch.setenv("DASHBOARD_CONFIG_FILE", str(config_path))
+    monkeypatch.setenv("DASHBOARD_DB_FILE", str(db_path))
 
     main_module = importlib.import_module("main")
     main_module = importlib.reload(main_module)

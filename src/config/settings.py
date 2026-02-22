@@ -14,6 +14,7 @@ class AppSettings:
     static_dir: Path
     index_file: Path
     config_file: Path
+    db_file: Path
     healthcheck_timeout_sec: float
     healthcheck_max_parallel: int
     healthcheck_verify_tls: bool
@@ -64,6 +65,12 @@ def load_app_settings(base_dir: Path | None = None) -> AppSettings:
             os.getenv(
                 "DASHBOARD_CONFIG_FILE",
                 str(resolved_base_dir.parent / "dashboard.yaml"),
+            )
+        ),
+        db_file=Path(
+            os.getenv(
+                "DASHBOARD_DB_FILE",
+                str(resolved_base_dir.parent / "data" / "dashboard.sqlite3"),
             )
         ),
         healthcheck_timeout_sec=_env_float("DASHBOARD_HEALTHCHECK_TIMEOUT_SEC", 4.0, minimum=0.2),
