@@ -17,11 +17,6 @@ from tools.events import build_lifespan
 
 
 @pytest.fixture()
-def admin_token() -> str:
-    return "test-admin-token"
-
-
-@pytest.fixture()
 def dashboard_config(fake: Faker) -> DashboardConfig:
     return build_dashboard_config(fake)
 
@@ -36,11 +31,9 @@ def dashboard_config_path(tmp_path: Path, dashboard_config: DashboardConfig) -> 
 def app_container(
     project_root: Path,
     dashboard_config_path: Path,
-    admin_token: str,
     monkeypatch: pytest.MonkeyPatch,
 ) -> AppContainer:
     monkeypatch.setenv("DASHBOARD_CONFIG_FILE", str(dashboard_config_path.resolve()))
-    monkeypatch.setenv("DASHBOARD_ADMIN_TOKEN", admin_token)
     monkeypatch.setenv("DASHBOARD_PROXY_TOKEN_SECRET", "test-proxy-secret")
     monkeypatch.setenv("LAN_SCAN_ENABLED", "false")
 

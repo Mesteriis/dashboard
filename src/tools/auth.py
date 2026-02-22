@@ -7,25 +7,6 @@ from time import time
 
 
 @dataclass(frozen=True)
-class AuthFailure(Exception):
-    status_code: int
-    detail: str
-
-
-def ensure_admin_token(token: str | None, *, admin_token: str) -> None:
-    if not admin_token:
-        raise AuthFailure(
-            status_code=503,
-            detail=(
-                "Admin token is not configured. "
-                "Set DASHBOARD_ADMIN_TOKEN to enable protected actions."
-            ),
-        )
-    if token is None or not hmac.compare_digest(token, admin_token):
-        raise AuthFailure(status_code=401, detail="Invalid admin token")
-
-
-@dataclass(frozen=True)
 class ProxyAccessSigner:
     secret: str
     ttl_sec: int

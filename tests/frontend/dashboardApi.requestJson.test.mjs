@@ -54,46 +54,23 @@ test('requestJson formats validation errors from detail array', async () => {
   )
 })
 
-test('requestJson adds admin token from localStorage when required', async () => {
-  let headers = null
+test('requestJson resolves relative path against runtime api base', async () => {
+  let calledPath = ''
   globalThis.window = {
-    localStorage: { getItem: () => '  secret-token  ' },
-    __DASHBOARD_ADMIN_TOKEN__: 'fallback-token',
+    __OKO_API_BASE__: 'http://127.0.0.1:9000',
   }
-  globalThis.fetch = async (_path, options) => {
-    headers = options.headers
+  globalThis.fetch = async (path) => {
+    calledPath = path
     return makeResponse({ jsonBody: { ok: true } })
   }
 
-  await requestJson('/api/secure', { requireAdminToken: true })
-  assert.equal(headers['X-Dashboard-Token'], 'secret-token')
-})
-
-test('requestJson falls back to global admin token and supports text response', async () => {
-  globalThis.window = {
-    localStorage: { getItem: () => '' },
-    __DASHBOARD_ADMIN_TOKEN__: '  global-token  ',
-  }
-  globalThis.fetch = async (_path, options) => {
-    assert.equal(options.headers['X-Dashboard-Token'], 'global-token')
-    return makeResponse({ contentType: 'text/plain', textBody: 'ok-text' })
-  }
-
-  const payload = await requestJson('/api/text', { requireAdminToken: true })
-  assert.equal(payload, 'ok-text')
-})
-
-test('requestJson uses embedded desktop token when runtime is embedded', async () => {
-  globalThis.window = {
-    localStorage: { getItem: () => '' },
-    __DASHBOARD_ADMIN_TOKEN__: '',
-    __OKO_DESKTOP_RUNTIME__: { desktop: true, mode: 'embedded' },
-  }
-  globalThis.fetch = async (_path, options) => {
-    assert.equal(options.headers['X-Dashboard-Token'], 'oko-desktop-embedded')
-    return makeResponse({ jsonBody: { ok: true } })
-  }
-
-  const payload = await requestJson('/api/embedded', { requireAdminToken: true })
+  const payload = await requestJson('/api/embedded')
   assert.deepEqual(payload, { ok: true })
+  assert.equal(calledPath, 'http://127.0.0.1:9000/api/embedded')
+})
+
+test('requestJson supports text response bodies', async () => {
+  globalThis.fetch = async () => makeResponse({ contentType: 'text/plain', textBody: 'ok-text' })
+  const payload = await requestJson('/api/text')
+  assert.equal(payload, 'ok-text')
 })

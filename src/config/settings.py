@@ -5,7 +5,6 @@ import secrets
 from dataclasses import dataclass
 from pathlib import Path
 
-ADMIN_TOKEN_HEADER = "X-Dashboard-Token"
 PROXY_ACCESS_COOKIE = "dashboard_proxy_access"
 
 
@@ -19,8 +18,6 @@ class AppSettings:
     healthcheck_max_parallel: int
     healthcheck_verify_tls: bool
     health_history_size: int
-    admin_token: str
-    admin_token_header: str
     proxy_access_cookie: str
     proxy_token_secret: str
     proxy_token_ttl_sec: int
@@ -57,12 +54,7 @@ def _env_float(name: str, default: float, *, minimum: float) -> float:
 
 def load_app_settings(base_dir: Path | None = None) -> AppSettings:
     resolved_base_dir = base_dir or Path(__file__).resolve().parents[1]
-    admin_token = os.getenv("DASHBOARD_ADMIN_TOKEN", "").strip()
-    proxy_secret = (
-        os.getenv("DASHBOARD_PROXY_TOKEN_SECRET", "").strip()
-        or admin_token
-        or secrets.token_urlsafe(32)
-    )
+    proxy_secret = os.getenv("DASHBOARD_PROXY_TOKEN_SECRET", "").strip() or secrets.token_urlsafe(32)
 
     return AppSettings(
         base_dir=resolved_base_dir,
@@ -78,8 +70,6 @@ def load_app_settings(base_dir: Path | None = None) -> AppSettings:
         healthcheck_max_parallel=_env_int("DASHBOARD_HEALTHCHECK_MAX_PARALLEL", 8, minimum=1),
         healthcheck_verify_tls=_env_bool("DASHBOARD_HEALTHCHECK_VERIFY_TLS", True),
         health_history_size=_env_int("DASHBOARD_HEALTH_HISTORY_SIZE", 20, minimum=1),
-        admin_token=admin_token,
-        admin_token_header=ADMIN_TOKEN_HEADER,
         proxy_access_cookie=PROXY_ACCESS_COOKIE,
         proxy_token_secret=proxy_secret,
         proxy_token_ttl_sec=_env_int("DASHBOARD_PROXY_TOKEN_TTL_SEC", 3600, minimum=30),

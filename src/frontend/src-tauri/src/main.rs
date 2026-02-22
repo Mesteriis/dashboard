@@ -19,7 +19,6 @@ const USER_CONFIG_FILE_NAME: &str = "dashboard.yaml";
 const USER_LAN_SCAN_RESULT_FILE: &str = "data/lan_scan_result.json";
 const USER_BACKEND_LOG_FILE: &str = "logs/backend.log";
 const USER_BACKEND_PID_FILE: &str = "backend.pid";
-const EMBEDDED_ADMIN_TOKEN: &str = "oko-desktop-embedded";
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
@@ -265,7 +264,6 @@ fn spawn_embedded_backend(app: &AppHandle) -> Result<EmbeddedBackend, String> {
     .env("DASHBOARD_CONFIG_FILE", &config_path)
     .env("LAN_SCAN_RESULT_FILE", &lan_result_file)
     .env("DASHBOARD_ENABLE_LAN_SCAN", "true")
-    .env("DASHBOARD_ADMIN_TOKEN", EMBEDDED_ADMIN_TOKEN)
     .env("LAN_SCAN_RUN_ON_STARTUP", "true")
     .env("LAN_SCAN_INTERVAL_SEC", "300");
 

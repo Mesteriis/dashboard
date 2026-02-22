@@ -23,10 +23,6 @@ function jsonResponse(body = {}) {
   }
 }
 
-function setAdminToken(token = 'admin-token') {
-  globalThis.window = { localStorage: { getItem: () => token } }
-}
-
 test.afterEach(() => {
   globalThis.fetch = originalFetch
   if (hadWindow) {
@@ -59,8 +55,7 @@ test('fetchDashboardHealth encodes repeated item_id query params', async () => {
   assert.equal(path, '/api/v1/dashboard/health?item_id=a&item_id=b+c')
 })
 
-test('updateDashboardConfig uses PUT, JSON body, and admin token header', async () => {
-  setAdminToken('save-token')
+test('updateDashboardConfig uses PUT and JSON body', async () => {
   let options = null
   globalThis.fetch = async (_path, nextOptions) => {
     options = nextOptions
@@ -70,13 +65,11 @@ test('updateDashboardConfig uses PUT, JSON body, and admin token header', async 
   await updateDashboardConfig({ app: { id: 'ok' } })
   assert.equal(options.method, 'PUT')
   assert.equal(options.headers['Content-Type'], 'application/json')
-  assert.equal(options.headers['X-Dashboard-Token'], 'save-token')
   assert.equal(options.body, JSON.stringify({ app: { id: 'ok' } }))
 })
 
-test('fetchIframeSource and triggerLanScan require admin token and proper methods', async () => {
+test('fetchIframeSource resolves runtime URL and triggerLanScan uses POST', async () => {
   globalThis.window = {
-    localStorage: { getItem: () => 'run-token' },
     __OKO_API_BASE__: 'http://127.0.0.1:9000',
   }
   const calls = []
@@ -91,9 +84,7 @@ test('fetchIframeSource and triggerLanScan require admin token and proper method
   const iframeSource = await fetchIframeSource('item/id')
   await triggerLanScan()
   assert.equal(calls[0].path, 'http://127.0.0.1:9000/api/v1/dashboard/iframe/item%2Fid/source')
-  assert.equal(calls[0].options.headers['X-Dashboard-Token'], 'run-token')
   assert.equal(iframeSource.src, 'http://127.0.0.1:9000/api/v1/dashboard/iframe/item%2Fid/proxy')
   assert.equal(calls[1].path, 'http://127.0.0.1:9000/api/v1/dashboard/lan/run')
   assert.equal(calls[1].options.method, 'POST')
-  assert.equal(calls[1].options.headers['X-Dashboard-Token'], 'run-token')
 })

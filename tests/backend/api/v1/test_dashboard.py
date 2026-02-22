@@ -12,7 +12,6 @@ from support.factories import build_dashboard_config
 import api.v1.dashboard as dashboard_module
 from api.v1.dashboard import dashboard_router
 from config.container import AppContainer
-from config.settings import ADMIN_TOKEN_HEADER
 from scheme.dashboard import DashboardConfig, ItemHealthStatus, LanScanStateResponse, LinkItemConfig, ValidationIssue
 from service.config_service import DashboardConfigValidationError
 
@@ -79,32 +78,17 @@ async def test_get_dashboard_config_returns_422_when_service_validation_fails(
     assert response.status_code == httpx.codes.UNPROCESSABLE_ENTITY
 
 
-async def test_put_dashboard_config_requires_admin_token(
+async def test_put_dashboard_config_is_open_without_admin_token(
     api_client: AsyncClient,
     fake: Faker,
 ) -> None:
     payload = build_dashboard_config(fake, title="Config Without Token").model_dump(mode="json", exclude_none=True)
 
     response = await api_client.put("/api/v1/dashboard/config", json=payload)
-    assert response.status_code == httpx.codes.UNAUTHORIZED
-
-
-async def test_put_dashboard_config_accepts_valid_admin_token(
-    api_client: AsyncClient,
-    fake: Faker,
-    admin_token: str,
-) -> None:
-    payload = build_dashboard_config(fake, title="Config With Token").model_dump(mode="json", exclude_none=True)
-
-    response = await api_client.put(
-        "/api/v1/dashboard/config",
-        json=payload,
-        headers={ADMIN_TOKEN_HEADER: admin_token},
-    )
 
     assert response.status_code == httpx.codes.OK
     response_payload = response.json()
-    assert response_payload["config"]["app"]["title"] == "Config With Token"
+    assert response_payload["config"]["app"]["title"] == "Config Without Token"
     assert response_payload["version"]["sha256"]
 
 
@@ -564,15 +548,8 @@ async def test_get_iframe_source_returns_direct_url_for_public_iframe(api_client
 
 async def test_get_iframe_source_for_protected_item_sets_proxy_cookie(
     api_client: AsyncClient,
-    admin_token: str,
 ) -> None:
-    unauthorized = await api_client.get("/api/v1/dashboard/iframe/svc-iframe-protected/source")
-    assert unauthorized.status_code == httpx.codes.UNAUTHORIZED
-
-    authorized = await api_client.get(
-        "/api/v1/dashboard/iframe/svc-iframe-protected/source",
-        headers={ADMIN_TOKEN_HEADER: admin_token},
-    )
+    authorized = await api_client.get("/api/v1/dashboard/iframe/svc-iframe-protected/source")
 
     assert authorized.status_code == httpx.codes.OK
     payload = authorized.json()
@@ -584,7 +561,6 @@ async def test_get_iframe_source_for_protected_item_sets_proxy_cookie(
 async def test_run_lan_scan_message_branches(
     api_client: AsyncClient,
     app_container: AppContainer,
-    admin_token: str,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     async def accepted() -> bool:
@@ -596,7 +572,7 @@ async def test_run_lan_scan_message_branches(
         "state",
         lambda: LanScanStateResponse(enabled=True, running=False, queued=False),
     )
-    accepted_response = await api_client.post("/api/v1/dashboard/lan/run", headers={ADMIN_TOKEN_HEADER: admin_token})
+    accepted_response = await api_client.post("/api/v1/dashboard/lan/run")
     assert accepted_response.status_code == httpx.codes.OK
     assert accepted_response.json()["accepted"] is True
 
@@ -609,7 +585,7 @@ async def test_run_lan_scan_message_branches(
         "state",
         lambda: LanScanStateResponse(enabled=True, running=True, queued=True),
     )
-    queued_response = await api_client.post("/api/v1/dashboard/lan/run", headers={ADMIN_TOKEN_HEADER: admin_token})
+    queued_response = await api_client.post("/api/v1/dashboard/lan/run")
     assert queued_response.status_code == httpx.codes.OK
     assert queued_response.json()["state"]["queued"] is True
 
@@ -621,7 +597,6 @@ async def test_proxy_iframe_requires_access_cookie_for_protected_items(api_clien
 
 async def test_proxy_iframe_streams_and_rewrites_headers(
     api_client: AsyncClient,
-    admin_token: str,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     class FakeHeaders:
@@ -665,10 +640,7 @@ async def test_proxy_iframe_streams_and_rewrites_headers(
 
     monkeypatch.setattr(dashboard_module.httpx, "AsyncClient", FakeProxyClient)
 
-    source = await api_client.get(
-        "/api/v1/dashboard/iframe/svc-iframe-protected/source",
-        headers={ADMIN_TOKEN_HEADER: admin_token},
-    )
+    source = await api_client.get("/api/v1/dashboard/iframe/svc-iframe-protected/source")
     assert source.status_code == httpx.codes.OK
 
     proxy = await api_client.get("/api/v1/dashboard/iframe/svc-iframe-protected/proxy/path?x=1")
@@ -680,7 +652,6 @@ async def test_proxy_iframe_streams_and_rewrites_headers(
 
 async def test_proxy_iframe_returns_502_when_upstream_errors(
     api_client: AsyncClient,
-    admin_token: str,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     class ErrorProxyClient:
@@ -698,9 +669,6 @@ async def test_proxy_iframe_returns_502_when_upstream_errors(
             return None
 
     monkeypatch.setattr(dashboard_module.httpx, "AsyncClient", ErrorProxyClient)
-    await api_client.get(
-        "/api/v1/dashboard/iframe/svc-iframe-protected/source",
-        headers={ADMIN_TOKEN_HEADER: admin_token},
-    )
+    await api_client.get("/api/v1/dashboard/iframe/svc-iframe-protected/source")
     response = await api_client.get("/api/v1/dashboard/iframe/svc-iframe-protected/proxy")
     assert response.status_code == httpx.codes.BAD_GATEWAY

@@ -1,30 +1,4 @@
-const ADMIN_TOKEN_HEADER = 'X-Dashboard-Token'
-const DESKTOP_EMBEDDED_ADMIN_TOKEN = 'oko-desktop-embedded'
-
-/**
- * @typedef {RequestInit & {
- *   requireAdminToken?: boolean
- * }} RequestJsonOptions
- */
-
-function getAdminToken() {
-  if (typeof window === 'undefined') return ''
-  let fromStorage = ''
-  try {
-    fromStorage = window.localStorage?.getItem('dashboard_admin_token') || ''
-  } catch {
-    fromStorage = ''
-  }
-  if (String(fromStorage).trim()) {
-    return String(fromStorage).trim()
-  }
-  const runtimeProfile = window.__OKO_DESKTOP_RUNTIME__
-  if (runtimeProfile?.desktop && runtimeProfile?.mode === 'embedded') {
-    return DESKTOP_EMBEDDED_ADMIN_TOKEN
-  }
-  const fromGlobal = window.__DASHBOARD_ADMIN_TOKEN__ || ''
-  return String(fromGlobal).trim()
-}
+/** @typedef {RequestInit} RequestJsonOptions */
 
 /**
  * @param {string} path
@@ -77,7 +51,7 @@ function resolveErrorMessage(body, isJson, status) {
  * @returns {Promise<unknown>}
  */
 export async function requestJson(path, options = {}) {
-  const { requireAdminToken = false, headers: customHeaders = {}, ...fetchOptions } = options
+  const { headers: customHeaders = {}, ...fetchOptions } = options
   /** @type {Record<string, string>} */
   const customHeadersObject = {}
   if (customHeaders instanceof Headers) {
@@ -95,13 +69,6 @@ export async function requestJson(path, options = {}) {
   const headers = {
     Accept: 'application/json',
     ...customHeadersObject,
-  }
-
-  if (requireAdminToken) {
-    const adminToken = getAdminToken()
-    if (adminToken) {
-      headers[ADMIN_TOKEN_HEADER] = adminToken
-    }
   }
 
   const response = await fetch(resolveRequestUrl(path), {

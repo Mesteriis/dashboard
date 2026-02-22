@@ -16,7 +16,7 @@ export function fetchDashboardConfig() {
  * @returns {Promise<unknown>}
  */
 export function fetchIframeSource(itemId) {
-  return requestJson(`${DASHBOARD_API_BASE}/iframe/${encodeURIComponent(itemId)}/source`, { requireAdminToken: true }).then(
+  return requestJson(`${DASHBOARD_API_BASE}/iframe/${encodeURIComponent(itemId)}/source`).then(
     (payload) => {
       if (!payload || typeof payload !== 'object') return payload
       const sourcePayload = /** @type {{ src?: unknown }} */ (payload)
@@ -48,7 +48,6 @@ export function fetchDashboardHealth(itemIds = []) {
  */
 export function updateDashboardConfig(config) {
   return requestJson(`${DASHBOARD_API_BASE}/config`, {
-    requireAdminToken: true,
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
@@ -69,7 +68,6 @@ export function fetchLanScanState() {
  */
 export function triggerLanScan() {
   return requestJson(`${DASHBOARD_API_BASE}/lan/run`, {
-    requireAdminToken: true,
     method: 'POST',
   })
 }

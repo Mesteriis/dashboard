@@ -7,12 +7,12 @@ from datetime import UTC, datetime
 from typing import Annotated, Literal
 
 import httpx
-from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request, Response
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 from fastapi.responses import StreamingResponse
 from starlette.background import BackgroundTask
 
 from config.container import AppContainer
-from config.settings import ADMIN_TOKEN_HEADER, AppSettings
+from config.settings import AppSettings
 from scheme.dashboard import (
     AggregateStatus,
     ConfigVersion,
@@ -34,7 +34,7 @@ from scheme.dashboard import (
 )
 from service.config_service import DashboardConfigService, DashboardConfigValidationError
 from service.lan_scan import LanScanService
-from tools.auth import AuthFailure, ProxyAccessSigner, ensure_admin_token
+from tools.auth import ProxyAccessSigner
 from tools.health import probe_item_health
 from tools.proxy import (
     PROXY_REQUEST_HEADERS,
@@ -49,10 +49,6 @@ from tools.proxy import (
 
 def _validation_exception(exc: DashboardConfigValidationError) -> HTTPException:
     return HTTPException(status_code=422, detail=[issue.model_dump() for issue in exc.issues])
-
-
-def _auth_exception(exc: AuthFailure) -> HTTPException:
-    return HTTPException(status_code=exc.status_code, detail=exc.detail)
 
 
 def get_container(request: Request) -> AppContainer:
@@ -82,20 +78,6 @@ SettingsDep = Annotated[AppSettings, Depends(get_settings)]
 ConfigServiceDep = Annotated[DashboardConfigService, Depends(get_config_service)]
 LanScanServiceDep = Annotated[LanScanService, Depends(get_lan_scan_service)]
 ProxySignerDep = Annotated[ProxyAccessSigner, Depends(get_proxy_signer)]
-AdminTokenHeaderDep = Annotated[str | None, Header(alias=ADMIN_TOKEN_HEADER)]
-
-
-def require_admin_token(
-    settings: SettingsDep,
-    token: AdminTokenHeaderDep = None,
-) -> None:
-    try:
-        ensure_admin_token(token=token, admin_token=settings.admin_token)
-    except AuthFailure as exc:
-        raise _auth_exception(exc) from exc
-
-
-AdminAuthDep = Annotated[None, Depends(require_admin_token)]
 HealthLevel = Literal["online", "degraded", "down", "unknown", "indirect_failure"]
 DependencyResolution = tuple[HealthLevel, str | None, str | None]
 _HEALTH_HISTORY_BY_ITEM: dict[str, deque[HealthHistoryPoint]] = {}
@@ -411,10 +393,8 @@ async def validate_dashboard_yaml(payload: ValidateRequest, config_service: Conf
 @dashboard_router.put("/dashboard/config", response_model=SaveConfigResponse)
 async def save_dashboard_config(
     payload: DashboardConfig,
-    _auth: AdminAuthDep,
     config_service: ConfigServiceDep,
 ) -> SaveConfigResponse:
-    del _auth
     try:
         state = config_service.save(payload.model_dump(mode="json", exclude_none=True))
         return SaveConfigResponse(config=state.config, version=state.version)
@@ -507,14 +487,6 @@ async def get_iframe_source(
     item = _load_iframe_item(item_id, config_service)
 
     if item.auth_profile:
-        try:
-            ensure_admin_token(
-                token=request.headers.get(settings.admin_token_header),
-                admin_token=settings.admin_token,
-            )
-        except AuthFailure as exc:
-            raise _auth_exception(exc) from exc
-
         src = f"/api/v1/dashboard/iframe/{item_id}/proxy"
         proxy_token = proxy_signer.build_token(item_id=item_id)
         if proxy_token:
@@ -544,10 +516,8 @@ async def get_lan_scan_state(lan_scan_service: LanScanServiceDep) -> LanScanStat
 
 @dashboard_router.post("/dashboard/lan/run", response_model=LanScanTriggerResponse)
 async def run_lan_scan(
-    _auth: AdminAuthDep,
     lan_scan_service: LanScanServiceDep,
 ) -> LanScanTriggerResponse:
-    del _auth
     accepted = await lan_scan_service.trigger_scan()
     state = lan_scan_service.state()
     if accepted:
