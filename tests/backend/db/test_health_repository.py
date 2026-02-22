@@ -70,3 +70,21 @@ def test_delete_samples_not_in_item_ids_removes_stale_rows(health_repository: He
 
     history = health_repository.list_recent_by_item_ids(item_ids={"svc-a", "svc-b", "svc-c"}, limit_per_item=5)
     assert set(history) == {"svc-a", "svc-b"}
+
+
+def test_delete_samples_not_in_item_ids_with_empty_filter_removes_all_rows(
+    health_repository: HealthSampleRepository,
+) -> None:
+    now = datetime(2026, 2, 22, 12, 0, 0, tzinfo=UTC)
+    health_repository.append_samples(
+        [
+            HealthSampleWrite(item_id="svc-a", ts=now, level="online"),
+            HealthSampleWrite(item_id="svc-b", ts=now, level="down"),
+        ]
+    )
+
+    deleted = health_repository.delete_samples_not_in_item_ids(set())
+    assert deleted == 2
+
+    history = health_repository.list_recent_by_item_ids(item_ids={"svc-a", "svc-b"}, limit_per_item=5)
+    assert history == {}

@@ -4,8 +4,10 @@ from collections import defaultdict
 from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import UTC, datetime
+from typing import Any, cast
 
 from sqlalchemy import asc, delete, desc, select
+from sqlalchemy.engine import CursorResult
 from sqlalchemy.orm import Session, sessionmaker
 
 from db.models import HealthSample
@@ -98,22 +100,14 @@ class HealthSampleRepository:
 
     def delete_samples_not_in_item_ids(self, item_ids: Iterable[str]) -> int:
         ids = sorted({item_id for item_id in item_ids if item_id})
-        if not ids:
-            return 0
 
-        with self._session_factory() as session:
-            stale_ids = session.scalars(
-                select(HealthSample.id).where(HealthSample.item_id.not_in(ids))
-            )
-            stale_id_list = stale_ids.all()
-            if not stale_id_list:
-                return 0
+        statement = delete(HealthSample)
+        if ids:
+            statement = statement.where(HealthSample.item_id.not_in(ids))
 
-            session.execute(
-                delete(HealthSample).where(HealthSample.id.in_(stale_id_list))
-            )
-            session.commit()
-            return len(stale_id_list)
+        with self._session_factory() as session, session.begin():
+            result = cast(CursorResult[Any], session.execute(statement))
+            return int(result.rowcount or 0)
 
 
 def _as_utc(value: datetime) -> datetime:
