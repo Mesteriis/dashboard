@@ -16,6 +16,8 @@ npm ci
 npm run build
 ```
 
+Для `npm run dev` API проксируется на `http://127.0.0.1:8090` (переопределяется через `OKO_DEV_BACKEND_URL`).
+
 ## Desktop (Tauri, macOS Apple Silicon only)
 
 Desktop shell is implemented with Tauri and is intentionally scoped to M-chip Macs (`aarch64-apple-darwin`).

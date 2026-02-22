@@ -42,6 +42,7 @@ COPY --from=frontend_builder /frontend/dist/index.html /app/src/templates/index.
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONPATH=/app/src \
+    PATH=/app/.venv/bin:$PATH \
     DASHBOARD_PORT=8090 \
     LAN_SCAN_ENABLED=false \
     LAN_SCAN_RUN_ON_STARTUP=false \
@@ -49,4 +50,4 @@ ENV PYTHONUNBUFFERED=1 \
     LAN_SCAN_HTTP_VERIFY_TLS=true
 
 EXPOSE 8090
-CMD ["uv", "run", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8090"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8090"]

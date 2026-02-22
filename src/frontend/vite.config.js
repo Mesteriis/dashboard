@@ -1,6 +1,8 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 
+const DEV_BACKEND_TARGET = process.env.OKO_DEV_BACKEND_URL || 'http://127.0.0.1:8090'
+
 function resolveBase(command) {
   if (command === 'serve') return '/'
   if (process.env.OKO_BUILD_TARGET === 'desktop') return '/'
@@ -14,7 +16,7 @@ export default defineConfig(({ command }) => ({
     port: 5173,
     proxy: {
       '/api': {
-        target: 'http://127.0.0.1:8000',
+        target: DEV_BACKEND_TARGET,
         changeOrigin: true,
       },
     },
