@@ -1,4 +1,4 @@
-from .dashboard_config_repository import (
+from .config import (
     DashboardConfigRepository,
     StoredDashboardConfig,
     StoredDashboardConfigRevision,
