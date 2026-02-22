@@ -30,10 +30,13 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 COPY src/main.py /app/src/main.py
 COPY src/api/ /app/src/api/
 COPY src/config/ /app/src/config/
+COPY src/db/ /app/src/db/
 COPY src/scheme/ /app/src/scheme/
 COPY src/service/ /app/src/service/
 COPY src/tools/ /app/src/tools/
-COPY dashboard.yaml /app/dashboard.yaml
+COPY alembic.ini /app/alembic.ini
+COPY alembic/ /app/alembic/
+COPY src/frontend/src-tauri/resources/dashboard.default.yaml /app/dashboard.yaml
 COPY src/templates/ /app/src/templates/
 COPY src/static/ /app/src/static/
 
@@ -44,6 +47,7 @@ ENV PYTHONUNBUFFERED=1 \
     PYTHONPATH=/app/src \
     PATH=/app/.venv/bin:$PATH \
     DASHBOARD_PORT=8090 \
+    DASHBOARD_CONFIG_FILE=/app/dashboard.yaml \
     LAN_SCAN_ENABLED=false \
     LAN_SCAN_RUN_ON_STARTUP=false \
     DASHBOARD_HEALTHCHECK_VERIFY_TLS=true \
