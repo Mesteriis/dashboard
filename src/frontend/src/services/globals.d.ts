@@ -6,6 +6,8 @@ declare global {
     __OKO_DESKTOP_RUNTIME__?: {
       desktop: boolean
       mode: 'web' | 'embedded' | 'remote'
+      deploymentMode: 'docker' | 'dev' | 'app'
+      appClientMode: 'thin' | 'thick' | null
       apiBaseUrl: string
       remoteBaseUrl: string
       embeddedRunning: boolean

@@ -37,7 +37,7 @@ struct RuntimeProfile {
 impl Default for RuntimeProfile {
   fn default() -> Self {
     Self {
-      mode: RuntimeMode::Embedded,
+      mode: RuntimeMode::Remote,
       remote_base_url: DEFAULT_REMOTE_BASE_URL.to_string(),
     }
   }

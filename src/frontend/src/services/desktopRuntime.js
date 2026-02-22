@@ -5,9 +5,19 @@ const DEFAULT_REMOTE_BASE_URL = 'http://127.0.0.1:8090'
  */
 
 /**
+ * @typedef {'docker' | 'dev' | 'app'} DeploymentMode
+ */
+
+/**
+ * @typedef {'thin' | 'thick' | null} AppClientMode
+ */
+
+/**
  * @typedef {object} RuntimeProfile
  * @property {boolean} desktop
  * @property {RuntimeMode} mode
+ * @property {DeploymentMode} deploymentMode
+ * @property {AppClientMode} appClientMode
  * @property {string} apiBaseUrl
  * @property {string} remoteBaseUrl
  * @property {boolean} embeddedRunning
@@ -17,6 +27,8 @@ const DEFAULT_REMOTE_BASE_URL = 'http://127.0.0.1:8090'
 let runtimeProfile = {
   desktop: false,
   mode: 'web',
+  deploymentMode: 'docker',
+  appClientMode: null,
   apiBaseUrl: '',
   remoteBaseUrl: DEFAULT_REMOTE_BASE_URL,
   embeddedRunning: false,
@@ -42,6 +54,26 @@ function normalizeBaseUrl(rawValue) {
 }
 
 /**
+ * @param {boolean} desktop
+ * @returns {DeploymentMode}
+ */
+function resolveDeploymentMode(desktop) {
+  if (desktop) return 'app'
+  const importMeta = /** @type {{ env?: { DEV?: unknown } } | undefined} */ (import.meta)
+  return importMeta?.env?.DEV ? 'dev' : 'docker'
+}
+
+/**
+ * @param {RuntimeMode} mode
+ * @param {boolean} desktop
+ * @returns {AppClientMode}
+ */
+function resolveAppClientMode(mode, desktop) {
+  if (!desktop) return null
+  return mode === 'embedded' ? 'thick' : 'thin'
+}
+
+/**
  * @param {Record<string, unknown> | null | undefined} payload
  * @param {string} camelKey
  * @param {string} snakeKey
@@ -60,9 +92,13 @@ function readProfileField(payload, camelKey, snakeKey) {
  */
 function applyRuntimeProfile(nextProfile) {
   const payload = /** @type {Partial<RuntimeProfile> | null | undefined} */ (nextProfile)
+  const desktop = Boolean(readProfileField(payload, 'desktop', 'desktop'))
+  const mode = /** @type {RuntimeMode} */ (String(payload?.mode || 'web'))
   const normalized = {
-    desktop: Boolean(readProfileField(payload, 'desktop', 'desktop')),
-    mode: /** @type {RuntimeMode} */ (String(payload?.mode || 'web')),
+    desktop,
+    mode,
+    deploymentMode: resolveDeploymentMode(desktop),
+    appClientMode: resolveAppClientMode(mode, desktop),
     apiBaseUrl: normalizeBaseUrl(readProfileField(payload, 'apiBaseUrl', 'api_base_url')),
     remoteBaseUrl: normalizeBaseUrl(readProfileField(payload, 'remoteBaseUrl', 'remote_base_url')) || DEFAULT_REMOTE_BASE_URL,
     embeddedRunning: Boolean(readProfileField(payload, 'embeddedRunning', 'embedded_running')),

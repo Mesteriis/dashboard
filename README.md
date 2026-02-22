@@ -27,6 +27,8 @@ Desktop shell is implemented with Tauri and is intentionally scoped to M-chip Ma
 - `embedded`: backend runs as a local sidecar process inside the desktop app.
 - `remote`: desktop app uses an external backend URL (default `http://127.0.0.1:8090`).
 
+По умолчанию desktop стартует в `remote` (тонкий клиент). Переключение в `embedded` (толстый клиент) делается из `Настройки панели`.
+
 You can switch modes from `Настройки панели -> Desktop Runtime`.
 
 ### Prerequisites (for local desktop build)

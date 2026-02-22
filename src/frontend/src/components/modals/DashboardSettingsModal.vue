@@ -70,58 +70,99 @@
         </div>
       </section>
 
+      <section class="settings-modal-section settings-modal-section-wide">
+        <h4>Режим запуска проекта</h4>
+        <div class="settings-state-group">
+          <p class="settings-state-label">Deployment</p>
+          <div class="settings-state-switcher" role="radiogroup" aria-label="Режим запуска проекта">
+            <button
+              v-for="option in deploymentModeOptions"
+              :key="`deploy:${option.value}`"
+              class="settings-state-btn"
+              :class="{ active: deploymentModeDraft === option.value }"
+              type="button"
+              :disabled="option.value !== deploymentModeDraft"
+              :aria-pressed="deploymentModeDraft === option.value"
+            >
+              {{ option.label }}
+            </button>
+          </div>
+          <p class="settings-state-hint">Режим определяется средой запуска и доступен для чтения.</p>
+        </div>
+
+        <template v-if="deploymentModeDraft === 'app'">
+          <div class="settings-state-group">
+            <p class="settings-state-label">Режим клиента</p>
+            <div class="settings-state-switcher" role="radiogroup" aria-label="Режим клиента приложения">
+              <button
+                v-for="option in appClientModeOptions"
+                :key="`app-client:${option.value}`"
+                class="settings-state-btn"
+                :class="{ active: appClientModeDraft === option.value }"
+                type="button"
+                :disabled="runtimeApplying"
+                :aria-pressed="appClientModeDraft === option.value"
+                @click="appClientModeDraft = option.value"
+              >
+                {{ option.label }}
+              </button>
+            </div>
+            <p class="settings-state-hint">{{ runtimeStatusHint }}</p>
+          </div>
+
+          <div class="settings-state-group">
+            <p class="settings-state-label">Remote URL</p>
+            <input
+              v-model.trim="remoteBaseUrlDraft"
+              class="settings-runtime-input"
+              type="text"
+              autocomplete="off"
+              spellcheck="false"
+              placeholder="http://127.0.0.1:8090"
+              :disabled="runtimeApplying || appClientModeDraft !== 'thin'"
+            />
+          </div>
+
+          <div class="settings-runtime-actions">
+            <button class="settings-nav-action" type="button" :disabled="runtimeApplying || !runtimeChanged" @click="applyRuntimeMode">
+              <span class="settings-nav-action-main">
+                <Play class="ui-icon settings-nav-action-icon" />
+                <span>{{ runtimeApplying ? 'Применяем...' : 'Применить режим клиента' }}</span>
+              </span>
+              <ChevronRight class="ui-icon settings-nav-action-caret" />
+            </button>
+          </div>
+
+          <p v-if="runtimeError" class="settings-state-hint settings-state-error">{{ runtimeError }}</p>
+        </template>
+      </section>
+
       <section v-if="desktopRuntime.desktop" class="settings-modal-section settings-modal-section-wide">
         <h4>Desktop Runtime (macOS Apple Silicon)</h4>
         <div class="settings-state-group">
-          <p class="settings-state-label">Режим backend</p>
-          <div class="settings-state-switcher" role="radiogroup" aria-label="Режим backend">
+          <p class="settings-state-label">Текущий backend</p>
+          <div class="settings-state-switcher">
             <button
               class="settings-state-btn"
-              :class="{ active: desktopRuntimeModeDraft === 'embedded' }"
+              :class="{ active: desktopRuntime.mode === 'embedded' }"
               type="button"
-              :disabled="runtimeApplying"
-              :aria-pressed="desktopRuntimeModeDraft === 'embedded'"
-              @click="desktopRuntimeModeDraft = 'embedded'"
+              disabled
             >
-              Embedded (inside app)
+              Embedded
             </button>
             <button
               class="settings-state-btn"
-              :class="{ active: desktopRuntimeModeDraft === 'remote' }"
+              :class="{ active: desktopRuntime.mode === 'remote' }"
               type="button"
-              :disabled="runtimeApplying"
-              :aria-pressed="desktopRuntimeModeDraft === 'remote'"
-              @click="desktopRuntimeModeDraft = 'remote'"
+              disabled
             >
-              Remote (external server)
+              Remote
             </button>
           </div>
+          <p class="settings-state-hint">
+            {{ desktopRuntime.embeddedRunning ? 'Локальный backend запущен.' : 'Локальный backend остановлен.' }}
+          </p>
         </div>
-
-        <div class="settings-state-group">
-          <p class="settings-state-label">Remote URL</p>
-          <input
-            v-model.trim="remoteBaseUrlDraft"
-            class="settings-runtime-input"
-            type="text"
-            autocomplete="off"
-            spellcheck="false"
-            placeholder="http://127.0.0.1:8090"
-            :disabled="runtimeApplying || desktopRuntimeModeDraft !== 'remote'"
-          />
-        </div>
-
-        <div class="settings-runtime-actions">
-          <button class="settings-nav-action" type="button" :disabled="runtimeApplying || !runtimeChanged" @click="applyRuntimeMode">
-            <span class="settings-nav-action-main">
-              <Play class="ui-icon settings-nav-action-icon" />
-              <span>{{ runtimeApplying ? 'Применяем...' : 'Применить runtime' }}</span>
-            </span>
-            <ChevronRight class="ui-icon settings-nav-action-caret" />
-          </button>
-        </div>
-
-        <p v-if="runtimeError" class="settings-state-hint settings-state-error">{{ runtimeError }}</p>
       </section>
 
       <section class="settings-modal-section">
@@ -202,7 +243,8 @@ const {
 } = dashboard
 
 const desktopRuntime = ref(getRuntimeProfile())
-const desktopRuntimeModeDraft = ref(desktopRuntime.value.mode === 'web' ? 'embedded' : desktopRuntime.value.mode)
+const deploymentModeDraft = ref(desktopRuntime.value.deploymentMode || 'docker')
+const appClientModeDraft = ref(desktopRuntime.value.appClientMode || 'thin')
 const remoteBaseUrlDraft = ref(desktopRuntime.value.remoteBaseUrl || 'http://127.0.0.1:8090')
 const runtimeApplying = ref(false)
 const runtimeError = ref('')
@@ -210,18 +252,47 @@ const backupBusy = ref(false)
 const restoreBusy = ref(false)
 const backupError = ref('')
 const backupSuccess = ref('')
+const deploymentModeOptions = [
+  { value: 'docker', label: 'Docker' },
+  { value: 'dev', label: 'Dev (Vite + backend)' },
+  { value: 'app', label: 'App' },
+]
+const appClientModeOptions = [
+  { value: 'thin', label: 'Тонкий клиент' },
+  { value: 'thick', label: 'Толстый клиент' },
+]
+
+const desktopRuntimeModeDraft = computed(() => (appClientModeDraft.value === 'thick' ? 'embedded' : 'remote'))
+const runtimeStatusHint = computed(() => {
+  if (deploymentModeDraft.value !== 'app') {
+    return 'Для web-режимов backend управляется внешним окружением.'
+  }
+  if (appClientModeDraft.value === 'thick') {
+    return desktopRuntime.value.embeddedRunning
+      ? 'Локальный backend уже запущен.'
+      : 'Локальный backend будет запущен после применения.'
+  }
+  return desktopRuntime.value.embeddedRunning
+    ? 'После применения локальный backend будет остановлен.'
+    : 'Локальный backend отключен.'
+})
 
 const runtimeChanged = computed(() => {
-  if (!desktopRuntime.value.desktop) return false
+  if (deploymentModeDraft.value !== 'app' || !desktopRuntime.value.desktop) return false
   const normalizedDraftUrl = String(remoteBaseUrlDraft.value || '').trim()
+  const runtimeModeChanged = desktopRuntimeModeDraft.value !== desktopRuntime.value.mode
+  if (desktopRuntimeModeDraft.value !== 'remote') {
+    return runtimeModeChanged
+  }
   return (
-    desktopRuntimeModeDraft.value !== desktopRuntime.value.mode ||
+    runtimeModeChanged ||
     normalizedDraftUrl !== String(desktopRuntime.value.remoteBaseUrl || '').trim()
   )
 })
 
 function normalizeRuntimeDraft() {
-  desktopRuntimeModeDraft.value = desktopRuntime.value.mode === 'web' ? 'embedded' : desktopRuntime.value.mode
+  deploymentModeDraft.value = desktopRuntime.value.deploymentMode || (desktopRuntime.value.desktop ? 'app' : 'docker')
+  appClientModeDraft.value = desktopRuntime.value.appClientMode || (desktopRuntime.value.mode === 'embedded' ? 'thick' : 'thin')
   remoteBaseUrlDraft.value = desktopRuntime.value.remoteBaseUrl || 'http://127.0.0.1:8090'
 }
 
@@ -236,7 +307,7 @@ function openSearchFromSettings() {
 }
 
 async function applyRuntimeMode() {
-  if (!desktopRuntime.value.desktop || !runtimeChanged.value || runtimeApplying.value) return
+  if (!desktopRuntime.value.desktop || deploymentModeDraft.value !== 'app' || !runtimeChanged.value || runtimeApplying.value) return
   runtimeApplying.value = true
   runtimeError.value = ''
 
