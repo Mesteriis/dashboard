@@ -17,11 +17,29 @@
     </button>
 
     <Transition name="hero-dropdown-menu-transition">
-      <ul v-if="open" class="hero-dropdown-menu" role="listbox" :aria-label="ariaLabel || label">
-        <li v-for="option in options" :key="option.value" role="option" :aria-selected="modelValue === option.value">
-          <button class="hero-dropdown-option" :class="{ active: modelValue === option.value }" type="button" @click="selectOption(option.value)">
+      <ul
+        v-if="open"
+        class="hero-dropdown-menu"
+        role="listbox"
+        :aria-label="ariaLabel || label"
+      >
+        <li
+          v-for="option in options"
+          :key="option.value"
+          role="option"
+          :aria-selected="modelValue === option.value"
+        >
+          <button
+            class="hero-dropdown-option"
+            :class="{ active: modelValue === option.value }"
+            type="button"
+            @click="selectOption(option.value)"
+          >
             <span>{{ option.label }}</span>
-            <Check v-if="modelValue === option.value" class="ui-icon hero-dropdown-check" />
+            <Check
+              v-if="modelValue === option.value"
+              class="ui-icon hero-dropdown-check"
+            />
           </button>
         </li>
       </ul>
@@ -30,21 +48,21 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
-import { Check, ChevronDown } from 'lucide-vue-next'
+import { computed, onBeforeUnmount, onMounted, ref } from "vue";
+import { Check, ChevronDown } from "lucide-vue-next";
 
 const props = defineProps({
   modelValue: {
     type: String,
-    default: '',
+    default: "",
   },
   label: {
     type: String,
-    default: '',
+    default: "",
   },
   ariaLabel: {
     type: String,
-    default: '',
+    default: "",
   },
   options: {
     type: Array,
@@ -54,49 +72,51 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
-})
+});
 
-const emit = defineEmits(['update:modelValue'])
+const emit = defineEmits(["update:modelValue"]);
 
-const open = ref(false)
-const rootRef = ref(null)
+const open = ref(false);
+const rootRef = ref(null);
 
 const selectedLabel = computed(() => {
-  const selected = props.options.find((option) => option.value === props.modelValue)
-  if (selected) return selected.label
-  return props.options[0]?.label || ''
-})
+  const selected = props.options.find(
+    (option) => option.value === props.modelValue,
+  );
+  if (selected) return selected.label;
+  return props.options[0]?.label || "";
+});
 
 function toggleOpen() {
-  if (props.disabled) return
-  open.value = !open.value
+  if (props.disabled) return;
+  open.value = !open.value;
 }
 
 function selectOption(value) {
-  emit('update:modelValue', value)
-  open.value = false
+  emit("update:modelValue", value);
+  open.value = false;
 }
 
 function handleOutsidePointer(event) {
-  if (!open.value) return
+  if (!open.value) return;
   if (rootRef.value && !rootRef.value.contains(event.target)) {
-    open.value = false
+    open.value = false;
   }
 }
 
 function handleKeydown(event) {
-  if (event.key === 'Escape') {
-    open.value = false
+  if (event.key === "Escape") {
+    open.value = false;
   }
 }
 
 onMounted(() => {
-  window.addEventListener('pointerdown', handleOutsidePointer)
-  window.addEventListener('keydown', handleKeydown)
-})
+  window.addEventListener("pointerdown", handleOutsidePointer);
+  window.addEventListener("keydown", handleKeydown);
+});
 
 onBeforeUnmount(() => {
-  window.removeEventListener('pointerdown', handleOutsidePointer)
-  window.removeEventListener('keydown', handleKeydown)
-})
+  window.removeEventListener("pointerdown", handleOutsidePointer);
+  window.removeEventListener("keydown", handleKeydown);
+});
 </script>

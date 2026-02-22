@@ -15,7 +15,10 @@
   overflow: hidden;
   transform: translateY(10px);
   pointer-events: none;
-  transition: max-height 320ms ease, opacity 220ms ease, transform 320ms ease;
+  transition:
+    max-height 320ms ease,
+    opacity 220ms ease,
+    transform 320ms ease;
 }
 
 .sidebar-stats-panel.open {
@@ -35,10 +38,17 @@
   border: 1px solid var(--border);
   border-radius: 14px;
   padding: 12px;
-  background: linear-gradient(152deg, rgba(15, 33, 48, 0.62), rgba(8, 19, 30, 0.76));
+  background: linear-gradient(
+    152deg,
+    rgba(15, 33, 48, 0.62),
+    rgba(8, 19, 30, 0.76)
+  );
   display: grid;
   gap: 8px;
-  transition: border-color 160ms ease, transform 160ms ease, background 160ms ease;
+  transition:
+    border-color 160ms ease,
+    transform 160ms ease,
+    background 160ms ease;
 }
 
 .sidebar-indicator.interactive {
@@ -52,7 +62,11 @@
 
 .sidebar-indicator.active {
   border-color: rgba(106, 244, 220, 0.62);
-  background: linear-gradient(154deg, rgba(20, 80, 82, 0.38), rgba(10, 23, 36, 0.78));
+  background: linear-gradient(
+    154deg,
+    rgba(20, 80, 82, 0.38),
+    rgba(10, 23, 36, 0.78)
+  );
   box-shadow: 0 10px 24px rgba(0, 165, 147, 0.14);
 }
 

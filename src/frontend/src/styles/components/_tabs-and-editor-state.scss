@@ -1,4 +1,3 @@
-
 .editor-status.saving {
   color: #d8f5ff;
 }
@@ -36,7 +35,11 @@
 .tab-btn {
   border: 1px solid transparent;
   border-radius: 14px;
-  background: linear-gradient(145deg, rgba(11, 22, 34, 0.9), rgba(8, 16, 27, 0.85));
+  background: linear-gradient(
+    145deg,
+    rgba(11, 22, 34, 0.9),
+    rgba(8, 16, 27, 0.85)
+  );
   color: var(--text);
   height: var(--tab-tile-size);
   min-width: var(--tab-tile-size);
@@ -89,7 +92,11 @@
   justify-content: flex-start;
   padding: 0 14px;
   border-color: rgba(96, 247, 223, 0.64);
-  background: linear-gradient(138deg, rgba(12, 79, 81, 0.62), rgba(9, 19, 30, 0.92));
+  background: linear-gradient(
+    138deg,
+    rgba(12, 79, 81, 0.62),
+    rgba(9, 19, 30, 0.92)
+  );
   box-shadow:
     0 12px 30px rgba(0, 171, 153, 0.26),
     inset 0 1px 0 rgba(255, 255, 255, 0.1);

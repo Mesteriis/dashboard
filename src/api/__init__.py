@@ -1,3 +1,3 @@
-from api.v1.dashboard import dashboard_router
+from .v1 import v1_router
 
-__all__ = ["dashboard_router"]
+__all__ = ["v1_router"]

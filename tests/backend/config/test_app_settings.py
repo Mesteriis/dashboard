@@ -24,14 +24,14 @@ def test_load_app_settings_raises_for_invalid_float(monkeypatch: pytest.MonkeyPa
 def test_load_app_settings_uses_explicit_proxy_secret(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     monkeypatch.setenv("DASHBOARD_PROXY_TOKEN_SECRET", "proxy-secret")
     app_settings = load_app_settings(base_dir=tmp_path.resolve())
-    assert app_settings.proxy_token_secret == "proxy-secret"
+    assert app_settings.proxy_token_secret == "proxy-secret"  # pragma: allowlist secret
 
 
 def test_load_app_settings_generates_proxy_secret_when_missing(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     monkeypatch.delenv("DASHBOARD_PROXY_TOKEN_SECRET", raising=False)
     monkeypatch.setattr(settings_module.secrets, "token_urlsafe", lambda _: "generated-secret")
     app_settings = load_app_settings(base_dir=tmp_path.resolve())
-    assert app_settings.proxy_token_secret == "generated-secret"
+    assert app_settings.proxy_token_secret == "generated-secret"  # pragma: allowlist secret
 
 
 def test_load_app_settings_applies_env_and_minimums(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:

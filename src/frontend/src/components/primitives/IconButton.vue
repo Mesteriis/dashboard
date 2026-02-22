@@ -24,21 +24,21 @@ defineProps({
   },
   type: {
     type: String,
-    default: 'button',
+    default: "button",
   },
   title: {
     type: String,
-    default: '',
+    default: "",
   },
   ariaLabel: {
     type: String,
-    default: '',
+    default: "",
   },
   buttonClass: {
     type: String,
-    default: '',
+    default: "",
   },
-})
+});
 
-defineEmits(['click'])
+defineEmits(["click"]);
 </script>

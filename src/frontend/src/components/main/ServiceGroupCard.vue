@@ -1,5 +1,8 @@
 <template>
-  <article class="panel group-panel" :class="{ 'group-panel-inline': isInlineGroupLayout(group) }">
+  <article
+    class="panel group-panel"
+    :class="{ 'group-panel-inline': isInlineGroupLayout(group) }"
+  >
     <header class="group-header">
       <div class="group-title-row">
         <component :is="resolveGroupIcon(group)" class="ui-icon group-icon" />
@@ -8,9 +11,16 @@
       <p v-if="group.description" class="subtitle">{{ group.description }}</p>
     </header>
 
-    <section v-for="subgroup in group.subgroups" :key="subgroup.id" class="subgroup">
+    <section
+      v-for="subgroup in group.subgroups"
+      :key="subgroup.id"
+      class="subgroup"
+    >
       <h3 class="subgroup-title">
-        <component :is="resolveSubgroupIcon(subgroup)" class="ui-icon subgroup-icon" />
+        <component
+          :is="resolveSubgroupIcon(subgroup)"
+          class="ui-icon subgroup-icon"
+        />
         <span>{{ subgroup.title }}</span>
       </h3>
 
@@ -24,16 +34,17 @@
 </template>
 
 <script setup>
-import VirtualizedItemGrid from './VirtualizedItemGrid.vue'
-import { useDashboardStore } from '../../stores/dashboardStore.js'
+import VirtualizedItemGrid from "./VirtualizedItemGrid.vue";
+import { useDashboardStore } from "../../stores/dashboardStore.js";
 
 defineProps({
   group: {
     type: Object,
     required: true,
   },
-})
+});
 
-const dashboard = useDashboardStore()
-const { isInlineGroupLayout, resolveGroupIcon, resolveSubgroupIcon } = dashboard
+const dashboard = useDashboardStore();
+const { isInlineGroupLayout, resolveGroupIcon, resolveSubgroupIcon } =
+  dashboard;
 </script>

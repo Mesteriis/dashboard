@@ -7,11 +7,17 @@
   >
     <header class="iframe-modal-header">
       <h3>{{ iframeModal.title }}</h3>
-      <button class="ghost" type="button" @click="closeIframeModal">Закрыть</button>
+      <button class="ghost" type="button" @click="closeIframeModal">
+        Закрыть
+      </button>
     </header>
 
-    <p v-if="iframeModal.loading" class="subtitle iframe-modal-status">Подготовка iframe...</p>
-    <p v-else-if="iframeModal.error" class="widget-error iframe-modal-status">{{ iframeModal.error }}</p>
+    <p v-if="iframeModal.loading" class="subtitle iframe-modal-status">
+      Подготовка iframe...
+    </p>
+    <p v-else-if="iframeModal.error" class="widget-error iframe-modal-status">
+      {{ iframeModal.error }}
+    </p>
     <iframe
       v-else
       class="iframe-view"
@@ -24,9 +30,9 @@
 </template>
 
 <script setup>
-import BaseModal from '../primitives/BaseModal.vue'
-import { useDashboardStore } from '../../stores/dashboardStore.js'
+import BaseModal from "../primitives/BaseModal.vue";
+import { useDashboardStore } from "../../stores/dashboardStore.js";
 
-const dashboard = useDashboardStore()
-const { iframeModal, closeIframeModal } = dashboard
+const dashboard = useDashboardStore();
+const { iframeModal, closeIframeModal } = dashboard;
 </script>

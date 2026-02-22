@@ -1,6 +1,10 @@
 .sidebar-icon-btn.active {
   border-color: rgba(98, 246, 223, 0.66);
-  background: linear-gradient(148deg, rgba(15, 80, 81, 0.58), rgba(10, 22, 34, 0.92));
+  background: linear-gradient(
+    148deg,
+    rgba(15, 80, 81, 0.58),
+    rgba(10, 22, 34, 0.92)
+  );
   box-shadow: 0 9px 24px rgba(2, 156, 139, 0.18);
 }
 
@@ -38,7 +42,11 @@
 .sidebar-tree {
   border: 1px solid rgba(109, 170, 192, 0.24);
   border-radius: 16px;
-  background: linear-gradient(164deg, rgba(8, 22, 33, 0.72), rgba(6, 14, 23, 0.66));
+  background: linear-gradient(
+    164deg,
+    rgba(8, 22, 33, 0.72),
+    rgba(6, 14, 23, 0.66)
+  );
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.04),
     0 14px 32px rgba(1, 10, 18, 0.3);
@@ -92,5 +100,7 @@
   font-size: 0.8rem;
   padding: 8px 10px;
   outline: none;
-  transition: border-color 160ms ease, box-shadow 160ms ease;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease;
 }

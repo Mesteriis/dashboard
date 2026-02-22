@@ -1,4 +1,4 @@
-@use '../abstracts/breakpoints' as bp;
+@use "../abstracts/breakpoints" as bp;
 
 @include bp.prefers-reduced-motion {
   .center-emblem {
@@ -46,65 +46,65 @@
   }
 }
 
-html[data-fx-mode='lite'] {
+html[data-fx-mode="lite"] {
   --glow-enabled: 0.58;
 }
 
-html[data-fx-mode='off'] {
+html[data-fx-mode="off"] {
   --glow-enabled: 0;
 }
 
-html[data-fx-mode='lite'] .shell::after,
-html[data-fx-mode='lite'] .center-emblem,
-html[data-fx-mode='lite'] .item-card .health-dot.ok,
-html[data-fx-mode='lite'] .item-card .health-dot.degraded {
+html[data-fx-mode="lite"] .shell::after,
+html[data-fx-mode="lite"] .center-emblem,
+html[data-fx-mode="lite"] .item-card .health-dot.ok,
+html[data-fx-mode="lite"] .item-card .health-dot.degraded {
   animation: none !important;
 }
 
-html[data-fx-mode='lite'] .panel,
-html[data-fx-mode='lite'] .sidebar {
+html[data-fx-mode="lite"] .panel,
+html[data-fx-mode="lite"] .sidebar {
   backdrop-filter: blur(9px) saturate(116%);
 }
 
-html[data-fx-mode='off'] .shell::after,
-html[data-fx-mode='off'] .center-emblem,
-html[data-fx-mode='off'] .item-card::before,
-html[data-fx-mode='off'] .item-card::after,
-html[data-fx-mode='off'] .health-dot,
-html[data-fx-mode='off'] .hero-panel-particles,
-html[data-fx-mode='off'] .sidebar-particles {
+html[data-fx-mode="off"] .shell::after,
+html[data-fx-mode="off"] .center-emblem,
+html[data-fx-mode="off"] .item-card::before,
+html[data-fx-mode="off"] .item-card::after,
+html[data-fx-mode="off"] .health-dot,
+html[data-fx-mode="off"] .hero-panel-particles,
+html[data-fx-mode="off"] .sidebar-particles {
   animation: none !important;
 }
 
-html[data-fx-mode='off'] .panel,
-html[data-fx-mode='off'] .sidebar,
-html[data-fx-mode='off'] .iframe-modal-backdrop,
-html[data-fx-mode='off'] .editor-modal-backdrop,
-html[data-fx-mode='off'] .lan-host-modal-backdrop,
-html[data-fx-mode='off'] .settings-modal-backdrop,
-html[data-fx-mode='off'] .command-palette-backdrop {
+html[data-fx-mode="off"] .panel,
+html[data-fx-mode="off"] .sidebar,
+html[data-fx-mode="off"] .iframe-modal-backdrop,
+html[data-fx-mode="off"] .editor-modal-backdrop,
+html[data-fx-mode="off"] .lan-host-modal-backdrop,
+html[data-fx-mode="off"] .settings-modal-backdrop,
+html[data-fx-mode="off"] .command-palette-backdrop {
   backdrop-filter: none !important;
 }
 
-html[data-motion-budget='medium'] .item-card .health-dot.ok,
-html[data-motion-budget='medium'] .item-card .health-dot.degraded,
-html[data-motion-budget='medium'] .item-card.data-updated::before {
+html[data-motion-budget="medium"] .item-card .health-dot.ok,
+html[data-motion-budget="medium"] .item-card .health-dot.degraded,
+html[data-motion-budget="medium"] .item-card.data-updated::before {
   animation: none !important;
 }
 
-html[data-motion-budget='medium'] .item-card {
+html[data-motion-budget="medium"] .item-card {
   transition-duration: 120ms !important;
 }
 
-html[data-motion-budget='low'] .item-card::before,
-html[data-motion-budget='low'] .item-card::after,
-html[data-motion-budget='low'] .item-card .health-dot,
-html[data-motion-budget='low'] .shell::after,
-html[data-motion-budget='low'] .center-emblem {
+html[data-motion-budget="low"] .item-card::before,
+html[data-motion-budget="low"] .item-card::after,
+html[data-motion-budget="low"] .item-card .health-dot,
+html[data-motion-budget="low"] .shell::after,
+html[data-motion-budget="low"] .center-emblem {
   animation: none !important;
 }
 
-html[data-motion-budget='low'] .item-card {
+html[data-motion-budget="low"] .item-card {
   transform: none !important;
   transition-duration: 90ms !important;
 }

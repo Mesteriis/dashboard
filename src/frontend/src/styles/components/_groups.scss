@@ -1,4 +1,3 @@
-
 .group-title-row {
   display: flex;
   align-items: center;
@@ -22,7 +21,10 @@
   min-width: 0;
   content-visibility: auto;
   contain-intrinsic-size: 320px;
-  transition: border-color 240ms ease, box-shadow 240ms ease, background-color 240ms ease;
+  transition:
+    border-color 240ms ease,
+    box-shadow 240ms ease,
+    background-color 240ms ease;
 }
 
 .subgroup:hover {
@@ -69,7 +71,11 @@
 .item-card {
   border: 1px solid rgba(138, 175, 194, 0.2);
   border-radius: calc(var(--card-radius) - 6px);
-  background: linear-gradient(156deg, rgba(15, 30, 44, 0.58), rgba(7, 17, 28, 0.86));
+  background: linear-gradient(
+    156deg,
+    rgba(15, 30, 44, 0.58),
+    rgba(7, 17, 28, 0.86)
+  );
   padding: 12px;
   display: grid;
   gap: 9px;
@@ -90,7 +96,7 @@
 
 .item-card::before,
 .item-card::after {
-  content: '';
+  content: "";
   position: absolute;
   inset: 0;
   border-radius: inherit;
@@ -99,8 +105,17 @@
 
 .item-card::before {
   background:
-    linear-gradient(170deg, rgba(211, 238, 255, 0.13), rgba(211, 238, 255, 0) 46%),
-    linear-gradient(103deg, rgba(176, 252, 241, 0), rgba(176, 252, 241, 0.2) 50%, rgba(176, 252, 241, 0));
+    linear-gradient(
+      170deg,
+      rgba(211, 238, 255, 0.13),
+      rgba(211, 238, 255, 0) 46%
+    ),
+    linear-gradient(
+      103deg,
+      rgba(176, 252, 241, 0),
+      rgba(176, 252, 241, 0.2) 50%,
+      rgba(176, 252, 241, 0)
+    );
   background-size:
     100% 100%,
     220% 100%;
@@ -115,8 +130,16 @@
 .item-card::after {
   inset: -1px;
   background:
-    radial-gradient(circle at 12% 4%, rgba(110, 242, 220, 0.28), rgba(110, 242, 220, 0) 42%),
-    radial-gradient(circle at 85% 96%, rgba(110, 208, 242, 0.22), rgba(110, 208, 242, 0) 50%);
+    radial-gradient(
+      circle at 12% 4%,
+      rgba(110, 242, 220, 0.28),
+      rgba(110, 242, 220, 0) 42%
+    ),
+    radial-gradient(
+      circle at 85% 96%,
+      rgba(110, 208, 242, 0.22),
+      rgba(110, 208, 242, 0) 50%
+    );
   opacity: 0;
   transition: opacity 900ms ease;
   z-index: 0;
@@ -234,14 +257,14 @@
   }
 }
 
-.block-wrap[data-offscreen='1'] .item-card::before,
-.block-wrap[data-offscreen='1'] .item-card::after,
-.block-wrap[data-offscreen='1'] .item-card .health-dot.ok,
-.block-wrap[data-offscreen='1'] .item-card .health-dot.degraded,
-.block-wrap[data-offscreen='1'] .item-card .health-dot.down {
+.block-wrap[data-offscreen="1"] .item-card::before,
+.block-wrap[data-offscreen="1"] .item-card::after,
+.block-wrap[data-offscreen="1"] .item-card .health-dot.ok,
+.block-wrap[data-offscreen="1"] .item-card .health-dot.degraded,
+.block-wrap[data-offscreen="1"] .item-card .health-dot.down {
   animation: none !important;
 }
 
-.block-wrap[data-offscreen='1'] .item-card::after {
+.block-wrap[data-offscreen="1"] .item-card::after {
   opacity: 0 !important;
 }

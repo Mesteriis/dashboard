@@ -7,6 +7,8 @@ import json
 from datetime import UTC, datetime, timedelta
 from time import perf_counter
 
+import structlog
+
 from db.repositories import LanScanSnapshotRepository
 from scheme.dashboard import LanScanHost, LanScanResult, LanScanStateResponse
 from service.config_service import DashboardConfigService
@@ -25,6 +27,8 @@ from .clients import (
 )
 from .parsers import detect_device_type, mac_vendor
 from .settings import LanScanSettings
+
+logger = structlog.get_logger()
 
 
 def _utc_now() -> datetime:
@@ -105,6 +109,10 @@ class LanScanService:
     async def _periodic_runner(self) -> None:
         interval = max(30, self._settings.interval_sec)
         next_tick = _utc_now() + timedelta(seconds=interval)
+        await logger.ainfo(
+            "lan_scan_scheduler_started",
+            interval_sec=interval,
+        )
         while True:
             self._next_run_at = next_tick
             sleep_for = max((next_tick - _utc_now()).total_seconds(), 0.2)
@@ -119,6 +127,12 @@ class LanScanService:
         self._last_started_at = started
         self._last_error = None
 
+        await logger.ainfo(
+            "lan_scan_started",
+            cidrs=self._settings.cidrs,
+            ports=self._settings.ports,
+        )
+
         try:
             networks = resolve_networks(self._settings.cidrs or detect_default_cidrs())
             host_ips = enumerate_hosts(networks, max_hosts=self._settings.max_hosts)
@@ -129,7 +143,7 @@ class LanScanService:
 
             discovered_ips = sorted(
                 set(open_ports_map.keys()) | set(dashboard_map.keys()),
-                key=lambda raw: ipaddress.ip_address(raw),
+                key=ipaddress.ip_address,
             )
             hostnames = await resolve_hostnames_with_services(discovered_ips, http_services_map)
             macs = await asyncio.to_thread(resolve_mac_addresses, discovered_ips)
@@ -171,8 +185,20 @@ class LanScanService:
             self._last_result = result
             self._save_snapshot_to_db(result)
             save_result(self._settings.result_file, result)
+
+            await logger.ainfo(
+                "lan_scan_completed",
+                duration_ms=result.duration_ms,
+                scanned_hosts=len(hosts),
+                scanned_ports=result.scanned_ports,
+            )
         except Exception as exc:
             self._last_error = str(exc)
+            await logger.aerror(
+                "lan_scan_failed",
+                error=str(exc),
+                exc_info=True,
+            )
         finally:
             self._running = False
             self._last_finished_at = _utc_now()

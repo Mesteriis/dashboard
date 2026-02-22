@@ -63,7 +63,7 @@ class HealthSampleRepository:
         if not ids:
             return {}
 
-        limit = max(1, int(limit_per_item))
+        limit = max(1, limit_per_item)
         statement = (
             select(HealthSample)
             .where(HealthSample.item_id.in_(ids))
@@ -96,7 +96,7 @@ class HealthSampleRepository:
             values.reverse()
             by_item[item_id] = values
 
-        return dict(by_item)
+        return by_item.copy()
 
     def delete_samples_not_in_item_ids(self, item_ids: Iterable[str]) -> int:
         ids = sorted({item_id for item_id in item_ids if item_id})
@@ -119,7 +119,7 @@ class HealthSampleRepository:
         if not ids:
             return 0
 
-        limit = max(1, int(limit_per_item))
+        limit = max(1, limit_per_item)
         deleted_total = 0
         with self._session_factory() as session, session.begin():
             for item_id in ids:
@@ -138,6 +138,13 @@ class HealthSampleRepository:
                 deleted_total += int(result.rowcount or 0)
 
         return deleted_total
+
+    def delete_samples_older_than(self, cutoff: datetime) -> int:
+        """Delete all samples older than the specified cutoff datetime."""
+        statement = delete(HealthSample).where(HealthSample.ts < cutoff)
+        with self._session_factory() as session, session.begin():
+            result = cast(CursorResult[Any], session.execute(statement))
+            return int(result.rowcount or 0)
 
 
 def _as_utc(value: datetime) -> datetime:

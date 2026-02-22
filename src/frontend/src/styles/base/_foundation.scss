@@ -28,12 +28,20 @@ body,
 
 body {
   margin: 0;
-  font-family: 'Space Grotesk', 'Segoe UI', sans-serif;
+  font-family: "Space Grotesk", "Segoe UI", sans-serif;
   color: var(--text);
   background-color: var(--bg);
   background-image:
-    radial-gradient(circle at 62% -4%, rgba(46, 157, 168, 0.14), transparent 30%),
-    radial-gradient(circle at 18% 10%, rgba(26, 140, 131, 0.22), transparent 38%),
+    radial-gradient(
+      circle at 62% -4%,
+      rgba(46, 157, 168, 0.14),
+      transparent 30%
+    ),
+    radial-gradient(
+      circle at 18% 10%,
+      rgba(26, 140, 131, 0.22),
+      transparent 38%
+    ),
     radial-gradient(circle at 82% 84%, rgba(18, 96, 98, 0.2), transparent 42%),
     linear-gradient(168deg, #02060d 0%, #05131c 40%, #062118 74%, #030c14 100%);
 }
@@ -59,25 +67,42 @@ body {
 }
 
 .shell::before {
-  content: '';
+  content: "";
   position: absolute;
   inset: 0;
   z-index: 0;
   pointer-events: none;
   background:
-    linear-gradient(180deg, rgba(2, 6, 10, 0.44) 0%, rgba(2, 8, 14, 0.06) 44%, rgba(2, 7, 12, 0.5) 100%),
-    radial-gradient(circle at 50% -8%, rgba(127, 229, 216, 0.08), transparent 38%);
+    linear-gradient(
+      180deg,
+      rgba(2, 6, 10, 0.44) 0%,
+      rgba(2, 8, 14, 0.06) 44%,
+      rgba(2, 7, 12, 0.5) 100%
+    ),
+    radial-gradient(
+      circle at 50% -8%,
+      rgba(127, 229, 216, 0.08),
+      transparent 38%
+    );
 }
 
 .shell::after {
-  content: '';
+  content: "";
   position: absolute;
   inset: 0;
   z-index: 0;
   pointer-events: none;
   background:
-    radial-gradient(circle at 8% 18%, rgba(83, 236, 215, 0.08), transparent 36%),
-    radial-gradient(circle at 92% 82%, rgba(85, 172, 224, 0.08), transparent 34%),
+    radial-gradient(
+      circle at 8% 18%,
+      rgba(83, 236, 215, 0.08),
+      transparent 36%
+    ),
+    radial-gradient(
+      circle at 92% 82%,
+      rgba(85, 172, 224, 0.08),
+      transparent 34%
+    ),
     repeating-linear-gradient(
       0deg,
       rgba(213, 240, 255, 0.016) 0,
@@ -101,10 +126,10 @@ body {
   object-fit: contain;
   pointer-events: none;
   opacity: calc(0.11 * var(--glow-enabled));
-  filter:
-    drop-shadow(0 0 calc(42px * var(--glow-enabled)) rgba(55, 224, 199, 0.26))
-    saturate(1.12)
-    contrast(1.03);
+  filter: drop-shadow(
+      0 0 calc(42px * var(--glow-enabled)) rgba(55, 224, 199, 0.26)
+    )
+    saturate(1.12) contrast(1.03);
   mix-blend-mode: screen;
   animation: emblem-breathe 16s ease-in-out infinite;
 }

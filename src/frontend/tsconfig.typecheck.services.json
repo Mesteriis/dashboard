@@ -10,8 +10,5 @@
     "noEmit": true,
     "skipLibCheck": true
   },
-  "include": [
-    "src/services/**/*.js",
-    "src/services/**/*.d.ts"
-  ]
+  "include": ["src/services/**/*.js", "src/services/**/*.d.ts"]
 }

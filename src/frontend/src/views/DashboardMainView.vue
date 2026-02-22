@@ -2,7 +2,10 @@
   <main
     :key="activePage?.id || 'empty'"
     class="page"
-    :class="{ 'indicator-open': Boolean(activeIndicatorWidget), 'page--lan': isLanPage && !activeIndicatorWidget }"
+    :class="{
+      'indicator-open': Boolean(activeIndicatorWidget),
+      'page--lan': isLanPage && !activeIndicatorWidget,
+    }"
   >
     <section v-if="loadingConfig" class="panel status-panel">
       <h2>Загрузка конфигурации...</h2>
@@ -36,14 +39,25 @@
 </template>
 
 <script setup>
-import { defineAsyncComponent } from 'vue'
-import ServicesGroupsPanel from '../components/main/ServicesGroupsPanel.vue'
-import ServicesHeroPanel from '../components/main/ServicesHeroPanel.vue'
-import { useDashboardStore } from '../stores/dashboardStore.js'
+import { defineAsyncComponent } from "vue";
+import ServicesGroupsPanel from "../components/main/ServicesGroupsPanel.vue";
+import ServicesHeroPanel from "../components/main/ServicesHeroPanel.vue";
+import { useDashboardStore } from "../stores/dashboardStore.js";
 
-const IndicatorTabPanel = defineAsyncComponent(() => import('../components/main/IndicatorTabPanel.vue'))
-const LanPageView = defineAsyncComponent(() => import('../components/main/LanPageView.vue'))
+const IndicatorTabPanel = defineAsyncComponent(
+  () => import("../components/main/IndicatorTabPanel.vue"),
+);
+const LanPageView = defineAsyncComponent(
+  () => import("../components/main/LanPageView.vue"),
+);
 
-const dashboard = useDashboardStore()
-const { activePage, activeIndicatorWidget, loadingConfig, configError, isLanPage, loadConfig } = dashboard
+const dashboard = useDashboardStore();
+const {
+  activePage,
+  activeIndicatorWidget,
+  loadingConfig,
+  configError,
+  isLanPage,
+  loadConfig,
+} = dashboard;
 </script>

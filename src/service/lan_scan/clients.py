@@ -4,12 +4,12 @@ import asyncio
 import contextlib
 import ipaddress
 import json
-import os
 import re
 import socket
 import ssl
-import subprocess
+import subprocess  # nosec B404
 import tempfile
+from itertools import starmap
 from pathlib import Path
 from typing import Any, Literal
 from urllib.parse import urlsplit
@@ -82,7 +82,7 @@ async def scan_open_ports(host_ips: list[str], settings: LanScanSettings) -> dic
                     asyncio.open_connection(ip, port),
                     timeout=settings.connect_timeout_sec,
                 )
-            except (TimeoutError, OSError):
+            except TimeoutError, OSError:
                 return False
             writer.close()
             with contextlib.suppress(OSError):
@@ -196,7 +196,7 @@ async def probe_http_services(
             async with semaphore:
                 return ip, await _probe_http_port(client, ip=ip, port=port)
 
-        probed = await asyncio.gather(*[probe_target(ip, port) for ip, port in targets])
+        probed = await asyncio.gather(*list(starmap(probe_target, targets)))
 
     grouped: dict[str, list[LanHttpService]] = {}
     for ip, service in probed:
@@ -271,13 +271,7 @@ def _normalize_hostname(value: str, ip: str) -> str | None:
 
 
 def hostname_from_tls_services(ip: str, services: list[LanHttpService]) -> str | None:
-    ports = sorted(
-        {
-            entry.port
-            for entry in services
-            if entry.scheme == "https"
-        }
-    )
+    ports = sorted({entry.port for entry in services if entry.scheme == "https"})
     for port in ports:
         candidate = hostname_from_tls_certificate(ip, port)
         if candidate:
@@ -304,9 +298,9 @@ def hostname_from_tls_certificate(ip: str, port: int) -> str | None:
     except Exception:
         return None
     finally:
-        if cert_file_path and os.path.exists(cert_file_path):
+        if cert_file_path and Path(cert_file_path).exists():
             with contextlib.suppress(OSError):
-                os.unlink(cert_file_path)
+                Path(cert_file_path).unlink()
 
     for rdns in decoded.get("subject", ()):
         for key, value in rdns:
@@ -336,14 +330,14 @@ def read_arp_table() -> dict[str, str]:
 
     for command in commands:
         try:
-            completed = subprocess.run(
+            completed = subprocess.run(  # nosec B603
                 command,
                 capture_output=True,
                 text=True,
                 check=False,
                 timeout=3.0,
             )
-        except (FileNotFoundError, OSError, subprocess.SubprocessError):
+        except FileNotFoundError, OSError, subprocess.SubprocessError:
             continue
 
         output = completed.stdout or ""
@@ -418,9 +412,7 @@ def dashboard_services_by_ip(config_service: DashboardConfigService) -> dict[str
         ip = item_ip(item, resolve_cache)
         if ip is None:
             continue
-        mapping.setdefault(ip, []).append(
-            LanScanMappedService(id=item.id, title=item.title, url=item.url)
-        )
+        mapping.setdefault(ip, []).append(LanScanMappedService(id=item.id, title=item.title, url=item.url))
 
     for entries in mapping.values():
         entries.sort(key=lambda entry: entry.title.lower())

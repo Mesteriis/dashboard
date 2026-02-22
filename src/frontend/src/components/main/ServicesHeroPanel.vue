@@ -1,23 +1,46 @@
 <template>
   <section class="hero-layout">
     <header class="hero panel hero-title-panel">
-      <div id="hero-title-particles" class="hero-panel-particles" aria-hidden="true"></div>
+      <div
+        id="hero-title-particles"
+        class="hero-panel-particles"
+        aria-hidden="true"
+      ></div>
       <div class="hero-title-content">
         <HeroPageTabs />
       </div>
     </header>
 
-    <aside class="panel hero-control-panel service-hero-controls" :class="{ active: editMode }">
-      <div id="hero-controls-particles" class="hero-panel-particles" aria-hidden="true"></div>
+    <aside
+      class="panel hero-control-panel service-hero-controls"
+      :class="{ active: editMode }"
+    >
+      <div
+        id="hero-controls-particles"
+        class="hero-panel-particles"
+        aria-hidden="true"
+      ></div>
       <div class="hero-controls-content">
         <div class="hero-controls-accordion" :class="{ open: controlsOpen }">
           <Transition name="hero-controls-drawer-transition">
-            <div v-if="controlsOpen" id="hero-controls-drawer" class="hero-controls-drawer">
+            <div
+              v-if="controlsOpen"
+              id="hero-controls-drawer"
+              class="hero-controls-drawer"
+            >
               <IconButton
                 button-class="hero-icon-btn hero-accordion-action editor-toggle"
                 :active="editMode"
-                :title="editMode ? 'Выключить режим редактирования' : 'Включить режим редактирования'"
-                :aria-label="editMode ? 'Выключить режим редактирования' : 'Включить режим редактирования'"
+                :title="
+                  editMode
+                    ? 'Выключить режим редактирования'
+                    : 'Включить режим редактирования'
+                "
+                :aria-label="
+                  editMode
+                    ? 'Выключить режим редактирования'
+                    : 'Включить режим редактирования'
+                "
                 @click="toggleEditMode"
               >
                 <Pencil class="ui-icon hero-action-icon" />
@@ -79,30 +102,48 @@
             type="button"
             :aria-expanded="controlsOpen"
             aria-controls="hero-controls-drawer"
-            :title="controlsOpen ? 'Скрыть панель действий' : 'Показать панель действий'"
+            :title="
+              controlsOpen
+                ? 'Скрыть панель действий'
+                : 'Показать панель действий'
+            "
             @click="controlsOpen = !controlsOpen"
           >
             <Wrench class="ui-icon hero-action-icon" />
-            <ChevronLeft class="ui-icon hero-accordion-caret" :class="{ open: controlsOpen }" />
+            <ChevronLeft
+              class="ui-icon hero-accordion-caret"
+              :class="{ open: controlsOpen }"
+            />
           </button>
         </div>
 
-        <p v-if="editMode && saveError" class="editor-error hero-editor-error">{{ saveError }}</p>
+        <p v-if="editMode && saveError" class="editor-error hero-editor-error">
+          {{ saveError }}
+        </p>
       </div>
     </aside>
   </section>
 </template>
 
 <script setup>
-import { onMounted, ref, watch } from 'vue'
-import { ChevronLeft, Circle, FolderTree, Pencil, Plus, Search, SlidersHorizontal, Wrench } from 'lucide-vue-next'
-import HeroPageTabs from './HeroPageTabs.vue'
-import IconButton from '../primitives/IconButton.vue'
-import { useDashboardStore } from '../../stores/dashboardStore.js'
+import { onMounted, ref, watch } from "vue";
+import {
+  ChevronLeft,
+  Circle,
+  FolderTree,
+  Pencil,
+  Plus,
+  Search,
+  SlidersHorizontal,
+  Wrench,
+} from "lucide-vue-next";
+import HeroPageTabs from "./HeroPageTabs.vue";
+import IconButton from "../primitives/IconButton.vue";
+import { useDashboardStore } from "../../stores/dashboardStore.js";
 
-const dashboard = useDashboardStore()
-const HERO_CONTROLS_OPEN_STORAGE_KEY = 'oko:hero-controls-open:v1'
-const controlsOpen = ref(false)
+const dashboard = useDashboardStore();
+const HERO_CONTROLS_OPEN_STORAGE_KEY = "oko:hero-controls-open:v1";
+const controlsOpen = ref(false);
 
 const {
   editMode,
@@ -116,29 +157,29 @@ const {
   openCommandPalette,
   openSettingsPanel,
   toggleSidebarView,
-} = dashboard
+} = dashboard;
 
 function getLocalStorageSafe() {
   try {
-    return window.localStorage || null
+    return window.localStorage || null;
   } catch {
-    return null
+    return null;
   }
 }
 
 onMounted(() => {
-  const storage = getLocalStorageSafe()
-  if (!storage) return
-  const raw = storage.getItem(HERO_CONTROLS_OPEN_STORAGE_KEY)
-  controlsOpen.value = raw === '1'
-})
+  const storage = getLocalStorageSafe();
+  if (!storage) return;
+  const raw = storage.getItem(HERO_CONTROLS_OPEN_STORAGE_KEY);
+  controlsOpen.value = raw === "1";
+});
 
 watch(
   () => controlsOpen.value,
   (value) => {
-    const storage = getLocalStorageSafe()
-    if (!storage) return
-    storage.setItem(HERO_CONTROLS_OPEN_STORAGE_KEY, value ? '1' : '0')
-  }
-)
+    const storage = getLocalStorageSafe();
+    if (!storage) return;
+    storage.setItem(HERO_CONTROLS_OPEN_STORAGE_KEY, value ? "1" : "0");
+  },
+);
 </script>

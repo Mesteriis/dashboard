@@ -21,10 +21,12 @@ from scheme.dashboard import (
     BearerAuthProfile,
     ConfigVersion,
     DashboardConfig,
+    GroupBlock,
     IframeItemConfig,
     ItemConfig,
     QueryTokenAuthProfile,
     ValidationIssue,
+    WidgetBlock,
 )
 
 
@@ -68,7 +70,7 @@ class DashboardConfigService:
 
     @property
     def last_issues(self) -> list[ValidationIssue]:
-        return list(self._last_issues)
+        return self._last_issues.copy()
 
     def load(self, *, force: bool = False) -> DashboardConfig:
         try:
@@ -86,8 +88,10 @@ class DashboardConfigService:
 
     def get_version(self) -> ConfigVersion:
         self.load()
-        assert self._state is not None
-        return self._state.version
+        state = self._state
+        if state is None:
+            raise RuntimeError("Dashboard configuration state is not initialized")
+        return state.version
 
     def validate_yaml(self, yaml_text: str) -> tuple[DashboardConfig | None, list[ValidationIssue]]:
         try:
@@ -146,12 +150,7 @@ class DashboardConfigService:
 
     def list_items(self) -> list[ItemConfig]:
         config = self.load()
-        return [
-            item
-            for group in config.groups
-            for subgroup in group.subgroups
-            for item in subgroup.items
-        ]
+        return [item for group in config.groups for subgroup in group.subgroups for item in subgroup.items]
 
     def get_iframe_item(self, item_id: str) -> IframeItemConfig:
         item = self.get_item(item_id)
@@ -452,7 +451,7 @@ class DashboardConfigService:
         valid_group_refs = group_ids | subgroup_ids
         for page in config.layout.pages:
             for block in page.blocks:
-                if hasattr(block, "widgets"):
+                if isinstance(block, WidgetBlock):
                     for widget_id in block.widgets:
                         if widget_id not in widget_ids:
                             issues.append(
@@ -462,7 +461,7 @@ class DashboardConfigService:
                                     message=f"Unknown widget reference: {widget_id}",
                                 )
                             )
-                if hasattr(block, "group_ids"):
+                if isinstance(block, GroupBlock):
                     for group_id in block.group_ids:
                         if group_id not in valid_group_refs:
                             issues.append(

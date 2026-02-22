@@ -61,6 +61,8 @@ def test_detect_device_type_branches(
         hostname=hostname,
         vendor=vendor,
         open_ports=[LAN_SCAN_PORT_FACTORY.build(port=port, service="x") for port in ports],
-        dashboard_items=[LAN_SCAN_MAPPED_SERVICE_FACTORY.build(id="svc", title=hostname, url="http://192.168.1.2:8006/")],
+        dashboard_items=[
+            LAN_SCAN_MAPPED_SERVICE_FACTORY.build(id="svc", title=hostname, url="http://192.168.1.2:8006/")
+        ],
     )
     assert device_type == expected

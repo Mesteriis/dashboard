@@ -13,8 +13,9 @@ from httpx import ASGITransport, AsyncClient
 from sqlalchemy import select
 from support.factories import build_dashboard_config, dump_dashboard_yaml
 
-import api.v1.dashboard as dashboard_module
-from api.v1.dashboard import dashboard_router
+import depens.v1.health_runtime as dashboard_module
+from api.v1 import health as health_router_module
+from api.v1 import v1_router as dashboard_router
 from config.container import AppContainer
 from db.models import HealthSample
 from scheme.dashboard import DashboardConfig, ItemHealthStatus, LanScanStateResponse, LinkItemConfig, ValidationIssue
@@ -957,3 +958,233 @@ async def test_proxy_iframe_returns_502_when_upstream_errors(
     await api_client.get("/api/v1/dashboard/iframe/svc-iframe-protected/source")
     response = await api_client.get("/api/v1/dashboard/iframe/svc-iframe-protected/proxy")
     assert response.status_code == httpx.codes.BAD_GATEWAY
+
+
+async def test_get_dashboard_config_version_returns_422_when_service_validation_fails(
+    api_client: AsyncClient,
+    app_container: AppContainer,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def fail_get_version(*_: object, **__: object) -> object:
+        raise DashboardConfigValidationError(
+            [ValidationIssue(code="schema_error", path="$.version", message="invalid")]
+        )
+
+    monkeypatch.setattr(app_container.config_service, "get_version", fail_get_version)
+    response = await api_client.get("/api/v1/dashboard/version")
+    assert response.status_code == httpx.codes.UNPROCESSABLE_ENTITY
+
+
+async def test_get_dashboard_last_errors_returns_issues(api_client: AsyncClient) -> None:
+    response = await api_client.get("/api/v1/dashboard/errors")
+    assert response.status_code == httpx.codes.OK
+    assert isinstance(response.json()["issues"], list)
+
+
+async def test_validate_dashboard_yaml_returns_validation_payload(api_client: AsyncClient) -> None:
+    response = await api_client.post("/api/v1/dashboard/validate", json={"yaml": "version: 1\napp:\n  id: demo\n"})
+    assert response.status_code == httpx.codes.OK
+    assert "valid" in response.json()
+
+
+async def test_save_dashboard_config_returns_422_when_service_validation_fails(
+    api_client: AsyncClient,
+    app_container: AppContainer,
+    fake: Faker,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def fail_save(*_: object, **__: object) -> object:
+        raise DashboardConfigValidationError([ValidationIssue(code="schema_error", path="$.groups", message="invalid")])
+
+    monkeypatch.setattr(app_container.config_service, "save", fail_save)
+    payload = build_dashboard_config(fake).model_dump(mode="json", exclude_none=True)
+    response = await api_client.put("/api/v1/dashboard/config", json=payload)
+    assert response.status_code == httpx.codes.UNPROCESSABLE_ENTITY
+
+
+async def test_download_dashboard_config_backup_returns_422_when_service_validation_fails(
+    api_client: AsyncClient,
+    app_container: AppContainer,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def fail_export(*_: object, **__: object) -> object:
+        raise DashboardConfigValidationError([ValidationIssue(code="schema_error", path="$.app", message="invalid")])
+
+    monkeypatch.setattr(app_container.config_service, "export_yaml", fail_export)
+    response = await api_client.get("/api/v1/dashboard/config/backup")
+    assert response.status_code == httpx.codes.UNPROCESSABLE_ENTITY
+
+
+async def test_restore_dashboard_config_returns_422_when_service_validation_fails(
+    api_client: AsyncClient,
+    app_container: AppContainer,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def fail_import(*_: object, **__: object) -> object:
+        raise DashboardConfigValidationError(
+            [ValidationIssue(code="schema_error", path="$.app.title", message="invalid")]
+        )
+
+    monkeypatch.setattr(app_container.config_service, "import_yaml", fail_import)
+    response = await api_client.post("/api/v1/dashboard/config/restore", json={"yaml": "version: 1"})
+    assert response.status_code == httpx.codes.UNPROCESSABLE_ENTITY
+
+
+async def test_get_dashboard_health_returns_422_when_service_validation_fails(
+    api_client: AsyncClient,
+    app_container: AppContainer,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def fail_load(*_: object, **__: object) -> object:
+        raise DashboardConfigValidationError([ValidationIssue(code="schema_error", path="$.groups", message="invalid")])
+
+    monkeypatch.setattr(app_container.config_service, "load", fail_load)
+    response = await api_client.get("/api/v1/dashboard/health")
+    assert response.status_code == httpx.codes.UNPROCESSABLE_ENTITY
+
+
+async def test_dashboard_health_stream_returns_422_when_service_validation_fails(
+    api_client: AsyncClient,
+    app_container: AppContainer,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def fail_load(*_: object, **__: object) -> object:
+        raise DashboardConfigValidationError([ValidationIssue(code="schema_error", path="$.groups", message="invalid")])
+
+    monkeypatch.setattr(app_container.config_service, "load", fail_load)
+    response = await api_client.get("/api/v1/dashboard/health/stream?once=true")
+    assert response.status_code == httpx.codes.UNPROCESSABLE_ENTITY
+
+
+async def test_dashboard_health_stream_emits_keepalive_when_revision_does_not_change(
+    app_container: AppContainer,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    async def fake_probe_item_health(**kwargs: object) -> ItemHealthStatus:
+        item = kwargs["item"]
+        return ItemHealthStatus(
+            item_id=item.id,
+            ok=True,
+            checked_url=str(item.url),
+            status_code=200,
+            latency_ms=8,
+            error=None,
+            level="online",
+            reason="ok",
+            error_kind=None,
+        )
+
+    async def same_revision(*, revision: int, timeout_sec: float) -> int:
+        _ = timeout_sec
+        return revision
+
+    monkeypatch.setattr(dashboard_module, "probe_item_health", fake_probe_item_health)
+    monkeypatch.setattr(dashboard_module._HEALTH_RUNTIME, "wait_for_revision_after", same_revision)
+
+    class FakeRequest:
+        async def is_disconnected(self) -> bool:
+            return False
+
+    response = await health_router_module.stream_dashboard_health(
+        request=FakeRequest(),
+        config_service=app_container.config_service,
+        settings=app_container.settings,
+        health_sample_repository=app_container.health_sample_repository,
+        item_id=["svc-link"],
+        once=False,
+    )
+    iterator = response.body_iterator
+    initial_chunk = await anext(iterator)
+    keepalive_chunk = await anext(iterator)
+    await iterator.aclose()
+
+    initial_text = initial_chunk.decode() if isinstance(initial_chunk, bytes) else initial_chunk
+    keepalive_text = keepalive_chunk.decode() if isinstance(keepalive_chunk, bytes) else keepalive_chunk
+    assert "event: snapshot" in initial_text
+    assert ": keepalive" in keepalive_text
+
+
+async def test_dashboard_health_stream_refreshes_when_runtime_snapshot_is_missing(
+    app_container: AppContainer,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    async def fake_probe_item_health(**kwargs: object) -> ItemHealthStatus:
+        item = kwargs["item"]
+        return ItemHealthStatus(
+            item_id=item.id,
+            ok=True,
+            checked_url=str(item.url),
+            status_code=200,
+            latency_ms=8,
+            error=None,
+            level="online",
+            reason="ok",
+            error_kind=None,
+        )
+
+    async def increment_revision(*, revision: int, timeout_sec: float) -> int:
+        _ = timeout_sec
+        return revision + 1
+
+    snapshot_calls = 0
+    original_snapshot = dashboard_module._HEALTH_RUNTIME.snapshot
+
+    def snapshot_with_gap() -> object:
+        nonlocal snapshot_calls
+        snapshot_calls += 1
+        if snapshot_calls == 1:
+            return None
+        return original_snapshot()
+
+    monkeypatch.setattr(dashboard_module, "probe_item_health", fake_probe_item_health)
+    monkeypatch.setattr(dashboard_module._HEALTH_RUNTIME, "wait_for_revision_after", increment_revision)
+    monkeypatch.setattr(dashboard_module._HEALTH_RUNTIME, "snapshot", snapshot_with_gap)
+
+    class FakeRequest:
+        async def is_disconnected(self) -> bool:
+            return False
+
+    response = await health_router_module.stream_dashboard_health(
+        request=FakeRequest(),
+        config_service=app_container.config_service,
+        settings=app_container.settings,
+        health_sample_repository=app_container.health_sample_repository,
+        item_id=["svc-link"],
+        once=False,
+    )
+    iterator = response.body_iterator
+    first_chunk = await anext(iterator)
+    second_chunk = await anext(iterator)
+    await iterator.aclose()
+
+    first_text = first_chunk.decode() if isinstance(first_chunk, bytes) else first_chunk
+    second_text = second_chunk.decode() if isinstance(second_chunk, bytes) else second_chunk
+    assert "event: snapshot" in first_text
+    assert "event: snapshot" in second_text
+    assert snapshot_calls >= 1
+
+
+async def test_get_lan_scan_state_returns_current_state(api_client: AsyncClient) -> None:
+    response = await api_client.get("/api/v1/dashboard/lan/state")
+    assert response.status_code == httpx.codes.OK
+    assert "enabled" in response.json()
+
+
+async def test_run_lan_scan_returns_disabled_message(
+    api_client: AsyncClient,
+    app_container: AppContainer,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    async def disabled_trigger() -> bool:
+        return False
+
+    monkeypatch.setattr(app_container.lan_scan_service, "trigger_scan", disabled_trigger)
+    monkeypatch.setattr(
+        app_container.lan_scan_service,
+        "state",
+        lambda: LanScanStateResponse(enabled=False, running=False, queued=False),
+    )
+
+    response = await api_client.post("/api/v1/dashboard/lan/run")
+    assert response.status_code == httpx.codes.OK
+    assert response.json()["message"] == "Сканирование отключено"

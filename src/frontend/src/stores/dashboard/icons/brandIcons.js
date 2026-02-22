@@ -1,4 +1,4 @@
-import { h } from 'vue'
+import { h } from "vue";
 import {
   siAdguard,
   siCockpit,
@@ -20,29 +20,31 @@ import {
   siTermius,
   siYoutube,
   siYoutubeshorts,
-} from 'simple-icons'
+} from "simple-icons";
 
 export function createBrandIcon(icon) {
-  const brandColor = `#${icon.hex}`
+  const brandColor = `#${icon.hex}`;
   return (_props, { attrs }) =>
     h(
-      'svg',
+      "svg",
       {
         ...attrs,
-        xmlns: 'http://www.w3.org/2000/svg',
-        viewBox: '0 0 24 24',
-        fill: 'currentColor',
-        role: 'img',
-        'aria-hidden': 'true',
-        style: attrs.style ? [attrs.style, { color: brandColor }] : { color: brandColor },
+        xmlns: "http://www.w3.org/2000/svg",
+        viewBox: "0 0 24 24",
+        fill: "currentColor",
+        role: "img",
+        "aria-hidden": "true",
+        style: attrs.style
+          ? [attrs.style, { color: brandColor }]
+          : { color: brandColor },
       },
-      [h('path', { d: icon.path })]
-    )
+      [h("path", { d: icon.path })],
+    );
 }
 
 export const BRAND_ICON_BY_KEY = {
   homeassistant: createBrandIcon(siHomeassistant),
-  'home-assistant': createBrandIcon(siHomeassistant),
+  "home-assistant": createBrandIcon(siHomeassistant),
   ha: createBrandIcon(siHomeassistant),
   openwrt: createBrandIcon(siOpenwrt),
   adguard: createBrandIcon(siAdguard),
@@ -67,7 +69,7 @@ export const BRAND_ICON_BY_KEY = {
   cockpit: createBrandIcon(siCockpit),
   npm: createBrandIcon(siNginxproxymanager),
   nginxproxymanager: createBrandIcon(siNginxproxymanager),
-  'nginx-proxy-manager': createBrandIcon(siNginxproxymanager),
+  "nginx-proxy-manager": createBrandIcon(siNginxproxymanager),
   nginx: createBrandIcon(siNginx),
   openai: createBrandIcon(siOpenaigym),
   ai: createBrandIcon(siOpenaigym),
@@ -77,4 +79,4 @@ export const BRAND_ICON_BY_KEY = {
   youtubeshorts: createBrandIcon(siYoutubeshorts),
   termius: createBrandIcon(siTermius),
   termix: createBrandIcon(siTermius),
-}
+};

@@ -14,7 +14,11 @@
   max-height: min(88vh, 760px);
   border: 1px solid rgba(112, 236, 215, 0.32);
   border-radius: calc(var(--card-radius) + 2px);
-  background: linear-gradient(165deg, rgba(8, 22, 34, 0.98), rgba(5, 14, 23, 0.98));
+  background: linear-gradient(
+    165deg,
+    rgba(8, 22, 34, 0.98),
+    rgba(5, 14, 23, 0.98)
+  );
   box-shadow:
     var(--shadow),
     inset 0 0 0 1px rgba(214, 248, 255, 0.03);
@@ -103,26 +107,41 @@
   width: 100%;
   border: 1px solid rgba(100, 145, 165, 0.22);
   border-radius: 10px;
-  background: linear-gradient(150deg, rgba(10, 28, 40, 0.8), rgba(7, 18, 30, 0.82));
+  background: linear-gradient(
+    150deg,
+    rgba(10, 28, 40, 0.8),
+    rgba(7, 18, 30, 0.82)
+  );
   color: #d9ebf8;
   padding: 8px 10px;
   text-align: left;
   display: grid;
   gap: 4px;
   cursor: pointer;
-  transition: border-color 130ms ease, background 130ms ease, transform 130ms ease;
+  transition:
+    border-color 130ms ease,
+    background 130ms ease,
+    transform 130ms ease;
 }
 
 .command-palette-entry:hover,
 .command-palette-entry.active {
   border-color: rgba(111, 236, 214, 0.46);
-  background: linear-gradient(150deg, rgba(13, 41, 56, 0.82), rgba(7, 21, 33, 0.86));
+  background: linear-gradient(
+    150deg,
+    rgba(13, 41, 56, 0.82),
+    rgba(7, 21, 33, 0.86)
+  );
   transform: translateY(-1px);
 }
 
 .command-palette-entry.is-action {
   border-color: rgba(118, 236, 214, 0.34);
-  background: linear-gradient(148deg, rgba(11, 40, 54, 0.82), rgba(8, 23, 35, 0.86));
+  background: linear-gradient(
+    148deg,
+    rgba(11, 40, 54, 0.82),
+    rgba(8, 23, 35, 0.86)
+  );
 }
 
 .command-palette-entry-title {

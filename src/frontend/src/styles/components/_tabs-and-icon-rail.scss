@@ -1,4 +1,3 @@
-
 .ui-icon {
   width: 14px;
   height: 14px;
@@ -74,13 +73,21 @@
   height: 42px;
   border: 1px solid rgba(113, 170, 190, 0.34);
   border-radius: 11px;
-  background: linear-gradient(152deg, rgba(11, 24, 36, 0.88), rgba(8, 18, 30, 0.9));
+  background: linear-gradient(
+    152deg,
+    rgba(11, 24, 36, 0.88),
+    rgba(8, 18, 30, 0.9)
+  );
   color: #cfe1ef;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: border-color 170ms ease, background 170ms ease, transform 170ms ease, box-shadow 170ms ease;
+  transition:
+    border-color 170ms ease,
+    background 170ms ease,
+    transform 170ms ease,
+    box-shadow 170ms ease;
 }
 
 .sidebar-icon-btn:hover {

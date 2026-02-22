@@ -38,13 +38,14 @@ class AppSettings(BaseSettings):
     health_refresh_sec: float = Field(default=5.0, validation_alias="DASHBOARD_HEALTH_REFRESH_SEC")
     health_sse_keepalive_sec: float = Field(default=15.0, validation_alias="DASHBOARD_HEALTH_SSE_KEEPALIVE_SEC")
     health_history_size: int = Field(default=20, validation_alias="DASHBOARD_HEALTH_HISTORY_SIZE")
+    health_samples_retention_days: int = Field(default=30, validation_alias="DASHBOARD_HEALTH_SAMPLES_RETENTION_DAYS")
     proxy_access_cookie: str = Field(default=PROXY_ACCESS_COOKIE)
     proxy_token_secret: str = Field(default="", validation_alias="DASHBOARD_PROXY_TOKEN_SECRET")
     proxy_token_ttl_sec: int = Field(default=3600, validation_alias="DASHBOARD_PROXY_TOKEN_TTL_SEC")
 
     @model_validator(mode="before")
     @classmethod
-    def _populate_paths_and_secret(cls, data: Any) -> Any:
+    def _populate_paths_and_secret(_cls, data: Any) -> Any:
         values = dict(data) if isinstance(data, dict) else {}
 
         base_dir_raw = values.get("base_dir")
@@ -64,12 +65,12 @@ class AppSettings(BaseSettings):
 
     @model_validator(mode="after")
     def _apply_minimums(self) -> AppSettings:
-        object.__setattr__(self, "healthcheck_timeout_sec", max(0.2, float(self.healthcheck_timeout_sec)))
-        object.__setattr__(self, "healthcheck_max_parallel", max(1, int(self.healthcheck_max_parallel)))
-        object.__setattr__(self, "health_refresh_sec", max(0.0, float(self.health_refresh_sec)))
-        object.__setattr__(self, "health_sse_keepalive_sec", max(2.0, float(self.health_sse_keepalive_sec)))
-        object.__setattr__(self, "health_history_size", max(1, int(self.health_history_size)))
-        object.__setattr__(self, "proxy_token_ttl_sec", max(30, int(self.proxy_token_ttl_sec)))
+        object.__setattr__(self, "healthcheck_timeout_sec", max(0.2, self.healthcheck_timeout_sec))
+        object.__setattr__(self, "healthcheck_max_parallel", max(1, self.healthcheck_max_parallel))
+        object.__setattr__(self, "health_refresh_sec", max(0.0, self.health_refresh_sec))
+        object.__setattr__(self, "health_sse_keepalive_sec", max(2.0, self.health_sse_keepalive_sec))
+        object.__setattr__(self, "health_history_size", max(1, self.health_history_size))
+        object.__setattr__(self, "proxy_token_ttl_sec", max(30, self.proxy_token_ttl_sec))
         return self
 
 

@@ -13,12 +13,17 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="host in lanHosts" :key="host.ip" class="lan-host-row" @click="openLanHostModal(host)">
+        <tr
+          v-for="host in lanHosts"
+          :key="host.ip"
+          class="lan-host-row"
+          @click="openLanHostModal(host)"
+        >
           <td>{{ host.ip }}</td>
-          <td>{{ host.hostname || '—' }}</td>
-          <td>{{ host.mac_address || '—' }}</td>
-          <td>{{ host.mac_vendor || '—' }}</td>
-          <td>{{ host.device_type || '—' }}</td>
+          <td>{{ host.hostname || "—" }}</td>
+          <td>{{ host.mac_address || "—" }}</td>
+          <td>{{ host.mac_vendor || "—" }}</td>
+          <td>{{ host.device_type || "—" }}</td>
           <td>{{ lanPortsLabel(host) }}</td>
           <td>
             <div v-if="host.dashboard_items?.length" class="lan-service-links">
@@ -38,7 +43,9 @@
           </td>
         </tr>
         <tr v-if="!lanHosts.length">
-          <td colspan="7" class="lan-empty">Хосты не обнаружены. Запустите сканирование вручную.</td>
+          <td colspan="7" class="lan-empty">
+            Хосты не обнаружены. Запустите сканирование вручную.
+          </td>
         </tr>
       </tbody>
     </table>
@@ -46,8 +53,8 @@
 </template>
 
 <script setup>
-import { useDashboardStore } from '../../stores/dashboardStore.js'
+import { useDashboardStore } from "../../stores/dashboardStore.js";
 
-const dashboard = useDashboardStore()
-const { lanHosts, lanPortsLabel, openLanHostModal } = dashboard
+const dashboard = useDashboardStore();
+const { lanHosts, lanPortsLabel, openLanHostModal } = dashboard;
 </script>

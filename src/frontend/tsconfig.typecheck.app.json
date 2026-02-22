@@ -12,9 +12,5 @@
     "jsx": "preserve",
     "types": ["vite/client"]
   },
-  "include": [
-    "src/**/*.js",
-    "src/**/*.vue",
-    "src/**/*.d.ts"
-  ]
+  "include": ["src/**/*.js", "src/**/*.vue", "src/**/*.d.ts"]
 }

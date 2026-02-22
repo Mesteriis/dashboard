@@ -10,8 +10,9 @@ from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
 from support.factories import build_dashboard_config, write_dashboard_yaml
 
-from api.v1.dashboard import dashboard_router, start_health_runtime, stop_health_runtime
+from api.v1 import v1_router as dashboard_router
 from config.container import AppContainer, build_container
+from depens.v1.health_runtime import start_health_runtime, stop_health_runtime
 from scheme.dashboard import DashboardConfig
 from tools.events import build_lifespan
 

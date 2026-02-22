@@ -89,7 +89,7 @@ async def test_probe_http_services_groups_and_sorts(monkeypatch: pytest.MonkeyPa
         async def __aenter__(self) -> FakeAsyncClient:
             return self
 
-        async def __aexit__(self, exc_type: object, exc: object, tb: object) -> None:
+        async def __aexit__(self, _exc_type: object, exc: object, _tb: object) -> None:
             return None
 
     async def fake_probe(client: object, *, ip: str, port: int) -> LanHttpService | None:
@@ -164,10 +164,10 @@ def test_detect_default_cidrs_success_and_fallback(monkeypatch: pytest.MonkeyPat
         def __enter__(self) -> SocketOK:
             return self
 
-        def __exit__(self, exc_type: object, exc: object, tb: object) -> None:
+        def __exit__(self, _exc_type: object, exc: object, _tb: object) -> None:
             return None
 
-        def connect(self, target: tuple[str, int]) -> None:
+        def connect(self, _target: tuple[str, int]) -> None:
             return None
 
         def getsockname(self) -> tuple[str, int]:
@@ -180,7 +180,7 @@ def test_detect_default_cidrs_success_and_fallback(monkeypatch: pytest.MonkeyPat
         def __enter__(self) -> SocketFail:
             raise OSError("fail")
 
-        def __exit__(self, exc_type: object, exc: object, tb: object) -> None:
+        def __exit__(self, _exc_type: object, exc: object, _tb: object) -> None:
             return None
 
     monkeypatch.setattr(clients_module.socket, "socket", lambda *args, **kwargs: SocketFail())
@@ -282,9 +282,7 @@ def test_load_last_result_and_save_result(tmp_path: Path, monkeypatch: pytest.Mo
                         {"port": 11434, "service": None},
                         {"port": 22, "service": "ssh"},
                     ],
-                    "http_services": [
-                        {"port": 8006, "scheme": "https", "url": "https://192.168.1.2:8006/"}
-                    ],
+                    "http_services": [{"port": 8006, "scheme": "https", "url": "https://192.168.1.2:8006/"}],
                 }
             ],
         }

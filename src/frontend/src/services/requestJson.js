@@ -5,19 +5,26 @@
  * @returns {string}
  */
 export function resolveRequestUrl(path) {
-  const inputPath = String(path || '')
-  if (!inputPath) return inputPath
+  const inputPath = String(path || "");
+  if (!inputPath) return inputPath;
 
   if (/^https?:\/\//i.test(inputPath)) {
-    return inputPath
+    return inputPath;
   }
 
-  const runtimeBase = typeof window === 'undefined' ? '' : String(window.__OKO_API_BASE__ || '').trim()
-  if (!runtimeBase) return inputPath
+  const runtimeBase =
+    typeof window === "undefined"
+      ? ""
+      : String(window.__OKO_API_BASE__ || "").trim();
+  if (!runtimeBase) return inputPath;
 
-  const normalizedBase = runtimeBase.endsWith('/') ? runtimeBase.slice(0, -1) : runtimeBase
-  const normalizedPath = inputPath.startsWith('/') ? inputPath : `/${inputPath}`
-  return `${normalizedBase}${normalizedPath}`
+  const normalizedBase = runtimeBase.endsWith("/")
+    ? runtimeBase.slice(0, -1)
+    : runtimeBase;
+  const normalizedPath = inputPath.startsWith("/")
+    ? inputPath
+    : `/${inputPath}`;
+  return `${normalizedBase}${normalizedPath}`;
 }
 
 /**
@@ -27,22 +34,27 @@ export function resolveRequestUrl(path) {
  * @returns {string}
  */
 function resolveErrorMessage(body, isJson, status) {
-  const detail = isJson && typeof body === 'object' && body !== null ? /** @type {{ detail?: unknown }} */ (body).detail : null
-  let message = `Request failed: ${status}`
+  const detail =
+    isJson && typeof body === "object" && body !== null
+      ? /** @type {{ detail?: unknown }} */ (body).detail
+      : null;
+  let message = `Request failed: ${status}`;
 
   if (Array.isArray(detail)) {
     message = detail
-      .map((item) => (typeof item === 'object' && item !== null && 'message' in item
-        ? String(/** @type {{ message?: unknown }} */ (item).message || '')
-        : JSON.stringify(item)))
-      .join('; ')
-  } else if (typeof detail === 'string' && detail) {
-    message = detail
-  } else if (typeof body === 'string' && body) {
-    message = body
+      .map((item) =>
+        typeof item === "object" && item !== null && "message" in item
+          ? String(/** @type {{ message?: unknown }} */ (item).message || "")
+          : JSON.stringify(item),
+      )
+      .join("; ");
+  } else if (typeof detail === "string" && detail) {
+    message = detail;
+  } else if (typeof body === "string" && body) {
+    message = body;
   }
 
-  return message
+  return message;
 }
 
 /**
@@ -51,43 +63,44 @@ function resolveErrorMessage(body, isJson, status) {
  * @returns {Promise<unknown>}
  */
 export async function requestJson(path, options = {}) {
-  const { headers: customHeaders = {}, ...fetchOptions } = options
+  const { headers: customHeaders = {}, ...fetchOptions } = options;
   /** @type {Record<string, string>} */
-  const customHeadersObject = {}
+  const customHeadersObject = {};
   if (customHeaders instanceof Headers) {
     customHeaders.forEach((value, key) => {
-      customHeadersObject[key] = value
-    })
+      customHeadersObject[key] = value;
+    });
   } else if (Array.isArray(customHeaders)) {
     for (const [key, value] of customHeaders) {
-      customHeadersObject[key] = String(value)
+      customHeadersObject[key] = String(value);
     }
   } else {
-    Object.assign(customHeadersObject, customHeaders)
+    Object.assign(customHeadersObject, customHeaders);
   }
   /** @type {Record<string, string>} */
   const headers = {
-    Accept: 'application/json',
+    Accept: "application/json",
     ...customHeadersObject,
-  }
+  };
 
   const response = await fetch(resolveRequestUrl(path), {
-    credentials: 'include',
+    credentials: "include",
     headers,
     ...fetchOptions,
-  })
+  });
 
-  const contentType = response.headers.get('content-type') || ''
-  const isJson = contentType.includes('application/json')
-  const body = isJson ? await response.json() : await response.text()
+  const contentType = response.headers.get("content-type") || "";
+  const isJson = contentType.includes("application/json");
+  const body = isJson ? await response.json() : await response.text();
 
   if (!response.ok) {
-    const error = new Error(resolveErrorMessage(body, isJson, response.status))
-    const typedError = /** @type {Error & { status: number; body: unknown }} */ (error)
-    typedError.status = response.status
-    typedError.body = body
-    throw typedError
+    const error = new Error(resolveErrorMessage(body, isJson, response.status));
+    const typedError =
+      /** @type {Error & { status: number; body: unknown }} */ (error);
+    typedError.status = response.status;
+    typedError.body = body;
+    throw typedError;
   }
 
-  return body
+  return body;
 }

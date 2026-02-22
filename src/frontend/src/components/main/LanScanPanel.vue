@@ -1,13 +1,21 @@
 <template>
   <section class="panel lan-scan-panel">
     <p v-if="lanScanError" class="widget-error">{{ lanScanError }}</p>
-    <p v-else-if="lanScanLoading && !lanScanState" class="widget-loading">Загрузка состояния сканера...</p>
+    <p v-else-if="lanScanLoading && !lanScanState" class="widget-loading">
+      Загрузка состояния сканера...
+    </p>
 
     <template v-else>
       <section class="lan-summary-grid">
         <article class="lan-summary-card">
           <p>Статус</p>
-          <strong>{{ lanScanState?.running ? 'Сканирование' : lanScanState?.queued ? 'В очереди' : 'Ожидание' }}</strong>
+          <strong>{{
+            lanScanState?.running
+              ? "Сканирование"
+              : lanScanState?.queued
+                ? "В очереди"
+                : "Ожидание"
+          }}</strong>
         </article>
         <article class="lan-summary-card">
           <p>Хостов найдено</p>
@@ -23,7 +31,9 @@
         </article>
         <article class="lan-summary-card">
           <p>Длительность</p>
-          <strong>{{ formatLanDuration(lanScanState?.result?.duration_ms) }}</strong>
+          <strong>{{
+            formatLanDuration(lanScanState?.result?.duration_ms)
+          }}</strong>
         </article>
         <article class="lan-summary-card">
           <p>Последний старт</p>
@@ -37,10 +47,15 @@
 
       <p class="subtitle lan-meta-line">Подсети: {{ lanCidrsLabel }}</p>
       <p class="subtitle lan-meta-line">
-        Планировщик: {{ lanScanState?.scheduler || 'asyncio' }} · интервал {{ lanScanState?.interval_sec || 1020 }} сек
+        Планировщик: {{ lanScanState?.scheduler || "asyncio" }} · интервал
+        {{ lanScanState?.interval_sec || 1020 }} сек
       </p>
-      <p class="subtitle lan-meta-line">Файл результата: {{ lanScanState?.result?.source_file || 'не создан' }}</p>
-      <p v-if="lanScanState?.last_error" class="widget-error">Ошибка сканирования: {{ lanScanState.last_error }}</p>
+      <p class="subtitle lan-meta-line">
+        Файл результата: {{ lanScanState?.result?.source_file || "не создан" }}
+      </p>
+      <p v-if="lanScanState?.last_error" class="widget-error">
+        Ошибка сканирования: {{ lanScanState.last_error }}
+      </p>
 
       <LanHostsTable />
     </template>
@@ -48,10 +63,10 @@
 </template>
 
 <script setup>
-import LanHostsTable from './LanHostsTable.vue'
-import { useDashboardStore } from '../../stores/dashboardStore.js'
+import LanHostsTable from "./LanHostsTable.vue";
+import { useDashboardStore } from "../../stores/dashboardStore.js";
 
-const dashboard = useDashboardStore()
+const dashboard = useDashboardStore();
 
 const {
   lanScanError,
@@ -61,5 +76,5 @@ const {
   lanCidrsLabel,
   formatLanDuration,
   formatLanMoment,
-} = dashboard
+} = dashboard;
 </script>

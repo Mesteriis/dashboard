@@ -43,8 +43,7 @@ def test_append_samples_persists_rows(health_repository: HealthSampleRepository)
 def test_list_recent_by_item_ids_applies_per_item_limit(health_repository: HealthSampleRepository) -> None:
     now = datetime(2026, 2, 22, 12, 0, 0, tzinfo=UTC)
     payload = [
-        HealthSampleWrite(item_id="svc-a", ts=now + timedelta(seconds=index), level="online")
-        for index in range(4)
+        HealthSampleWrite(item_id="svc-a", ts=now + timedelta(seconds=index), level="online") for index in range(4)
     ]
     health_repository.append_samples(payload)
 

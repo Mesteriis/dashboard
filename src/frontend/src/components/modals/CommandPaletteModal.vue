@@ -28,18 +28,34 @@
       />
     </div>
 
-    <ul v-if="commandPaletteResults.length" class="command-palette-list" role="listbox" aria-label="Быстрый поиск сервиса или команды">
-      <li v-for="(entry, index) in commandPaletteResults" :key="entry.id" v-motion="commandPaletteRowMotion(index)" class="command-palette-row">
+    <ul
+      v-if="commandPaletteResults.length"
+      class="command-palette-list"
+      role="listbox"
+      aria-label="Быстрый поиск сервиса или команды"
+    >
+      <li
+        v-for="(entry, index) in commandPaletteResults"
+        :key="entry.id"
+        v-motion="commandPaletteRowMotion(index)"
+        class="command-palette-row"
+      >
         <button
           class="command-palette-entry"
-          :class="{ active: index === commandPaletteActiveIndex, 'is-action': entry.type === 'action' }"
+          :class="{
+            active: index === commandPaletteActiveIndex,
+            'is-action': entry.type === 'action',
+          }"
           type="button"
           @mouseenter="setCommandPaletteActiveIndex(index)"
           @focus="setCommandPaletteActiveIndex(index)"
           @click="activateCommandPaletteEntry(entry)"
         >
           <span class="command-palette-entry-title">{{ entry.title }}</span>
-          <span v-if="entry.type === 'action'" class="command-palette-entry-meta">
+          <span
+            v-if="entry.type === 'action'"
+            class="command-palette-entry-meta"
+          >
             <span>Команда</span>
             <span>{{ entry.subgroupTitle }}</span>
           </span>
@@ -51,7 +67,13 @@
           </span>
         </button>
 
-        <button v-if="entry.type === 'item'" class="ghost command-palette-copy" type="button" title="Скопировать URL" @click.stop="copyCommandPaletteEntryUrl(entry)">
+        <button
+          v-if="entry.type === 'item'"
+          class="ghost command-palette-copy"
+          type="button"
+          title="Скопировать URL"
+          @click.stop="copyCommandPaletteEntryUrl(entry)"
+        >
           <Copy class="ui-icon" />
         </button>
       </li>
@@ -62,12 +84,12 @@
 </template>
 
 <script setup>
-import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { Copy, Search } from 'lucide-vue-next'
-import BaseModal from '../primitives/BaseModal.vue'
-import { useDashboardStore } from '../../stores/dashboardStore.js'
+import { nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
+import { Copy, Search } from "lucide-vue-next";
+import BaseModal from "../primitives/BaseModal.vue";
+import { useDashboardStore } from "../../stores/dashboardStore.js";
 
-const dashboard = useDashboardStore()
+const dashboard = useDashboardStore();
 const {
   commandPaletteActiveIndex,
   commandPaletteOpen,
@@ -80,62 +102,66 @@ const {
   moveCommandPaletteSelection,
   setCommandPaletteActiveIndex,
   setCommandPaletteQuery,
-} = dashboard
+} = dashboard;
 
-const inputRef = ref(null)
-const shortcutLabel = /Mac|iPhone|iPad/i.test(globalThis.navigator?.platform || '') ? '⌘K' : 'Ctrl+K'
-const fxMode = ref(document.documentElement.dataset.fxMode || 'full')
+const inputRef = ref(null);
+const shortcutLabel = /Mac|iPhone|iPad/i.test(
+  globalThis.navigator?.platform || "",
+)
+  ? "⌘K"
+  : "Ctrl+K";
+const fxMode = ref(document.documentElement.dataset.fxMode || "full");
 
 function syncFxMode() {
-  fxMode.value = document.documentElement.dataset.fxMode || 'full'
+  fxMode.value = document.documentElement.dataset.fxMode || "full";
 }
 
 function focusSearchInput() {
   const applyFocus = () => {
-    if (!inputRef.value) return
-    inputRef.value.focus()
-    inputRef.value.select()
-  }
+    if (!inputRef.value) return;
+    inputRef.value.focus();
+    inputRef.value.select();
+  };
 
   void nextTick(() => {
-    applyFocus()
+    applyFocus();
     window.requestAnimationFrame(() => {
-      applyFocus()
-    })
-  })
+      applyFocus();
+    });
+  });
 }
 
 function handleInputKeydown(event) {
-  if (event.key === 'ArrowDown') {
-    event.preventDefault()
-    moveCommandPaletteSelection(1)
-    return
+  if (event.key === "ArrowDown") {
+    event.preventDefault();
+    moveCommandPaletteSelection(1);
+    return;
   }
 
-  if (event.key === 'ArrowUp') {
-    event.preventDefault()
-    moveCommandPaletteSelection(-1)
-    return
+  if (event.key === "ArrowUp") {
+    event.preventDefault();
+    moveCommandPaletteSelection(-1);
+    return;
   }
 
-  if (event.key === 'Enter') {
-    event.preventDefault()
-    activateCommandPaletteSelection()
-    return
+  if (event.key === "Enter") {
+    event.preventDefault();
+    activateCommandPaletteSelection();
+    return;
   }
 
-  if (event.key === 'Escape') {
-    event.preventDefault()
-    closeCommandPalette()
+  if (event.key === "Escape") {
+    event.preventDefault();
+    closeCommandPalette();
   }
 }
 
 function commandPaletteRowMotion(index) {
-  if (fxMode.value === 'off') {
+  if (fxMode.value === "off") {
     return {
       initial: { opacity: 1, y: 0, scale: 1 },
       enter: { opacity: 1, y: 0, scale: 1, transition: { duration: 0 } },
-    }
+    };
   }
 
   return {
@@ -149,26 +175,26 @@ function commandPaletteRowMotion(index) {
         delay: Math.min(index, 10) * 24,
       },
     },
-  }
+  };
 }
 
 onMounted(() => {
-  window.addEventListener('oko:fx-mode-change', syncFxMode)
+  window.addEventListener("oko:fx-mode-change", syncFxMode);
   if (commandPaletteOpen.value) {
-    focusSearchInput()
+    focusSearchInput();
   }
-})
+});
 
 onBeforeUnmount(() => {
-  window.removeEventListener('oko:fx-mode-change', syncFxMode)
-})
+  window.removeEventListener("oko:fx-mode-change", syncFxMode);
+});
 
 watch(
   () => commandPaletteOpen.value,
   (isOpen) => {
-    if (!isOpen) return
-    focusSearchInput()
+    if (!isOpen) return;
+    focusSearchInput();
   },
-  { flush: 'post' }
-)
+  { flush: "post" },
+);
 </script>

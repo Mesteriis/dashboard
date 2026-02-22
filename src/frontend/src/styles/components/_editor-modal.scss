@@ -1,10 +1,13 @@
-
 .editor-modal {
   width: min(96vw, 920px);
   max-height: min(92vh, 980px);
   border: 1px solid rgba(104, 240, 217, 0.34);
   border-radius: calc(var(--card-radius) + 4px);
-  background: linear-gradient(164deg, rgba(9, 23, 36, 0.98), rgba(6, 14, 23, 0.99));
+  background: linear-gradient(
+    164deg,
+    rgba(9, 23, 36, 0.98),
+    rgba(6, 14, 23, 0.99)
+  );
   box-shadow:
     0 30px 70px rgba(1, 6, 13, 0.68),
     inset 0 1px 0 rgba(214, 255, 247, 0.09);
@@ -21,7 +24,11 @@
   gap: 10px;
   padding: 14px 16px;
   border-bottom: 1px solid rgba(126, 162, 180, 0.2);
-  background: linear-gradient(180deg, rgba(14, 35, 49, 0.65), rgba(8, 18, 29, 0.28));
+  background: linear-gradient(
+    180deg,
+    rgba(14, 35, 49, 0.65),
+    rgba(8, 18, 29, 0.28)
+  );
 }
 
 .editor-modal-header h3 {
@@ -68,7 +75,10 @@
   font-size: 0.86rem;
   padding: 9px 11px;
   outline: none;
-  transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    background 160ms ease;
 }
 
 .editor-field input::placeholder {

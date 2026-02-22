@@ -1,7 +1,10 @@
-
 .lan-http-card.error {
   border-color: rgba(241, 122, 136, 0.4);
-  background: linear-gradient(154deg, rgba(43, 17, 25, 0.82), rgba(28, 13, 20, 0.84));
+  background: linear-gradient(
+    154deg,
+    rgba(43, 17, 25, 0.82),
+    rgba(28, 13, 20, 0.84)
+  );
 }
 
 .lan-http-head {
@@ -59,7 +62,11 @@
 
 .error-state {
   border-color: rgba(255, 124, 124, 0.44);
-  background: linear-gradient(165deg, rgba(58, 23, 29, 0.82), rgba(28, 14, 22, 0.82));
+  background: linear-gradient(
+    165deg,
+    rgba(58, 23, 29, 0.82),
+    rgba(28, 14, 22, 0.82)
+  );
 }
 
 .groups-grid {

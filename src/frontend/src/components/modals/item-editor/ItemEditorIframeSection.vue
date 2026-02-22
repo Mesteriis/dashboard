@@ -7,7 +7,10 @@
     <div class="editor-grid">
       <label class="editor-field">
         <span>Sandbox</span>
-        <select v-model="itemEditor.form.iframeSandboxMode" :disabled="itemEditor.submitting">
+        <select
+          v-model="itemEditor.form.iframeSandboxMode"
+          :disabled="itemEditor.submitting"
+        >
           <option value="default">default</option>
           <option value="enabled">enabled</option>
           <option value="disabled">disabled</option>
@@ -38,9 +41,18 @@
 
       <label class="editor-field">
         <span>Auth profile</span>
-        <select v-model="itemEditor.form.authProfile" :disabled="itemEditor.submitting">
+        <select
+          v-model="itemEditor.form.authProfile"
+          :disabled="itemEditor.submitting"
+        >
           <option value="">none</option>
-          <option v-for="profile in authProfileOptions" :key="profile.id" :value="profile.id">{{ profile.id }} ({{ profile.type }})</option>
+          <option
+            v-for="profile in authProfileOptions"
+            :key="profile.id"
+            :value="profile.id"
+          >
+            {{ profile.id }} ({{ profile.type }})
+          </option>
         </select>
       </label>
     </div>
@@ -48,8 +60,8 @@
 </template>
 
 <script setup>
-import { useDashboardStore } from '../../../stores/dashboardStore.js'
+import { useDashboardStore } from "../../../stores/dashboardStore.js";
 
-const dashboard = useDashboardStore()
-const { itemEditor, authProfileOptions } = dashboard
+const dashboard = useDashboardStore();
+const { itemEditor, authProfileOptions } = dashboard;
 </script>

@@ -282,7 +282,7 @@ class LanScanSettings(BaseSettings):
 
     @model_validator(mode="before")
     @classmethod
-    def _populate_paths(cls, data: Any) -> Any:
+    def _populate_paths(_cls, data: Any) -> Any:
         values = dict(data) if isinstance(data, dict) else {}
         base_dir_raw = values.get("base_dir")
         base_dir = Path(base_dir_raw).resolve() if base_dir_raw is not None else _default_base_dir().resolve()
@@ -292,7 +292,7 @@ class LanScanSettings(BaseSettings):
 
     @field_validator("ports", mode="before")
     @classmethod
-    def _validate_ports(cls, value: Any) -> tuple[int, ...]:
+    def _validate_ports(_cls, value: Any) -> tuple[int, ...]:
         if value is None:
             return SAFE_DEFAULT_SCAN_PORTS
         if isinstance(value, str):
@@ -303,7 +303,7 @@ class LanScanSettings(BaseSettings):
 
     @field_validator("cidrs", mode="before")
     @classmethod
-    def _validate_cidrs(cls, value: Any) -> tuple[str, ...]:
+    def _validate_cidrs(_cls, value: Any) -> tuple[str, ...]:
         if value is None:
             return ()
         if isinstance(value, str):
@@ -314,42 +314,42 @@ class LanScanSettings(BaseSettings):
 
     @field_validator("interval_sec", mode="before")
     @classmethod
-    def _coerce_interval(cls, value: Any) -> int:
+    def _coerce_interval(_cls, value: Any) -> int:
         try:
             return int(value)
-        except (TypeError, ValueError):
+        except TypeError, ValueError:
             return 1020
 
     @field_validator("max_parallel", mode="before")
     @classmethod
-    def _coerce_max_parallel(cls, value: Any) -> int:
+    def _coerce_max_parallel(_cls, value: Any) -> int:
         try:
             return int(value)
-        except (TypeError, ValueError):
+        except TypeError, ValueError:
             return 128
 
     @field_validator("max_hosts", mode="before")
     @classmethod
-    def _coerce_max_hosts(cls, value: Any) -> int:
+    def _coerce_max_hosts(_cls, value: Any) -> int:
         try:
             return int(value)
-        except (TypeError, ValueError):
+        except TypeError, ValueError:
             return 512
 
     @field_validator("connect_timeout_sec", mode="before")
     @classmethod
-    def _coerce_connect_timeout(cls, value: Any) -> float:
+    def _coerce_connect_timeout(_cls, value: Any) -> float:
         try:
             return float(value)
-        except (TypeError, ValueError):
+        except TypeError, ValueError:
             return 0.25
 
     @model_validator(mode="after")
     def _apply_minimums(self) -> LanScanSettings:
-        object.__setattr__(self, "interval_sec", max(30, int(self.interval_sec)))
-        object.__setattr__(self, "connect_timeout_sec", max(0.1, float(self.connect_timeout_sec)))
-        object.__setattr__(self, "max_parallel", max(16, int(self.max_parallel)))
-        object.__setattr__(self, "max_hosts", max(32, int(self.max_hosts)))
+        object.__setattr__(self, "interval_sec", max(30, self.interval_sec))
+        object.__setattr__(self, "connect_timeout_sec", max(0.1, self.connect_timeout_sec))
+        object.__setattr__(self, "max_parallel", max(16, self.max_parallel))
+        object.__setattr__(self, "max_hosts", max(32, self.max_hosts))
         return self
 
 

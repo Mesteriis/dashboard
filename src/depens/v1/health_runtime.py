@@ -2,20 +2,19 @@ from __future__ import annotations
 
 import asyncio
 from collections import deque
-from collections.abc import AsyncIterator
 from contextlib import suppress
 from dataclasses import dataclass
 from datetime import UTC, datetime
-from typing import Annotated, Literal
+from typing import Literal
 
 import httpx
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
-from fastapi.responses import StreamingResponse
-from starlette.background import BackgroundTask
+import structlog
+from fastapi import HTTPException
 
 from config.container import AppContainer
 from config.settings import AppSettings
 from db.repositories import HealthSampleRepository, HealthSampleWrite
+from depens.v1.dashboard_deps import validation_exception as _validation_exception
 from scheme.dashboard import (
     AggregateStatus,
     ConfigVersion,
@@ -25,69 +24,15 @@ from scheme.dashboard import (
     GroupHealthAggregate,
     HealthHistoryPoint,
     IframeItemConfig,
-    IframeSourceResponse,
     ItemConfig,
     ItemHealthStatus,
-    LanScanStateResponse,
-    LanScanTriggerResponse,
-    SaveConfigResponse,
     SubgroupHealthAggregate,
-    ValidateRequest,
-    ValidateResponse,
 )
 from service.config_service import DashboardConfigService, DashboardConfigValidationError
-from service.lan_scan import LanScanService
-from tools.auth import ProxyAccessSigner
 from tools.health import probe_item_health
-from tools.proxy import (
-    PROXY_REQUEST_HEADERS,
-    PROXY_RESPONSE_HEADERS,
-    build_upstream_url,
-    close_upstream_resources,
-    filter_cookie_header,
-    rewrite_location,
-    rewrite_set_cookie,
-)
 
+logger = structlog.get_logger()
 
-def _validation_exception(exc: DashboardConfigValidationError) -> HTTPException:
-    return HTTPException(status_code=422, detail=[issue.model_dump() for issue in exc.issues])
-
-
-def get_container(request: Request) -> AppContainer:
-    container = getattr(request.app.state, "container", None)
-    if not isinstance(container, AppContainer):
-        raise HTTPException(status_code=500, detail="Application container is not configured")
-    return container
-
-
-def get_settings(container: Annotated[AppContainer, Depends(get_container)]) -> AppSettings:
-    return container.settings
-
-
-def get_config_service(container: Annotated[AppContainer, Depends(get_container)]) -> DashboardConfigService:
-    return container.config_service
-
-
-def get_lan_scan_service(container: Annotated[AppContainer, Depends(get_container)]) -> LanScanService:
-    return container.lan_scan_service
-
-
-def get_proxy_signer(container: Annotated[AppContainer, Depends(get_container)]) -> ProxyAccessSigner:
-    return container.proxy_signer
-
-
-def get_health_sample_repository(
-    container: Annotated[AppContainer, Depends(get_container)],
-) -> HealthSampleRepository:
-    return container.health_sample_repository
-
-
-SettingsDep = Annotated[AppSettings, Depends(get_settings)]
-ConfigServiceDep = Annotated[DashboardConfigService, Depends(get_config_service)]
-LanScanServiceDep = Annotated[LanScanService, Depends(get_lan_scan_service)]
-ProxySignerDep = Annotated[ProxyAccessSigner, Depends(get_proxy_signer)]
-HealthSampleRepositoryDep = Annotated[HealthSampleRepository, Depends(get_health_sample_repository)]
 HealthLevel = Literal["online", "degraded", "down", "unknown", "indirect_failure"]
 DependencyResolution = tuple[HealthLevel, str | None, str | None]
 _HEALTH_HISTORY_BY_ITEM: dict[str, deque[HealthHistoryPoint]] = {}
@@ -174,8 +119,10 @@ class HealthRuntime:
         force_refresh: bool,
     ) -> HealthSnapshot:
         current = self._snapshot
-        snapshot_stale = current is not None and settings.health_refresh_sec > 0 and (
-            (datetime.now(UTC) - current.updated_at).total_seconds() > settings.health_refresh_sec * 3
+        snapshot_stale = (
+            current is not None
+            and settings.health_refresh_sec > 0
+            and ((datetime.now(UTC) - current.updated_at).total_seconds() > settings.health_refresh_sec * 3)
         )
 
         if force_refresh or current is None or snapshot_stale:
@@ -216,7 +163,7 @@ class HealthRuntime:
         if current is not None and current.revision > revision:
             return current.revision
 
-        timeout = max(0.1, float(timeout_sec))
+        timeout = max(0.1, timeout_sec)
         async with self._revision_condition:
             with suppress(TimeoutError):
                 await asyncio.wait_for(
@@ -239,7 +186,18 @@ class HealthRuntime:
         if self._stop_event is None or self._wake_event is None:
             return
 
-        refresh_timeout = max(0.2, float(settings.health_refresh_sec))
+        from datetime import timedelta
+
+        refresh_timeout = max(0.2, settings.health_refresh_sec)
+        retention_days = max(1, settings.health_samples_retention_days)
+        retention_cutoff = datetime.now(UTC) - timedelta(days=retention_days)
+        last_retention_run = datetime.now(UTC)
+
+        await logger.ainfo(
+            "health_refresh_loop_started",
+            refresh_sec=refresh_timeout,
+            retention_days=retention_days,
+        )
         while not self._stop_event.is_set():
             try:
                 await self.refresh_snapshot(
@@ -247,12 +205,30 @@ class HealthRuntime:
                     settings=settings,
                     health_sample_repository=health_sample_repository,
                 )
-            except DashboardConfigValidationError:
-                # Keep previous snapshot until config is fixed.
-                pass
-            except Exception:
-                # Health loop is best effort and must not crash the application.
-                pass
+
+                now = datetime.now(UTC)
+                if (now - last_retention_run).total_seconds() > 3600:
+                    deleted = health_sample_repository.delete_samples_older_than(retention_cutoff)
+                    last_retention_run = now
+                    retention_cutoff = now - timedelta(days=retention_days)
+                    if deleted > 0:
+                        await logger.ainfo(
+                            "health_samples_retention_applied",
+                            deleted_count=deleted,
+                            retention_days=retention_days,
+                        )
+
+            except DashboardConfigValidationError as exc:
+                await logger.awarning(
+                    "health_refresh_config_validation_error",
+                    error=str(exc),
+                )
+            except Exception as exc:
+                await logger.aerror(
+                    "health_refresh_unexpected_error",
+                    error=str(exc),
+                    exc_info=True,
+                )
 
             if self._stop_event.is_set():
                 break
@@ -263,6 +239,8 @@ class HealthRuntime:
                 continue
             finally:
                 self._wake_event.clear()
+
+        await logger.ainfo("health_refresh_loop_stopped")
 
 
 _HEALTH_RUNTIME = HealthRuntime()
@@ -277,12 +255,12 @@ def _if_none_match_matches(value: str | None, current_etag: str) -> bool:
         return False
 
     for candidate in value.split(","):
-        token = candidate.strip()
-        if token == "*":
+        etag_candidate = candidate.strip()
+        if etag_candidate == "*":
             return True
-        if token == current_etag:
+        if etag_candidate == current_etag:
             return True
-        if token.startswith("W/") and token[2:] == current_etag:
+        if etag_candidate.startswith("W/") and etag_candidate[2:] == current_etag:
             return True
     return False
 
@@ -378,11 +356,7 @@ def _apply_dependency_awareness(items: list[ItemConfig], statuses_by_id: dict[st
         visiting.add(item_id)
         try:
             missing_dependencies = sorted(
-                {
-                    dependency_id
-                    for dependency_id in item.depends_on
-                    if dependency_id not in items_by_id
-                }
+                {dependency_id for dependency_id in item.depends_on if dependency_id not in items_by_id}
             )
             if missing_dependencies:
                 result = (
@@ -472,11 +446,7 @@ def _build_health_aggregates(
         group_statuses: list[ItemHealthStatus] = []
 
         for subgroup in group.subgroups:
-            subgroup_statuses = [
-                statuses_by_id[item.id]
-                for item in subgroup.items
-                if item.id in statuses_by_id
-            ]
+            subgroup_statuses = [statuses_by_id[item.id] for item in subgroup.items if item.id in statuses_by_id]
             if not subgroup_statuses:
                 continue
 
@@ -612,12 +582,7 @@ def _hydrate_health_history_from_db(
 
 
 def _all_config_items(config: DashboardConfig) -> list[ItemConfig]:
-    return [
-        item
-        for group in config.groups
-        for subgroup in group.subgroups
-        for item in subgroup.items
-    ]
+    return [item for group in config.groups for subgroup in group.subgroups for item in subgroup.items]
 
 
 async def _probe_health_snapshot(
@@ -734,346 +699,22 @@ def reset_health_runtime_state() -> None:
     _HEALTH_HISTORY_BY_ITEM.clear()
 
 
-dashboard_router = APIRouter(prefix="/api/v1")
-
-
-@dashboard_router.get("/dashboard/config", response_model=DashboardConfig)
-async def get_dashboard_config(
-    request: Request,
-    response: Response,
-    config_service: ConfigServiceDep,
-) -> DashboardConfig | Response:
-    try:
-        version = config_service.get_version()
-        etag = _config_etag(version)
-
-        if _if_none_match_matches(request.headers.get("if-none-match"), etag):
-            return Response(
-                status_code=304,
-                headers={
-                    "etag": etag,
-                    "cache-control": CONFIG_CACHE_CONTROL,
-                },
-            )
-
-        config = config_service.load()
-    except DashboardConfigValidationError as exc:
-        raise _validation_exception(exc) from exc
-
-    response.headers["etag"] = etag
-    response.headers["cache-control"] = CONFIG_CACHE_CONTROL
-    return config
-
-
-@dashboard_router.get("/dashboard/version", response_model=ConfigVersion)
-async def get_dashboard_config_version(config_service: ConfigServiceDep) -> ConfigVersion:
-    try:
-        return config_service.get_version()
-    except DashboardConfigValidationError as exc:
-        raise _validation_exception(exc) from exc
-
-
-@dashboard_router.get("/dashboard/errors")
-async def get_dashboard_last_errors(config_service: ConfigServiceDep) -> dict[str, list[dict[str, str]]]:
-    return {"issues": [issue.model_dump() for issue in config_service.last_issues]}
-
-
-@dashboard_router.post("/dashboard/validate", response_model=ValidateResponse)
-async def validate_dashboard_yaml(payload: ValidateRequest, config_service: ConfigServiceDep) -> ValidateResponse:
-    config, issues = config_service.validate_yaml(payload.yaml)
-    return ValidateResponse(valid=not issues, issues=issues, config=config)
-
-
-@dashboard_router.put("/dashboard/config", response_model=SaveConfigResponse)
-async def save_dashboard_config(
-    payload: DashboardConfig,
-    config_service: ConfigServiceDep,
-) -> SaveConfigResponse:
-    try:
-        state = config_service.save(payload.model_dump(mode="json", exclude_none=True), source="api")
-        return SaveConfigResponse(config=state.config, version=state.version)
-    except DashboardConfigValidationError as exc:
-        raise _validation_exception(exc) from exc
-
-
-@dashboard_router.get("/dashboard/config/backup")
-async def download_dashboard_config_backup(config_service: ConfigServiceDep) -> Response:
-    try:
-        backup_yaml = config_service.export_yaml()
-    except DashboardConfigValidationError as exc:
-        raise _validation_exception(exc) from exc
-
-    timestamp = datetime.now(UTC).strftime("%Y%m%d-%H%M%S")
-    return Response(
-        content=backup_yaml,
-        media_type="application/x-yaml",
-        headers={
-            "content-disposition": f'attachment; filename=\"dashboard-backup-{timestamp}.yaml\"',
-            "cache-control": CONFIG_CACHE_CONTROL,
-        },
-    )
-
-
-@dashboard_router.post("/dashboard/config/restore", response_model=SaveConfigResponse)
-async def restore_dashboard_config(
-    payload: ValidateRequest,
-    config_service: ConfigServiceDep,
-) -> SaveConfigResponse:
-    try:
-        state = config_service.import_yaml(payload.yaml, source="restore")
-        return SaveConfigResponse(config=state.config, version=state.version)
-    except DashboardConfigValidationError as exc:
-        raise _validation_exception(exc) from exc
-
-
-@dashboard_router.get("/dashboard/health", response_model=DashboardHealthResponse)
-async def get_dashboard_health(
-    config_service: ConfigServiceDep,
-    settings: SettingsDep,
-    health_sample_repository: HealthSampleRepositoryDep,
-    response: Response,
-    item_id: Annotated[list[str] | None, Query()] = None,
-) -> DashboardHealthResponse:
-    try:
-        snapshot = await _ensure_health_snapshot_for_request(
-            config_service=config_service,
-            settings=settings,
-            health_sample_repository=health_sample_repository,
-        )
-    except DashboardConfigValidationError as exc:
-        raise _validation_exception(exc) from exc
-
-    response.headers["cache-control"] = HEALTH_CACHE_CONTROL
-    return _build_health_response_from_snapshot(snapshot=snapshot, item_ids=item_id)
-
-
-@dashboard_router.get("/dashboard/health/stream")
-async def stream_dashboard_health(
-    request: Request,
-    config_service: ConfigServiceDep,
-    settings: SettingsDep,
-    health_sample_repository: HealthSampleRepositoryDep,
-    item_id: Annotated[list[str] | None, Query()] = None,
-    once: Annotated[bool, Query()] = False,
-) -> StreamingResponse:
-    try:
-        snapshot = await _ensure_health_snapshot_for_request(
-            config_service=config_service,
-            settings=settings,
-            health_sample_repository=health_sample_repository,
-        )
-    except DashboardConfigValidationError as exc:
-        raise _validation_exception(exc) from exc
-
-    keepalive_sec = max(2.0, settings.health_sse_keepalive_sec)
-
-    async def _stream() -> AsyncIterator[str]:
-        local_revision = snapshot.revision
-        initial_payload = _build_health_response_from_snapshot(snapshot=snapshot, item_ids=item_id)
-        yield _format_sse_snapshot_message(payload=initial_payload, revision=local_revision)
-        if once:
-            return
-
-        while True:
-            if await request.is_disconnected():
-                return
-
-            revision = await _HEALTH_RUNTIME.wait_for_revision_after(
-                revision=local_revision,
-                timeout_sec=keepalive_sec,
-            )
-            if await request.is_disconnected():
-                return
-
-            if revision <= local_revision:
-                # Keep idle streams alive through reverse proxies.
-                yield ": keepalive\n\n"
-                continue
-
-            current = _HEALTH_RUNTIME.snapshot()
-            if current is None:
-                try:
-                    current = await _ensure_health_snapshot_for_request(
-                        config_service=config_service,
-                        settings=settings,
-                        health_sample_repository=health_sample_repository,
-                    )
-                except DashboardConfigValidationError:
-                    continue
-
-            local_revision = current.revision
-            payload = _build_health_response_from_snapshot(snapshot=current, item_ids=item_id)
-            yield _format_sse_snapshot_message(payload=payload, revision=local_revision)
-
-    return StreamingResponse(
-        _stream(),
-        media_type=HEALTH_STREAM_MEDIA_TYPE,
-        headers={
-            "cache-control": HEALTH_STREAM_CACHE_CONTROL,
-            "connection": "keep-alive",
-            "x-accel-buffering": "no",
-        },
-    )
-
-
-@dashboard_router.get("/dashboard/iframe/{item_id}/source", response_model=IframeSourceResponse)
-async def get_iframe_source(
-    item_id: str,
-    response: Response,
-    request: Request,
-    config_service: ConfigServiceDep,
-    settings: SettingsDep,
-    proxy_signer: ProxySignerDep,
-) -> IframeSourceResponse:
-    item = _load_iframe_item(item_id, config_service)
-
-    if item.auth_profile:
-        src = f"/api/v1/dashboard/iframe/{item_id}/proxy"
-        proxy_token = proxy_signer.build_token(item_id=item_id)
-        if proxy_token:
-            response.set_cookie(
-                key=settings.proxy_access_cookie,
-                value=proxy_token,
-                max_age=settings.proxy_token_ttl_sec,
-                httponly=True,
-                secure=request.url.scheme == "https",
-                samesite="lax",
-                path=src,
-            )
-        return IframeSourceResponse(
-            item_id=item.id,
-            src=src,
-            proxied=True,
-            auth_profile=item.auth_profile,
-        )
-
-    return IframeSourceResponse(item_id=item.id, src=str(item.url), proxied=False, auth_profile=None)
-
-
-@dashboard_router.get("/dashboard/lan/state", response_model=LanScanStateResponse)
-async def get_lan_scan_state(lan_scan_service: LanScanServiceDep) -> LanScanStateResponse:
-    return lan_scan_service.state()
-
-
-@dashboard_router.post("/dashboard/lan/run", response_model=LanScanTriggerResponse)
-async def run_lan_scan(
-    lan_scan_service: LanScanServiceDep,
-) -> LanScanTriggerResponse:
-    accepted = await lan_scan_service.trigger_scan()
-    state = lan_scan_service.state()
-    if accepted:
-        message = "Сканирование запущено"
-    elif state.queued:
-        message = "Сканирование уже выполняется, следующий запуск поставлен в очередь"
-    else:
-        message = "Сканирование отключено"
-    return LanScanTriggerResponse(
-        accepted=accepted,
-        message=message,
-        state=state,
-    )
-
-
-@dashboard_router.api_route(
-    "/dashboard/iframe/{item_id}/proxy",
-    methods=["GET", "HEAD", "OPTIONS", "POST", "PUT", "PATCH", "DELETE"],
-)
-@dashboard_router.api_route(
-    "/dashboard/iframe/{item_id}/proxy/{proxy_path:path}",
-    methods=["GET", "HEAD", "OPTIONS", "POST", "PUT", "PATCH", "DELETE"],
-)
-async def proxy_iframe(
-    request: Request,
-    item_id: str,
-    config_service: ConfigServiceDep,
-    settings: SettingsDep,
-    proxy_signer: ProxySignerDep,
-    proxy_path: str = "",
-) -> Response:
-    item = _load_iframe_item(item_id, config_service)
-
-    try:
-        auth_headers, auth_query = config_service.build_proxy_request(item)
-    except DashboardConfigValidationError as exc:
-        raise _validation_exception(exc) from exc
-
-    if item.auth_profile and not proxy_signer.is_valid(
-        token=request.cookies.get(settings.proxy_access_cookie),
-        item_id=item_id,
-    ):
-        raise HTTPException(status_code=401, detail="Proxy access denied")
-
-    upstream_url = build_upstream_url(
-        base_url=str(item.url),
-        proxy_path=proxy_path,
-        request_query=list(request.query_params.multi_items()),
-        auth_query=auth_query,
-    )
-
-    outgoing_headers = {
-        key: value
-        for key, value in request.headers.items()
-        if key.lower() in PROXY_REQUEST_HEADERS
-    }
-    outgoing_headers.update(auth_headers)
-
-    filtered_cookie_header = filter_cookie_header(
-        outgoing_headers.get("cookie"),
-        blocked_cookie_names={settings.proxy_access_cookie} if settings.proxy_access_cookie else set(),
-    )
-    if filtered_cookie_header:
-        outgoing_headers["cookie"] = filtered_cookie_header
-    else:
-        outgoing_headers.pop("cookie", None)
-
-    body = await request.body()
-
-    client = httpx.AsyncClient(follow_redirects=False, timeout=20.0)
-    upstream_request = client.build_request(
-        request.method,
-        upstream_url,
-        headers=outgoing_headers,
-        content=body,
-    )
-    try:
-        upstream_response = await client.send(upstream_request, stream=True)
-    except httpx.HTTPError as exc:
-        await client.aclose()
-        raise HTTPException(status_code=502, detail=f"Upstream request failed: {exc}") from exc
-
-    response_headers = {
-        key: value
-        for key, value in upstream_response.headers.items()
-        if key.lower() in PROXY_RESPONSE_HEADERS
-    }
-
-    if "location" in response_headers:
-        response_headers["location"] = rewrite_location(
-            location=response_headers["location"],
-            item_url=str(item.url),
-            item_id=item_id,
-        )
-
-    async def _stream_body() -> AsyncIterator[bytes]:
-        async for chunk in upstream_response.aiter_raw():
-            yield chunk
-
-    response = StreamingResponse(
-        _stream_body(),
-        status_code=upstream_response.status_code,
-        headers=response_headers,
-        background=BackgroundTask(close_upstream_resources, upstream_response, client),
-    )
-
-    for cookie in upstream_response.headers.get_list("set-cookie"):
-        for rewritten_cookie in rewrite_set_cookie(cookie, item_id):
-            response.headers.append("set-cookie", rewritten_cookie)
-
-    return response
-
-
 __all__ = [
-    "dashboard_router",
+    "CONFIG_CACHE_CONTROL",
+    "HEALTH_CACHE_CONTROL",
+    "HEALTH_STREAM_CACHE_CONTROL",
+    "HEALTH_STREAM_MEDIA_TYPE",
+    "_HEALTH_RUNTIME",
+    "HealthRuntime",
+    "HealthSnapshot",
+    "_build_health_response_from_snapshot",
+    "_config_etag",
+    "_ensure_health_snapshot_for_request",
+    "_format_sse_snapshot_message",
+    "_if_none_match_matches",
+    "_load_iframe_item",
+    "httpx",
+    "probe_item_health",
     "reset_health_runtime_state",
     "start_health_runtime",
     "stop_health_runtime",

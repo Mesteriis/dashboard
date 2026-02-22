@@ -14,7 +14,11 @@
   max-height: min(92vh, 980px);
   border: 1px solid rgba(112, 236, 215, 0.34);
   border-radius: calc(var(--card-radius) + 4px);
-  background: linear-gradient(163deg, rgba(10, 24, 37, 0.98), rgba(6, 15, 24, 0.98));
+  background: linear-gradient(
+    163deg,
+    rgba(10, 24, 37, 0.98),
+    rgba(6, 15, 24, 0.98)
+  );
   box-shadow: var(--shadow);
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);

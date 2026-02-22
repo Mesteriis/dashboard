@@ -2,7 +2,13 @@
   <div class="editor-grid">
     <label class="editor-field">
       <span>ID</span>
-      <input v-model.trim="itemEditor.form.id" type="text" placeholder="auto (из названия)" autocomplete="off" :disabled="itemEditor.submitting" />
+      <input
+        v-model.trim="itemEditor.form.id"
+        type="text"
+        placeholder="auto (из названия)"
+        autocomplete="off"
+        :disabled="itemEditor.submitting"
+      />
     </label>
 
     <label class="editor-field">
@@ -81,8 +87,8 @@
 </template>
 
 <script setup>
-import { useDashboardStore } from '../../../stores/dashboardStore.js'
+import { useDashboardStore } from "../../../stores/dashboardStore.js";
 
-const dashboard = useDashboardStore()
-const { itemEditor } = dashboard
+const dashboard = useDashboardStore();
+const { itemEditor } = dashboard;
 </script>

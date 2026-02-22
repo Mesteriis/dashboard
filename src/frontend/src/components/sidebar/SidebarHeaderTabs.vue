@@ -9,8 +9,8 @@
 </template>
 
 <script setup>
-import { useDashboardStore } from '../../stores/dashboardStore.js'
+import { useDashboardStore } from "../../stores/dashboardStore.js";
 
-const dashboard = useDashboardStore()
-const { EMBLEM_SRC, appTitle, appTagline } = dashboard
+const dashboard = useDashboardStore();
+const { EMBLEM_SRC, appTitle, appTagline } = dashboard;
 </script>

@@ -54,7 +54,7 @@ class LanScanSnapshotRepository:
             return _to_stored_snapshot(row)
 
     def prune_old(self, *, keep_last: int) -> int:
-        keep = max(1, int(keep_last))
+        keep = max(1, keep_last)
 
         with self._session_factory() as session:
             rows = session.scalars(

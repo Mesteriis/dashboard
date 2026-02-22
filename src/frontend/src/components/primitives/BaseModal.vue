@@ -20,7 +20,7 @@ defineProps({
     type: String,
     required: true,
   },
-})
+});
 
-defineEmits(['backdrop'])
+defineEmits(["backdrop"]);
 </script>

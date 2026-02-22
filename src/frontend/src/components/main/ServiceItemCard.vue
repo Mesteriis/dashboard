@@ -16,8 +16,15 @@
           referrerpolicy="no-referrer"
           @error="markItemFaviconFailed(item)"
         />
-        <component v-else :is="resolveItemIcon(item)" class="ui-icon item-icon compact-item-icon" />
-        <span class="health-dot compact-health-dot" :class="healthVisualClass"></span>
+        <component
+          v-else
+          :is="resolveItemIcon(item)"
+          class="ui-icon item-icon compact-item-icon"
+        />
+        <span
+          class="health-dot compact-health-dot"
+          :class="healthVisualClass"
+        ></span>
       </div>
     </template>
 
@@ -32,8 +39,15 @@
           referrerpolicy="no-referrer"
           @error="markItemFaviconFailed(item)"
         />
-        <component v-else :is="resolveItemIcon(item)" class="ui-icon item-icon tile-item-icon" />
-        <span class="health-dot tile-health-dot" :class="healthVisualClass"></span>
+        <component
+          v-else
+          :is="resolveItemIcon(item)"
+          class="ui-icon item-icon tile-item-icon"
+        />
+        <span
+          class="health-dot tile-health-dot"
+          :class="healthVisualClass"
+        ></span>
       </div>
       <p class="item-tile-title">{{ item.title }}</p>
     </template>
@@ -50,7 +64,11 @@
             referrerpolicy="no-referrer"
             @error="markItemFaviconFailed(item)"
           />
-          <component v-else :is="resolveItemIcon(item)" class="ui-icon item-icon" />
+          <component
+            v-else
+            :is="resolveItemIcon(item)"
+            class="ui-icon item-icon"
+          />
           <h4>{{ item.title }}</h4>
         </div>
         <span class="item-type">{{ item.type }}</span>
@@ -60,31 +78,68 @@
 
       <div class="item-health">
         <span class="health-dot" :class="healthVisualClass"></span>
-        <span class="health-text" :class="{ 'is-updating': healthFlashActive }">{{ healthLabelText }}</span>
+        <span
+          class="health-text"
+          :class="{ 'is-updating': healthFlashActive }"
+          >{{ healthLabelText }}</span
+        >
       </div>
 
       <div v-if="siteLabel || item.tags?.length" class="item-tags">
-        <span v-if="siteLabel" class="tag-pill site-pill">site:{{ siteLabel }}</span>
-        <span v-for="tag in item.tags" :key="tag" class="tag-pill">{{ tag }}</span>
+        <span v-if="siteLabel" class="tag-pill site-pill"
+          >site:{{ siteLabel }}</span
+        >
+        <span v-for="tag in item.tags" :key="tag" class="tag-pill">{{
+          tag
+        }}</span>
       </div>
 
       <div class="item-actions">
-        <IconButton :title="item.type === 'iframe' ? 'Открыть iframe' : 'Открыть'" :aria-label="item.type === 'iframe' ? 'Открыть iframe' : 'Открыть'" @click.stop="openItem(item)">
-          <component :is="item.type === 'iframe' ? Globe : Link2" class="ui-icon item-action-icon" />
+        <IconButton
+          :title="item.type === 'iframe' ? 'Открыть iframe' : 'Открыть'"
+          :aria-label="item.type === 'iframe' ? 'Открыть iframe' : 'Открыть'"
+          @click.stop="openItem(item)"
+        >
+          <component
+            :is="item.type === 'iframe' ? Globe : Link2"
+            class="ui-icon item-action-icon"
+          />
         </IconButton>
-        <IconButton title="Открыть в новой вкладке" aria-label="Открыть в новой вкладке" @click.stop="openItemInNewTab(item)">
+        <IconButton
+          title="Открыть в новой вкладке"
+          aria-label="Открыть в новой вкладке"
+          @click.stop="openItemInNewTab(item)"
+        >
           <ExternalLink class="ui-icon item-action-icon" />
         </IconButton>
-        <IconButton title="Recheck health" aria-label="Recheck health" @click.stop="recheckItem(item.id)">
+        <IconButton
+          title="Recheck health"
+          aria-label="Recheck health"
+          @click.stop="recheckItem(item.id)"
+        >
           <RefreshCw class="ui-icon item-action-icon" />
         </IconButton>
-        <IconButton v-if="itemIpValue" title="Копировать IP" aria-label="Копировать IP" @click.stop="copyItemIp(item.id)">
+        <IconButton
+          v-if="itemIpValue"
+          title="Копировать IP"
+          aria-label="Копировать IP"
+          @click.stop="copyItemIp(item.id)"
+        >
           <Server class="ui-icon item-action-icon" />
         </IconButton>
-        <IconButton v-if="itemIpValue" title="Копировать SSH shortcut" aria-label="Копировать SSH shortcut" @click.stop="copyItemSshShortcut(item.id)">
+        <IconButton
+          v-if="itemIpValue"
+          title="Копировать SSH shortcut"
+          aria-label="Копировать SSH shortcut"
+          @click.stop="copyItemSshShortcut(item.id)"
+        >
           <Terminal class="ui-icon item-action-icon" />
         </IconButton>
-        <IconButton title="Копировать URL" aria-label="Копировать URL" @click.stop="copyUrl(item.url)">
+        <IconButton
+          title="Копировать URL"
+          aria-label="Копировать URL"
+          @click.stop="copyUrl(item.url)"
+        >
           <Copy class="ui-icon item-action-icon" />
         </IconButton>
       </div>
@@ -97,10 +152,18 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, ref, toRef, watch } from 'vue'
-import { Copy, ExternalLink, Globe, Link2, RefreshCw, Server, Terminal } from 'lucide-vue-next'
-import IconButton from '../primitives/IconButton.vue'
-import { useDashboardStore } from '../../stores/dashboardStore.js'
+import { computed, onBeforeUnmount, ref, toRef, watch } from "vue";
+import {
+  Copy,
+  ExternalLink,
+  Globe,
+  Link2,
+  RefreshCw,
+  Server,
+  Terminal,
+} from "lucide-vue-next";
+import IconButton from "../primitives/IconButton.vue";
+import { useDashboardStore } from "../../stores/dashboardStore.js";
 
 const props = defineProps({
   groupKey: {
@@ -115,12 +178,12 @@ const props = defineProps({
     type: Object,
     required: true,
   },
-})
-const groupKey = toRef(props, 'groupKey')
-const subgroupId = toRef(props, 'subgroupId')
-const item = toRef(props, 'item')
+});
+const groupKey = toRef(props, "groupKey");
+const subgroupId = toRef(props, "subgroupId");
+const item = toRef(props, "item");
 
-const dashboard = useDashboardStore()
+const dashboard = useDashboardStore();
 
 const {
   isIconCardView,
@@ -141,74 +204,77 @@ const {
   openItemInNewTab,
   recheckItem,
   copyUrl,
-} = dashboard
+} = dashboard;
 
-const healthVisualClass = computed(() => healthClass(item.value.id))
-const healthLabelText = computed(() => healthLabel(item.value.id))
-const itemIpValue = computed(() => itemIp(item.value.id))
-const sshShortcut = computed(() => `ssh ${itemIpValue.value}`)
-const siteLabel = computed(() => itemSite(item.value, groupKey.value))
-const healthFlashActive = ref(false)
-const dataSweepActive = ref(false)
-let healthFlashTimer = 0
-let dataSweepTimer = 0
+const healthVisualClass = computed(() => healthClass(item.value.id));
+const healthLabelText = computed(() => healthLabel(item.value.id));
+const itemIpValue = computed(() => itemIp(item.value.id));
+const sshShortcut = computed(() => `ssh ${itemIpValue.value}`);
+const siteLabel = computed(() => itemSite(item.value, groupKey.value));
+const healthFlashActive = ref(false);
+const dataSweepActive = ref(false);
+let healthFlashTimer = 0;
+let dataSweepTimer = 0;
 
 const itemCardClasses = computed(() => ({
   selected: !isCompactServiceCardView.value && isItemSelected(item.value.id),
   compact: isCompactServiceCardView.value,
   tile: isTileCardView.value,
   [`status-${healthVisualClass.value}`]: true,
-  'data-updated': dataSweepActive.value,
-}))
+  "data-updated": dataSweepActive.value,
+}));
 
 function triggerHealthFlash() {
   if (healthFlashTimer) {
-    clearTimeout(healthFlashTimer)
+    clearTimeout(healthFlashTimer);
   }
-  healthFlashActive.value = false
+  healthFlashActive.value = false;
   window.requestAnimationFrame(() => {
-    healthFlashActive.value = true
+    healthFlashActive.value = true;
     healthFlashTimer = window.setTimeout(() => {
-      healthFlashActive.value = false
-      healthFlashTimer = 0
-    }, 900)
-  })
+      healthFlashActive.value = false;
+      healthFlashTimer = 0;
+    }, 900);
+  });
 }
 
 function triggerDataSweep() {
   if (dataSweepTimer) {
-    clearTimeout(dataSweepTimer)
+    clearTimeout(dataSweepTimer);
   }
-  dataSweepActive.value = false
+  dataSweepActive.value = false;
   window.requestAnimationFrame(() => {
-    dataSweepActive.value = true
+    dataSweepActive.value = true;
     dataSweepTimer = window.setTimeout(() => {
-      dataSweepActive.value = false
-      dataSweepTimer = 0
-    }, 1250)
-  })
+      dataSweepActive.value = false;
+      dataSweepTimer = 0;
+    }, 1250);
+  });
 }
 
-watch([healthVisualClass, healthLabelText], ([nextClass, nextLabel], [prevClass, prevLabel]) => {
-  if (prevClass === undefined && prevLabel === undefined) {
-    return
-  }
-  if (nextClass !== prevClass || nextLabel !== prevLabel) {
-    triggerDataSweep()
-  }
-  if (nextLabel !== prevLabel) {
-    triggerHealthFlash()
-  }
-})
+watch(
+  [healthVisualClass, healthLabelText],
+  ([nextClass, nextLabel], [prevClass, prevLabel]) => {
+    if (prevClass === undefined && prevLabel === undefined) {
+      return;
+    }
+    if (nextClass !== prevClass || nextLabel !== prevLabel) {
+      triggerDataSweep();
+    }
+    if (nextLabel !== prevLabel) {
+      triggerHealthFlash();
+    }
+  },
+);
 
 onBeforeUnmount(() => {
   if (healthFlashTimer) {
-    clearTimeout(healthFlashTimer)
-    healthFlashTimer = 0
+    clearTimeout(healthFlashTimer);
+    healthFlashTimer = 0;
   }
   if (dataSweepTimer) {
-    clearTimeout(dataSweepTimer)
-    dataSweepTimer = 0
+    clearTimeout(dataSweepTimer);
+    dataSweepTimer = 0;
   }
-})
+});
 </script>

@@ -1,4 +1,3 @@
-
 .item-compact-body {
   width: 100%;
   height: 100%;
@@ -83,7 +82,9 @@
 
 .item-icon {
   color: #9cc8e1;
-  transition: color 220ms ease, filter 220ms ease;
+  transition:
+    color 220ms ease,
+    filter 220ms ease;
 }
 
 .item-favicon {
@@ -147,7 +148,7 @@
 }
 
 .health-dot::after {
-  content: '';
+  content: "";
   position: absolute;
   left: 50%;
   top: 50%;

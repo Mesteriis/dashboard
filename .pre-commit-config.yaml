@@ -1,41 +1,186 @@
+default_stages: [manual]
+fail_fast: false
+minimum_pre_commit_version: "4.0.0"
+exclude: ^(src/frontend/node_modules/|src-tauri/target/|src/static/assets/|src-tauri/binaries/)
+
 repos:
+  # REPO HYGIENE
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
     hooks:
       - id: check-merge-conflict
+        name: "[hygiene][quality] check-merge-conflict"
+        stages: [manual]
+      - id: check-added-large-files
+        name: "[hygiene][quality] check-added-large-files"
+        args: ["--maxkb=2048"]
+        stages: [manual]
       - id: end-of-file-fixer
+        name: "[hygiene][quality] end-of-file-fixer"
+        stages: [manual]
       - id: trailing-whitespace
+        name: "[hygiene][quality] trailing-whitespace"
+        stages: [manual]
       - id: check-yaml
+        name: "[hygiene][quality] check-yaml"
+        stages: [manual]
+      - id: check-json
+        name: "[hygiene][quality] check-json"
+        stages: [manual]
+      - id: check-toml
+        name: "[hygiene][quality] check-toml"
+        stages: [manual]
+      - id: mixed-line-ending
+        name: "[hygiene][quality] mixed-line-ending"
+        args: ["--fix=lf"]
+        stages: [manual]
 
+  # SECRETS
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.5.0
+    hooks:
+      - id: detect-secrets
+        name: "[security][quality] detect-secrets"
+        args: ["--exclude-files", "^(src/frontend/node_modules/|src-tauri/target/|src/static/assets/)"]
+        stages: [manual]
+
+  # PYTHON
   - repo: local
     hooks:
-      - id: backend-ruff
-        name: backend ruff (strict)
-        entry: uv run --group dev ruff check src tests/backend
+      - id: python-ruff-format
+        name: "[python][lint][quality] ruff-format"
+        entry: uv run --group dev ruff format src tests/backend
         language: system
+        stages: [manual]
         pass_filenames: false
-      - id: backend-mypy
-        name: backend mypy (strict)
-        entry: uv run --group dev mypy
+      - id: python-ruff-check-fix
+        name: "[python][lint][quality] ruff-check-fix-strict"
+        entry: uv run --group dev ruff check --fix --unsafe-fixes --exit-non-zero-on-fix src tests/backend
         language: system
+        stages: [manual]
         pass_filenames: false
-      - id: backend-pytest
-        name: backend pytest
-        entry: uv run --group dev pytest tests/backend
+      - id: python-mypy-strict
+        name: "[python][types][quality] mypy-strict"
+        entry: uv run --group dev mypy --strict src
         language: system
+        stages: [manual]
+        pass_filenames: false
+      - id: python-pyright
+        name: "[python][types][quality] pyright"
+        entry: uv run --group dev pyright src
+        language: system
+        stages: [manual]
+        pass_filenames: false
+      - id: python-pytest
+        name: "[python][tests][quality] pytest"
+        entry: uv run --group dev pytest --override-ini=addopts= tests/backend
+        language: system
+        stages: [manual]
+        pass_filenames: false
+      - id: python-coverage-gate
+        name: "[python][tests][quality] coverage-gate-85"
+        entry: uv run --group dev pytest --override-ini=addopts= --cov=src --cov-report=term-missing --cov-fail-under=85 tests/backend
+        language: system
+        stages: [manual]
+        pass_filenames: false
+      - id: python-refurb
+        name: "[python][quality] refurb"
+        entry: uv run --group dev refurb src
+        language: system
+        stages: [manual]
+        pass_filenames: false
+      - id: python-vulture
+        name: "[python][quality] vulture"
+        entry: uv run --group dev vulture src tests/backend --min-confidence 80
+        language: system
+        stages: [manual]
+        pass_filenames: false
+      - id: python-bandit
+        name: "[python][security][quality] bandit"
+        entry: uv run --group dev bandit -r src
+        language: system
+        stages: [manual]
+        pass_filenames: false
+      - id: python-pip-audit
+        name: "[python][security][deps] pip-audit-via-uv-export"
+        entry: >-
+          bash -lc 'set -euo pipefail;
+          tmp_requirements="$(mktemp)";
+          trap "rm -f ${tmp_requirements}" EXIT;
+          uv export --group dev --format requirements-txt --no-hashes > "${tmp_requirements}";
+          uv run --group dev pip-audit --no-deps --disable-pip -r "${tmp_requirements}"'
+        language: system
+        stages: [manual]
+        pass_filenames: false
+
+  # FRONTEND
+  - repo: local
+    hooks:
+      - id: frontend-prettier
+        name: "[frontend][lint][quality] prettier"
+        entry: bash -lc 'cd src/frontend && npm run format:check'
+        language: system
+        stages: [manual]
         pass_filenames: false
       - id: frontend-eslint
-        name: frontend eslint (strict)
-        entry: bash -lc 'cd src/frontend && npm run lint'
+        name: "[frontend][lint][quality] eslint-max-warnings-0"
+        entry: bash -lc 'cd src/frontend && npm exec -- eslint "src/**/*.{js,vue}" --max-warnings=0'
         language: system
+        stages: [manual]
         pass_filenames: false
-      - id: frontend-typecheck
-        name: frontend typecheck (strict)
-        entry: bash -lc 'cd src/frontend && npm run typecheck'
+      - id: frontend-vue-tsc
+        name: "[frontend][types][quality] vue-tsc-noemit"
+        entry: bash -lc 'cd src/frontend && npm run typecheck:app'
         language: system
+        stages: [manual]
         pass_filenames: false
       - id: frontend-tests
-        name: frontend tests
-        entry: bash -lc 'cd src/frontend && npm test'
+        name: "[frontend][tests][quality] npm-test"
+        entry: bash -lc 'cd src/frontend && npm run test'
         language: system
+        stages: [manual]
+        pass_filenames: false
+      - id: frontend-knip
+        name: "[frontend][quality] knip"
+        entry: bash -lc 'cd src/frontend && npm exec -- knip'
+        language: system
+        stages: [manual]
+        pass_filenames: false
+      - id: frontend-npm-audit
+        name: "[frontend][security][deps] npm-audit-high"
+        entry: bash -lc 'cd src/frontend && npm audit --audit-level=high'
+        language: system
+        stages: [manual]
+        pass_filenames: false
+
+  # SAST
+  - repo: local
+    hooks:
+      - id: sast-semgrep-python
+        name: "[python][security][sast] semgrep-python-security-audit"
+        entry: uv run --group dev semgrep --error --config p/python --config p/security-audit src
+        language: system
+        stages: [manual]
+        pass_filenames: false
+      - id: sast-semgrep-frontend
+        name: "[frontend][security][sast] semgrep-javascript-security-audit"
+        entry: bash -lc 'cd src/frontend && uv run --group dev semgrep --error --config p/javascript --config p/security-audit .'
+        language: system
+        stages: [manual]
+        pass_filenames: false
+
+  # SBOM
+  - repo: local
+    hooks:
+      - id: sbom-cyclonedx-python
+        name: "[python][deps][quality] cyclonedx-sbom-python"
+        entry: >-
+          bash -lc 'set -euo pipefail;
+          mkdir -p artifacts;
+          tmp_requirements="$(mktemp)";
+          trap "rm -f ${tmp_requirements}" EXIT;
+          uv export --group dev --format requirements-txt --no-hashes > "${tmp_requirements}";
+          uv run --group dev cyclonedx-py requirements "${tmp_requirements}" --output-format json --output-file artifacts/sbom-python.json'
+        language: system
+        stages: [manual]
         pass_filenames: false

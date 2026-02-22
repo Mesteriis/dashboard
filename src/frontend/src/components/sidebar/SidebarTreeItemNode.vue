@@ -1,7 +1,9 @@
 <template>
   <li
     class="tree-item-row"
-    :class="{ dragging: dragState.type === 'item' && dragState.itemId === item.id }"
+    :class="{
+      dragging: dragState.type === 'item' && dragState.itemId === item.id,
+    }"
     :draggable="editMode"
     @dragstart.stop="onItemDragStart($event, group.id, subgroup.id, item.id)"
     @dragend.stop="clearDragState"
@@ -9,7 +11,12 @@
     @drop.stop="onItemDrop($event, group.id, subgroup.id, item.id)"
   >
     <div class="tree-node-row">
-      <button class="tree-node tree-item" :class="{ active: isItemSelected(item.id) }" type="button" @click="selectItemNode(group.key, subgroup.id, item.id)">
+      <button
+        class="tree-node tree-item"
+        :class="{ active: isItemSelected(item.id) }"
+        type="button"
+        @click="selectItemNode(group.key, subgroup.id, item.id)"
+      >
         <span class="health-dot" :class="healthClass(item.id)"></span>
         <img
           v-if="itemFaviconSrc(item)"
@@ -20,16 +27,30 @@
           referrerpolicy="no-referrer"
           @error="markItemFaviconFailed(item)"
         />
-        <component v-else :is="resolveItemIcon(item)" class="ui-icon tree-icon tree-item-icon" />
+        <component
+          v-else
+          :is="resolveItemIcon(item)"
+          class="ui-icon tree-icon tree-item-icon"
+        />
         <span class="tree-text">{{ item.title }}</span>
       </button>
 
       <div v-if="editMode" class="tree-inline-actions">
         <GripVertical class="ui-icon tree-grip" />
-        <button class="tree-mini-btn" type="button" title="Редактировать элемент" @click.stop="editItem(group.id, subgroup.id, item.id)">
+        <button
+          class="tree-mini-btn"
+          type="button"
+          title="Редактировать элемент"
+          @click.stop="editItem(group.id, subgroup.id, item.id)"
+        >
           <Pencil class="ui-icon" />
         </button>
-        <button class="tree-mini-btn danger" type="button" title="Удалить элемент" @click.stop="removeItem(group.id, subgroup.id, item.id)">
+        <button
+          class="tree-mini-btn danger"
+          type="button"
+          title="Удалить элемент"
+          @click.stop="removeItem(group.id, subgroup.id, item.id)"
+        >
           <Trash2 class="ui-icon" />
         </button>
       </div>
@@ -38,16 +59,16 @@
 </template>
 
 <script setup>
-import { GripVertical, Pencil, Trash2 } from 'lucide-vue-next'
-import { useDashboardStore } from '../../stores/dashboardStore.js'
+import { GripVertical, Pencil, Trash2 } from "lucide-vue-next";
+import { useDashboardStore } from "../../stores/dashboardStore.js";
 
 defineProps({
   group: { type: Object, required: true },
   subgroup: { type: Object, required: true },
   item: { type: Object, required: true },
-})
+});
 
-const dashboard = useDashboardStore()
+const dashboard = useDashboardStore();
 
 const {
   dragState,
@@ -64,5 +85,5 @@ const {
   resolveItemIcon,
   editItem,
   removeItem,
-} = dashboard
+} = dashboard;
 </script>
