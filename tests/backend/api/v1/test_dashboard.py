@@ -325,6 +325,71 @@ async def test_get_dashboard_health_persists_health_samples_in_db(
     assert samples[0].level == "online"
 
 
+async def test_get_dashboard_health_hydrates_history_from_db_after_memory_reset(
+    api_client: AsyncClient,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    sequence = ["online", "down"]
+    seen_count = 0
+
+    async def fake_probe_item_health(**kwargs: object) -> ItemHealthStatus:
+        nonlocal seen_count
+        item = kwargs["item"]
+
+        if item.id != "svc-link":
+            return ItemHealthStatus(
+                item_id=item.id,
+                ok=True,
+                checked_url=str(item.url),
+                status_code=200,
+                latency_ms=5,
+                error=None,
+                level="online",
+                reason="ok",
+                error_kind=None,
+            )
+
+        seen_count += 1
+        level = sequence[min(seen_count - 1, len(sequence) - 1)]
+        if level == "online":
+            return ItemHealthStatus(
+                item_id=item.id,
+                ok=True,
+                checked_url=str(item.url),
+                status_code=200,
+                latency_ms=7,
+                error=None,
+                level="online",
+                reason="ok",
+                error_kind=None,
+            )
+        return ItemHealthStatus(
+            item_id=item.id,
+            ok=False,
+            checked_url=str(item.url),
+            status_code=503,
+            latency_ms=25,
+            error="HTTP 503",
+            level="down",
+            reason="http_5xx",
+            error_kind="http_error",
+        )
+
+    monkeypatch.setattr(dashboard_module, "probe_item_health", fake_probe_item_health)
+
+    first = await api_client.get("/api/v1/dashboard/health?item_id=svc-link")
+    assert first.status_code == httpx.codes.OK
+    assert len(first.json()["items"][0]["history"]) == 1
+
+    dashboard_module._HEALTH_HISTORY_BY_ITEM.clear()
+
+    second = await api_client.get("/api/v1/dashboard/health?item_id=svc-link")
+    assert second.status_code == httpx.codes.OK
+    history = second.json()["items"][0]["history"]
+    assert len(history) == 2
+    assert [point["level"] for point in history] == ["online", "down"]
+
+
 async def test_get_dashboard_health_history_respects_max_points(
     api_client: AsyncClient,
     monkeypatch: pytest.MonkeyPatch,

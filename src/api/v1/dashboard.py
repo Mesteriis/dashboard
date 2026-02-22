@@ -141,6 +141,19 @@ def _status_level(status: ItemHealthStatus) -> HealthLevel:
     return "down"
 
 
+def _coerce_health_level(level: str | None) -> HealthLevel:
+    normalized = str(level or "").lower()
+    if normalized == "online":
+        return "online"
+    if normalized == "degraded":
+        return "degraded"
+    if normalized == "down":
+        return "down"
+    if normalized == "indirect_failure":
+        return "indirect_failure"
+    return "unknown"
+
+
 def _expand_requested_with_dependencies(requested_ids: set[str], items_by_id: dict[str, ItemConfig]) -> set[str]:
     expanded: set[str] = set()
     stack = list(requested_ids)
@@ -384,6 +397,41 @@ def _prune_health_history(
         return
 
 
+def _hydrate_health_history_from_db(
+    *,
+    item_ids: set[str],
+    max_points: int,
+    health_sample_repository: HealthSampleRepository | None = None,
+) -> None:
+    if health_sample_repository is None:
+        return
+
+    missing_item_ids = {item_id for item_id in item_ids if item_id not in _HEALTH_HISTORY_BY_ITEM}
+    if not missing_item_ids:
+        return
+
+    try:
+        persisted = health_sample_repository.list_recent_by_item_ids(
+            item_ids=missing_item_ids,
+            limit_per_item=max_points,
+        )
+    except Exception:
+        return
+
+    for item_id, samples in persisted.items():
+        buffer: deque[HealthHistoryPoint] = deque(maxlen=max_points)
+        for sample in samples:
+            buffer.append(
+                HealthHistoryPoint(
+                    ts=sample.ts,
+                    level=_coerce_health_level(sample.level),
+                    latency_ms=sample.latency_ms,
+                    status_code=sample.status_code,
+                )
+            )
+        _HEALTH_HISTORY_BY_ITEM[item_id] = buffer
+
+
 dashboard_router = APIRouter(prefix="/api/v1")
 
 
@@ -499,6 +547,11 @@ async def get_dashboard_health(
     items_by_id = {item.id: item for item in all_items}
     _prune_health_history(
         set(items_by_id),
+        health_sample_repository=health_sample_repository,
+    )
+    _hydrate_health_history_from_db(
+        item_ids=set(items_by_id),
+        max_points=_health_history_size(settings),
         health_sample_repository=health_sample_repository,
     )
     requested_ids: set[str] | None = None
