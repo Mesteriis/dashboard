@@ -109,6 +109,36 @@ class HealthSampleRepository:
             result = cast(CursorResult[Any], session.execute(statement))
             return int(result.rowcount or 0)
 
+    def trim_samples_per_item(
+        self,
+        *,
+        item_ids: Iterable[str],
+        limit_per_item: int,
+    ) -> int:
+        ids = sorted({item_id for item_id in item_ids if item_id})
+        if not ids:
+            return 0
+
+        limit = max(1, int(limit_per_item))
+        deleted_total = 0
+        with self._session_factory() as session, session.begin():
+            for item_id in ids:
+                stale_ids = session.scalars(
+                    select(HealthSample.id)
+                    .where(HealthSample.item_id == item_id)
+                    .order_by(desc(HealthSample.ts), desc(HealthSample.id))
+                    .offset(limit)
+                ).all()
+                if not stale_ids:
+                    continue
+                result = cast(
+                    CursorResult[Any],
+                    session.execute(delete(HealthSample).where(HealthSample.id.in_(stale_ids))),
+                )
+                deleted_total += int(result.rowcount or 0)
+
+        return deleted_total
+
 
 def _as_utc(value: datetime) -> datetime:
     if value.tzinfo is None:

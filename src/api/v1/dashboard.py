@@ -369,6 +369,10 @@ def _record_health_history(
         return
     try:
         health_sample_repository.append_samples(persisted_samples)
+        health_sample_repository.trim_samples_per_item(
+            item_ids=statuses_by_id.keys(),
+            limit_per_item=max_points,
+        )
     except Exception:
         # Health endpoint should still return live probe data even if persistence fails.
         return

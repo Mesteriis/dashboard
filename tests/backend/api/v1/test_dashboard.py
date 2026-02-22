@@ -392,6 +392,7 @@ async def test_get_dashboard_health_hydrates_history_from_db_after_memory_reset(
 
 async def test_get_dashboard_health_history_respects_max_points(
     api_client: AsyncClient,
+    app_container: AppContainer,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     sequence = ["online", "degraded", "down"]
@@ -463,6 +464,15 @@ async def test_get_dashboard_health_history_respects_max_points(
     history = third.json()["items"][0]["history"]
     assert len(history) == 2
     assert [point["level"] for point in history] == ["degraded", "down"]
+
+    with app_container.db_session_factory() as session:
+        rows = session.scalars(
+            select(HealthSample)
+            .where(HealthSample.item_id == "svc-link")
+            .order_by(HealthSample.ts.asc(), HealthSample.id.asc())
+        ).all()
+    assert len(rows) == 2
+    assert [row.level for row in rows] == ["degraded", "down"]
 
 
 async def test_get_dashboard_health_prunes_history_for_removed_items(

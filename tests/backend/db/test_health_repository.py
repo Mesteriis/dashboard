@@ -88,3 +88,24 @@ def test_delete_samples_not_in_item_ids_with_empty_filter_removes_all_rows(
 
     history = health_repository.list_recent_by_item_ids(item_ids={"svc-a", "svc-b"}, limit_per_item=5)
     assert history == {}
+
+
+def test_trim_samples_per_item_keeps_latest_per_item(health_repository: HealthSampleRepository) -> None:
+    now = datetime(2026, 2, 22, 12, 0, 0, tzinfo=UTC)
+    health_repository.append_samples(
+        [
+            HealthSampleWrite(item_id="svc-a", ts=now + timedelta(seconds=0), level="online"),
+            HealthSampleWrite(item_id="svc-a", ts=now + timedelta(seconds=1), level="degraded"),
+            HealthSampleWrite(item_id="svc-a", ts=now + timedelta(seconds=2), level="down"),
+            HealthSampleWrite(item_id="svc-b", ts=now + timedelta(seconds=0), level="online"),
+            HealthSampleWrite(item_id="svc-b", ts=now + timedelta(seconds=1), level="unknown"),
+            HealthSampleWrite(item_id="svc-b", ts=now + timedelta(seconds=2), level="down"),
+        ]
+    )
+
+    deleted = health_repository.trim_samples_per_item(item_ids={"svc-a", "svc-b"}, limit_per_item=2)
+    assert deleted == 2
+
+    history = health_repository.list_recent_by_item_ids(item_ids={"svc-a", "svc-b"}, limit_per_item=10)
+    assert [sample.level for sample in history["svc-a"]] == ["degraded", "down"]
+    assert [sample.level for sample in history["svc-b"]] == ["unknown", "down"]
