@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Mapping, Sequence
 from http.cookies import SimpleCookie
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
@@ -44,23 +45,23 @@ async def close_upstream_resources(
 def build_upstream_url(
     base_url: str,
     proxy_path: str,
-    request_query: dict[str, str],
-    auth_query: dict[str, str],
+    request_query: Sequence[tuple[str, str]],
+    auth_query: Mapping[str, str],
 ) -> str:
     parsed = urlsplit(base_url)
     base_path = parsed.path.rstrip("/")
     target_path = f"{base_path}/{proxy_path}" if proxy_path else base_path
 
-    merged_query = dict(parse_qsl(parsed.query, keep_blank_values=True))
-    merged_query.update(request_query)
-    merged_query.update(auth_query)
+    merged_query = parse_qsl(parsed.query, keep_blank_values=True)
+    merged_query.extend(request_query)
+    merged_query.extend(auth_query.items())
 
     return urlunsplit(
         (
             parsed.scheme,
             parsed.netloc,
             target_path or "/",
-            urlencode(merged_query),
+            urlencode(merged_query, doseq=True),
             "",
         )
     )
@@ -102,3 +103,27 @@ def rewrite_set_cookie(set_cookie_value: str, item_id: str) -> list[str]:
         rewritten.append(morsel.OutputString())
 
     return rewritten or [set_cookie_value]
+
+
+def filter_cookie_header(cookie_header: str | None, blocked_cookie_names: set[str]) -> str | None:
+    if not cookie_header:
+        return None
+
+    if not blocked_cookie_names:
+        return cookie_header
+
+    cookie = SimpleCookie()
+    try:
+        cookie.load(cookie_header)
+    except Exception:
+        return cookie_header
+
+    allowed_parts: list[str] = []
+    for key, morsel in cookie.items():
+        if key in blocked_cookie_names:
+            continue
+        allowed_parts.append(f"{key}={morsel.value}")
+
+    if not allowed_parts:
+        return None
+    return "; ".join(allowed_parts)

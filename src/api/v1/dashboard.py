@@ -41,6 +41,7 @@ from tools.proxy import (
     PROXY_RESPONSE_HEADERS,
     build_upstream_url,
     close_upstream_resources,
+    filter_cookie_header,
     rewrite_location,
     rewrite_set_cookie,
 )
@@ -594,7 +595,7 @@ async def proxy_iframe(
     upstream_url = build_upstream_url(
         base_url=str(item.url),
         proxy_path=proxy_path,
-        request_query=dict(request.query_params.items()),
+        request_query=list(request.query_params.multi_items()),
         auth_query=auth_query,
     )
 
@@ -604,6 +605,15 @@ async def proxy_iframe(
         if key.lower() in PROXY_REQUEST_HEADERS
     }
     outgoing_headers.update(auth_headers)
+
+    filtered_cookie_header = filter_cookie_header(
+        outgoing_headers.get("cookie"),
+        blocked_cookie_names={settings.proxy_access_cookie} if settings.proxy_access_cookie else set(),
+    )
+    if filtered_cookie_header:
+        outgoing_headers["cookie"] = filtered_cookie_header
+    else:
+        outgoing_headers.pop("cookie", None)
 
     body = await request.body()
 
