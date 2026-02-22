@@ -5,9 +5,21 @@
 __pycache__/
 *.pyc
 .DS_Store
+.coverage
+.coverage.*
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+.ai/
+.aiassistant/
 
 dist/
 tests/
 src/frontend/tests/
 src/frontend/node_modules/
 src/frontend/dist/
+artifacts/
+data/
+src/frontend/src-tauri/target/
+src/frontend/src-tauri/gen/
+src/frontend/src-tauri/binaries/
