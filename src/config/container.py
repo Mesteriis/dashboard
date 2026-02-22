@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from config.settings import AppSettings, load_app_settings
 from db.migrations import run_alembic_upgrade
+from db.repositories import DashboardConfigRepository
 from db.session import build_sqlite_engine, sqlite_url_from_path
 from service.config_service import DashboardConfigService
 from service.lan_scan import LanScanService, lan_scan_settings_from_env
@@ -19,6 +20,7 @@ class AppContainer:
     settings: AppSettings
     db_engine: Engine
     db_session_factory: sessionmaker[Session]
+    config_repository: DashboardConfigRepository
     config_service: DashboardConfigService
     lan_scan_service: LanScanService
     proxy_signer: ProxyAccessSigner
@@ -32,10 +34,11 @@ def build_container(base_dir: Path | None = None) -> AppContainer:
         ini_path=(settings.base_dir.parent / "alembic.ini"),
         db_url=sqlite_url_from_path(settings.db_file),
     )
+    config_repository = DashboardConfigRepository(db_session_factory)
 
     config_service = DashboardConfigService(
         config_path=settings.config_file,
-        db_session_factory=db_session_factory,
+        config_repository=config_repository,
     )
     lan_scan_service = LanScanService(
         config_service=config_service,
@@ -49,6 +52,7 @@ def build_container(base_dir: Path | None = None) -> AppContainer:
         settings=settings,
         db_engine=db_engine,
         db_session_factory=db_session_factory,
+        config_repository=config_repository,
         config_service=config_service,
         lan_scan_service=lan_scan_service,
         proxy_signer=proxy_signer,

@@ -12,9 +12,8 @@ from urllib.parse import urlparse
 
 import yaml
 from pydantic import ValidationError
-from sqlalchemy.orm import Session, sessionmaker
 
-from db.models import DashboardConfigRecord, DashboardConfigRevision
+from db.repositories import DashboardConfigRepository, StoredDashboardConfig
 from scheme.dashboard import (
     AuthProfileConfig,
     BasicAuthProfile,
@@ -47,9 +46,9 @@ def _join_path(path: tuple[Any, ...]) -> str:
 
 
 class DashboardConfigService:
-    def __init__(self, config_path: Path, db_session_factory: sessionmaker[Session] | None = None):
+    def __init__(self, config_path: Path, config_repository: DashboardConfigRepository | None = None):
         self.config_path = config_path
-        self.db_session_factory = db_session_factory
+        self.config_repository = config_repository
         self._state: DashboardConfigState | None = None
         self._last_issues: list[ValidationIssue] = []
 
@@ -59,7 +58,7 @@ class DashboardConfigService:
 
     def load(self, *, force: bool = False) -> DashboardConfig:
         try:
-            if self.db_session_factory is not None:
+            if self.config_repository is not None:
                 state = self._load_from_db(force=force)
             else:
                 state = self._load_from_file(force=force)
@@ -96,7 +95,7 @@ class DashboardConfigService:
             self._last_issues = exc.issues
             raise
 
-        if self.db_session_factory is not None:
+        if self.config_repository is not None:
             state = self._save_config_to_db(config=config, source=source)
         else:
             state = self._save_to_file(config)
@@ -197,18 +196,17 @@ class DashboardConfigService:
         return DashboardConfigState(config=config, version=ConfigVersion(sha256=file_hash, mtime=file_mtime))
 
     def _fetch_db_state(self) -> DashboardConfigState | None:
-        if self.db_session_factory is None:
+        if self.config_repository is None:
             return None
 
-        with self.db_session_factory() as session:
-            record = session.get(DashboardConfigRecord, 1)
-            if record is None:
-                return None
-            return self._state_from_record(record)
+        stored = self.config_repository.fetch_active()
+        if stored is None:
+            return None
+        return self._state_from_stored(stored)
 
-    def _state_from_record(self, record: DashboardConfigRecord) -> DashboardConfigState:
+    def _state_from_stored(self, stored: StoredDashboardConfig) -> DashboardConfigState:
         try:
-            raw_document = json.loads(record.payload_json)
+            raw_document = json.loads(stored.payload_json)
         except json.JSONDecodeError as exc:
             raise DashboardConfigValidationError(
                 [
@@ -221,10 +219,10 @@ class DashboardConfigService:
             ) from exc
 
         config = self._validate_document(raw_document)
-        mtime = record.updated_at.timestamp() if record.updated_at else 0.0
+        mtime = stored.updated_at.timestamp() if stored.updated_at else 0.0
         return DashboardConfigState(
             config=config,
-            version=ConfigVersion(sha256=record.payload_sha256, mtime=mtime),
+            version=ConfigVersion(sha256=stored.payload_sha256, mtime=mtime),
         )
 
     def _bootstrap_from_yaml_to_db(self) -> DashboardConfigState:
@@ -235,49 +233,21 @@ class DashboardConfigService:
         return state
 
     def _save_config_to_db(self, *, config: DashboardConfig, source: str) -> DashboardConfigState:
-        if self.db_session_factory is None:
-            raise RuntimeError("DB session factory is required for DB-backed save")
+        if self.config_repository is None:
+            raise RuntimeError("Config repository is required for DB-backed save")
 
         payload_json = self._serialize_json(config)
         payload_sha256 = hashlib.sha256(payload_json.encode("utf-8")).hexdigest()
-        now = datetime.now(UTC)
-
-        with self.db_session_factory() as session:
-            record = session.get(DashboardConfigRecord, 1)
-            if record is None:
-                revision = 1
-                record = DashboardConfigRecord(
-                    id=1,
-                    revision=revision,
-                    payload_json=payload_json,
-                    payload_sha256=payload_sha256,
-                    source=source,
-                    created_at=now,
-                    updated_at=now,
-                )
-                session.add(record)
-            else:
-                revision = max(1, int(record.revision) + 1)
-                record.revision = revision
-                record.payload_json = payload_json
-                record.payload_sha256 = payload_sha256
-                record.source = source
-                record.updated_at = now
-
-            session.add(
-                DashboardConfigRevision(
-                    revision=revision,
-                    payload_json=payload_json,
-                    payload_sha256=payload_sha256,
-                    source=source,
-                    created_at=now,
-                )
-            )
-            session.commit()
+        stored = self.config_repository.save_active(
+            payload_json=payload_json,
+            payload_sha256=payload_sha256,
+            source=source,
+            now=datetime.now(UTC),
+        )
 
         return DashboardConfigState(
             config=config,
-            version=ConfigVersion(sha256=payload_sha256, mtime=now.timestamp()),
+            version=ConfigVersion(sha256=stored.payload_sha256, mtime=stored.updated_at.timestamp()),
         )
 
     def _save_to_file(self, config: DashboardConfig) -> DashboardConfigState:

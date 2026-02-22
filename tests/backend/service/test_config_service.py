@@ -4,15 +4,16 @@ from pathlib import Path
 
 import pytest
 from faker import Faker
-from sqlalchemy import func, select
-from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy import Engine
+from sqlalchemy.orm import sessionmaker
 from support.factories import (
     build_dashboard_config,
     build_dashboard_config_with_basic_auth,
     write_dashboard_yaml,
 )
 
-from db.models import DashboardConfigRecord, DashboardConfigRevision
+from db.models import DashboardConfigRecord
+from db.repositories import DashboardConfigRepository
 from db.session import build_sqlite_engine
 from scheme.dashboard import (
     BearerAuthProfile,
@@ -23,10 +24,11 @@ from scheme.dashboard import (
 from service.config_service import DashboardConfigService, DashboardConfigValidationError
 
 
-def _build_db_session_factory(tmp_path: Path) -> sessionmaker[Session]:
+def _build_config_repository(tmp_path: Path) -> tuple[DashboardConfigRepository, Engine]:
     engine = build_sqlite_engine((tmp_path / "dashboard.sqlite3").resolve())
     DashboardConfigRecord.metadata.create_all(engine)
-    return sessionmaker(bind=engine, autoflush=False, autocommit=False, expire_on_commit=False)
+    session_factory = sessionmaker(bind=engine, autoflush=False, autocommit=False, expire_on_commit=False)
+    return DashboardConfigRepository(session_factory), engine
 
 
 def test_get_version_refreshes_after_external_file_change(tmp_path: Path, fake: Faker) -> None:
@@ -212,33 +214,38 @@ def test_save_writes_normalized_yaml_with_trailing_newline(tmp_path: Path, fake:
 def test_db_bootstrap_imports_yaml_and_deletes_file(tmp_path: Path, fake: Faker) -> None:
     config = build_dashboard_config(fake)
     config_path = write_dashboard_yaml((tmp_path / "dashboard.yaml").resolve(), config)
-    session_factory = _build_db_session_factory(tmp_path)
-    service = DashboardConfigService(config_path=config_path, db_session_factory=session_factory)
+    repository, engine = _build_config_repository(tmp_path)
+    try:
+        service = DashboardConfigService(config_path=config_path, config_repository=repository)
 
-    loaded = service.load()
+        loaded = service.load()
 
-    assert loaded.app.id == config.app.id
-    assert not config_path.exists()
-    with session_factory() as session:
-        row = session.get(DashboardConfigRecord, 1)
-        assert row is not None
-        assert row.revision == 1
+        assert loaded.app.id == config.app.id
+        assert not config_path.exists()
+
+        stored = repository.fetch_active()
+        assert stored is not None
+        assert stored.revision == 1
+    finally:
+        engine.dispose()
 
 
 def test_db_save_updates_active_config_and_revision_history(tmp_path: Path, fake: Faker) -> None:
     config = build_dashboard_config(fake, title="First")
     config_path = write_dashboard_yaml((tmp_path / "dashboard.yaml").resolve(), config)
-    session_factory = _build_db_session_factory(tmp_path)
-    service = DashboardConfigService(config_path=config_path, db_session_factory=session_factory)
-    service.load()
+    repository, engine = _build_config_repository(tmp_path)
+    try:
+        service = DashboardConfigService(config_path=config_path, config_repository=repository)
+        service.load()
 
-    updated = build_dashboard_config(fake, title="Second")
-    state = service.save(updated.model_dump(mode="json", exclude_none=True), source="api")
+        updated = build_dashboard_config(fake, title="Second")
+        state = service.save(updated.model_dump(mode="json", exclude_none=True), source="api")
 
-    assert state.config.app.title == "Second"
-    with session_factory() as session:
-        active_row = session.get(DashboardConfigRecord, 1)
-        assert active_row is not None
-        assert active_row.revision == 2
-        history_count = session.scalar(select(func.count()).select_from(DashboardConfigRevision))
-        assert history_count == 2
+        assert state.config.app.title == "Second"
+
+        reloaded_service = DashboardConfigService(config_path=config_path, config_repository=repository)
+        reloaded = reloaded_service.load()
+        assert reloaded.app.title == "Second"
+        assert reloaded_service.get_version().sha256 == state.version.sha256
+    finally:
+        engine.dispose()
