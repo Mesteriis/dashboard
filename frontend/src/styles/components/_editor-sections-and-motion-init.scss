@@ -67,11 +67,10 @@
 .sidebar-tree,
 .sidebar-stats-accordion,
 .sidebar-stats-panel .sidebar-indicator,
-.page .hero,
-.page .panel,
-.page .block-wrap,
-.item-card,
-.widget-card {
+.page-motion-zone .panel,
+.page-motion-zone .block-wrap,
+.page-motion-zone .item-card,
+.page-motion-zone .widget-card {
   opacity: 0;
   transform: translateZ(-190px) scale(0.84) rotateX(5deg);
   filter: blur(12px);
@@ -94,12 +93,4 @@
 
 .tab-btn:nth-child(3) {
   animation-delay: 300ms;
-}
-
-.shell.shell-motion-static .page .hero {
-  animation: none;
-  opacity: 1;
-  transform: none;
-  filter: none;
-  will-change: auto;
 }

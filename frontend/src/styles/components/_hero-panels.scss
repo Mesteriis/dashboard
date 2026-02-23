@@ -257,7 +257,7 @@
   box-shadow: none;
 }
 .service-hero-controls {
-  overflow: visible;
+  overflow: hidden;
 }
 .hero-title-panel {
   padding: 0;
@@ -273,6 +273,11 @@
 
 .hero-page-tabs {
   --hero-page-tab-size: 52px;
+  --hero-page-tab-icon-size: 17px;
+  --hero-tabs-unfold-duration: 760ms;
+  --hero-tabs-slide-duration: 940ms;
+  --hero-tabs-fade-duration: 520ms;
+  --hero-tabs-ease: cubic-bezier(0.16, 1, 0.3, 1);
   margin: 0;
   display: inline-flex;
   align-items: stretch;
@@ -314,7 +319,7 @@
 }
 
 .hero-page-tabs--intro {
-  animation: hero-tabs-unfold 320ms cubic-bezier(0.22, 0.72, 0.14, 1);
+  animation: hero-tabs-unfold var(--hero-tabs-unfold-duration) var(--hero-tabs-ease);
 }
 
 .hero-page-tab-btn {
@@ -329,31 +334,55 @@
   min-height: 0;
   height: 100%;
   min-width: 0;
-  flex: 0 0 var(--hero-page-tab-size);
-  padding: 0 8px;
+  flex-grow: 0;
+  flex-shrink: 0;
+  flex-basis: var(--hero-page-tab-size);
+  padding-inline: calc(
+    (var(--hero-page-tab-size) - var(--hero-page-tab-icon-size)) / 2
+  );
+  padding-block: 0;
   display: inline-flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 0;
   cursor: pointer;
   white-space: nowrap;
   transform-origin: left center;
+  will-change: flex-grow, flex-basis, padding, gap;
   transition:
-    border-color 220ms ease,
-    background 220ms ease,
-    box-shadow 220ms ease,
-    transform 260ms ease;
+    flex-grow var(--hero-tabs-slide-duration) var(--hero-tabs-ease),
+    flex-basis var(--hero-tabs-slide-duration) var(--hero-tabs-ease),
+    padding-inline var(--hero-tabs-slide-duration) var(--hero-tabs-ease),
+    gap var(--hero-tabs-slide-duration) var(--hero-tabs-ease),
+    border-color var(--hero-tabs-fade-duration) ease,
+    background var(--hero-tabs-fade-duration) ease,
+    box-shadow var(--hero-tabs-fade-duration) ease,
+    transform 420ms ease;
+}
+
+.hero-page-tabs--js-smooth .hero-page-tab-btn,
+.hero-page-tabs--js-smooth .hero-page-tab-btn.active {
+  flex-grow: 0;
+  flex-shrink: 0;
+  flex-basis: auto;
+  transition:
+    border-color var(--hero-tabs-fade-duration) ease,
+    background var(--hero-tabs-fade-duration) ease,
+    box-shadow var(--hero-tabs-fade-duration) ease,
+    transform 420ms ease;
+}
+
+.hero-page-tabs--js-smooth .hero-page-tab-label {
+  transition: none;
+}
+
+.hero-page-tabs--js-smooth.hero-page-tabs--intro .hero-page-tab-btn,
+.hero-page-tabs--js-smooth .hero-page-tab-btn--intro-active {
+  animation: none;
 }
 
 .hero-page-tabs--intro .hero-page-tab-btn {
-  transition:
-    border-color 220ms ease,
-    background 220ms ease,
-    box-shadow 220ms ease,
-    transform 260ms ease,
-    flex-basis 420ms cubic-bezier(0.22, 0.72, 0.14, 1),
-    padding 420ms cubic-bezier(0.22, 0.72, 0.14, 1);
-  animation: hero-tab-spread 420ms cubic-bezier(0.18, 0.74, 0.18, 1) backwards;
+  animation: hero-tab-spread var(--hero-tabs-slide-duration) var(--hero-tabs-ease) backwards;
 }
 
 .hero-page-tab-btn + .hero-page-tab-btn {
@@ -381,22 +410,24 @@
 }
 
 .hero-page-tabs--intro .hero-page-tab-btn:nth-of-type(2) {
-  animation-delay: 52ms;
+  animation-delay: 84ms;
 }
 
 .hero-page-tabs--intro .hero-page-tab-btn:nth-of-type(3) {
-  animation-delay: 96ms;
+  animation-delay: 156ms;
 }
 
 .hero-page-tabs--intro .hero-page-tab-btn:nth-of-type(4) {
-  animation-delay: 140ms;
+  animation-delay: 228ms;
 }
 
 .hero-page-tab-btn.active {
-  flex: 1 1 auto;
-  justify-content: flex-start;
-  gap: 8px;
-  padding: 0 32px;
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 0%;
+  gap: 10px;
+  padding-inline: 32px;
+  padding-block: 0;
   border-color: rgba(120, 246, 223, 0.56);
   background: linear-gradient(
     138deg,
@@ -407,47 +438,61 @@
     0 10px 24px rgba(0, 171, 153, 0.2),
     inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
+.hero-page-tab-btn.hero-page-tab-btn--home,
+.hero-page-tab-btn.hero-page-tab-btn--home.active {
+  flex-grow: 0;
+  flex-shrink: 0;
+  flex-basis: var(--hero-page-tab-size);
+  justify-content: center;
+  gap: 0;
+  padding-inline: 0;
+  padding-block: 0;
+}
 
 .hero-page-tab-btn--intro-active {
   animation:
-    hero-tab-spread 420ms cubic-bezier(0.18, 0.74, 0.18, 1) backwards,
-    hero-tab-activate 320ms cubic-bezier(0.22, 0.72, 0.14, 1);
+    hero-tab-spread var(--hero-tabs-slide-duration) var(--hero-tabs-ease) backwards,
+    hero-tab-activate var(--hero-tabs-unfold-duration) var(--hero-tabs-ease);
 }
 
 .hero-page-tab-icon {
-  width: 17px;
-  height: 17px;
+  width: var(--hero-page-tab-icon-size);
+  height: var(--hero-page-tab-icon-size);
   color: #9dd9cf;
   flex: 0 0 auto;
 }
 
 .hero-page-tab-label {
-  inline-size: 0;
+  max-inline-size: 0;
   min-width: 0;
   opacity: 0;
   margin-left: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  transform: translateX(-8px);
+  transform: translateX(-10px);
   font-family: "Cinzel", "Times New Roman", serif;
   font-size: clamp(1.05rem, 1.45vw, 1.4rem);
   line-height: 1.05;
-  transition: none;
+  transition:
+    max-inline-size var(--hero-tabs-slide-duration) var(--hero-tabs-ease),
+    opacity var(--hero-tabs-fade-duration) ease,
+    margin-left var(--hero-tabs-slide-duration) var(--hero-tabs-ease),
+    transform var(--hero-tabs-slide-duration) var(--hero-tabs-ease);
 }
 
 .hero-page-tabs--intro .hero-page-tab-label {
   transition:
-    inline-size 420ms cubic-bezier(0.22, 0.72, 0.14, 1),
-    opacity 220ms ease,
-    margin-left 420ms cubic-bezier(0.22, 0.72, 0.14, 1),
-    transform 420ms cubic-bezier(0.22, 0.72, 0.14, 1);
+    max-inline-size var(--hero-tabs-slide-duration) var(--hero-tabs-ease),
+    opacity var(--hero-tabs-fade-duration) ease,
+    margin-left var(--hero-tabs-slide-duration) var(--hero-tabs-ease),
+    transform var(--hero-tabs-slide-duration) var(--hero-tabs-ease);
 }
 
 .hero-page-tab-btn.active .hero-page-tab-label {
-  inline-size: 100%;
-  opacity: 1;
-  margin-left: 2px;
+  max-inline-size: min(44vw, 520px);
+  opacity: 0.98;
+  margin-left: 4px;
   transform: translateX(0);
 }
 
@@ -533,6 +578,12 @@
   min-height: 0;
   padding: 0;
   aspect-ratio: 1 / 1;
+}
+.service-hero-controls .hero-lan-scan-btn {
+  inline-size: 52px;
+  min-inline-size: 52px;
+  flex: 0 0 52px;
+  aspect-ratio: auto;
 }
 .service-hero-controls .hero-accordion-action {
   border: 0;

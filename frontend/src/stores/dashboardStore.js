@@ -506,6 +506,7 @@ export function useDashboardStore() {
   const commandPaletteEntries = computed(() => {
     const entries = [];
     const pageMap = pageByBlockGroupId.value;
+    const hasLanPage = pages.value.some((page) => page.id === LAN_PAGE_ID);
 
     entries.push({
       id: "action:open-settings-panel",
@@ -527,6 +528,28 @@ export function useDashboardStore() {
       searchBlob:
         "открыть панель настроек settings ui интерфейс control panel параметры фильтры",
     });
+    if (hasLanPage) {
+      entries.push({
+        id: "action:open-lan-workspace",
+        type: "action",
+        action: "open_lan_workspace",
+        item: null,
+        title: "Открыть LAN обзор",
+        titleLower: "открыть lan обзор",
+        host: "",
+        ip: "",
+        site: "",
+        tagsLower: [],
+        groupId: "",
+        groupKey: "",
+        groupTitle: "Команда",
+        subgroupId: "",
+        subgroupTitle: "Сеть",
+        pageId: LAN_PAGE_ID,
+        searchBlob:
+          "открыть lan обзор сеть network scan scanner сканер устройства хосты",
+      });
+    }
 
     for (const group of config.value?.groups || []) {
       for (const subgroup of group.subgroups || []) {
@@ -1855,6 +1878,14 @@ export function useDashboardStore() {
     settingsPanel.open = true;
   }
 
+  function openLanWorkspace() {
+    if (!pages.value.some((page) => page.id === LAN_PAGE_ID)) {
+      return false;
+    }
+    activePageId.value = LAN_PAGE_ID;
+    return true;
+  }
+
   function closeSettingsPanel() {
     settingsPanel.open = false;
   }
@@ -1903,6 +1934,12 @@ export function useDashboardStore() {
     if (entry.type === "action" && entry.action === "open_settings_panel") {
       closeCommandPalette();
       openSettingsPanel();
+      return;
+    }
+
+    if (entry.type === "action" && entry.action === "open_lan_workspace") {
+      closeCommandPalette();
+      openLanWorkspace();
       return;
     }
 
@@ -3297,7 +3334,7 @@ export function useDashboardStore() {
     if (container.dataset.particlesReady === "1") return;
 
     container.innerHTML = "";
-    window.particlesJS(containerId, config);
+    await window.particlesJS(containerId, config);
     container.dataset.particlesReady = "1";
   }
 
@@ -3635,6 +3672,7 @@ export function useDashboardStore() {
     openIndicatorView,
     openItem,
     openItemInNewTab,
+    openLanWorkspace,
     openLanHostModal,
     openLinkItem,
     pageHealthSummary,

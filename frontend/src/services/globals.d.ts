@@ -1,6 +1,15 @@
 export {}
 
 declare global {
+  interface ImportMetaEnv {
+    readonly BASE_URL?: string
+    readonly DEV?: boolean
+  }
+
+  interface ImportMeta {
+    readonly env: ImportMetaEnv
+  }
+
   interface Window {
     __OKO_API_BASE__?: string
     __OKO_DESKTOP_RUNTIME__?: {

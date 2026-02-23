@@ -1,8 +1,8 @@
 {
-  "generated_at": "2026-02-22T20:31:11.959175Z",
-  "duration_ms": 2773,
+  "generated_at": "2026-02-23T09:43:57.315025Z",
+  "duration_ms": 47420,
   "scanned_hosts": 254,
-  "scanned_ports": 762,
+  "scanned_ports": 22860,
   "scanned_cidrs": [
     "192.168.1.0/24"
   ],
@@ -41,12 +41,12 @@
         {
           "port": 443,
           "scheme": "https",
-          "url": "https://192.168.1.1:443/",
-          "status_code": null,
+          "url": "https://192.168.1.1/",
+          "status_code": 200,
           "title": null,
           "description": null,
           "server": null,
-          "error": "https: ConnectError"
+          "error": null
         }
       ],
       "dashboard_items": []
@@ -61,9 +61,84 @@
         {
           "port": 22,
           "service": "ssh"
+        },
+        {
+          "port": 111,
+          "service": "rpcbind"
+        },
+        {
+          "port": 3128,
+          "service": "proxy"
+        },
+        {
+          "port": 8006,
+          "service": "proxmox"
+        },
+        {
+          "port": 8080,
+          "service": "http-alt"
+        },
+        {
+          "port": 11434,
+          "service": "ollama"
+        },
+        {
+          "port": 19999,
+          "service": "netdata"
         }
       ],
-      "http_services": [],
+      "http_services": [
+        {
+          "port": 3128,
+          "scheme": "http",
+          "url": "http://192.168.1.2:3128/",
+          "status_code": 501,
+          "title": null,
+          "description": null,
+          "server": "pve-api-daemon/3.0",
+          "error": null
+        },
+        {
+          "port": 8006,
+          "scheme": "http",
+          "url": "https://192.168.1.2:8006/",
+          "status_code": 200,
+          "title": "pve - Proxmox Virtual Environment",
+          "description": null,
+          "server": "pve-api-daemon/3.0",
+          "error": null
+        },
+        {
+          "port": 8080,
+          "scheme": "http",
+          "url": "http://192.168.1.2:8080/",
+          "status_code": 200,
+          "title": "File Browser",
+          "description": null,
+          "server": null,
+          "error": null
+        },
+        {
+          "port": 11434,
+          "scheme": "http",
+          "url": "http://192.168.1.2:11434/",
+          "status_code": 200,
+          "title": null,
+          "description": null,
+          "server": null,
+          "error": null
+        },
+        {
+          "port": 19999,
+          "scheme": "http",
+          "url": "http://192.168.1.2:19999/",
+          "status_code": 200,
+          "title": "Netdata",
+          "description": null,
+          "server": "Netdata Embedded HTTP Server v2.9.0",
+          "error": null
+        }
+      ],
       "dashboard_items": [
         {
           "id": "h-192-168-1-2-p-8080-2",
@@ -97,9 +172,42 @@
         {
           "port": 22,
           "service": "ssh"
+        },
+        {
+          "port": 53,
+          "service": "dns"
+        },
+        {
+          "port": 3000,
+          "service": "app-3000"
+        },
+        {
+          "port": 19999,
+          "service": "netdata"
         }
       ],
-      "http_services": [],
+      "http_services": [
+        {
+          "port": 3000,
+          "scheme": "http",
+          "url": "http://192.168.1.3:3000/login.html",
+          "status_code": 200,
+          "title": "Login",
+          "description": null,
+          "server": null,
+          "error": null
+        },
+        {
+          "port": 19999,
+          "scheme": "http",
+          "url": "http://192.168.1.3:19999/",
+          "status_code": 200,
+          "title": "Netdata",
+          "description": null,
+          "server": "Netdata Embedded HTTP Server v2.8.1",
+          "error": null
+        }
+      ],
       "dashboard_items": [
         {
           "id": "h-192-168-1-3-p-19999",
@@ -118,9 +226,50 @@
         {
           "port": 22,
           "service": "ssh"
+        },
+        {
+          "port": 111,
+          "service": "rpcbind"
+        },
+        {
+          "port": 139,
+          "service": "netbios"
+        },
+        {
+          "port": 445,
+          "service": "smb"
+        },
+        {
+          "port": 8123,
+          "service": "home-assistant"
+        },
+        {
+          "port": 9090,
+          "service": "prometheus"
         }
       ],
-      "http_services": [],
+      "http_services": [
+        {
+          "port": 8123,
+          "scheme": "http",
+          "url": "http://192.168.1.4:8123/",
+          "status_code": 200,
+          "title": "Home Assistant",
+          "description": null,
+          "server": "",
+          "error": null
+        },
+        {
+          "port": 9090,
+          "scheme": "http",
+          "url": "http://192.168.1.4:9090/",
+          "status_code": 200,
+          "title": "Mealie",
+          "description": "Mealie is a recipe management app for your kitchen.",
+          "server": "nginx",
+          "error": null
+        }
+      ],
       "dashboard_items": [
         {
           "id": "h-192-168-1-4-p-9999-4",
@@ -154,9 +303,24 @@
         {
           "port": 22,
           "service": "ssh"
+        },
+        {
+          "port": 3000,
+          "service": "app-3000"
         }
       ],
-      "http_services": [],
+      "http_services": [
+        {
+          "port": 3000,
+          "scheme": "http",
+          "url": "http://192.168.1.5:3000/",
+          "status_code": 200,
+          "title": "Personal Git Server",
+          "description": "Gitea (Git with a cup of tea) is a painless self-hosted Git service written in Go",
+          "server": null,
+          "error": null
+        }
+      ],
       "dashboard_items": [
         {
           "id": "h-192-168-1-5-p-3000",
@@ -175,9 +339,80 @@
         {
           "port": 22,
           "service": "ssh"
+        },
+        {
+          "port": 3000,
+          "service": "app-3000"
+        },
+        {
+          "port": 5001,
+          "service": "app-5001"
+        },
+        {
+          "port": 7575,
+          "service": "homarr"
+        },
+        {
+          "port": 8000,
+          "service": "app-8000"
+        },
+        {
+          "port": 9090,
+          "service": "prometheus"
         }
       ],
-      "http_services": [],
+      "http_services": [
+        {
+          "port": 3000,
+          "scheme": "http",
+          "url": "http://192.168.1.6:3000/",
+          "status_code": 200,
+          "title": "DbGate",
+          "description": "DbGate - web based opensource database administration tool for MS SQL, MySQL, Postgre SQL",
+          "server": null,
+          "error": null
+        },
+        {
+          "port": 5001,
+          "scheme": "http",
+          "url": "http://192.168.1.6:5001/",
+          "status_code": 200,
+          "title": "Dockge",
+          "description": null,
+          "server": null,
+          "error": null
+        },
+        {
+          "port": 7575,
+          "scheme": "http",
+          "url": "http://192.168.1.6:7575/onboard",
+          "status_code": 200,
+          "title": "Onboard • Homarr",
+          "description": null,
+          "server": null,
+          "error": null
+        },
+        {
+          "port": 8000,
+          "scheme": "http",
+          "url": "http://192.168.1.6:8000/",
+          "status_code": 200,
+          "title": "GlitchTip",
+          "description": null,
+          "server": null,
+          "error": null
+        },
+        {
+          "port": 9090,
+          "scheme": "http",
+          "url": "http://192.168.1.6:9090/",
+          "status_code": 200,
+          "title": "Console",
+          "description": "width=device-width,initial-scale=1\" name=\"viewport\"/><meta content=\"#081C42\" media=\"(prefers-color-scheme: light)\" name=\"theme-color\"/><meta content=\"#081C42\" media=\"(prefers-color-scheme: dark)\" name=\"theme-color\"/><meta content=",
+          "server": "MinIO Console",
+          "error": null
+        }
+      ],
       "dashboard_items": [
         {
           "id": "h-192-168-1-6-p-9090-5",
@@ -211,11 +446,11 @@
       "hostname": null,
       "mac_address": null,
       "mac_vendor": null,
-      "device_type": "Linux/Unix Host",
+      "device_type": "Server/Host",
       "open_ports": [
         {
-          "port": 22,
-          "service": "ssh"
+          "port": 2375,
+          "service": "docker"
         }
       ],
       "http_services": [],
@@ -224,13 +459,13 @@
     {
       "ip": "192.168.1.8",
       "hostname": null,
-      "mac_address": "BC:24:11:3B:6F:DD",
+      "mac_address": null,
       "mac_vendor": null,
-      "device_type": "Linux/Unix Host",
+      "device_type": "Server/Host",
       "open_ports": [
         {
-          "port": 22,
-          "service": "ssh"
+          "port": 2375,
+          "service": "docker"
         }
       ],
       "http_services": [],
@@ -262,7 +497,7 @@
       "hostname": null,
       "mac_address": null,
       "mac_vendor": null,
-      "device_type": "Web Device",
+      "device_type": "NAS/File Server",
       "open_ports": [
         {
           "port": 22,
@@ -271,6 +506,22 @@
         {
           "port": 80,
           "service": "http"
+        },
+        {
+          "port": 111,
+          "service": "rpcbind"
+        },
+        {
+          "port": 139,
+          "service": "netbios"
+        },
+        {
+          "port": 445,
+          "service": "smb"
+        },
+        {
+          "port": 2049,
+          "service": "nfs"
         }
       ],
       "http_services": [
@@ -298,7 +549,7 @@
       "hostname": null,
       "mac_address": "BC:24:11:46:A2:B5",
       "mac_vendor": null,
-      "device_type": "Web Device",
+      "device_type": "Linux/Unix Host",
       "open_ports": [
         {
           "port": 22,
@@ -307,6 +558,58 @@
         {
           "port": 80,
           "service": "http"
+        },
+        {
+          "port": 111,
+          "service": "rpcbind"
+        },
+        {
+          "port": 3001,
+          "service": "app-3001"
+        },
+        {
+          "port": 3002,
+          "service": "app-3002"
+        },
+        {
+          "port": 7878,
+          "service": "radarr"
+        },
+        {
+          "port": 8080,
+          "service": "http-alt"
+        },
+        {
+          "port": 8191,
+          "service": "flaresolverr"
+        },
+        {
+          "port": 8265,
+          "service": "tdarr"
+        },
+        {
+          "port": 8266,
+          "service": "tdarr-node"
+        },
+        {
+          "port": 8686,
+          "service": "lidarr"
+        },
+        {
+          "port": 8787,
+          "service": "readarr"
+        },
+        {
+          "port": 8989,
+          "service": "sonarr"
+        },
+        {
+          "port": 9696,
+          "service": "prowlarr"
+        },
+        {
+          "port": 13378,
+          "service": "audiobookshelf"
         }
       ],
       "http_services": [
@@ -318,6 +621,126 @@
           "title": "Media Stack Dashboard",
           "description": null,
           "server": "Werkzeug/3.1.5 Python/3.11.14",
+          "error": null
+        },
+        {
+          "port": 3001,
+          "scheme": "http",
+          "url": "http://192.168.1.24:3001/",
+          "status_code": 200,
+          "title": "JellyStat",
+          "description": "Jellyfin stats for the masses",
+          "server": null,
+          "error": null
+        },
+        {
+          "port": 3002,
+          "scheme": "http",
+          "url": "http://192.168.1.24:3002/",
+          "status_code": 200,
+          "title": "Media Stack",
+          "description": "A highly customizable homepage (or startpage / application dashboard) with Docker and service API integrations.",
+          "server": null,
+          "error": null
+        },
+        {
+          "port": 7878,
+          "scheme": "http",
+          "url": "http://192.168.1.24:7878/radarr/",
+          "status_code": 200,
+          "title": "Radarr",
+          "description": "Radarr",
+          "server": "Kestrel",
+          "error": null
+        },
+        {
+          "port": 8080,
+          "scheme": "http",
+          "url": "http://192.168.1.24:8080/",
+          "status_code": 200,
+          "title": "qBittorrent WebUI",
+          "description": "qBittorrent WebUI",
+          "server": null,
+          "error": null
+        },
+        {
+          "port": 8191,
+          "scheme": "http",
+          "url": "http://192.168.1.24:8191/",
+          "status_code": 200,
+          "title": null,
+          "description": null,
+          "server": "waitress",
+          "error": null
+        },
+        {
+          "port": 8265,
+          "scheme": "http",
+          "url": "http://192.168.1.24:8265/",
+          "status_code": 200,
+          "title": "Tdarr",
+          "description": "Tdarr UI",
+          "server": null,
+          "error": null
+        },
+        {
+          "port": 8266,
+          "scheme": "http",
+          "url": "http://192.168.1.24:8265/",
+          "status_code": 200,
+          "title": "Tdarr",
+          "description": "Tdarr UI",
+          "server": null,
+          "error": null
+        },
+        {
+          "port": 8686,
+          "scheme": "http",
+          "url": "http://192.168.1.24:8686/lidarr/",
+          "status_code": 200,
+          "title": "Lidarr",
+          "description": "Lidarr",
+          "server": "Kestrel",
+          "error": null
+        },
+        {
+          "port": 8787,
+          "scheme": "http",
+          "url": "http://192.168.1.24:8787/readarr/",
+          "status_code": 200,
+          "title": "Readarr",
+          "description": "Readarr",
+          "server": "Kestrel",
+          "error": null
+        },
+        {
+          "port": 8989,
+          "scheme": "http",
+          "url": "http://192.168.1.24:8989/sonarr/",
+          "status_code": 200,
+          "title": "Sonarr",
+          "description": "Sonarr",
+          "server": "Kestrel",
+          "error": null
+        },
+        {
+          "port": 9696,
+          "scheme": "http",
+          "url": "http://192.168.1.24:9696/prowlarr/",
+          "status_code": 200,
+          "title": "Prowlarr",
+          "description": "Prowlarr",
+          "server": "Kestrel",
+          "error": null
+        },
+        {
+          "port": 13378,
+          "scheme": "http",
+          "url": "http://192.168.1.24:13378/",
+          "status_code": 200,
+          "title": "Audiobookshelf",
+          "description": null,
+          "server": null,
           "error": null
         }
       ],
@@ -394,7 +817,7 @@
       "hostname": null,
       "mac_address": "BC:24:11:71:32:A9",
       "mac_vendor": null,
-      "device_type": "Web Device",
+      "device_type": "Database Server",
       "open_ports": [
         {
           "port": 22,
@@ -403,6 +826,14 @@
         {
           "port": 80,
           "service": "http"
+        },
+        {
+          "port": 5432,
+          "service": "postgres"
+        },
+        {
+          "port": 8080,
+          "service": "http-alt"
         }
       ],
       "http_services": [
@@ -414,6 +845,16 @@
           "title": "PostgreSQL 18 Dashboard - postgres18",
           "description": null,
           "server": "nginx",
+          "error": null
+        },
+        {
+          "port": 8080,
+          "scheme": "http",
+          "url": "http://192.168.1.25:8080/",
+          "status_code": 404,
+          "title": "404 Not Found",
+          "description": null,
+          "server": "Werkzeug/3.1.3 Python/3.13.5",
           "error": null
         }
       ],
@@ -435,9 +876,28 @@
         {
           "port": 22,
           "service": "ssh"
+        },
+        {
+          "port": 2375,
+          "service": "docker"
+        },
+        {
+          "port": 6333,
+          "service": "qdrant"
         }
       ],
-      "http_services": [],
+      "http_services": [
+        {
+          "port": 6333,
+          "scheme": "http",
+          "url": "http://192.168.1.26:6333/",
+          "status_code": 200,
+          "title": null,
+          "description": null,
+          "server": null,
+          "error": null
+        }
+      ],
       "dashboard_items": [
         {
           "id": "h-192-168-1-26-p-6333",
@@ -451,11 +911,11 @@
       "hostname": null,
       "mac_address": null,
       "mac_vendor": null,
-      "device_type": "Linux/Unix Host",
+      "device_type": "Server/Host",
       "open_ports": [
         {
-          "port": 22,
-          "service": "ssh"
+          "port": 2375,
+          "service": "docker"
         }
       ],
       "http_services": [],
@@ -471,9 +931,24 @@
         {
           "port": 22,
           "service": "ssh"
+        },
+        {
+          "port": 9000,
+          "service": "portainer"
         }
       ],
-      "http_services": [],
+      "http_services": [
+        {
+          "port": 9000,
+          "scheme": "http",
+          "url": "http://192.168.1.28:9000/",
+          "status_code": 403,
+          "title": null,
+          "description": null,
+          "server": "MinIO",
+          "error": null
+        }
+      ],
       "dashboard_items": [
         {
           "id": "h-192-168-1-28-p-9000",
@@ -497,6 +972,10 @@
         {
           "port": 80,
           "service": "http"
+        },
+        {
+          "port": 8080,
+          "service": "http-alt"
         }
       ],
       "http_services": [
@@ -508,6 +987,16 @@
           "title": null,
           "description": null,
           "server": "Caddy",
+          "error": null
+        },
+        {
+          "port": 8080,
+          "scheme": "http",
+          "url": "http://192.168.1.29:8080/",
+          "status_code": 200,
+          "title": "File Browser",
+          "description": null,
+          "server": null,
           "error": null
         }
       ],
@@ -527,13 +1016,17 @@
     {
       "ip": "192.168.1.30",
       "hostname": null,
-      "mac_address": "BC:24:11:9A:7F:52",
+      "mac_address": null,
       "mac_vendor": null,
       "device_type": "Linux/Unix Host",
       "open_ports": [
         {
           "port": 22,
           "service": "ssh"
+        },
+        {
+          "port": 2375,
+          "service": "docker"
         }
       ],
       "http_services": [],
@@ -544,55 +1037,67 @@
       "hostname": null,
       "mac_address": "BC:24:11:AB:BC:EC",
       "mac_vendor": null,
-      "device_type": "Web Device",
+      "device_type": "Server/Host",
       "open_ports": [
         {
-          "port": 22,
-          "service": "ssh"
+          "port": 2375,
+          "service": "docker"
         },
         {
-          "port": 80,
-          "service": "http"
+          "port": 3000,
+          "service": "app-3000"
+        },
+        {
+          "port": 3001,
+          "service": "app-3001"
+        },
+        {
+          "port": 8080,
+          "service": "http-alt"
+        },
+        {
+          "port": 8081,
+          "service": "http-alt"
         }
       ],
       "http_services": [
         {
-          "port": 80,
+          "port": 3000,
           "scheme": "http",
-          "url": "http://192.168.1.31/",
+          "url": "http://192.168.1.31:3000/",
           "status_code": 200,
-          "title": "3D Printing Dashboard",
+          "title": null,
           "description": null,
-          "server": "nginx/1.29.4",
+          "server": "nginx",
           "error": null
-        }
-      ],
-      "dashboard_items": []
-    },
-    {
-      "ip": "192.168.1.32",
-      "hostname": null,
-      "mac_address": "BC:24:11:4D:F5:13",
-      "mac_vendor": null,
-      "device_type": "Web Device",
-      "open_ports": [
-        {
-          "port": 22,
-          "service": "ssh"
         },
         {
-          "port": 80,
-          "service": "http"
-        }
-      ],
-      "http_services": [
-        {
-          "port": 80,
+          "port": 3001,
           "scheme": "http",
-          "url": "http://192.168.1.32/",
-          "status_code": 200,
-          "title": "Termix",
+          "url": "http://192.168.1.31:3001/",
+          "status_code": 400,
+          "title": "400 The plain HTTP request was sent to HTTPS port",
           "description": null,
+          "server": "nginx",
+          "error": null
+        },
+        {
+          "port": 8080,
+          "scheme": "http",
+          "url": "http://192.168.1.31:8080/",
+          "status_code": 200,
+          "title": "fluidd",
+          "description": "The Klipper web interface for managing your 3d printer",
+          "server": "nginx/1.23.3",
+          "error": null
+        },
+        {
+          "port": 8081,
+          "scheme": "http",
+          "url": "http://192.168.1.31:8081/",
+          "status_code": 200,
+          "title": "Mainsail",
+          "description": "Mainsail is the popular web interface for Klipper.",
           "server": "nginx/1.26.3",
           "error": null
         }
@@ -601,10 +1106,10 @@
     },
     {
       "ip": "192.168.1.33",
-      "hostname": null,
+      "hostname": "59979288f7e1c4a231aa56b0521df5f4.14a612cacd75cd7fce52e56363429642.traefik.default",
       "mac_address": "BC:24:11:F8:BC:57",
       "mac_vendor": null,
-      "device_type": "Web Device",
+      "device_type": "Linux/Unix Host",
       "open_ports": [
         {
           "port": 22,
@@ -617,6 +1122,10 @@
         {
           "port": 443,
           "service": "https"
+        },
+        {
+          "port": 3000,
+          "service": "app-3000"
         }
       ],
       "http_services": [
@@ -632,10 +1141,20 @@
         },
         {
           "port": 443,
-          "scheme": "http",
-          "url": "http://192.168.1.33:443/",
+          "scheme": "https",
+          "url": "https://192.168.1.33/",
           "status_code": 404,
           "title": null,
+          "description": null,
+          "server": null,
+          "error": null
+        },
+        {
+          "port": 3000,
+          "scheme": "http",
+          "url": "http://192.168.1.33:3000/",
+          "status_code": 200,
+          "title": "Dokploy",
           "description": null,
           "server": null,
           "error": null
@@ -648,7 +1167,7 @@
       "hostname": null,
       "mac_address": "C8:89:F3:E6:66:70",
       "mac_vendor": null,
-      "device_type": "Web Device",
+      "device_type": "Linux/Unix Host",
       "open_ports": [
         {
           "port": 22,
@@ -661,6 +1180,10 @@
         {
           "port": 443,
           "service": "https"
+        },
+        {
+          "port": 5000,
+          "service": "app-5000"
         }
       ],
       "http_services": [
@@ -683,6 +1206,16 @@
           "description": null,
           "server": null,
           "error": "https: ConnectError"
+        },
+        {
+          "port": 5000,
+          "scheme": "http",
+          "url": "http://192.168.1.58:5000/",
+          "status_code": 403,
+          "title": null,
+          "description": null,
+          "server": "AirTunes/925.5.1",
+          "error": null
         }
       ],
       "dashboard_items": [
@@ -711,7 +1244,7 @@
     {
       "ip": "192.168.1.94",
       "hostname": null,
-      "mac_address": null,
+      "mac_address": "B8:87:6E:E4:48:68",
       "mac_vendor": null,
       "device_type": "Unknown",
       "open_ports": [],
@@ -726,7 +1259,7 @@
     },
     {
       "ip": "192.168.1.107",
-      "hostname": null,
+      "hostname": "www.asusrouter.com",
       "mac_address": "10:7C:61:CD:30:A8",
       "mac_vendor": null,
       "device_type": "Web Device",
@@ -734,6 +1267,10 @@
         {
           "port": 80,
           "service": "http"
+        },
+        {
+          "port": 8443,
+          "service": "https-alt"
         }
       ],
       "http_services": [
@@ -741,6 +1278,16 @@
           "port": 80,
           "scheme": "http",
           "url": "http://192.168.1.107/",
+          "status_code": 200,
+          "title": null,
+          "description": null,
+          "server": "httpd/3.0",
+          "error": null
+        },
+        {
+          "port": 8443,
+          "scheme": "https",
+          "url": "https://192.168.1.107:8443/",
           "status_code": 200,
           "title": null,
           "description": null,
@@ -775,6 +1322,10 @@
         {
           "port": 80,
           "service": "http"
+        },
+        {
+          "port": 3000,
+          "service": "app-3000"
         }
       ],
       "http_services": [
@@ -786,6 +1337,16 @@
           "title": "AI WebUI Hub",
           "description": null,
           "server": "nginx/1.22.1",
+          "error": null
+        },
+        {
+          "port": 3000,
+          "scheme": "http",
+          "url": "http://192.168.1.130:3000/",
+          "status_code": 200,
+          "title": "Open WebUI",
+          "description": null,
+          "server": "uvicorn",
           "error": null
         }
       ],
@@ -833,9 +1394,24 @@
         {
           "port": 22,
           "service": "ssh"
+        },
+        {
+          "port": 3000,
+          "service": "app-3000"
         }
       ],
-      "http_services": [],
+      "http_services": [
+        {
+          "port": 3000,
+          "scheme": "http",
+          "url": "http://192.168.1.159:3000/",
+          "status_code": 200,
+          "title": null,
+          "description": null,
+          "server": null,
+          "error": null
+        }
+      ],
       "dashboard_items": [
         {
           "id": "h-192-168-1-159-p-3000",
@@ -903,6 +1479,10 @@
       "device_type": "Web Device",
       "open_ports": [
         {
+          "port": 53,
+          "service": "dns"
+        },
+        {
           "port": 80,
           "service": "http"
         },
@@ -915,22 +1495,22 @@
         {
           "port": 80,
           "scheme": "http",
-          "url": "http://192.168.1.165:80/",
-          "status_code": null,
-          "title": null,
+          "url": "https://192.168.1.165/",
+          "status_code": 200,
+          "title": "Войти | OPNsense",
           "description": null,
-          "server": null,
-          "error": "http: ConnectError"
+          "server": "OPNsense",
+          "error": null
         },
         {
           "port": 443,
           "scheme": "https",
-          "url": "https://192.168.1.165:443/",
-          "status_code": null,
-          "title": null,
+          "url": "https://192.168.1.165/",
+          "status_code": 200,
+          "title": "Войти | OPNsense",
           "description": null,
-          "server": null,
-          "error": "https: ConnectError"
+          "server": "OPNsense",
+          "error": null
         }
       ],
       "dashboard_items": [
@@ -946,7 +1526,7 @@
       "hostname": null,
       "mac_address": "BC:24:11:9C:41:AE",
       "mac_vendor": null,
-      "device_type": "Web Device",
+      "device_type": "Linux/Unix Host",
       "open_ports": [
         {
           "port": 22,
@@ -955,6 +1535,14 @@
         {
           "port": 80,
           "service": "http"
+        },
+        {
+          "port": 3001,
+          "service": "app-3001"
+        },
+        {
+          "port": 6379,
+          "service": "redis"
         }
       ],
       "http_services": [
@@ -966,6 +1554,16 @@
           "title": "Homarr",
           "description": "Simplify the management of your server with Homarr - a sleek, modern dashboard that puts all of your apps and services at your fingertips.",
           "server": "nginx/1.26.3",
+          "error": null
+        },
+        {
+          "port": 3001,
+          "scheme": "http",
+          "url": "http://192.168.1.168:3001/",
+          "status_code": 426,
+          "title": null,
+          "description": null,
+          "server": null,
           "error": null
         }
       ],
@@ -987,7 +1585,7 @@
       "hostname": "*",
       "mac_address": null,
       "mac_vendor": null,
-      "device_type": "Web Device",
+      "device_type": "Linux/Unix Host",
       "open_ports": [
         {
           "port": 22,
@@ -996,6 +1594,10 @@
         {
           "port": 80,
           "service": "http"
+        },
+        {
+          "port": 81,
+          "service": "http-alt"
         },
         {
           "port": 443,
@@ -1014,14 +1616,24 @@
           "error": null
         },
         {
-          "port": 443,
-          "scheme": "https",
-          "url": "https://192.168.1.170:443/",
-          "status_code": null,
-          "title": null,
+          "port": 81,
+          "scheme": "http",
+          "url": "https://192.168.1.170:81/",
+          "status_code": 200,
+          "title": "NPMplus",
           "description": null,
           "server": null,
-          "error": "https: ConnectError"
+          "error": null
+        },
+        {
+          "port": 443,
+          "scheme": "https",
+          "url": "https://192.168.1.170/",
+          "status_code": 200,
+          "title": "Default Page",
+          "description": "Default Page of NPMplus",
+          "server": null,
+          "error": null
         }
       ],
       "dashboard_items": [
@@ -1048,13 +1660,59 @@
       ]
     },
     {
+      "ip": "192.168.1.171",
+      "hostname": null,
+      "mac_address": "40:ED:CF:79:89:37",
+      "mac_vendor": null,
+      "device_type": "Server/Host",
+      "open_ports": [
+        {
+          "port": 5000,
+          "service": "app-5000"
+        }
+      ],
+      "http_services": [
+        {
+          "port": 5000,
+          "scheme": "http",
+          "url": "http://192.168.1.171:5000/",
+          "status_code": 404,
+          "title": null,
+          "description": null,
+          "server": "AirTunes/935.7.1",
+          "error": null
+        }
+      ],
+      "dashboard_items": []
+    },
+    {
       "ip": "192.168.1.172",
       "hostname": null,
       "mac_address": "40:ED:CF:76:6E:33",
       "mac_vendor": null,
-      "device_type": "Unknown",
-      "open_ports": [],
-      "http_services": [],
+      "device_type": "Server/Host",
+      "open_ports": [
+        {
+          "port": 53,
+          "service": "dns"
+        },
+        {
+          "port": 5000,
+          "service": "app-5000"
+        }
+      ],
+      "http_services": [
+        {
+          "port": 5000,
+          "scheme": "http",
+          "url": "http://192.168.1.172:5000/",
+          "status_code": 404,
+          "title": null,
+          "description": null,
+          "server": "AirTunes/935.7.1",
+          "error": null
+        }
+      ],
       "dashboard_items": [
         {
           "id": "h-192-168-1-172-p-7100",
@@ -1066,7 +1724,7 @@
     {
       "ip": "192.168.1.173",
       "hostname": null,
-      "mac_address": null,
+      "mac_address": "B8:87:6E:7B:B3:76",
       "mac_vendor": null,
       "device_type": "Unknown",
       "open_ports": [],
@@ -1081,21 +1739,21 @@
     },
     {
       "ip": "192.168.1.176",
-      "hostname": null,
-      "mac_address": "BC:FC:E7:5B:53:A9",
+      "hostname": "www.asusrouter.com",
+      "mac_address": "BC:FC:E7:5B:53:A8",
       "mac_vendor": null,
       "device_type": "Web Device",
       "open_ports": [
         {
-          "port": 80,
-          "service": "http"
+          "port": 8443,
+          "service": "https-alt"
         }
       ],
       "http_services": [
         {
-          "port": 80,
-          "scheme": "http",
-          "url": "http://192.168.1.176/",
+          "port": 8443,
+          "scheme": "https",
+          "url": "https://192.168.1.176:8443/",
           "status_code": 200,
           "title": null,
           "description": null,
@@ -1110,14 +1768,25 @@
       "hostname": null,
       "mac_address": "BC:24:11:60:B8:48",
       "mac_vendor": null,
-      "device_type": "Linux/Unix Host",
+      "device_type": "Web Device",
       "open_ports": [
         {
-          "port": 22,
-          "service": "ssh"
+          "port": 8080,
+          "service": "http-alt"
         }
       ],
-      "http_services": [],
+      "http_services": [
+        {
+          "port": 8080,
+          "scheme": "http",
+          "url": "http://192.168.1.181:8080/",
+          "status_code": 200,
+          "title": "zot OCI-native Container Image Registry",
+          "description": "zot OCI-native Container Image Registry",
+          "server": null,
+          "error": null
+        }
+      ],
       "dashboard_items": []
     }
   ],

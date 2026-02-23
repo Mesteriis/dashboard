@@ -1,10 +1,10 @@
 <template>
   <main
-    :key="activePage?.id || 'empty'"
     class="page"
     :class="{
       'indicator-open': Boolean(activeIndicatorWidget),
       'page--lan': isLanPage && !activeIndicatorWidget,
+      'page--split-scroll': Boolean(activePage) && !loadingConfig && !configError,
     }"
   >
     <section v-if="loadingConfig" class="panel status-panel">
@@ -19,15 +19,35 @@
     </section>
 
     <template v-else-if="activePage">
-      <IndicatorTabPanel v-if="activeIndicatorWidget" />
+      <section
+        v-if="activeIndicatorWidget"
+        class="page-right-bottom page-motion-zone"
+      >
+        <IndicatorTabPanel />
+      </section>
 
       <template v-else>
-        <LanPageView v-if="isLanPage" />
+        <section v-if="isLanPage" class="lan-workspace-backdrop">
+          <section class="lan-workspace-shell">
+            <section class="page-right-top">
+              <LanHeroPanel />
+            </section>
 
-        <template v-else>
-          <ServicesHeroPanel />
-          <ServicesGroupsPanel />
-        </template>
+            <section class="page-right-bottom page-motion-zone">
+              <LanPageView />
+            </section>
+          </section>
+        </section>
+
+        <section v-else class="page-right-shell">
+          <section class="page-right-top">
+            <ServicesHeroPanel />
+          </section>
+
+          <section class="page-right-bottom page-motion-zone">
+            <ServicesGroupsPanel />
+          </section>
+        </section>
       </template>
     </template>
 
@@ -76,6 +96,7 @@
 
 <script setup>
 import { computed, defineAsyncComponent, ref, watch } from "vue";
+import LanHeroPanel from "../components/main/LanHeroPanel.vue";
 import ServicesGroupsPanel from "../components/main/ServicesGroupsPanel.vue";
 import ServicesHeroPanel from "../components/main/ServicesHeroPanel.vue";
 import { useDashboardStore } from "../stores/dashboardStore.js";

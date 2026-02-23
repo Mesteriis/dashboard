@@ -51,6 +51,23 @@
   padding: 4px;
 }
 
+.brand.brand--with-action {
+  display: grid;
+  gap: 10px;
+  align-items: stretch;
+}
+
+.brand-action-stack {
+  display: grid;
+  gap: 8px;
+}
+
+.brand-main {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .brand img {
   width: 50px;
   height: 50px;
@@ -70,6 +87,62 @@
   margin: 4px 0 0;
   color: var(--muted);
   font-size: 0.8rem;
+}
+
+.brand-pleiad-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  border: 1px solid rgba(117, 173, 220, 0.42);
+  border-radius: 12px;
+  background: linear-gradient(
+    138deg,
+    rgba(30, 58, 84, 0.5),
+    rgba(17, 41, 64, 0.42)
+  );
+  color: rgba(218, 235, 251, 0.94);
+  font-size: 0.78rem;
+  letter-spacing: 0.045em;
+  text-transform: uppercase;
+  padding: 8px 10px;
+  cursor: pointer;
+  transition:
+    border-color 150ms ease,
+    background 150ms ease;
+}
+
+.brand-pleiad-btn:hover {
+  border-color: rgba(148, 208, 255, 0.68);
+  background: linear-gradient(
+    138deg,
+    rgba(36, 71, 106, 0.58),
+    rgba(22, 52, 80, 0.5)
+  );
+}
+
+.brand-pleiad-icon {
+  width: 14px;
+  height: 14px;
+}
+
+.brand-aura-btn {
+  border-color: rgba(114, 237, 216, 0.42);
+  background: linear-gradient(
+    138deg,
+    rgba(22, 71, 76, 0.54),
+    rgba(15, 55, 61, 0.46)
+  );
+}
+
+.brand-aura-btn:hover {
+  border-color: rgba(138, 248, 232, 0.68);
+  background: linear-gradient(
+    138deg,
+    rgba(27, 86, 92, 0.6),
+    rgba(19, 65, 71, 0.52)
+  );
 }
 
 .editor-toggle {

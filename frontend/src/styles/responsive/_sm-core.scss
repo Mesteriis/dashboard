@@ -47,7 +47,7 @@
   }
 
   .hero-page-tab-btn.active .hero-page-tab-label {
-    inline-size: 100%;
+    max-inline-size: min(58vw, 260px);
   }
 
   .hero-display-controls {
@@ -115,5 +115,14 @@
 
   .settings-modal-grid {
     grid-template-columns: 1fr;
+  }
+
+  .lan-workspace-backdrop {
+    padding: 12px;
+  }
+
+  .lan-workspace-shell {
+    padding: 12px;
+    border-radius: calc(var(--card-radius) + 2px);
   }
 }

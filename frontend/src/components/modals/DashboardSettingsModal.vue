@@ -250,6 +250,17 @@
             </span>
             <ChevronRight class="ui-icon settings-nav-action-caret" />
           </button>
+          <button
+            class="settings-nav-action"
+            type="button"
+            @click="openLanFromSettings"
+          >
+            <span class="settings-nav-action-main">
+              <Network class="ui-icon settings-nav-action-icon" />
+              <span>Открыть LAN обзор</span>
+            </span>
+            <ChevronRight class="ui-icon settings-nav-action-caret" />
+          </button>
         </div>
       </section>
 
@@ -309,6 +320,7 @@ import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import {
   ChevronRight,
   Download,
+  Network,
   PanelLeft,
   Pencil,
   Play,
@@ -334,6 +346,7 @@ const {
   editMode,
   isSidebarHidden,
   openCommandPalette,
+  openLanWorkspace,
   serviceCardView,
   serviceGroupingMode,
   serviceGroupingOptions,
@@ -423,6 +436,11 @@ function setGroupingMode(value) {
 function openSearchFromSettings() {
   closeSettingsPanel();
   openCommandPalette();
+}
+
+function openLanFromSettings() {
+  closeSettingsPanel();
+  openLanWorkspace();
 }
 
 async function applyRuntimeMode() {

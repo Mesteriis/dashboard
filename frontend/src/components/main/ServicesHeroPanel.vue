@@ -76,6 +76,15 @@
 
               <IconButton
                 button-class="hero-icon-btn hero-accordion-action"
+                title="Открыть Pleiad"
+                aria-label="Открыть Pleiad"
+                @click="openPleiad"
+              >
+                <Orbit class="ui-icon hero-action-icon" />
+              </IconButton>
+
+              <IconButton
+                button-class="hero-icon-btn hero-accordion-action"
                 :active="!isSidebarDetailed"
                 :title="sidebarViewToggleTitle"
                 :aria-label="sidebarViewToggleTitle"
@@ -131,6 +140,7 @@ import {
   ChevronLeft,
   Circle,
   FolderTree,
+  Orbit,
   Pencil,
   Plus,
   Search,
@@ -139,6 +149,7 @@ import {
 } from "lucide-vue-next";
 import HeroPageTabs from "./HeroPageTabs.vue";
 import IconButton from "../primitives/IconButton.vue";
+import { dispatchOpenPleiad } from "../../services/pleiadNavigation.js";
 import { useDashboardStore } from "../../stores/dashboardStore.js";
 
 const dashboard = useDashboardStore();
@@ -158,6 +169,10 @@ const {
   openSettingsPanel,
   toggleSidebarView,
 } = dashboard;
+
+function openPleiad() {
+  dispatchOpenPleiad();
+}
 
 function getLocalStorageSafe() {
   try {
