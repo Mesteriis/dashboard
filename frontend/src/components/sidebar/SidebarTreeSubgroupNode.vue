@@ -39,7 +39,7 @@
           class="tree-mini-btn"
           type="button"
           title="Добавить элемент"
-          @click.stop="addItem(group.id, subgroup.id)"
+          @click.stop="openCreateChooser(group.id, subgroup.id)"
         >
           <Plus class="ui-icon" />
         </button>
@@ -53,12 +53,23 @@
         </button>
       </div>
     </div>
+
+    <ul v-if="subgroup.items?.length" class="tree-items">
+      <SidebarTreeItemNode
+        v-for="item in subgroup.items"
+        :key="item.id"
+        :group="group"
+        :subgroup="subgroup"
+        :item="item"
+      />
+    </ul>
   </li>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { GripVertical, Pencil, Plus, Trash2 } from "lucide-vue-next";
-import { useDashboardStore } from "../../stores/dashboardStore.js";
+import { useDashboardStore } from "@/stores/dashboardStore";
+import SidebarTreeItemNode from "@/components/sidebar/SidebarTreeItemNode.vue";
 
 defineProps({
   group: { type: Object, required: true },
@@ -79,7 +90,7 @@ const {
   resolveSubgroupIcon,
   subgroupTotalItems,
   editSubgroup,
-  addItem,
+  openCreateChooser,
   removeSubgroup,
 } = dashboard;
 </script>

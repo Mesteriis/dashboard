@@ -1,4 +1,4 @@
-@use "../abstracts/breakpoints" as bp;
+@use "@/styles/abstracts/breakpoints" as bp;
 
 @include bp.down(bp.$bp-lg) {
   .page {
@@ -64,24 +64,6 @@
 
   .item-grid.icon-card-grid {
     grid-template-columns: repeat(auto-fill, minmax(82px, 1fr));
-  }
-
-  .lan-summary-grid {
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  }
-
-  .lan-table th,
-  .lan-table td {
-    padding: 8px;
-  }
-
-  .lan-table-wrap {
-    min-height: 240px;
-    max-height: none;
-  }
-
-  .lan-http-grid {
-    grid-template-columns: 1fr;
   }
 
   .editor-grid {

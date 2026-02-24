@@ -23,11 +23,14 @@
 html,
 body,
 #app {
+  height: 100%;
   min-height: 100%;
+  overflow: hidden;
 }
 
 body {
   margin: 0;
+  overscroll-behavior: none;
   font-family: "Space Grotesk", "Segoe UI", sans-serif;
   color: var(--text);
   background-color: var(--bg);

@@ -250,17 +250,6 @@
             </span>
             <ChevronRight class="ui-icon settings-nav-action-caret" />
           </button>
-          <button
-            class="settings-nav-action"
-            type="button"
-            @click="openLanFromSettings"
-          >
-            <span class="settings-nav-action-main">
-              <Network class="ui-icon settings-nav-action-icon" />
-              <span>Открыть LAN обзор</span>
-            </span>
-            <ChevronRight class="ui-icon settings-nav-action-caret" />
-          </button>
         </div>
       </section>
 
@@ -315,30 +304,34 @@
   </BaseModal>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import {
   ChevronRight,
   Download,
-  Network,
   PanelLeft,
   Pencil,
   Play,
   Search,
   Upload,
 } from "lucide-vue-next";
-import BaseModal from "../primitives/BaseModal.vue";
-import ConfigValidatorPanel from "./ConfigValidatorPanel.vue";
+import BaseModal from "@/components/primitives/BaseModal.vue";
+import ConfigValidatorPanel from "@/components/modals/ConfigValidatorPanel.vue";
 import {
   fetchDashboardConfigBackup,
   restoreDashboardConfig,
-} from "../../services/dashboardApi.js";
+} from "@/services/dashboardApi";
 import {
   getRuntimeProfile,
   initDesktopRuntimeBridge,
   setDesktopRuntimeProfile,
-} from "../../services/desktopRuntime.js";
-import { useDashboardStore } from "../../stores/dashboardStore.js";
+  type AppClientMode,
+  type DeploymentMode,
+  type RuntimeMode,
+  type RuntimeProfile,
+} from "@/services/desktopRuntime";
+import { EVENT_API_BASE_CHANGE, onOkoEvent } from "@/services/events";
+import { useDashboardStore } from "@/stores/dashboardStore";
 
 const dashboard = useDashboardStore();
 const {
@@ -346,7 +339,6 @@ const {
   editMode,
   isSidebarHidden,
   openCommandPalette,
-  openLanWorkspace,
   serviceCardView,
   serviceGroupingMode,
   serviceGroupingOptions,
@@ -360,11 +352,20 @@ const {
   loadConfig,
 } = dashboard;
 
-const desktopRuntime = ref(getRuntimeProfile());
-const deploymentModeDraft = ref(
+type AppClientModeDraft = Exclude<AppClientMode, null>;
+type ServiceGroupingValue = "groups" | "tags_in_groups" | "tags" | "flat";
+type Option<T extends string> = {
+  value: T;
+  label: string;
+};
+
+const desktopRuntime = ref<RuntimeProfile>(getRuntimeProfile());
+const deploymentModeDraft = ref<DeploymentMode>(
   desktopRuntime.value.deploymentMode || "docker",
 );
-const appClientModeDraft = ref(desktopRuntime.value.appClientMode || "thin");
+const appClientModeDraft = ref<AppClientModeDraft>(
+  desktopRuntime.value.appClientMode === "thick" ? "thick" : "thin",
+);
 const remoteBaseUrlDraft = ref(
   desktopRuntime.value.remoteBaseUrl || "http://127.0.0.1:8000",
 );
@@ -374,17 +375,18 @@ const backupBusy = ref(false);
 const restoreBusy = ref(false);
 const backupError = ref("");
 const backupSuccess = ref("");
-const deploymentModeOptions = [
+const deploymentModeOptions: ReadonlyArray<Option<DeploymentMode>> = [
   { value: "docker", label: "Docker" },
   { value: "dev", label: "Dev (Vite + backend)" },
   { value: "app", label: "App" },
 ];
-const appClientModeOptions = [
+const appClientModeOptions: ReadonlyArray<Option<AppClientModeDraft>> = [
   { value: "thin", label: "Тонкий клиент" },
   { value: "thick", label: "Толстый клиент" },
 ];
+let removeApiBaseListener: () => void = () => {};
 
-const desktopRuntimeModeDraft = computed(() =>
+const desktopRuntimeModeDraft = computed<Extract<RuntimeMode, "embedded" | "remote">>(() =>
   appClientModeDraft.value === "thick" ? "embedded" : "remote",
 );
 const runtimeStatusHint = computed(() => {
@@ -417,7 +419,11 @@ const runtimeChanged = computed(() => {
   );
 });
 
-function normalizeRuntimeDraft() {
+function resolveErrorMessage(error: unknown, fallback: string): string {
+  return error instanceof Error && error.message ? error.message : fallback;
+}
+
+function normalizeRuntimeDraft(): void {
   deploymentModeDraft.value =
     desktopRuntime.value.deploymentMode ||
     (desktopRuntime.value.desktop ? "app" : "docker");
@@ -428,22 +434,17 @@ function normalizeRuntimeDraft() {
     desktopRuntime.value.remoteBaseUrl || "http://127.0.0.1:8000";
 }
 
-function setGroupingMode(value) {
+function setGroupingMode(value: ServiceGroupingValue): void {
   if (isSidebarHidden.value) return;
   serviceGroupingMode.value = value;
 }
 
-function openSearchFromSettings() {
+function openSearchFromSettings(): void {
   closeSettingsPanel();
   openCommandPalette();
 }
 
-function openLanFromSettings() {
-  closeSettingsPanel();
-  openLanWorkspace();
-}
-
-async function applyRuntimeMode() {
+async function applyRuntimeMode(): Promise<void> {
   if (
     !desktopRuntime.value.desktop ||
     deploymentModeDraft.value !== "app" ||
@@ -462,15 +463,17 @@ async function applyRuntimeMode() {
     desktopRuntime.value = updated;
     normalizeRuntimeDraft();
     await loadConfig();
-  } catch (error) {
-    runtimeError.value =
-      error?.message || "Не удалось применить desktop runtime";
+  } catch (error: unknown) {
+    runtimeError.value = resolveErrorMessage(
+      error,
+      "Не удалось применить desktop runtime",
+    );
   } finally {
     runtimeApplying.value = false;
   }
 }
 
-async function downloadConfigBackup() {
+async function downloadConfigBackup(): Promise<void> {
   if (backupBusy.value) return;
   backupBusy.value = true;
   backupError.value = "";
@@ -491,16 +494,20 @@ async function downloadConfigBackup() {
     document.body.removeChild(link);
     URL.revokeObjectURL(blobUrl);
     backupSuccess.value = `Backup сохранен: ${link.download}`;
-  } catch (error) {
-    backupError.value = error?.message || "Не удалось скачать backup";
+  } catch (error: unknown) {
+    backupError.value = resolveErrorMessage(
+      error,
+      "Не удалось скачать backup",
+    );
   } finally {
     backupBusy.value = false;
   }
 }
 
-async function restoreConfigBackup(event) {
-  const input = /** @type {HTMLInputElement | null} */ (event?.target || null);
-  const file = input?.files?.[0];
+async function restoreConfigBackup(event: Event): Promise<void> {
+  if (!(event.target instanceof HTMLInputElement)) return;
+  const input = event.target;
+  const file = input.files?.[0];
   if (!file || restoreBusy.value) return;
 
   restoreBusy.value = true;
@@ -512,13 +519,14 @@ async function restoreConfigBackup(event) {
     await restoreDashboardConfig(yamlText);
     await loadConfig();
     backupSuccess.value = `Backup импортирован: ${file.name}`;
-  } catch (error) {
-    backupError.value = error?.message || "Не удалось импортировать backup";
+  } catch (error: unknown) {
+    backupError.value = resolveErrorMessage(
+      error,
+      "Не удалось импортировать backup",
+    );
   } finally {
     restoreBusy.value = false;
-    if (input) {
-      input.value = "";
-    }
+    input.value = "";
   }
 }
 
@@ -526,28 +534,29 @@ onMounted(async () => {
   const profile = await initDesktopRuntimeBridge();
   desktopRuntime.value = profile;
   normalizeRuntimeDraft();
-  window.addEventListener("oko:api-base-change", syncDesktopRuntimeFromBridge);
-});
-
-onBeforeUnmount(() => {
-  window.removeEventListener(
-    "oko:api-base-change",
+  removeApiBaseListener = onOkoEvent(
+    EVENT_API_BASE_CHANGE,
     syncDesktopRuntimeFromBridge,
   );
 });
 
-function syncDesktopRuntimeFromBridge() {
+onBeforeUnmount(() => {
+  removeApiBaseListener();
+  removeApiBaseListener = () => {};
+});
+
+function syncDesktopRuntimeFromBridge(): void {
   desktopRuntime.value = getRuntimeProfile();
   normalizeRuntimeDraft();
 }
 
-function handleConfigRestored() {
+function handleConfigRestored(): void {
   backupSuccess.value = "Конфигурация успешно восстановлена";
   backupError.value = "";
-  loadConfig();
+  void loadConfig();
 }
 
-function handleValidatorError(error) {
+function handleValidatorError(error: string): void {
   backupError.value = error;
 }
 </script>

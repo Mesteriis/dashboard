@@ -1,11 +1,6 @@
 <template>
   <section class="hero-layout">
     <header class="hero panel hero-title-panel">
-      <div
-        id="hero-title-particles"
-        class="hero-panel-particles"
-        aria-hidden="true"
-      ></div>
       <div class="hero-title-content">
         <HeroPageTabs />
       </div>
@@ -15,11 +10,6 @@
       class="panel hero-control-panel service-hero-controls"
       :class="{ active: editMode }"
     >
-      <div
-        id="hero-controls-particles"
-        class="hero-panel-particles"
-        aria-hidden="true"
-      ></div>
       <div class="hero-controls-content">
         <div class="hero-controls-accordion" :class="{ open: controlsOpen }">
           <Transition name="hero-controls-drawer-transition">
@@ -28,6 +18,25 @@
               id="hero-controls-drawer"
               class="hero-controls-drawer"
             >
+              <IconButton
+                button-class="hero-icon-btn hero-accordion-action"
+                title="Панель настроек"
+                aria-label="Открыть панель настроек"
+                @click="openSettingsPanel"
+              >
+                <SlidersHorizontal class="ui-icon hero-action-icon" />
+              </IconButton>
+
+              <IconButton
+                button-class="hero-icon-btn hero-accordion-action"
+                :active="!isSidebarDetailed"
+                :title="sidebarViewToggleTitle"
+                :aria-label="sidebarViewToggleTitle"
+                @click="toggleSidebarView"
+              >
+                <FolderTree class="ui-icon hero-action-icon" />
+              </IconButton>
+
               <IconButton
                 button-class="hero-icon-btn hero-accordion-action editor-toggle"
                 :active="editMode"
@@ -47,50 +56,13 @@
               </IconButton>
 
               <IconButton
-                v-if="editMode"
                 button-class="hero-icon-btn hero-accordion-action"
-                title="Добавить группу"
-                aria-label="Добавить группу"
-                @click="addGroup"
+                :disabled="!editMode"
+                title="Добавить сущность"
+                aria-label="Добавить сущность"
+                @click="openCreateChooser()"
               >
                 <Plus class="ui-icon hero-action-icon" />
-              </IconButton>
-
-              <IconButton
-                button-class="hero-icon-btn hero-accordion-action"
-                title="Быстрый поиск сервисов (Ctrl/Cmd+K)"
-                aria-label="Быстрый поиск сервисов"
-                @click="openCommandPalette"
-              >
-                <Search class="ui-icon hero-action-icon" />
-              </IconButton>
-
-              <IconButton
-                button-class="hero-icon-btn hero-accordion-action"
-                title="Панель настроек"
-                aria-label="Открыть панель настроек"
-                @click="openSettingsPanel"
-              >
-                <SlidersHorizontal class="ui-icon hero-action-icon" />
-              </IconButton>
-
-              <IconButton
-                button-class="hero-icon-btn hero-accordion-action"
-                title="Открыть Pleiad"
-                aria-label="Открыть Pleiad"
-                @click="openPleiad"
-              >
-                <Orbit class="ui-icon hero-action-icon" />
-              </IconButton>
-
-              <IconButton
-                button-class="hero-icon-btn hero-accordion-action"
-                :active="!isSidebarDetailed"
-                :title="sidebarViewToggleTitle"
-                :aria-label="sidebarViewToggleTitle"
-                @click="toggleSidebarView"
-              >
-                <FolderTree class="ui-icon hero-action-icon" />
               </IconButton>
 
               <span
@@ -124,6 +96,24 @@
               :class="{ open: controlsOpen }"
             />
           </button>
+
+          <IconButton
+            button-class="hero-icon-btn hero-accordion-action hero-plugin-panel-btn"
+            title="Открыть панель плагинов"
+            aria-label="Открыть панель плагинов"
+            @click="openPluginPanel"
+          >
+            <Puzzle class="ui-icon hero-action-icon" />
+          </IconButton>
+
+          <IconButton
+            button-class="hero-icon-btn hero-accordion-action hero-pleiad-lock-btn"
+            title="Открыть Pleiad"
+            aria-label="Открыть Pleiad"
+            @click="openPleiad"
+          >
+            <Lock class="ui-icon hero-action-icon" />
+          </IconButton>
         </div>
 
         <p v-if="editMode && saveError" class="editor-error hero-editor-error">
@@ -134,23 +124,26 @@
   </section>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { onMounted, ref, watch } from "vue";
 import {
   ChevronLeft,
   Circle,
   FolderTree,
-  Orbit,
-  Pencil,
+  Lock,
   Plus,
-  Search,
+  Pencil,
+  Puzzle,
   SlidersHorizontal,
   Wrench,
 } from "lucide-vue-next";
-import HeroPageTabs from "./HeroPageTabs.vue";
-import IconButton from "../primitives/IconButton.vue";
-import { dispatchOpenPleiad } from "../../services/pleiadNavigation.js";
-import { useDashboardStore } from "../../stores/dashboardStore.js";
+import HeroPageTabs from "@/components/main/HeroPageTabs.vue";
+import IconButton from "@/components/primitives/IconButton.vue";
+import {
+  goPluginsPanel,
+  openPleiadOverlay,
+} from "@/core/navigation/nav";
+import { useDashboardStore } from "@/stores/dashboardStore";
 
 const dashboard = useDashboardStore();
 const HERO_CONTROLS_OPEN_STORAGE_KEY = "oko:hero-controls-open:v1";
@@ -164,14 +157,17 @@ const {
   saveError,
   sidebarViewToggleTitle,
   toggleEditMode,
-  addGroup,
-  openCommandPalette,
+  openCreateChooser,
   openSettingsPanel,
   toggleSidebarView,
 } = dashboard;
 
 function openPleiad() {
-  dispatchOpenPleiad();
+  void openPleiadOverlay("route");
+}
+
+function openPluginPanel() {
+  void goPluginsPanel();
 }
 
 function getLocalStorageSafe() {

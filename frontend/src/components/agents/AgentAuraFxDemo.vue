@@ -243,31 +243,36 @@
   </section>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from "vue";
-import AgentAvatarFx from "./AgentAvatarFx.vue";
-import AgentAvatarSphereParticlesThree from "./AgentAvatarSphereParticlesThree.vue";
-import FxModeToggle from "./FxModeToggle.vue";
-import { AGENTS } from "../../constants/agentPlasmaPresets";
-import { useAgentActivity } from "../../composables/useAgentActivity";
+import AgentAvatarFx from "@/components/agents/AgentAvatarFx.vue";
+import AgentAvatarSphereParticlesThree from "@/components/agents/AgentAvatarSphereParticlesThree.vue";
+import FxModeToggle from "@/components/agents/FxModeToggle.vue";
+import { AGENTS, type AgentDefinition } from "@/constants/agentPlasmaPresets";
+import { useAgentActivity, type AgentEvent } from "@/composables/useAgentActivity";
+
+type ThreeTransformMode = "avatar" | "vortex";
+type ThreeProjectionMode = "ring2d" | "sphere";
+type ThreeMaskSourceType = "avatar" | "none" | "custom";
+type DemoAgentCard = AgentDefinition & { src: string };
 
 const { ingestEvent } = useAgentActivity();
 
-const demoAgents = computed(() =>
+const demoAgents = computed<DemoAgentCard[]>(() =>
   AGENTS.map((agent) => ({
     ...agent,
     src: `/static/img/pleiads/${agent.id}.webp`,
   })),
 );
-const selectedThreeAgentId = ref("HESTIA");
+const selectedThreeAgentId = ref<AgentDefinition["id"]>("HESTIA");
 const threeSettingsOpen = ref(false);
 const threeParticleCount = ref(4600);
 const threePointSize = ref(1.1);
 const threeSwirlSpeed = ref(1.1);
 const threeStreamCount = ref(3);
-const threeTransformMode = ref("vortex");
-const threeProjectionMode = ref("ring2d");
-const threeMaskSourceType = ref("avatar");
+const threeTransformMode = ref<ThreeTransformMode>("vortex");
+const threeProjectionMode = ref<ThreeProjectionMode>("ring2d");
+const threeMaskSourceType = ref<ThreeMaskSourceType>("avatar");
 const threeMaskCustomSrc = ref("");
 const threeMaskStrength = ref(1.2);
 const threeRingAngleDeg = ref(0);
@@ -280,7 +285,7 @@ const threeSize = 320;
 const selectedThreeAvatarSrc = computed(
   () => `/static/img/pleiads/${selectedThreeAgentId.value}.webp`,
 );
-const resolvedThreeMaskSrc = computed(() => {
+const resolvedThreeMaskSrc = computed<string>(() => {
   if (threeMaskSourceType.value === "none") {
     return "";
   }
@@ -293,33 +298,38 @@ const resolvedThreeMaskSrc = computed(() => {
 let demoEventTimerId = 0;
 let traceSequence = 0;
 
-function randomFloat(min, max) {
+function randomFloat(min: number, max: number): number {
   return min + Math.random() * (max - min);
 }
 
-function randomInt(min, max) {
+function randomInt(min: number, max: number): number {
   return Math.floor(randomFloat(min, max + 1));
 }
 
-function pickRandom(list) {
+function pickRandom<T>(list: readonly T[]): T | undefined {
   if (!Array.isArray(list) || !list.length) return undefined;
   return list[randomInt(0, list.length - 1)];
 }
 
-function nextTraceId() {
+function nextTraceId(): string {
   traceSequence += 1;
   return `afx-${Date.now().toString(36)}-${traceSequence.toString(36)}`;
 }
 
-function createRandomEvent() {
+function createRandomEvent(): AgentEvent {
   const from = pickRandom(AGENTS)?.id || "HESTIA";
   const targetPool = AGENTS.filter((agent) => agent.id !== from);
   const to = pickRandom(targetPool)?.id || "VELES";
 
-  const kind = pickRandom(["info", "warning", "action", "memory"]) || "info";
+  const kind = pickRandom<AgentEvent["kind"]>([
+    "info",
+    "warning",
+    "action",
+    "memory",
+  ]) || "info";
   const importance = Number(randomFloat(0.2, 1).toFixed(2));
 
-  let status = "ok";
+  let status: AgentEvent["status"] = "ok";
   const roll = Math.random();
   if (kind === "warning" && roll > 0.52) {
     status = "error";
@@ -339,19 +349,19 @@ function createRandomEvent() {
   };
 }
 
-function emitRandomEvent() {
+function emitRandomEvent(): void {
   ingestEvent(createRandomEvent());
 }
 
-function handleModeChange() {
+function handleModeChange(): void {
   emitRandomEvent();
 }
 
-function toggleThreeSettings() {
+function toggleThreeSettings(): void {
   threeSettingsOpen.value = !threeSettingsOpen.value;
 }
 
-function setThreeTransformMode(mode) {
+function setThreeTransformMode(mode: unknown): void {
   const normalized = String(mode || "").toLowerCase() === "avatar" ? "avatar" : "vortex";
   threeTransformMode.value = normalized;
 }

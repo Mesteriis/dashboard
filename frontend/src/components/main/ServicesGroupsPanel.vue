@@ -32,25 +32,27 @@
   </section>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { vAutoAnimate } from "@formkit/auto-animate/vue";
-import ServiceGroupCard from "./ServiceGroupCard.vue";
-import { useDashboardStore } from "../../stores/dashboardStore.js";
+import ServiceGroupCard from "@/components/main/ServiceGroupCard.vue";
+import { useDashboardStore } from "@/stores/dashboardStore";
 
 const dashboard = useDashboardStore();
 const { activePage, activePageGroupBlocks, filteredBlockGroups } = dashboard;
-const blocksRootRef = ref(null);
-let visibilityObserver = null;
+const blocksRootRef = ref<HTMLElement | null>(null);
+let visibilityObserver: IntersectionObserver | null = null;
 const groupsAutoAnimateOptions = {
   duration: 180,
   easing: "cubic-bezier(0.22, 0.72, 0.14, 1)",
 };
 
-function observeVisibleBlocks() {
+function observeVisibleBlocks(): void {
   if (!visibilityObserver || !blocksRootRef.value) return;
 
-  for (const element of blocksRootRef.value.querySelectorAll(".block-wrap")) {
+  for (const element of blocksRootRef.value.querySelectorAll<HTMLElement>(
+    ".block-wrap",
+  )) {
     element.dataset.offscreen = "0";
     visibilityObserver.observe(element);
   }
@@ -70,7 +72,9 @@ onMounted(async () => {
   visibilityObserver = new IntersectionObserver(
     (entries) => {
       for (const entry of entries) {
-        entry.target.dataset.offscreen = entry.isIntersecting ? "0" : "1";
+        if (entry.target instanceof HTMLElement) {
+          entry.target.dataset.offscreen = entry.isIntersecting ? "0" : "1";
+        }
       }
     },
     {

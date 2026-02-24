@@ -70,79 +70,82 @@
   </div>
 </template>
 
-<script>
+<script setup lang="ts">
+import { ref } from "vue";
 import {
-  validateDashboardYaml,
+  type DashboardConfigBackup,
+  type DashboardValidationResult,
   restoreDashboardConfig,
-} from "../../services/dashboardApi.js";
+  validateDashboardYaml,
+} from "@/services/dashboardApi";
 
-export default {
-  name: "ConfigValidatorPanel",
-  emits: ["config-restored", "error"],
-  data() {
-    return {
-      yamlInput: "",
-      isValidating: false,
-      validationResult: null,
-      error: "",
+const emit = defineEmits<{
+  "config-restored": [payload: DashboardConfigBackup];
+  error: [message: string];
+}>();
+
+const yamlInput = ref("");
+const isValidating = ref(false);
+const validationResult = ref<DashboardValidationResult | null>(null);
+const error = ref("");
+
+function resolveErrorMessage(err: unknown, fallback: string): string {
+  return err instanceof Error && err.message ? err.message : fallback;
+}
+
+async function handleValidate(): Promise<void> {
+  if (!yamlInput.value.trim()) {
+    error.value = "Введите YAML для проверки";
+    return;
+  }
+
+  isValidating.value = true;
+  error.value = "";
+  validationResult.value = null;
+
+  try {
+    const result = await validateDashboardYaml(yamlInput.value);
+    validationResult.value = {
+      valid: Boolean(result.valid),
+      issues: Array.isArray(result.issues) ? result.issues : [],
     };
-  },
-  methods: {
-    async handleValidate() {
-      if (!this.yamlInput.trim()) {
-        this.error = "Введите YAML для проверки";
-        return;
-      }
+  } catch (err) {
+    error.value = resolveErrorMessage(err, "Ошибка валидации");
+    emit("error", error.value);
+  } finally {
+    isValidating.value = false;
+  }
+}
 
-      this.isValidating = true;
-      this.error = "";
-      this.validationResult = null;
+async function handleRestore(): Promise<void> {
+  if (!validationResult.value?.valid) return;
 
-      try {
-        const result = await validateDashboardYaml(this.yamlInput);
-        this.validationResult = {
-          valid: result.valid,
-          issues: result.issues || [],
-        };
-      } catch (err) {
-        this.error = err.message || "Ошибка валидации";
-        this.$emit("error", this.error);
-      } finally {
-        this.isValidating = false;
-      }
-    },
+  if (
+    !globalThis.confirm(
+      "Вы уверены, что хотите восстановить конфигурацию? Текущие данные будут заменены.",
+    )
+  ) {
+    return;
+  }
 
-    async handleRestore() {
-      if (!this.validationResult?.valid) {
-        return;
-      }
+  try {
+    const result = await restoreDashboardConfig(yamlInput.value);
+    emit("config-restored", result);
+    yamlInput.value = "";
+    validationResult.value = null;
+  } catch (err) {
+    error.value = resolveErrorMessage(err, "Ошибка восстановления конфигурации");
+    emit("error", error.value);
+  }
+}
 
-      if (
-        !confirm(
-          "Вы уверены, что хотите восстановить конфигурацию? Текущие данные будут заменены.",
-        )
-      ) {
-        return;
-      }
+function clear(): void {
+  yamlInput.value = "";
+  validationResult.value = null;
+  error.value = "";
+}
 
-      try {
-        const result = await restoreDashboardConfig(this.yamlInput);
-        this.$emit("config-restored", result);
-        this.yamlInput = "";
-        this.validationResult = null;
-      } catch (err) {
-        this.error = err.message || "Ошибка восстановления конфигурации";
-        this.$emit("error", this.error);
-      }
-    },
-
-    clear() {
-      this.yamlInput = "";
-      this.validationResult = null;
-      this.error = "";
-    },
-  },
-};
+defineExpose({ clear });
 </script>
 
 <style scoped>

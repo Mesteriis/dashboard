@@ -58,9 +58,9 @@
   </li>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { GripVertical, Pencil, Trash2 } from "lucide-vue-next";
-import { useDashboardStore } from "../../stores/dashboardStore.js";
+import { useDashboardStore } from "@/stores/dashboardStore";
 
 defineProps({
   group: { type: Object, required: true },

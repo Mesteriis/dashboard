@@ -6,39 +6,37 @@
     :title="title"
     :aria-label="ariaLabel || title"
     :disabled="disabled"
-    @click="$emit('click', $event)"
+    @click="emitClick"
   >
     <slot />
   </button>
 </template>
 
-<script setup>
-defineProps({
-  active: {
-    type: Boolean,
-    default: false,
+<script setup lang="ts">
+withDefaults(
+  defineProps<{
+    active?: boolean;
+    disabled?: boolean;
+    type?: "button" | "submit" | "reset";
+    title?: string;
+    ariaLabel?: string;
+    buttonClass?: string;
+  }>(),
+  {
+    active: false,
+    disabled: false,
+    type: "button",
+    title: "",
+    ariaLabel: "",
+    buttonClass: "",
   },
-  disabled: {
-    type: Boolean,
-    default: false,
-  },
-  type: {
-    type: String,
-    default: "button",
-  },
-  title: {
-    type: String,
-    default: "",
-  },
-  ariaLabel: {
-    type: String,
-    default: "",
-  },
-  buttonClass: {
-    type: String,
-    default: "",
-  },
-});
+);
 
-defineEmits(["click"]);
+const emit = defineEmits<{
+  click: [event: MouseEvent];
+}>();
+
+function emitClick(event: MouseEvent): void {
+  emit("click", event);
+}
 </script>

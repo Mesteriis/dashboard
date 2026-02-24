@@ -23,6 +23,30 @@
   bottom: 8px;
 }
 
+.item-inline-edit {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 3;
+}
+
+.item-inline-edit.icon-btn {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border-radius: 10px;
+}
+
+.item-inline-edit-compact {
+  top: 8px;
+  right: 8px;
+}
+
+.item-inline-edit-tile {
+  top: 8px;
+  right: 8px;
+}
+
 .item-card.tile {
   place-items: stretch;
   align-content: start;
@@ -119,10 +143,25 @@
   white-space: nowrap;
 }
 
+.item-kind-pills {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .item-url {
   margin: 0;
   color: #99b0c2;
   font-size: 0.78rem;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  min-width: 0;
+}
+
+.item-check-url {
+  margin: 0;
+  color: #a8c3d6;
+  font-size: 0.74rem;
   overflow-wrap: anywhere;
   word-break: break-word;
   min-width: 0;
@@ -192,6 +231,10 @@
 
 .item-card.status-down .item-icon {
   color: #e5a2a8;
+}
+
+.item-card.editing {
+  cursor: default;
 }
 
 .health-text.is-updating {

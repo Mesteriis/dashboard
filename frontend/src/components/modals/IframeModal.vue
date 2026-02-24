@@ -23,15 +23,15 @@
       class="iframe-view"
       :src="iframeModal.src"
       :allow="iframeModal.allow || undefined"
-      :sandbox="iframeModal.sandbox ? '' : undefined"
+      :sandbox="iframeModal.sandbox ? iframeModal.sandboxAttribute || '' : undefined"
       :referrerpolicy="iframeModal.referrerPolicy || undefined"
     ></iframe>
   </BaseModal>
 </template>
 
-<script setup>
-import BaseModal from "../primitives/BaseModal.vue";
-import { useDashboardStore } from "../../stores/dashboardStore.js";
+<script setup lang="ts">
+import BaseModal from "@/components/primitives/BaseModal.vue";
+import { useDashboardStore } from "@/stores/dashboardStore";
 
 const dashboard = useDashboardStore();
 const { iframeModal, closeIframeModal } = dashboard;

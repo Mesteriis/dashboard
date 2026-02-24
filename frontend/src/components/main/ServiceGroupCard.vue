@@ -33,16 +33,28 @@
   </article>
 </template>
 
-<script setup>
-import VirtualizedItemGrid from "./VirtualizedItemGrid.vue";
-import { useDashboardStore } from "../../stores/dashboardStore.js";
+<script setup lang="ts">
+import VirtualizedItemGrid from "@/components/main/VirtualizedItemGrid.vue";
+import { useDashboardStore } from "@/stores/dashboardStore";
 
-defineProps({
-  group: {
-    type: Object,
-    required: true,
-  },
-});
+interface ServiceSubgroup {
+  id: string;
+  title?: string;
+  items: Array<{ id: string; [key: string]: unknown }>;
+  [key: string]: unknown;
+}
+
+interface ServiceGroup {
+  key: string;
+  title?: string;
+  description?: string;
+  subgroups: ServiceSubgroup[];
+  [key: string]: unknown;
+}
+
+defineProps<{
+  group: ServiceGroup;
+}>();
 
 const dashboard = useDashboardStore();
 const { isInlineGroupLayout, resolveGroupIcon, resolveSubgroupIcon } =

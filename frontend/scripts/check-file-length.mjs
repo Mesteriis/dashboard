@@ -4,10 +4,10 @@ import path from "node:path";
 const ROOT = process.cwd();
 const THRESHOLD = 100;
 const SCAN_DIRS = ["src", "../tests/frontend"];
-const EXTENSIONS = new Set([".js", ".mjs", ".vue", ".css", ".scss"]);
+const EXTENSIONS = new Set([".ts", ".js", ".mjs", ".vue", ".css", ".scss"]);
 
 // Temporary exception while store logic is being split into domain modules.
-const ALLOWLIST = new Set(["src/stores/dashboardStore.js"]);
+const ALLOWLIST = new Set(["src/stores/dashboardStore.ts"]);
 
 async function walk(dir) {
   const entries = await readdir(dir, { withFileTypes: true });

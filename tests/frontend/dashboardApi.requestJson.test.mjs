@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { requestJson } from '../../frontend/src/services/dashboardApi.js'
+import { requestJson } from '../../frontend/src/services/dashboardApi.ts'
 
 const originalFetch = globalThis.fetch
 const hadWindow = 'window' in globalThis
@@ -37,6 +37,8 @@ test('requestJson returns parsed JSON and sends default headers', async () => {
   assert.equal(call.path, '/api/ping')
   assert.equal(call.options.credentials, 'include')
   assert.equal(call.options.headers.Accept, 'application/json')
+  assert.equal(call.options.headers['X-Oko-Actor'], 'frontend-local')
+  assert.ok(String(call.options.headers['X-Oko-Capabilities']).includes('read.config'))
 })
 
 test('requestJson formats validation errors from detail array', async () => {

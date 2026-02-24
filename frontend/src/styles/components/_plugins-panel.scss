@@ -1,0 +1,529 @@
+.plugins-panel-layout {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
+  gap: var(--grid-gap);
+  padding: calc(24px + var(--desktop-drag-strip)) clamp(12px, 2.2vw, 28px) 24px;
+}
+
+.plugins-panel-nav {
+  min-width: 0;
+}
+
+.plugins-panel-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.plugins-panel-brand img {
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.plugins-panel-brand-kicker {
+  margin: 0;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(140, 224, 223, 0.9);
+}
+
+.plugins-panel-brand h1 {
+  margin: 4px 0 0;
+  font-family: "Cinzel", "Times New Roman", serif;
+  font-size: 1.22rem;
+  letter-spacing: 0.04em;
+}
+
+.plugins-panel-brand-note {
+  margin: 4px 0 0;
+  color: #9ab3c5;
+  font-size: 0.82rem;
+}
+
+.plugins-panel-sidebar-content {
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 14px;
+}
+
+.plugins-panel-nav-links {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  min-height: 0;
+  overflow: auto;
+  padding-right: 2px;
+}
+
+.plugins-panel-nav-link {
+  border: 1px solid rgba(117, 184, 209, 0.28);
+  border-radius: 12px;
+  background: linear-gradient(
+    152deg,
+    rgba(10, 31, 46, 0.76),
+    rgba(8, 22, 35, 0.74)
+  );
+  color: #d5e8f5;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 11px 12px;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color 160ms ease,
+    background 160ms ease,
+    transform 160ms ease;
+}
+
+.plugins-panel-nav-link span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.84rem;
+}
+
+.plugins-panel-nav-link strong {
+  font-size: 0.76rem;
+  color: #9fc0d6;
+}
+
+.plugins-panel-nav-link:hover {
+  border-color: rgba(115, 243, 221, 0.48);
+  background: linear-gradient(
+    152deg,
+    rgba(15, 49, 69, 0.78),
+    rgba(11, 31, 48, 0.75)
+  );
+  transform: translateY(-1px);
+}
+
+.plugins-panel-nav-link.active {
+  border-color: rgba(125, 239, 221, 0.58);
+  background: linear-gradient(
+    152deg,
+    rgba(18, 62, 83, 0.76),
+    rgba(13, 43, 59, 0.75)
+  );
+}
+
+.plugins-install-actions {
+  display: grid;
+  gap: 8px;
+}
+
+.plugins-install-zip-input {
+  display: none;
+}
+
+.plugins-install-btn {
+  border: 1px solid rgba(117, 184, 209, 0.28);
+  border-radius: 12px;
+  background: linear-gradient(
+    152deg,
+    rgba(10, 31, 46, 0.66),
+    rgba(8, 22, 35, 0.64)
+  );
+  color: #d5e8f5;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 38px;
+  padding: 8px 10px;
+  font: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition:
+    border-color 160ms ease,
+    background 160ms ease,
+    transform 160ms ease;
+}
+
+.plugins-install-btn:hover {
+  border-color: rgba(115, 243, 221, 0.48);
+  background: linear-gradient(
+    152deg,
+    rgba(15, 49, 69, 0.72),
+    rgba(11, 31, 48, 0.7)
+  );
+  transform: translateY(-1px);
+}
+
+.plugins-panel-back {
+  width: 100%;
+  justify-content: center;
+  gap: 8px;
+}
+
+.plugins-panel-main {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 14px;
+  padding: 16px;
+  min-height: calc(100vh - (48px + var(--desktop-drag-strip)));
+}
+
+.plugins-main-tabs {
+  min-width: 0;
+  height: 52px;
+}
+
+.plugins-main-tabs .hero-page-tab-btn {
+  backdrop-filter: blur(2px);
+}
+
+.plugins-main-tabs .hero-page-tab-btn.active .hero-page-tab-label {
+  max-inline-size: min(40vw, 380px);
+}
+
+.plugins-panel-close {
+  position: relative;
+  z-index: 1;
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+  align-self: stretch;
+}
+
+.plugins-panel-content {
+  min-height: 0;
+  overflow: auto;
+  padding-right: 2px;
+}
+
+.plugins-main-surface {
+  border: 1px solid rgba(111, 175, 196, 0.22);
+  border-radius: 18px;
+  background: linear-gradient(
+    160deg,
+    rgba(6, 18, 30, 0.82),
+    rgba(4, 12, 22, 0.78)
+  );
+  box-shadow:
+    0 16px 30px rgba(2, 9, 17, 0.32),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  padding: 14px;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 12px;
+}
+
+.plugins-main-surface-head h3 {
+  margin: 0;
+  font-size: 1.03rem;
+  color: #e7f4ff;
+}
+
+.plugins-main-surface-head p {
+  margin: 6px 0 0;
+  font-size: 0.82rem;
+  color: #9db8cb;
+}
+
+.plugins-main-tile-wrap {
+  border: 1px solid rgba(96, 153, 177, 0.24);
+  border-radius: 14px;
+  min-height: 0;
+  padding: 10px;
+  background: linear-gradient(
+    160deg,
+    rgba(7, 22, 35, 0.66),
+    rgba(5, 15, 25, 0.62)
+  );
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 10px;
+  overflow: hidden;
+}
+
+.plugins-main-tile-head h4 {
+  margin: 0;
+  font-size: 0.96rem;
+  color: #d8ebf8;
+}
+
+.plugins-main-tile-grid {
+  min-height: 0;
+  overflow: auto;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  align-content: start;
+}
+
+.plugins-main-tile-card {
+  border: 1px solid rgba(113, 178, 201, 0.3);
+  border-radius: 12px;
+  padding: 12px;
+  background: linear-gradient(
+    150deg,
+    rgba(24, 58, 72, 0.36),
+    rgba(8, 20, 33, 0.84)
+  );
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.plugins-main-tile-card header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.plugins-main-tile-card h5 {
+  margin: 0;
+  font-size: 0.94rem;
+  color: #dff1ff;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.plugins-main-tile-chip {
+  border: 1px solid rgba(110, 176, 197, 0.34);
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 0.68rem;
+  color: #a9c8db;
+  background: rgba(8, 27, 40, 0.58);
+  text-transform: lowercase;
+}
+
+.plugins-main-tile-id {
+  margin: 0;
+  font-size: 0.76rem;
+  color: #98b7cb;
+  word-break: break-all;
+}
+
+.plugins-main-tile-meta {
+  margin: 0;
+  font-size: 0.78rem;
+  color: #8edecf;
+}
+
+.plugins-main-tile-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.plugins-empty-state {
+  border: 1px dashed rgba(118, 185, 208, 0.32);
+  border-radius: 14px;
+  background: rgba(8, 22, 33, 0.48);
+  padding: 18px;
+}
+
+.plugins-empty-state h3 {
+  margin: 0;
+  font-size: 0.98rem;
+}
+
+.plugins-empty-state p {
+  margin: 8px 0 0;
+  color: #9ab4c6;
+  font-size: 0.84rem;
+}
+
+.plugins-github-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  padding: 14px;
+  background: rgba(2, 8, 14, 0.76);
+  backdrop-filter: blur(6px) saturate(122%);
+}
+
+.plugins-github-modal {
+  width: min(94vw, 620px);
+  border: 1px solid rgba(112, 236, 215, 0.3);
+  border-radius: calc(var(--card-radius) + 2px);
+  background: linear-gradient(
+    165deg,
+    rgba(8, 22, 34, 0.98),
+    rgba(5, 14, 23, 0.98)
+  );
+  box-shadow:
+    var(--shadow),
+    inset 0 0 0 1px rgba(214, 248, 255, 0.03);
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  animation: command-palette-appear 170ms cubic-bezier(0.2, 0.72, 0.16, 1);
+}
+
+.plugins-github-modal-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.plugins-github-modal-head h3 {
+  margin: 0;
+  font-size: 0.96rem;
+}
+
+.plugins-github-modal-head p {
+  margin: 4px 0 0;
+  color: #9ab4c8;
+  font-size: 0.78rem;
+}
+
+.plugins-github-modal-close {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+}
+
+.plugins-github-field {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  border: 1px solid rgba(116, 177, 199, 0.32);
+  border-radius: 12px;
+  background: linear-gradient(
+    146deg,
+    rgba(22, 45, 66, 0.5),
+    rgba(14, 31, 49, 0.42)
+  );
+  color: rgba(218, 235, 251, 0.92);
+  padding: 8px 10px;
+}
+
+.plugins-github-field:focus-within {
+  border-color: rgba(110, 244, 221, 0.64);
+  box-shadow: 0 0 0 2px rgba(74, 210, 186, 0.2);
+}
+
+.plugins-github-field input {
+  width: 100%;
+  border: 0;
+  outline: 0;
+  min-width: 0;
+  background: transparent;
+  color: #e3eef7;
+  font: inherit;
+  font-size: 0.84rem;
+  line-height: 1.2;
+}
+
+.plugins-github-field input::placeholder {
+  color: #8ea6bb;
+}
+
+.plugins-github-field-icon {
+  width: 14px;
+  height: 14px;
+  color: #9ec6dd;
+  flex: 0 0 auto;
+}
+
+.plugins-github-status {
+  margin: 0;
+  font-size: 0.79rem;
+  color: #9eb9cb;
+}
+
+.plugins-github-status.ok {
+  color: #8df0d6;
+}
+
+.plugins-github-status.error {
+  color: #ffb4c1;
+}
+
+.plugins-github-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.plugins-github-check-btn,
+.plugins-github-install-btn {
+  border-radius: 10px;
+  min-height: 34px;
+  padding: 0 12px;
+  font: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition:
+    border-color 150ms ease,
+    background 150ms ease,
+    transform 150ms ease;
+}
+
+.plugins-github-check-btn {
+  border: 1px solid rgba(111, 175, 196, 0.34);
+  background: rgba(10, 30, 42, 0.7);
+  color: #d2e9f8;
+}
+
+.plugins-github-check-btn:hover {
+  border-color: rgba(113, 237, 217, 0.56);
+  background: rgba(15, 44, 58, 0.76);
+  transform: translateY(-1px);
+}
+
+.plugins-github-install-btn {
+  border: 1px solid rgba(114, 236, 214, 0.5);
+  background: linear-gradient(
+    148deg,
+    rgba(17, 70, 74, 0.76),
+    rgba(10, 47, 52, 0.78)
+  );
+  color: #dffcf3;
+}
+
+.plugins-github-install-btn:hover {
+  border-color: rgba(131, 250, 229, 0.62);
+  background: linear-gradient(
+    148deg,
+    rgba(20, 87, 90, 0.8),
+    rgba(12, 57, 63, 0.8)
+  );
+  transform: translateY(-1px);
+}
+
+@media (max-width: 980px) {
+  .plugins-panel-layout {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+
+  .plugins-panel-nav {
+    position: static;
+    top: auto;
+    height: auto;
+    max-height: none;
+  }
+
+  .plugins-panel-main {
+    min-height: 0;
+  }
+
+  .hero-glass-tabs-bg img {
+    width: min(30vw, 110px);
+    opacity: 0.12;
+  }
+}

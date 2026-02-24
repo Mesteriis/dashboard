@@ -1,0 +1,31 @@
+version: 1
+plugins:
+  autodiscover:
+    version: 1
+    tables:
+      - name: scan_runs
+        primary_key: scan_id
+        columns:
+          - name: scan_id
+            type: string
+            nullable: false
+          - name: status
+            type: string
+            nullable: false
+          - name: dry_run
+            type: boolean
+            nullable: false
+          - name: requested_at
+            type: datetime
+            nullable: false
+          - name: updated_at
+            type: datetime
+            nullable: false
+          - name: summary
+            type: json
+            nullable: true
+        indexes:
+          - name: ix_scan_runs_status
+            columns: [status]
+          - name: ix_scan_runs_dry_run
+            columns: [dry_run]

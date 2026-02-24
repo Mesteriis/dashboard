@@ -27,7 +27,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {
   computed,
   nextTick,
@@ -37,34 +37,32 @@ import {
   toRef,
   watch,
 } from "vue";
-import ServiceItemCard from "./ServiceItemCard.vue";
-import { useDashboardStore } from "../../stores/dashboardStore.js";
+import ServiceItemCard from "@/components/main/ServiceItemCard.vue";
+import { useDashboardStore } from "@/stores/dashboardStore";
 
 const VIRTUALIZATION_THRESHOLD = 120;
 const BATCH_SIZE = 72;
 
-const props = defineProps({
-  items: {
-    type: Array,
-    required: true,
-  },
-  groupKey: {
-    type: String,
-    required: true,
-  },
-  subgroupId: {
-    type: String,
-    required: true,
-  },
-});
+interface VirtualizedItem {
+  id: string;
+  __originGroupKey?: string;
+  __originSubgroupId?: string;
+  [key: string]: unknown;
+}
+
+const props = defineProps<{
+  items: VirtualizedItem[];
+  groupKey: string;
+  subgroupId: string;
+}>();
 
 const itemsRef = toRef(props, "items");
 const dashboard = useDashboardStore();
 const { isIconCardView, isTileCardView } = dashboard;
 
-const sentinelRef = ref(null);
+const sentinelRef = ref<HTMLElement | null>(null);
 const visibleCount = ref(BATCH_SIZE);
-let observer = null;
+let observer: IntersectionObserver | null = null;
 
 const shouldVirtualize = computed(
   () => itemsRef.value.length > VIRTUALIZATION_THRESHOLD,
@@ -77,18 +75,18 @@ const renderedItems = computed(() => {
   return itemsRef.value.slice(0, visibleCount.value);
 });
 
-function loadMore() {
+function loadMore(): void {
   visibleCount.value = Math.min(
     itemsRef.value.length,
     visibleCount.value + BATCH_SIZE,
   );
 }
 
-function resetVisibleItems() {
+function resetVisibleItems(): void {
   visibleCount.value = BATCH_SIZE;
 }
 
-function syncObserverTarget() {
+function syncObserverTarget(): void {
   if (!observer) return;
   observer.disconnect();
   if (!hasMore.value || !sentinelRef.value) return;

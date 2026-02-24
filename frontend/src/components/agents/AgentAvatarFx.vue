@@ -33,17 +33,58 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, toRef, watch } from "vue";
 import {
   AGENT_PLASMA_PRESETS,
   DEFAULT_AGENT_PRESET,
   normalizeAgentId,
-} from "../../constants/agentPlasmaPresets";
-import { useAgentActivity } from "../../composables/useAgentActivity";
-import { useFxMode } from "../../composables/useFxMode";
+  type AgentPlasmaPreset,
+} from "@/constants/agentPlasmaPresets";
+import { useAgentActivity, type AgentState } from "@/composables/useAgentActivity";
+import { useFxMode, type FxMode } from "@/composables/useFxMode";
 
-const QUALITY_PRESETS = {
+type QualityLevel = "low" | "medium" | "high";
+type IdleMode = "dim-plasma" | "particles" | "off";
+type RenderMode = FxMode;
+
+interface QualityPreset {
+  octaves: number;
+  particleCount: number;
+  plasmaFps: number;
+  particlesFps: number;
+}
+
+interface Particle {
+  angle: number;
+  orbit: number;
+  speed: number;
+  alpha: number;
+  size: number;
+  wobble: number;
+  phase: number;
+  px: number;
+  py: number;
+}
+
+interface PlasmaUniformLocations {
+  time: WebGLUniformLocation | null;
+  resolution: WebGLUniformLocation | null;
+  color: WebGLUniformLocation | null;
+  power: WebGLUniformLocation | null;
+  state: WebGLUniformLocation | null;
+  seed: WebGLUniformLocation | null;
+  octaves: WebGLUniformLocation | null;
+}
+
+interface RuntimeModeSnapshot {
+  mode: RenderMode;
+  power: number;
+  state: AgentState;
+  stateIndex: number;
+}
+
+const QUALITY_PRESETS: Record<QualityLevel, QualityPreset> = {
   low: {
     octaves: 3,
     particleCount: 35,
@@ -181,54 +222,32 @@ void main() {
 }
 `;
 
-const props = defineProps({
-  agentId: {
-    type: String,
-    required: true,
+const props = withDefaults(
+  defineProps<{
+    agentId: string;
+    src: string;
+    size?: number;
+    quality?: QualityLevel;
+    idleMode?: IdleMode;
+    fxMode?: "" | RenderMode;
+    animated?: boolean;
+  }>(),
+  {
+    size: 160,
+    quality: "medium",
+    idleMode: "particles",
+    fxMode: "",
+    animated: true,
   },
-  src: {
-    type: String,
-    required: true,
-  },
-  size: {
-    type: Number,
-    default: 160,
-  },
-  quality: {
-    type: String,
-    default: "medium",
-    validator(value) {
-      return ["low", "medium", "high"].includes(String(value || ""));
-    },
-  },
-  idleMode: {
-    type: String,
-    default: "particles",
-    validator(value) {
-      return ["dim-plasma", "particles", "off"].includes(String(value || ""));
-    },
-  },
-  fxMode: {
-    type: String,
-    default: "",
-    validator(value) {
-      if (!value) return true;
-      return ["off", "plasma", "particles"].includes(String(value || ""));
-    },
-  },
-  animated: {
-    type: Boolean,
-    default: true,
-  },
-});
+);
 
-const hostRef = ref(null);
-const plasmaCanvasRef = ref(null);
-const particlesCanvasRef = ref(null);
+const hostRef = ref<HTMLDivElement | null>(null);
+const plasmaCanvasRef = ref<HTMLCanvasElement | null>(null);
+const particlesCanvasRef = ref<HTMLCanvasElement | null>(null);
 const imageSrc = ref(String(props.src || ""));
-const activeRenderMode = ref("off");
-const activeState = ref("idle");
-const hoverTarget = ref(0);
+const activeRenderMode = ref<RenderMode>("off");
+const activeState = ref<AgentState>("idle");
+const hoverTarget = ref<number>(0);
 const isDocumentHidden = ref(
   typeof document === "undefined" ? false : Boolean(document.hidden),
 );
@@ -238,22 +257,23 @@ const { effectiveFxMode, prefersReducedMotion } = useFxMode();
 const { getFx } = useAgentActivity();
 const fxSnapshot = getFx(toRef(props, "agentId"));
 
-const preset = computed(() => {
+function isRenderMode(value: string): value is RenderMode {
+  return value === "off" || value === "plasma" || value === "particles";
+}
+
+const preset = computed<AgentPlasmaPreset>(() => {
   const normalized = normalizeAgentId(props.agentId);
   if (!normalized) return DEFAULT_AGENT_PRESET;
   return AGENT_PLASMA_PRESETS[normalized] || DEFAULT_AGENT_PRESET;
 });
 
-const qualityPreset = computed(() => {
-  const requested = String(props.quality || "medium");
-  return QUALITY_PRESETS[requested] || QUALITY_PRESETS.medium;
-});
+const qualityPreset = computed<QualityPreset>(() => QUALITY_PRESETS[props.quality]);
 
-const requestedFxMode = computed(() => {
+const requestedFxMode = computed<RenderMode>(() => {
   const propMode = String(props.fxMode || "")
     .trim()
     .toLowerCase();
-  if (["off", "plasma", "particles"].includes(propMode)) {
+  if (isRenderMode(propMode)) {
     return propMode;
   }
   return effectiveFxMode.value;
@@ -263,7 +283,7 @@ const canRunLoop = computed(
   () => props.animated && !prefersReducedMotion.value && !isDocumentHidden.value,
 );
 
-const containerStyle = computed(() => {
+const containerStyle = computed<Record<string, string>>(() => {
   const size = Math.max(56, Number(props.size || 160));
   return {
     "--avatar-size": `${size}px`,
@@ -281,45 +301,45 @@ let powerSmoothed = 0;
 let viewportWidth = 0;
 let viewportHeight = 0;
 let devicePixelRatio = 1;
-let resizeObserver = null;
+let resizeObserver: ResizeObserver | null = null;
 let fallbackResizeAttached = false;
-let imageFallbackCandidates = [];
+let imageFallbackCandidates: string[] = [];
 let imageFallbackIndex = 0;
-let previousDrawMode = "off";
+let previousDrawMode: RenderMode = "off";
 
-let particlesCtx = null;
-let particles = [];
+let particlesCtx: CanvasRenderingContext2D | null = null;
+let particles: Particle[] = [];
 
-let plasmaGl = null;
-let plasmaProgram = null;
-let plasmaBuffer = null;
+let plasmaGl: WebGLRenderingContext | null = null;
+let plasmaProgram: WebGLProgram | null = null;
+let plasmaBuffer: WebGLBuffer | null = null;
 let plasmaAttribPosition = -1;
-let plasmaUniforms = null;
+let plasmaUniforms: PlasmaUniformLocations | null = null;
 
-function clamp(value, min, max) {
+function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
 }
 
-function lerp(from, to, alpha) {
+function lerp(from: number, to: number, alpha: number): number {
   return from + (to - from) * alpha;
 }
 
-function randomFloat(min, max) {
+function randomFloat(min: number, max: number): number {
   return min + Math.random() * (max - min);
 }
 
-function resolveStateIndex(state) {
+function resolveStateIndex(state: AgentState): number {
   if (state === "active") return 1;
   if (state === "alert") return 2;
   if (state === "error") return 3;
   return 0;
 }
 
-function parseRgb(colorText) {
+function parseRgb(colorText: unknown): [number, number, number] {
   const source = String(colorText || "").trim();
   const rgbaMatch = source.match(/rgba?\(([^)]+)\)/i);
   if (!rgbaMatch) return [120, 200, 255];
-  const parts = rgbaMatch[1]
+  const parts = (rgbaMatch[1] || "")
     .split(",")
     .slice(0, 3)
     .map((part) => Number.parseFloat(part.trim()));
@@ -328,10 +348,14 @@ function parseRgb(colorText) {
     return [120, 200, 255];
   }
 
-  return parts.map((value) => clamp(value, 0, 255));
+  return [
+    clamp(parts[0] || 120, 0, 255),
+    clamp(parts[1] || 200, 0, 255),
+    clamp(parts[2] || 255, 0, 255),
+  ];
 }
 
-function resolveImageLowercaseCandidate(src) {
+function resolveImageLowercaseCandidate(src: unknown): string {
   const value = String(src || "").trim();
   if (!value) return "";
 
@@ -343,14 +367,14 @@ function resolveImageLowercaseCandidate(src) {
   return `${dir}${filename.toLowerCase()}`;
 }
 
-function swapImageExtension(src, nextExtension) {
+function swapImageExtension(src: unknown, nextExtension: string): string {
   const value = String(src || "").trim();
   if (!value) return "";
 
   const matched = value.match(/^([^?#]+)([?#].*)?$/);
   if (!matched) return "";
 
-  const pathname = matched[1];
+  const pathname = matched[1] || "";
   const suffix = matched[2] || "";
   if (!/\.(webp|png)$/i.test(pathname)) return "";
 
@@ -359,12 +383,12 @@ function swapImageExtension(src, nextExtension) {
   return `${replaced}${suffix}`;
 }
 
-function buildImageFallbackCandidates(src) {
+function buildImageFallbackCandidates(src: unknown): string[] {
   const source = String(src || "").trim();
   if (!source) return [];
 
-  const candidates = [];
-  const append = (value) => {
+  const candidates: string[] = [];
+  const append = (value: unknown): void => {
     const normalized = String(value || "").trim();
     if (!normalized || candidates.includes(normalized)) return;
     candidates.push(normalized);
@@ -382,41 +406,44 @@ function buildImageFallbackCandidates(src) {
   return candidates;
 }
 
-function handleImageError() {
+function handleImageError(): void {
   if (!imageFallbackCandidates.length) return;
   if (imageFallbackIndex >= imageFallbackCandidates.length - 1) return;
   imageFallbackIndex += 1;
-  imageSrc.value = imageFallbackCandidates[imageFallbackIndex];
+  const fallbackSrc = imageFallbackCandidates[imageFallbackIndex];
+  if (fallbackSrc) {
+    imageSrc.value = fallbackSrc;
+  }
 }
 
-function handlePointerEnter() {
+function handlePointerEnter(): void {
   hoverTarget.value = 1;
 }
 
-function handlePointerLeave() {
+function handlePointerLeave(): void {
   hoverTarget.value = 0;
 }
 
-function clearCanvas2d() {
+function clearCanvas2d(): void {
   if (!particlesCtx || !viewportWidth || !viewportHeight) return;
   particlesCtx.clearRect(0, 0, viewportWidth, viewportHeight);
 }
 
-function clearPlasmaCanvas() {
+function clearPlasmaCanvas(): void {
   if (!plasmaGl || !plasmaCanvasRef.value) return;
   plasmaGl.viewport(0, 0, plasmaCanvasRef.value.width, plasmaCanvasRef.value.height);
   plasmaGl.clearColor(0, 0, 0, 0);
   plasmaGl.clear(plasmaGl.COLOR_BUFFER_BIT);
 }
 
-function clearAllLayers() {
+function clearAllLayers(): void {
   clearCanvas2d();
   clearPlasmaCanvas();
 }
 
-function buildParticles() {
+function buildParticles(): void {
   const count = qualityPreset.value.particleCount;
-  const nextParticles = [];
+  const nextParticles: Particle[] = [];
 
   for (let index = 0; index < count; index += 1) {
     nextParticles.push({
@@ -435,7 +462,7 @@ function buildParticles() {
   particles = nextParticles;
 }
 
-function ensureParticlesContext() {
+function ensureParticlesContext(): CanvasRenderingContext2D | null {
   if (particlesCtx) return particlesCtx;
 
   const canvas = particlesCanvasRef.value;
@@ -457,7 +484,11 @@ function ensureParticlesContext() {
   return particlesCtx;
 }
 
-function compileShader(gl, type, source) {
+function compileShader(
+  gl: WebGLRenderingContext,
+  type: number,
+  source: string,
+): WebGLShader | null {
   const shader = gl.createShader(type);
   if (!shader) return null;
   gl.shaderSource(shader, source);
@@ -470,7 +501,7 @@ function compileShader(gl, type, source) {
   return null;
 }
 
-function destroyPlasmaResources() {
+function destroyPlasmaResources(): void {
   if (!plasmaGl) {
     plasmaProgram = null;
     plasmaBuffer = null;
@@ -493,7 +524,7 @@ function destroyPlasmaResources() {
   plasmaGl = null;
 }
 
-function ensurePlasmaContext() {
+function ensurePlasmaContext(): boolean {
   if (plasmaGl && plasmaProgram) {
     return true;
   }
@@ -583,7 +614,7 @@ function ensurePlasmaContext() {
   return true;
 }
 
-function renderPlasma(nowMs, power, stateIndex) {
+function renderPlasma(nowMs: number, power: number, stateIndex: number): boolean {
   const canvas = plasmaCanvasRef.value;
   if (!canvas) return false;
 
@@ -601,7 +632,10 @@ function renderPlasma(nowMs, power, stateIndex) {
   plasmaGl.enableVertexAttribArray(plasmaAttribPosition);
   plasmaGl.vertexAttribPointer(plasmaAttribPosition, 2, plasmaGl.FLOAT, false, 0, 0);
 
-  const [r, g, b] = parseRgb(preset.value.color).map((value) => value / 255);
+  const rgb = parseRgb(preset.value.color);
+  const r = rgb[0] / 255;
+  const g = rgb[1] / 255;
+  const b = rgb[2] / 255;
 
   plasmaGl.uniform1f(plasmaUniforms.time, nowMs);
   plasmaGl.uniform2f(plasmaUniforms.resolution, canvas.width, canvas.height);
@@ -615,7 +649,12 @@ function renderPlasma(nowMs, power, stateIndex) {
   return true;
 }
 
-function renderParticles(nowMs, dtSeconds, power, state) {
+function renderParticles(
+  nowMs: number,
+  dtSeconds: number,
+  power: number,
+  state: AgentState,
+): void {
   const ctx = ensureParticlesContext();
   if (!ctx) return;
 
@@ -692,9 +731,9 @@ function renderParticles(nowMs, dtSeconds, power, state) {
   ctx.globalCompositeOperation = "source-over";
 }
 
-function resolveRuntimeMode(nowMs) {
+function resolveRuntimeMode(nowMs: number): RuntimeModeSnapshot {
   const snapshot = fxSnapshot.value;
-  const state = snapshot.state || "idle";
+  const state: AgentState = snapshot.state || "idle";
   const stateIndex = resolveStateIndex(state);
   const lastAt = Number(snapshot.lastAt || 0);
 
@@ -733,7 +772,7 @@ function resolveRuntimeMode(nowMs) {
   };
 }
 
-function syncCanvasSize() {
+function syncCanvasSize(): void {
   const host = hostRef.value;
   if (!host) return;
 
@@ -755,7 +794,7 @@ function syncCanvasSize() {
   const particlesCanvas = particlesCanvasRef.value;
   if (!plasmaCanvas || !particlesCanvas) return;
 
-  [plasmaCanvas, particlesCanvas].forEach((canvas) => {
+  [plasmaCanvas, particlesCanvas].forEach((canvas: HTMLCanvasElement) => {
     canvas.width = Math.round(viewportWidth * devicePixelRatio);
     canvas.height = Math.round(viewportHeight * devicePixelRatio);
     canvas.style.width = `${viewportWidth}px`;
@@ -776,12 +815,12 @@ function syncCanvasSize() {
   }
 }
 
-function handleVisibilityChange() {
+function handleVisibilityChange(): void {
   if (typeof document === "undefined") return;
   isDocumentHidden.value = Boolean(document.hidden);
 }
 
-function step(nowMs) {
+function step(nowMs: number): void {
   rafId = window.requestAnimationFrame(step);
 
   const deltaMs = lastTickMs ? nowMs - lastTickMs : 16;
@@ -828,7 +867,7 @@ function step(nowMs) {
   renderParticles(nowMs, dtSeconds, powerSmoothed, runtime.state);
 }
 
-function startLoop() {
+function startLoop(): void {
   if (typeof window === "undefined") return;
   if (rafId) return;
   lastTickMs = 0;
@@ -836,7 +875,7 @@ function startLoop() {
   rafId = window.requestAnimationFrame(step);
 }
 
-function stopLoop() {
+function stopLoop(): void {
   if (!rafId || typeof window === "undefined") return;
   window.cancelAnimationFrame(rafId);
   rafId = 0;
@@ -844,13 +883,13 @@ function stopLoop() {
   lastDrawMs = 0;
 }
 
-function handleWindowResize() {
+function handleWindowResize(): void {
   syncCanvasSize();
 }
 
 watch(
   () => props.src,
-  (nextSrc) => {
+  (nextSrc: string) => {
     imageFallbackCandidates = buildImageFallbackCandidates(nextSrc);
     imageFallbackIndex = 0;
     imageSrc.value = imageFallbackCandidates[0] || String(nextSrc || "");
@@ -875,7 +914,7 @@ watch(
 
 watch(
   () => canRunLoop.value,
-  (enabled) => {
+  (enabled: boolean) => {
     if (enabled) {
       startLoop();
       return;
@@ -890,8 +929,8 @@ watch(
 onMounted(() => {
   syncCanvasSize();
 
-  if ("ResizeObserver" in window) {
-    resizeObserver = new window.ResizeObserver(() => {
+  if (typeof ResizeObserver !== "undefined") {
+    resizeObserver = new ResizeObserver(() => {
       syncCanvasSize();
     });
     if (hostRef.value) {
@@ -902,12 +941,16 @@ onMounted(() => {
     fallbackResizeAttached = true;
   }
 
-  document.addEventListener("visibilitychange", handleVisibilityChange);
+  if (typeof document !== "undefined") {
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+  }
 });
 
 onBeforeUnmount(() => {
   stopLoop();
-  document.removeEventListener("visibilitychange", handleVisibilityChange);
+  if (typeof document !== "undefined") {
+    document.removeEventListener("visibilitychange", handleVisibilityChange);
+  }
 
   if (resizeObserver) {
     resizeObserver.disconnect();

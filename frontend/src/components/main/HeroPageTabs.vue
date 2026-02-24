@@ -56,7 +56,7 @@
   </nav>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {
   computed,
   nextTick,
@@ -66,14 +66,16 @@ import {
   watch,
 } from "vue";
 import { House } from "lucide-vue-next";
-import { useDashboardStore } from "../../stores/dashboardStore.js";
+import { useDashboardStore } from "@/stores/dashboardStore";
 
-const props = defineProps({
-  variant: {
-    type: String,
-    default: "full",
+const props = withDefaults(
+  defineProps<{
+    variant?: "full" | "home";
+  }>(),
+  {
+    variant: "full",
   },
-});
+);
 
 let hasPlayedHeroTabsIntro = false;
 
@@ -91,50 +93,69 @@ const showLogoTile = computed(() => isSidebarHidden.value);
 const homeOnly = computed(() => props.variant === "home");
 const homePage = computed(() => pages.value?.[0] || null);
 const pageIdsSignature = computed(() =>
-  (pages.value || []).map((page) => String(page?.id || "")).join("|"),
+  (pages.value || [])
+    .map((page: { id?: unknown }) => String(page?.id || ""))
+    .join("|"),
 );
 const homeButtonTitle = computed(
   () =>
     `Домой${homePage.value?.title ? ` (${String(homePage.value.title)})` : ""}`,
 );
-const tabsRef = ref(null);
+const tabsRef = ref<HTMLElement | null>(null);
 
-let introTimeoutId = 0;
-let tabsAnimationFrameId = 0;
-let tabsResizeFrameId = 0;
-let tabsResizeObserver = null;
+let introTimeoutId: number | null = null;
+let tabsAnimationFrameId: number | null = null;
+let tabsResizeFrameId: number | null = null;
+let tabsResizeObserver: ResizeObserver | null = null;
 let fallbackResizeListenerAttached = false;
 
-function openHomePage() {
+interface TabMetrics {
+  collapsedWidth: number;
+  iconWidth: number;
+  slideDuration: number;
+  expandedPadding: number;
+  expandedGap: number;
+  collapsedPadding: number;
+  activeWidth: number;
+}
+
+interface TabDescriptor {
+  button: HTMLElement;
+  label: HTMLElement | null;
+  from: number;
+  to: number;
+}
+
+function openHomePage(): void {
   if (!homePage.value?.id) return;
   activePageId.value = homePage.value.id;
 }
 
-function parseCssNumber(rawValue, fallback) {
+function parseCssNumber(rawValue: unknown, fallback: number): number {
   const parsed = Number.parseFloat(String(rawValue || ""));
   return Number.isFinite(parsed) ? parsed : fallback;
 }
 
-function getTabButtons() {
+function getTabButtons(): HTMLElement[] {
   if (!tabsRef.value) return [];
   return Array.from(
-    tabsRef.value.querySelectorAll(":scope > .hero-page-tab-btn"),
+    tabsRef.value.querySelectorAll<HTMLElement>(":scope > .hero-page-tab-btn"),
   );
 }
 
-function stopTabsAnimation() {
+function stopTabsAnimation(): void {
   if (!tabsAnimationFrameId) return;
   globalThis.cancelAnimationFrame(tabsAnimationFrameId);
-  tabsAnimationFrameId = 0;
+  tabsAnimationFrameId = null;
 }
 
-function stopResizeSchedule() {
+function stopResizeSchedule(): void {
   if (!tabsResizeFrameId) return;
   globalThis.cancelAnimationFrame(tabsResizeFrameId);
-  tabsResizeFrameId = 0;
+  tabsResizeFrameId = null;
 }
 
-function resolveTabMetrics(buttons) {
+function resolveTabMetrics(buttons: HTMLElement[]): TabMetrics | null {
   const host = tabsRef.value;
   if (!host || !buttons.length) return null;
 
@@ -155,7 +176,7 @@ function resolveTabMetrics(buttons) {
   const expandedGap = 10;
   const collapsedPadding = Math.max(0, (collapsedWidth - iconWidth) / 2);
 
-  const logoTile = host.querySelector(":scope > .hero-logo-square");
+  const logoTile = host.querySelector<HTMLElement>(":scope > .hero-logo-square");
   const logoWidth = logoTile ? logoTile.getBoundingClientRect().width : 0;
   const overlapCompensation = Math.max(0, buttons.length - 1);
   const availableWidth = Math.max(
@@ -178,7 +199,10 @@ function resolveTabMetrics(buttons) {
   };
 }
 
-function readButtonWidth(button, fallbackWidth) {
+function readButtonWidth(
+  button: HTMLElement | null | undefined,
+  fallbackWidth: number,
+): number {
   const cachedWidth = parseCssNumber(button?.dataset?.tabWidth, 0);
   if (cachedWidth > 0) return cachedWidth;
 
@@ -188,7 +212,11 @@ function readButtonWidth(button, fallbackWidth) {
   return fallbackWidth;
 }
 
-function applyTabFrame(descriptors, metrics, frameProgress) {
+function applyTabFrame(
+  descriptors: TabDescriptor[],
+  metrics: TabMetrics,
+  frameProgress: number,
+): void {
   const transitionRange = Math.max(
     1,
     metrics.activeWidth - metrics.collapsedWidth,
@@ -234,14 +262,14 @@ function applyTabFrame(descriptors, metrics, frameProgress) {
   }
 }
 
-function easeInOutQuart(progress) {
+function easeInOutQuart(progress: number): number {
   if (progress < 0.5) {
     return 8 * progress ** 4;
   }
   return 1 - ((-2 * progress + 2) ** 4) / 2;
 }
 
-function animateTabsLayout({ instant = false } = {}) {
+function animateTabsLayout({ instant = false }: { instant?: boolean } = {}): void {
   if (homeOnly.value) return;
 
   const buttons = getTabButtons();
@@ -260,12 +288,12 @@ function animateTabsLayout({ instant = false } = {}) {
     activeIndex = 0;
   }
 
-  const descriptors = buttons.map((button, index) => {
+  const descriptors: TabDescriptor[] = buttons.map((button, index) => {
     const targetWidth =
       index === activeIndex ? metrics.activeWidth : metrics.collapsedWidth;
     return {
       button,
-      label: button.querySelector(".hero-page-tab-label"),
+      label: button.querySelector<HTMLElement>(".hero-page-tab-label"),
       from: readButtonWidth(button, targetWidth),
       to: targetWidth,
     };
@@ -284,7 +312,7 @@ function animateTabsLayout({ instant = false } = {}) {
   const durationMs = Math.max(560, Math.min(1800, metrics.slideDuration * 1.15));
   const startedAt = globalThis.performance.now();
 
-  const step = (timestamp) => {
+  const step = (timestamp: number) => {
     const elapsed = timestamp - startedAt;
     const progress = Math.max(0, Math.min(1, elapsed / durationMs));
     const eased = easeInOutQuart(progress);
@@ -294,17 +322,17 @@ function animateTabsLayout({ instant = false } = {}) {
       tabsAnimationFrameId = globalThis.requestAnimationFrame(step);
       return;
     }
-    tabsAnimationFrameId = 0;
+    tabsAnimationFrameId = null;
   };
 
   tabsAnimationFrameId = globalThis.requestAnimationFrame(step);
 }
 
-function scheduleInstantTabsLayout() {
+function scheduleInstantTabsLayout(): void {
   if (homeOnly.value) return;
   stopResizeSchedule();
   tabsResizeFrameId = globalThis.requestAnimationFrame(() => {
-    tabsResizeFrameId = 0;
+    tabsResizeFrameId = null;
     animateTabsLayout({ instant: true });
   });
 }
@@ -361,7 +389,7 @@ onBeforeUnmount(() => {
   if (homeOnly.value) return;
   if (introTimeoutId) {
     globalThis.clearTimeout(introTimeoutId);
-    introTimeoutId = 0;
+    introTimeoutId = null;
   }
   if (shouldPlayIntro.value) {
     hasPlayedHeroTabsIntro = true;

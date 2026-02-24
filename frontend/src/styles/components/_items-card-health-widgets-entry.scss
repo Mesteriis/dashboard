@@ -74,9 +74,121 @@
   color: #cffff1;
 }
 
+.item-plugin-zone {
+  border: 1px solid rgba(129, 167, 188, 0.2);
+  border-radius: 12px;
+  background: rgba(8, 20, 31, 0.45);
+  padding: 10px;
+  display: grid;
+  gap: 8px;
+}
+
+.item-plugin-title {
+  margin: 0;
+  color: #bcd6e6;
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.item-plugin-elements {
+  display: grid;
+  gap: 8px;
+}
+
+.item-plugin-text {
+  margin: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.item-plugin-label {
+  color: #90adc1;
+  font-size: 0.7rem;
+}
+
+.item-plugin-value {
+  color: #d6e8f5;
+  font-size: 0.8rem;
+}
+
+.item-plugin-badge {
+  inline-size: fit-content;
+  border: 1px solid rgba(137, 170, 188, 0.3);
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 0.72rem;
+  color: #d7e9f8;
+  background: rgba(15, 39, 52, 0.44);
+}
+
+.item-plugin-badge.tone-info {
+  border-color: rgba(104, 179, 242, 0.34);
+}
+
+.item-plugin-badge.tone-success {
+  border-color: rgba(111, 235, 194, 0.36);
+}
+
+.item-plugin-badge.tone-warning {
+  border-color: rgba(253, 196, 110, 0.36);
+}
+
+.item-plugin-badge.tone-danger {
+  border-color: rgba(247, 127, 136, 0.38);
+}
+
+.item-plugin-link-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+}
+
+.item-plugin-link-label {
+  margin: 0;
+  color: #d4e7f6;
+  font-size: 0.78rem;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.item-plugin-link-actions {
+  display: inline-flex;
+  gap: 6px;
+}
+
+.item-plugin-link-actions .ghost {
+  min-height: 28px;
+  padding: 0 10px;
+  font-size: 0.72rem;
+}
+
+.item-plugin-html-block {
+  margin: 0;
+}
+
+.item-plugin-html-frame {
+  width: 100%;
+  min-height: 84px;
+  border: 1px solid rgba(129, 167, 188, 0.26);
+  border-radius: 10px;
+  background: rgba(5, 13, 21, 0.84);
+}
+
+.item-plugin-html-denied {
+  margin: 0;
+  color: #e8a6ad;
+  font-size: 0.74rem;
+}
+
 .item-actions {
   margin-top: 2px;
   display: flex;
+  align-items: center;
   flex-wrap: wrap;
   gap: 8px;
   min-width: 0;

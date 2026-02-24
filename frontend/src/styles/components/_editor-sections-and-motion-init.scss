@@ -28,18 +28,16 @@
   font-weight: 620;
 }
 
-.editor-check {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-  user-select: none;
+.editor-section-note {
+  margin: 0;
+  font-size: 0.78rem;
+  color: rgba(181, 207, 223, 0.92);
 }
 
-.editor-check input[type="checkbox"] {
-  width: 16px;
-  height: 16px;
-  accent-color: var(--accent);
+.editor-switch-list {
+  display: grid;
+  gap: 8px;
+  padding: 2px 0 1px;
 }
 
 .editor-actions {

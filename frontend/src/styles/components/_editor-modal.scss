@@ -45,6 +45,54 @@
   padding: 16px;
   min-height: 0;
   overflow: auto;
+  position: relative;
+}
+
+.editor-modal-tabs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 2px;
+  border: 1px solid rgba(124, 172, 193, 0.24);
+  border-radius: 12px;
+  background: linear-gradient(
+    160deg,
+    rgba(8, 18, 30, 0.66),
+    rgba(8, 20, 32, 0.48)
+  );
+}
+
+.editor-modal-tab {
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: transparent;
+  color: #b7cedf;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 580;
+  letter-spacing: 0.012em;
+  min-height: 34px;
+  padding: 0 12px;
+  cursor: pointer;
+  transition:
+    border-color 160ms ease,
+    color 160ms ease,
+    background 160ms ease;
+}
+
+.editor-modal-tab:hover {
+  border-color: rgba(117, 246, 223, 0.32);
+  color: #dceefb;
+}
+
+.editor-modal-tab.active {
+  border-color: rgba(117, 246, 223, 0.58);
+  background: linear-gradient(
+    136deg,
+    rgba(10, 80, 90, 0.5),
+    rgba(10, 30, 43, 0.74)
+  );
+  color: #e8f6ff;
 }
 
 .editor-grid {
@@ -81,6 +129,27 @@
     background 160ms ease;
 }
 
+.editor-field .hero-dropdown,
+.editor-field .hero-multiselect {
+  position: relative;
+  width: 100%;
+  z-index: 1;
+}
+
+.editor-field .hero-dropdown.open,
+.editor-field .hero-multiselect.open {
+  z-index: 60;
+}
+
+.editor-field .hero-dropdown-trigger {
+  min-height: 38px;
+}
+
+.editor-field .hero-dropdown-menu {
+  max-height: min(42vh, 260px);
+  z-index: 120;
+}
+
 .editor-field input::placeholder {
   color: rgba(172, 199, 217, 0.62);
 }
@@ -95,4 +164,10 @@
   border-color: rgba(117, 246, 223, 0.72);
   background: rgba(11, 27, 40, 0.92);
   box-shadow: 0 0 0 3px rgba(77, 220, 198, 0.16);
+}
+
+@media (max-width: 760px) {
+  .editor-modal-tabs {
+    flex-wrap: wrap;
+  }
 }

@@ -1,0 +1,110 @@
+name: oko
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: oko-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-oko}
+      POSTGRES_USER: ${POSTGRES_USER:-oko}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-oko}
+    volumes:
+      - oko-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-oko} -d ${POSTGRES_DB:-oko}"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    container_name: oko-rabbitmq
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:-oko}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:-oko}
+      RABBITMQ_DEFAULT_VHOST: ${RABBITMQ_DEFAULT_VHOST:-/}
+    ports:
+      - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+  backend:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      args:
+        PYTHON_VERSION: 3.11-slim
+        NODE_VERSION: 20-alpine
+    container_name: oko-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    environment:
+      OKO_RUNTIME_ROLE: backend
+      DATABASE_URL: ${DATABASE_URL:-postgresql+asyncpg://oko:oko@postgres:5432/oko}
+      BROKER_URL: ${BROKER_URL:-amqp://oko:oko@rabbitmq:5672/}
+      OKO_BOOTSTRAP_CONFIG_FILE: /app/_dashboard.yaml
+      OKO_EVENTS_KEEPALIVE_SEC: ${OKO_EVENTS_KEEPALIVE_SEC:-15}
+      OKO_ACTIONS_EXECUTE_ENABLED: ${OKO_ACTIONS_EXECUTE_ENABLED:-true}
+      OKO_STORAGE_RPC_TIMEOUT_SEC: ${OKO_STORAGE_RPC_TIMEOUT_SEC:-2.0}
+      OKO_ACTION_RPC_TIMEOUT_SEC: ${OKO_ACTION_RPC_TIMEOUT_SEC:-5.0}
+      OKO_BROKER_PREFETCH_COUNT: ${OKO_BROKER_PREFETCH_COUNT:-32}
+    command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/v1/health', timeout=2)\" || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 20
+
+  worker:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      args:
+        PYTHON_VERSION: 3.11-slim
+        NODE_VERSION: 20-alpine
+    container_name: oko-worker
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      OKO_RUNTIME_ROLE: worker
+      DATABASE_URL: ${DATABASE_URL:-postgresql+asyncpg://oko:oko@postgres:5432/oko}
+      BROKER_URL: ${BROKER_URL:-amqp://oko:oko@rabbitmq:5672/}
+      OKO_STORAGE_RPC_TIMEOUT_SEC: ${OKO_STORAGE_RPC_TIMEOUT_SEC:-2.0}
+      OKO_ACTION_RPC_TIMEOUT_SEC: ${OKO_ACTION_RPC_TIMEOUT_SEC:-5.0}
+      OKO_BROKER_PREFETCH_COUNT: ${OKO_BROKER_PREFETCH_COUNT:-32}
+    command: ["python", "-m", "oko.worker"]
+
+  migrate:
+    profiles: ["migrate"]
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      args:
+        PYTHON_VERSION: 3.11-slim
+        NODE_VERSION: 20-alpine
+    container_name: oko-migrate
+    restart: "no"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgresql+asyncpg://oko:oko@postgres:5432/oko}
+    command: ["alembic", "-c", "alembic.ini", "upgrade", "head"]
+
+volumes:
+  oko-postgres-data:

@@ -3,10 +3,14 @@ name = "dashboard"
 version = "0.1.0"
 description = "FastAPI + Vue dashboard for service links, health checks, and LAN scan"
 readme = "README.md"
-requires-python = ">=3.14"
+requires-python = ">=3.11"
 dependencies = [
-    "alembic>=1.17.1",
+    "aiosqlite>=0.21.0",
+    "aio-pika>=9.5.7",
+    "alembic>=1.16.5",
+    "asyncpg>=0.30.0",
     "fastapi>=0.129.0",
+    "greenlet>=3.2.4",
     "httpx>=0.28.1",
     "prometheus-client>=0.21.0",
     "pydantic-settings>=2.11.0",
@@ -38,7 +42,7 @@ dev = [
 
 [tool.ruff]
 line-length = 120
-target-version = "py314"
+target-version = "py311"
 
 [tool.ruff.lint]
 select = [
@@ -56,7 +60,7 @@ select = [
 "tests/**/*.py" = ["S101"]
 
 [tool.mypy]
-python_version = "3.14"
+python_version = "3.11"
 strict = true
 show_error_codes = true
 explicit_package_bases = true
@@ -72,6 +76,9 @@ testpaths = ["tests"]
 python_files = ["test_*.py"]
 asyncio_mode = "auto"
 pythonpath = ["backend", "tests"]
+markers = [
+    "integration: end-to-end tests with external infra (Docker Compose)",
+]
 addopts = [
     "--cov=backend",
     "--cov-report=term-missing:skip-covered",

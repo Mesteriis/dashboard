@@ -23,7 +23,7 @@
         spellcheck="false"
         placeholder="Поиск сервиса или команды"
         :value="commandPaletteQuery"
-        @input="setCommandPaletteQuery($event.target.value)"
+        @input="handleInput"
         @keydown="handleInputKeydown"
       />
     </div>
@@ -83,11 +83,12 @@
   </BaseModal>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { Copy, Search } from "lucide-vue-next";
-import BaseModal from "../primitives/BaseModal.vue";
-import { useDashboardStore } from "../../stores/dashboardStore.js";
+import BaseModal from "@/components/primitives/BaseModal.vue";
+import { EVENT_FX_MODE_CHANGE, onOkoEvent } from "@/services/events";
+import { useDashboardStore } from "@/stores/dashboardStore";
 
 const dashboard = useDashboardStore();
 const {
@@ -104,19 +105,20 @@ const {
   setCommandPaletteQuery,
 } = dashboard;
 
-const inputRef = ref(null);
+const inputRef = ref<HTMLInputElement | null>(null);
 const shortcutLabel = /Mac|iPhone|iPad/i.test(
   globalThis.navigator?.platform || "",
 )
   ? "⌘K"
   : "Ctrl+K";
 const fxMode = ref(document.documentElement.dataset.fxMode || "full");
+let removeFxModeListener: () => void = () => {};
 
-function syncFxMode() {
+function syncFxMode(): void {
   fxMode.value = document.documentElement.dataset.fxMode || "full";
 }
 
-function focusSearchInput() {
+function focusSearchInput(): void {
   const applyFocus = () => {
     if (!inputRef.value) return;
     inputRef.value.focus();
@@ -131,7 +133,12 @@ function focusSearchInput() {
   });
 }
 
-function handleInputKeydown(event) {
+function handleInput(event: Event): void {
+  const target = event.target as HTMLInputElement | null;
+  setCommandPaletteQuery(target?.value || "");
+}
+
+function handleInputKeydown(event: KeyboardEvent): void {
   if (event.key === "ArrowDown") {
     event.preventDefault();
     moveCommandPaletteSelection(1);
@@ -156,7 +163,7 @@ function handleInputKeydown(event) {
   }
 }
 
-function commandPaletteRowMotion(index) {
+function commandPaletteRowMotion(index: number): Record<string, unknown> {
   if (fxMode.value === "off") {
     return {
       initial: { opacity: 1, y: 0, scale: 1 },
@@ -179,14 +186,15 @@ function commandPaletteRowMotion(index) {
 }
 
 onMounted(() => {
-  window.addEventListener("oko:fx-mode-change", syncFxMode);
+  removeFxModeListener = onOkoEvent(EVENT_FX_MODE_CHANGE, syncFxMode);
   if (commandPaletteOpen.value) {
     focusSearchInput();
   }
 });
 
 onBeforeUnmount(() => {
-  window.removeEventListener("oko:fx-mode-change", syncFxMode);
+  removeFxModeListener();
+  removeFxModeListener = () => {};
 });
 
 watch(

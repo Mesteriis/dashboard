@@ -6,21 +6,14 @@
   </div>
 </template>
 
-<script setup>
-defineProps({
-  open: {
-    type: Boolean,
-    required: true,
-  },
-  backdropClass: {
-    type: String,
-    required: true,
-  },
-  modalClass: {
-    type: String,
-    required: true,
-  },
-});
+<script setup lang="ts">
+defineProps<{
+  open: boolean;
+  backdropClass: string;
+  modalClass: string;
+}>();
 
-defineEmits(["backdrop"]);
+defineEmits<{
+  backdrop: [];
+}>();
 </script>

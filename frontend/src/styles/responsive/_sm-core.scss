@@ -1,4 +1,4 @@
-@use "../abstracts/breakpoints" as bp;
+@use "@/styles/abstracts/breakpoints" as bp;
 
 @include bp.down(bp.$bp-sm) {
   .app-shell {
@@ -60,33 +60,6 @@
     flex: 1 1 100%;
   }
 
-  .lan-summary-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .lan-table {
-    font-size: 0.78rem;
-    width: max(100%, 980px);
-  }
-
-  .lan-host-modal-backdrop {
-    padding: 10px;
-  }
-
-  .lan-host-modal {
-    width: 100%;
-    max-height: min(92vh, 940px);
-  }
-
-  .lan-host-modal-header,
-  .lan-host-modal-body {
-    padding: 12px;
-  }
-
-  .lan-host-overview {
-    grid-template-columns: 1fr;
-  }
-
   .iframe-modal-backdrop {
     padding: 10px;
   }
@@ -113,16 +86,25 @@
     max-height: min(92vh, 920px);
   }
 
+  .bootstrap-modal-backdrop {
+    padding: 10px;
+  }
+
+  .bootstrap-modal {
+    width: 100%;
+  }
+
+  .bootstrap-modal-grid {
+    grid-template-columns: 1fr;
+    min-height: auto;
+  }
+
+  .bootstrap-dropzone {
+    min-height: 170px;
+  }
+
   .settings-modal-grid {
     grid-template-columns: 1fr;
   }
 
-  .lan-workspace-backdrop {
-    padding: 12px;
-  }
-
-  .lan-workspace-shell {
-    padding: 12px;
-    border-radius: calc(var(--card-radius) + 2px);
-  }
 }

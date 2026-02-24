@@ -1,0 +1,201 @@
+.ui-kit-workspace {
+  display: grid;
+  grid-template-columns: minmax(250px, 300px) minmax(0, 1fr);
+  gap: 12px;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.ui-kit-nav {
+  border: 1px solid rgba(110, 169, 191, 0.28);
+  border-radius: 14px;
+  background:
+    radial-gradient(
+      140% 120% at 0% 0%,
+      rgba(45, 212, 191, 0.1),
+      rgba(7, 19, 30, 0.9) 56%
+    ),
+    rgba(7, 19, 30, 0.9);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 16px 34px rgba(2, 10, 18, 0.38);
+  min-height: 0;
+  overflow: hidden;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
+.ui-kit-nav__tools {
+  border-bottom: 1px solid rgba(111, 163, 184, 0.23);
+  padding: 12px;
+  display: grid;
+  gap: 10px;
+  background: rgba(8, 21, 32, 0.74);
+}
+
+.ui-kit-nav__search {
+  display: grid;
+  gap: 6px;
+}
+
+.ui-kit-nav__search span {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #9db7ca;
+}
+
+.ui-kit-nav__search input {
+  width: 100%;
+  border: 1px solid rgba(116, 173, 196, 0.33);
+  border-radius: 10px;
+  background: linear-gradient(154deg, rgba(14, 35, 50, 0.78), rgba(8, 21, 33, 0.88));
+  color: #e3eef7;
+  min-height: 38px;
+  padding: 0 11px;
+  font: inherit;
+  font-size: 0.84rem;
+  transition:
+    border-color 150ms ease,
+    background 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.ui-kit-nav__search input::placeholder {
+  color: #8ba6bb;
+}
+
+.ui-kit-nav__search input:hover {
+  border-color: rgba(140, 205, 224, 0.52);
+}
+
+.ui-kit-nav__search input:focus {
+  outline: none;
+  border-color: rgba(118, 246, 224, 0.68);
+  box-shadow: 0 0 0 3px rgba(77, 220, 198, 0.16);
+}
+
+.ui-kit-nav__groups {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.ui-kit-nav__group-btn {
+  border: 1px solid rgba(121, 169, 189, 0.26);
+  border-radius: 999px;
+  background: rgba(11, 29, 42, 0.74);
+  color: #c8ddec;
+  padding: 4px 9px;
+  min-height: 27px;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  transition:
+    border-color 150ms ease,
+    background 150ms ease,
+    color 150ms ease,
+    transform 150ms ease;
+}
+
+.ui-kit-nav__group-btn:hover {
+  border-color: rgba(116, 247, 224, 0.46);
+  background: rgba(17, 52, 62, 0.72);
+  color: #e8fbff;
+}
+
+.ui-kit-nav__group-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(77, 220, 198, 0.15);
+}
+
+.ui-kit-nav__group-btn.active {
+  border-color: rgba(45, 212, 191, 0.62);
+  background: linear-gradient(145deg, rgba(29, 119, 119, 0.58), rgba(12, 57, 68, 0.72));
+  color: #e8fffb;
+}
+
+.ui-kit-nav__list {
+  overflow: auto;
+  padding: 12px;
+  display: grid;
+  align-content: start;
+  gap: 12px;
+}
+
+.ui-kit-nav__section {
+  display: grid;
+  gap: 7px;
+}
+
+.ui-kit-nav__section h3 {
+  margin: 0;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #8fa8bb;
+}
+
+.ui-kit-nav__item {
+  width: 100%;
+  border: 1px solid rgba(123, 169, 190, 0.28);
+  border-radius: 10px;
+  background: linear-gradient(152deg, rgba(11, 30, 43, 0.82), rgba(7, 19, 30, 0.9));
+  color: #d6e9f7;
+  padding: 8px 10px;
+  text-align: left;
+  font: inherit;
+  font-size: 0.84rem;
+  cursor: pointer;
+  transition:
+    border-color 150ms ease,
+    background 150ms ease,
+    box-shadow 150ms ease,
+    transform 150ms ease;
+}
+
+.ui-kit-nav__item:hover {
+  border-color: rgba(129, 214, 229, 0.46);
+  background: linear-gradient(152deg, rgba(15, 42, 58, 0.84), rgba(10, 29, 44, 0.9));
+  transform: translateY(-1px);
+}
+
+.ui-kit-nav__item:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(77, 220, 198, 0.15);
+}
+
+.ui-kit-nav__item.active {
+  border-color: rgba(45, 212, 191, 0.68);
+  background: linear-gradient(145deg, rgba(32, 132, 127, 0.52), rgba(13, 60, 71, 0.74));
+  color: #e8fffa;
+  box-shadow: 0 10px 24px rgba(5, 85, 84, 0.24);
+}
+
+.ui-kit-nav__empty {
+  margin: 2px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+@media (max-width: 1080px) {
+  .ui-kit-workspace {
+    grid-template-columns: minmax(220px, 250px) minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 920px) {
+  .ui-kit-workspace {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    overflow: auto;
+  }
+
+  .ui-kit-nav {
+    grid-template-rows: auto;
+  }
+
+  .ui-kit-nav__list {
+    max-height: 300px;
+  }
+}

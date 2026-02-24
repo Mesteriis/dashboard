@@ -45,7 +45,7 @@
           class="tree-mini-btn"
           type="button"
           title="Добавить подгруппу"
-          @click.stop="addSubgroup(group.id)"
+          @click.stop="openCreateChooser(group.id)"
         >
           <Plus class="ui-icon" />
         </button>
@@ -71,10 +71,10 @@
   </li>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { GripVertical, Pencil, Plus, Trash2 } from "lucide-vue-next";
-import { useDashboardStore } from "../../stores/dashboardStore.js";
-import SidebarTreeSubgroupNode from "./SidebarTreeSubgroupNode.vue";
+import { useDashboardStore } from "@/stores/dashboardStore";
+import SidebarTreeSubgroupNode from "@/components/sidebar/SidebarTreeSubgroupNode.vue";
 
 defineProps({
   group: { type: Object, required: true },
@@ -96,7 +96,7 @@ const {
   resolveGroupIcon,
   groupTotalItems,
   editGroup,
-  addSubgroup,
+  openCreateChooser,
   removeGroup,
 } = dashboard;
 </script>

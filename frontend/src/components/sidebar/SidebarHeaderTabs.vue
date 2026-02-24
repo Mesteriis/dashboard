@@ -1,5 +1,5 @@
 <template>
-  <div class="brand brand--with-action">
+  <div class="brand brand--with-tools">
     <div class="brand-main">
       <img :src="EMBLEM_SRC" alt="Oko" />
       <div>
@@ -8,46 +8,68 @@
       </div>
     </div>
 
-    <div class="brand-action-stack">
-      <button
-        class="brand-pleiad-btn"
-        type="button"
-        title="Открыть Pleiad"
-        aria-label="Открыть Pleiad"
-        @click="openPleiad"
-      >
-        <Orbit class="ui-icon brand-pleiad-icon" />
-        <span>Pleiad</span>
-      </button>
+    <div class="sidebar-nav-tools">
+      <label class="sidebar-nav-search" for="sidebar-tree-search">
+        <Search class="ui-icon sidebar-nav-search-icon" />
+        <input
+          id="sidebar-tree-search"
+          v-model.trim="treeFilter"
+          type="search"
+          placeholder="Поиск: title url desc name"
+          autocomplete="off"
+        />
+      </label>
 
-      <button
-        class="brand-pleiad-btn brand-aura-btn"
-        type="button"
-        title="Открыть Agent Aura FX"
-        aria-label="Открыть Agent Aura FX"
-        @click="openAuraDemo"
+      <HeroDropdown
+        v-if="showSiteFilter"
+        class="sidebar-nav-filter-dropdown"
+        :model-value="siteFilter"
+        label="Site"
+        aria-label="Фильтр по site"
+        :options="siteFilterOptions"
+        @update:model-value="setSiteFilter"
       >
-        <Sparkles class="ui-icon brand-pleiad-icon" />
-        <span>Aura FX</span>
-      </button>
+        <template #prefix>
+          <span class="sidebar-nav-filter-prefix">
+            <Filter class="ui-icon sidebar-nav-filter-icon" />
+            <span class="sidebar-nav-filter-label">Site</span>
+          </span>
+        </template>
+      </HeroDropdown>
     </div>
   </div>
 </template>
 
-<script setup>
-import { Orbit, Sparkles } from "lucide-vue-next";
-import { dispatchOpenAgentAuraDemo } from "../../services/agentAuraNavigation.js";
-import { dispatchOpenPleiad } from "../../services/pleiadNavigation.js";
-import { useDashboardStore } from "../../stores/dashboardStore.js";
+<script setup lang="ts">
+import { computed, watch } from "vue";
+import { Filter, Search } from "lucide-vue-next";
+import HeroDropdown from "@/components/primitives/HeroDropdown.vue";
+import { useDashboardStore } from "@/stores/dashboardStore";
 
 const dashboard = useDashboardStore();
-const { EMBLEM_SRC, appTitle, appTagline } = dashboard;
+const {
+  EMBLEM_SRC,
+  appTitle,
+  appTagline,
+  treeFilter,
+  siteFilter,
+  siteFilterOptions,
+  setSiteFilter,
+} = dashboard;
 
-function openPleiad() {
-  dispatchOpenPleiad();
-}
+const showSiteFilter = computed(
+  () =>
+    siteFilterOptions.value.filter((option: any) => option.value !== "all")
+      .length > 1,
+);
 
-function openAuraDemo() {
-  dispatchOpenAgentAuraDemo();
-}
+watch(
+  () => showSiteFilter.value,
+  (visible) => {
+    if (!visible && siteFilter.value !== "all") {
+      setSiteFilter("all");
+    }
+  },
+  { immediate: true },
+);
 </script>

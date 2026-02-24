@@ -1,5 +1,5 @@
 <template>
-  <div ref="rootRef" class="hero-dropdown">
+  <div ref="rootRef" class="hero-dropdown" :class="{ open }">
     <button
       class="hero-dropdown-trigger"
       type="button"
@@ -19,7 +19,10 @@
     <Transition name="hero-dropdown-menu-transition">
       <ul
         v-if="open"
+        ref="menuRef"
         class="hero-dropdown-menu"
+        :class="menuPlacementClass"
+        :style="menuStyles"
         role="listbox"
         :aria-label="ariaLabel || label"
       >
@@ -47,37 +50,41 @@
   </div>
 </template>
 
-<script setup>
-import { computed, onBeforeUnmount, onMounted, ref } from "vue";
+<script setup lang="ts">
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { Check, ChevronDown } from "lucide-vue-next";
 
-const props = defineProps({
-  modelValue: {
-    type: String,
-    default: "",
-  },
-  label: {
-    type: String,
-    default: "",
-  },
-  ariaLabel: {
-    type: String,
-    default: "",
-  },
-  options: {
-    type: Array,
-    default: () => [],
-  },
-  disabled: {
-    type: Boolean,
-    default: false,
-  },
-});
+interface HeroDropdownOption {
+  value: string;
+  label: string;
+}
 
-const emit = defineEmits(["update:modelValue"]);
+const props = withDefaults(
+  defineProps<{
+    modelValue?: string;
+    label?: string;
+    ariaLabel?: string;
+    options?: HeroDropdownOption[];
+    disabled?: boolean;
+  }>(),
+  {
+    modelValue: "",
+    label: "",
+    ariaLabel: "",
+    options: () => [],
+    disabled: false,
+  },
+);
+
+const emit = defineEmits<{
+  "update:modelValue": [value: string];
+}>();
 
 const open = ref(false);
-const rootRef = ref(null);
+const rootRef = ref<HTMLElement | null>(null);
+const menuRef = ref<HTMLElement | null>(null);
+const menuDirection = ref<"down" | "up">("down");
+const menuMaxHeight = ref(360);
 
 const selectedLabel = computed(() => {
   const selected = props.options.find(
@@ -87,36 +94,82 @@ const selectedLabel = computed(() => {
   return props.options[0]?.label || "";
 });
 
-function toggleOpen() {
+const menuPlacementClass = computed(() =>
+  menuDirection.value === "up"
+    ? "hero-dropdown-menu--up"
+    : "hero-dropdown-menu--down",
+);
+
+const menuStyles = computed(() => ({
+  maxHeight: `${menuMaxHeight.value}px`,
+}));
+
+function toggleOpen(): void {
   if (props.disabled) return;
   open.value = !open.value;
 }
 
-function selectOption(value) {
+function selectOption(value: string): void {
   emit("update:modelValue", value);
   open.value = false;
 }
 
-function handleOutsidePointer(event) {
+function handleOutsidePointer(event: PointerEvent): void {
   if (!open.value) return;
-  if (rootRef.value && !rootRef.value.contains(event.target)) {
+  const targetNode = event.target as Node | null;
+  if (rootRef.value && targetNode && !rootRef.value.contains(targetNode)) {
     open.value = false;
   }
 }
 
-function handleKeydown(event) {
+function handleKeydown(event: KeyboardEvent): void {
   if (event.key === "Escape") {
     open.value = false;
   }
 }
 
+function updateMenuPlacement(): void {
+  if (typeof window === "undefined") return;
+  if (!rootRef.value) return;
+
+  const triggerRect = rootRef.value.getBoundingClientRect();
+  const viewportHeight = window.innerHeight || 0;
+  const margin = 12;
+  const spaceBelow = Math.max(0, viewportHeight - triggerRect.bottom - margin);
+  const spaceAbove = Math.max(0, triggerRect.top - margin);
+  const menuHeight = Math.min(menuRef.value?.scrollHeight || 260, 360);
+  const preferUp = spaceBelow < menuHeight && spaceAbove > spaceBelow;
+
+  menuDirection.value = preferUp ? "up" : "down";
+  const availableSpace = preferUp ? spaceAbove : spaceBelow;
+  menuMaxHeight.value = Math.max(140, Math.min(360, Math.floor(availableSpace)));
+}
+
+function handleViewportChange(): void {
+  if (!open.value) return;
+  updateMenuPlacement();
+}
+
+watch(open, (isOpen) => {
+  if (!isOpen) return;
+  void nextTick(() => {
+    updateMenuPlacement();
+  });
+});
+
 onMounted(() => {
+  if (typeof window === "undefined") return;
   window.addEventListener("pointerdown", handleOutsidePointer);
   window.addEventListener("keydown", handleKeydown);
+  window.addEventListener("resize", handleViewportChange);
+  window.addEventListener("scroll", handleViewportChange, true);
 });
 
 onBeforeUnmount(() => {
+  if (typeof window === "undefined") return;
   window.removeEventListener("pointerdown", handleOutsidePointer);
   window.removeEventListener("keydown", handleKeydown);
+  window.removeEventListener("resize", handleViewportChange);
+  window.removeEventListener("scroll", handleViewportChange, true);
 });
 </script>

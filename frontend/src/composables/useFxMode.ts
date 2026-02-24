@@ -7,6 +7,12 @@ import {
   type ComputedRef,
   type Ref,
 } from "vue";
+import {
+  EVENT_AGENT_FX_MODE_CHANGE,
+  EVENT_FX_MODE_CHANGE,
+  emitOkoEvent,
+  onOkoEvent,
+} from "@/services/events";
 
 export type FxMode = "off" | "plasma" | "particles";
 export type LegacyFxMode = "off" | "lite" | "full";
@@ -17,8 +23,6 @@ interface SetFxModeOptions {
 }
 
 const FX_MODE_STORAGE_KEY = "oko.fxMode";
-const LEGACY_FX_MODE_EVENT = "oko:fx-mode-change";
-const AGENT_FX_MODE_EVENT = "oko:agent-fx-mode-change";
 const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)";
 
 const FX_MODE_ORDER: FxMode[] = ["off", "plasma", "particles"];
@@ -33,6 +37,7 @@ let initialized = false;
 let consumerCount = 0;
 let mediaQueryList: MediaQueryList | null = null;
 let appliedLegacySync = false;
+let removeLegacyFxListener: (() => void) | null = null;
 
 function clampGlow(mode: LegacyFxMode): string {
   if (mode === "off") return "0";
@@ -94,28 +99,18 @@ function applyLegacyMode(mode: LegacyFxMode): void {
 }
 
 function dispatchLegacyModeChange(mode: LegacyFxMode, previousMode: LegacyFxMode): void {
-  if (typeof window === "undefined") return;
-  window.dispatchEvent(
-    new CustomEvent(LEGACY_FX_MODE_EVENT, {
-      detail: {
-        mode,
-        previousMode,
-      },
-    }),
-  );
+  emitOkoEvent(EVENT_FX_MODE_CHANGE, {
+    mode,
+    previousMode,
+  });
 }
 
 function dispatchAgentFxModeChange(mode: FxMode, previousMode: FxMode, source: string): void {
-  if (typeof window === "undefined") return;
-  window.dispatchEvent(
-    new CustomEvent(AGENT_FX_MODE_EVENT, {
-      detail: {
-        mode,
-        previousMode,
-        source,
-      },
-    }),
-  );
+  emitOkoEvent(EVENT_AGENT_FX_MODE_CHANGE, {
+    mode,
+    previousMode,
+    source,
+  });
 }
 
 function resolveInitialFxMode(): FxMode {
@@ -170,7 +165,7 @@ function handleStorageSync(event: StorageEvent): void {
 
 function bindGlobalListeners(): void {
   if (typeof window === "undefined") return;
-  window.addEventListener(LEGACY_FX_MODE_EVENT, handleLegacyModeChange);
+  removeLegacyFxListener = onOkoEvent(EVENT_FX_MODE_CHANGE, handleLegacyModeChange);
   window.addEventListener("storage", handleStorageSync);
 
   mediaQueryList = window.matchMedia?.(REDUCED_MOTION_QUERY) || null;
@@ -187,7 +182,8 @@ function bindGlobalListeners(): void {
 
 function unbindGlobalListeners(): void {
   if (typeof window !== "undefined") {
-    window.removeEventListener(LEGACY_FX_MODE_EVENT, handleLegacyModeChange);
+    removeLegacyFxListener?.();
+    removeLegacyFxListener = null;
     window.removeEventListener("storage", handleStorageSync);
   }
 
@@ -290,4 +286,4 @@ export function useFxMode(): {
 }
 
 export const FX_MODE_STORAGE = FX_MODE_STORAGE_KEY;
-export const AGENT_FX_MODE_CHANGE_EVENT = AGENT_FX_MODE_EVENT;
+export const AGENT_FX_MODE_CHANGE_EVENT = EVENT_AGENT_FX_MODE_CHANGE;

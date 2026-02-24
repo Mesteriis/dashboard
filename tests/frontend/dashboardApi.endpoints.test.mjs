@@ -1,22 +1,16 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import {
-  createLanScanStream,
   fetchDashboardConfig,
   fetchDashboardConfigBackup,
-  fetchDashboardHealth,
-  fetchIframeSource,
-  fetchLanScanState,
   restoreDashboardConfig,
-  triggerLanScan,
   updateDashboardConfig,
-} from '../../frontend/src/services/dashboardApi.js'
+  validateDashboardYaml,
+} from '../../frontend/src/services/dashboardApi.ts'
 
 const originalFetch = globalThis.fetch
 const hadWindow = 'window' in globalThis
 const originalWindow = globalThis.window
-const hadEventSource = 'EventSource' in globalThis
-const originalEventSource = globalThis.EventSource
 
 function jsonResponse(body = {}) {
   return {
@@ -28,23 +22,8 @@ function jsonResponse(body = {}) {
   }
 }
 
-function textResponse(body = '', headers = {}) {
-  return {
-    ok: true,
-    status: 200,
-    headers: new Headers(headers),
-    json: async () => ({ value: body }),
-    text: async () => body,
-  }
-}
-
 test.afterEach(() => {
   globalThis.fetch = originalFetch
-  if (hadEventSource) {
-    globalThis.EventSource = originalEventSource
-  } else {
-    delete globalThis.EventSource
-  }
   if (hadWindow) {
     globalThis.window = originalWindow
   } else {
@@ -52,106 +31,87 @@ test.afterEach(() => {
   }
 })
 
-test('fetchDashboardConfig and fetchLanScanState call expected endpoints', async () => {
-  const paths = []
-  globalThis.fetch = async (path) => {
-    paths.push(path)
-    return jsonResponse({ ok: true })
-  }
-
-  await fetchDashboardConfig()
-  await fetchLanScanState()
-  assert.deepEqual(paths, ['/api/v1/dashboard/config', '/api/v1/dashboard/lan/state'])
-})
-
-test('fetchDashboardHealth encodes repeated item_id query params', async () => {
+test('fetchDashboardConfig calls new core endpoint', async () => {
   let path = ''
   globalThis.fetch = async (nextPath) => {
     path = nextPath
-    return jsonResponse({ items: [] })
+    return jsonResponse({ version: 1, app: { id: 'ok' } })
   }
 
-  await fetchDashboardHealth(['a', 'b c'])
-  assert.equal(path, '/api/v1/dashboard/health?item_id=a&item_id=b+c')
+  await fetchDashboardConfig()
+  assert.equal(path, '/api/v1/config')
 })
 
-test('updateDashboardConfig uses PUT and JSON body', async () => {
-  let options = null
-  globalThis.fetch = async (_path, nextOptions) => {
-    options = nextOptions
-    return jsonResponse({ config: { app: { id: 'ok' } } })
-  }
-
-  await updateDashboardConfig({ app: { id: 'ok' } })
-  assert.equal(options.method, 'PUT')
-  assert.equal(options.headers['Content-Type'], 'application/json')
-  assert.equal(options.body, JSON.stringify({ app: { id: 'ok' } }))
-})
-
-test('fetchIframeSource resolves runtime URL and triggerLanScan uses POST', async () => {
-  globalThis.window = {
-    __OKO_API_BASE__: 'http://127.0.0.1:9000',
-  }
-  const calls = []
-  globalThis.fetch = async (path, options) => {
-    calls.push({ path, options })
-    if (calls.length === 1) {
-      return jsonResponse({ src: '/api/v1/dashboard/iframe/item%2Fid/proxy', proxied: true })
-    }
-    return jsonResponse({ ok: true })
-  }
-
-  const iframeSource = await fetchIframeSource('item/id')
-  await triggerLanScan()
-  assert.equal(calls[0].path, 'http://127.0.0.1:9000/api/v1/dashboard/iframe/item%2Fid/source')
-  assert.equal(iframeSource.src, 'http://127.0.0.1:9000/api/v1/dashboard/iframe/item%2Fid/proxy')
-  assert.equal(calls[1].path, 'http://127.0.0.1:9000/api/v1/dashboard/lan/run')
-  assert.equal(calls[1].options.method, 'POST')
-})
-
-test('createLanScanStream builds EventSource against runtime api base', () => {
-  class FakeEventSource {
-    constructor(url, options) {
-      this.url = url
-      this.options = options
-    }
-  }
-
-  globalThis.EventSource = FakeEventSource
-  globalThis.window = {
-    __OKO_API_BASE__: 'http://127.0.0.1:9000',
-  }
-
-  const stream = createLanScanStream()
-  assert.ok(stream instanceof FakeEventSource)
-  assert.equal(stream.url, 'http://127.0.0.1:9000/api/v1/dashboard/lan/stream')
-  assert.equal(stream.options.withCredentials, true)
-})
-
-test('fetchDashboardConfigBackup returns yaml payload with filename from content-disposition', async () => {
-  globalThis.fetch = async (path) => {
-    assert.equal(path, '/api/v1/dashboard/config/backup')
-    return textResponse('version: 1\n', {
-      'content-disposition': 'attachment; filename="dashboard-backup.yaml"',
-      'content-type': 'application/x-yaml',
-    })
-  }
-
-  const payload = await fetchDashboardConfigBackup()
-  assert.equal(payload.yaml, 'version: 1\n')
-  assert.equal(payload.filename, 'dashboard-backup.yaml')
-})
-
-test('restoreDashboardConfig posts yaml payload', async () => {
+test('updateDashboardConfig uses config patch endpoint', async () => {
   let call = null
   globalThis.fetch = async (path, options) => {
     call = { path, options }
-    return jsonResponse({ ok: true })
+    return jsonResponse({ active_state: { active_revision: 2 } })
+  }
+
+  await updateDashboardConfig({ app: { id: 'ok' } })
+  assert.equal(call.path, '/api/v1/config/patch')
+  assert.equal(call.options.method, 'POST')
+  assert.equal(call.options.headers['Content-Type'], 'application/json')
+  assert.equal(call.options.body, JSON.stringify({ patch: { app: { id: 'ok' } }, source: 'patch' }))
+})
+
+test('updateDashboardConfig returns config from revision payload', async () => {
+  globalThis.fetch = async () =>
+    jsonResponse({
+      active_state: { active_revision: 2 },
+      revision: {
+        payload: {
+          version: 1,
+          app: { id: 'demo' },
+          layout: { pages: [{ id: 'home' }] },
+        },
+      },
+    })
+
+  const result = await updateDashboardConfig({ app: { id: 'ok' } })
+  assert.deepEqual(result.config, {
+    version: 1,
+    app: { id: 'demo' },
+    layout: { pages: [{ id: 'home' }] },
+  })
+})
+
+test('validateDashboardYaml uses config validate endpoint', async () => {
+  let call = null
+  globalThis.fetch = async (path, options) => {
+    call = { path, options }
+    return jsonResponse({ valid: true, issues: [] })
+  }
+
+  const result = await validateDashboardYaml('version: 1\napp:\n  id: demo\n')
+  assert.equal(call.path, '/api/v1/config/validate')
+  assert.equal(call.options.method, 'POST')
+  assert.equal(result.valid, true)
+  assert.deepEqual(result.issues, [])
+})
+
+test('restoreDashboardConfig uses config import endpoint', async () => {
+  let call = null
+  globalThis.fetch = async (path, options) => {
+    call = { path, options }
+    return jsonResponse({ active_state: { active_revision: 3 } })
   }
 
   await restoreDashboardConfig('version: 1\n')
-  assert.equal(call.path, '/api/v1/dashboard/config/restore')
+  assert.equal(call.path, '/api/v1/config/import')
   assert.equal(call.options.method, 'POST')
   assert.equal(call.options.headers['Content-Type'], 'application/json')
-  assert.equal(call.options.body, JSON.stringify({ yaml: 'version: 1\n' }))
+  assert.equal(
+    call.options.body,
+    JSON.stringify({ format: 'yaml', payload: 'version: 1\n', source: 'import' }),
+  )
+})
+
+test('fetchDashboardConfigBackup is generated from config payload', async () => {
+  globalThis.fetch = async () => jsonResponse({ version: 1, app: { id: 'demo' } })
+
+  const payload = await fetchDashboardConfigBackup()
+  assert.ok(payload.yaml.includes('"version": 1'))
+  assert.ok(payload.filename.startsWith('dashboard-backup-'))
 })

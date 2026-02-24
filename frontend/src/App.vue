@@ -1,8 +1,5 @@
 <template>
-  <div
-    class="shell"
-    :class="{ 'shell-desktop': desktopShell }"
-  >
+  <div class="shell" :class="{ 'shell-desktop': desktopShell }">
     <div
       v-if="desktopShell"
       class="desktop-window-drag-strip"
@@ -10,34 +7,24 @@
       aria-hidden="true"
     ></div>
     <img
-      v-if="!isPleiadRoute"
+      v-if="!isPleiadOverlayVisible"
       class="center-emblem"
       :src="EMBLEM_SRC"
       alt=""
       aria-hidden="true"
     />
 
-    <PleiadExperience v-if="isPleiadRoute" mode="route" @close="closePleiadRoute" />
+    <RouterView />
 
-    <template v-else>
-      <div class="app-shell" :class="{ 'sidebar-hidden': isSidebarHidden }">
-        <DashboardSidebarView v-if="!isSidebarHidden" />
-        <DashboardMainView />
-      </div>
-
-      <LanHostModal v-if="lanHostModal.open" />
-      <IframeModal v-if="iframeModal.open" />
-      <ItemEditorModal v-if="itemEditor.open" />
-      <DashboardSettingsModal v-if="settingsPanel.open" />
-      <CommandPaletteModal v-if="commandPaletteOpen" />
-    </template>
-
-    <div v-if="screensaverVisible && !isPleiadRoute" class="pleiad-overlay-backdrop">
-      <PleiadExperience mode="screensaver" @close="hideScreensaver" />
+    <div
+      v-if="isPleiadOverlayVisible"
+      class="pleiad-overlay-backdrop"
+    >
+      <PleiadExperience :mode="pleiadOverlayMode" @close="handleCloseOverlay" />
     </div>
 
     <div
-      v-if="agentAuraDemoVisible && !isPleiadRoute"
+      v-if="agentAuraDemoVisible && !isImmersiveRoute"
       class="agent-aura-overlay-backdrop"
       @click.self="hideAgentAuraDemo"
     >
@@ -64,225 +51,160 @@
         <AgentAuraFxDemo />
       </section>
     </div>
+
+    <section
+      v-if="apiErrorNotice.message"
+      class="api-error-toast"
+      role="status"
+      aria-live="polite"
+    >
+      <header>
+        <strong>API error</strong>
+        <button
+          type="button"
+          class="api-error-toast-close"
+          aria-label="Dismiss API error message"
+          @click="clearApiErrorNotice"
+        >
+          Close
+        </button>
+      </header>
+      <p>{{ apiErrorNotice.message }}</p>
+    </section>
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
+import { computed, defineAsyncComponent, onBeforeUnmount, onMounted, ref } from "vue";
+import { RouterView, useRoute } from "vue-router";
+import PleiadExperience from "@/components/pleiad/PleiadExperience.vue";
+import { useIdleScreensaver } from "@/composables/useIdleScreensaver";
+import { closeOverlay, goDashboard, goPluginsPanel, goSettings, openPleiadOverlay } from "@/core/navigation/nav";
+import { AGENT_AURA_DEMO_OPEN_EVENT } from "@/services/agentAuraNavigation";
+import { isDesktopShell } from "@/services/desktopRuntime";
 import {
-  computed,
-  defineAsyncComponent,
-  onBeforeUnmount,
-  onMounted,
-  ref,
-  watch,
-} from "vue";
-import PleiadExperience from "./components/pleiad/PleiadExperience.vue";
-import { useIdleScreensaver } from "./composables/useIdleScreensaver.js";
-import DashboardMainView from "./views/DashboardMainView.vue";
-import DashboardSidebarView from "./views/DashboardSidebarView.vue";
-import { AGENT_AURA_DEMO_OPEN_EVENT } from "./services/agentAuraNavigation.js";
-import { isDesktopShell } from "./services/desktopRuntime.js";
-import {
-  PLEIAD_OPEN_EVENT,
-  isPleiadPath,
-  normalizePathname,
-  resolvePleiadPath,
-  resolveShellPath,
-} from "./services/pleiadNavigation.js";
-import { useDashboardStore } from "./stores/dashboardStore.js";
+  EVENT_API_ERROR,
+  EVENT_DESKTOP_ACTION,
+  onOkoEvent,
+} from "@/services/events";
+import { useDashboardStore } from "@/stores/dashboardStore";
 
-const loadLanHostModal = () => import("./components/modals/LanHostModal.vue");
-const loadIframeModal = () => import("./components/modals/IframeModal.vue");
-const loadItemEditorModal = () =>
-  import("./components/modals/ItemEditorModal.vue");
-const loadDashboardSettingsModal = () =>
-  import("./components/modals/DashboardSettingsModal.vue");
-const loadCommandPaletteModal = () =>
-  import("./components/modals/CommandPaletteModal.vue");
-const loadAgentAuraFxDemo = () =>
-  import("./components/agents/AgentAuraFxDemo.vue");
-const loadIndicatorTabPanel = () =>
-  import("./components/main/IndicatorTabPanel.vue");
-const loadLanPageView = () => import("./components/main/LanPageView.vue");
+const AgentAuraFxDemo = defineAsyncComponent(
+  () => import("@/components/agents/AgentAuraFxDemo.vue"),
+);
 
-const LanHostModal = defineAsyncComponent(loadLanHostModal);
-const IframeModal = defineAsyncComponent(loadIframeModal);
-const ItemEditorModal = defineAsyncComponent(loadItemEditorModal);
-const DashboardSettingsModal = defineAsyncComponent(loadDashboardSettingsModal);
-const CommandPaletteModal = defineAsyncComponent(loadCommandPaletteModal);
-const AgentAuraFxDemo = defineAsyncComponent(loadAgentAuraFxDemo);
-
+const route = useRoute();
 const dashboard = useDashboardStore();
 const {
   EMBLEM_SRC,
   closeCommandPalette,
   closeSettingsPanel,
   commandPaletteOpen,
-  iframeModal,
-  isSidebarHidden,
-  itemEditor,
-  lanHostModal,
   openSettingsPanel,
   settingsPanel,
   toggleCommandPalette,
 } = dashboard;
 const desktopShell = isDesktopShell();
-const currentPathname = ref(
-  normalizePathname(globalThis.location?.pathname || "/"),
-);
-const currentSearch = ref(String(globalThis.location?.search || ""));
-const screensaverVisible = ref(false);
 const agentAuraDemoVisible = ref(false);
-const lastDashboardUrl = ref(resolveShellPath());
-const isPleiadRoute = computed(() => isPleiadPath(currentPathname.value));
+const apiErrorNotice = ref<{ message: string }>({
+  message: "",
+});
 
-let idlePrefetchTimerId = 0;
-let idlePrefetchCallbackId = 0;
+const isPleiadOverlayVisible = computed(
+  () => String(route.query.overlay || "") === "pleiad",
+);
+const pleiadOverlayMode = computed<"route" | "screensaver">(() =>
+  String(route.query.mode || "") === "screensaver" ? "screensaver" : "route",
+);
+const isPluginsRoute = computed(
+  () => route.path === "/plugins" || route.path.startsWith("/plugins/"),
+);
+const isUiRoute = computed(() => route.path === "/ui");
+const isDashboardRoute = computed(() => route.path === "/" || route.path === "/settings");
+const isImmersiveRoute = computed(
+  () => isPleiadOverlayVisible.value || isPluginsRoute.value || isUiRoute.value,
+);
+
+let apiErrorNoticeTimerId: number | null = null;
+let removeDesktopActionListener: () => void = () => {};
+let removeAgentAuraOpenListener: () => void = () => {};
+let removeApiErrorListener: () => void = () => {};
 
 useIdleScreensaver({
   timeoutMs: 10 * 60 * 1000,
   onIdle: () => {
-    if (isPleiadRoute.value) return;
-    screensaverVisible.value = true;
+    if (isImmersiveRoute.value) return;
+    if (isPleiadOverlayVisible.value) return;
+    void openPleiadOverlay("screensaver");
   },
   onActive: () => {
-    if (!screensaverVisible.value) return;
-    screensaverVisible.value = false;
+    if (!isPleiadOverlayVisible.value) return;
+    if (pleiadOverlayMode.value !== "screensaver") return;
+    void closeOverlay();
   },
 });
 
-watch(
-  () => [currentPathname.value, currentSearch.value],
-  ([pathname, search]) => {
-    if (isPleiadPath(pathname)) return;
-    lastDashboardUrl.value = `${pathname}${search || ""}`;
-  },
-  { immediate: true },
-);
-
-watch(
-  () => isPleiadRoute.value,
-  (active) => {
-    if (active) {
-      screensaverVisible.value = false;
-      agentAuraDemoVisible.value = false;
-    }
-  },
-);
-
-function runIdlePrefetch() {
-  Promise.allSettled([
-    loadLanHostModal(),
-    loadIframeModal(),
-    loadItemEditorModal(),
-    loadDashboardSettingsModal(),
-    loadCommandPaletteModal(),
-    loadIndicatorTabPanel(),
-    loadLanPageView(),
-  ]);
+function handleCloseOverlay(): void {
+  void closeOverlay();
 }
 
-function scheduleIdlePrefetch() {
-  if ("requestIdleCallback" in window) {
-    idlePrefetchCallbackId = window.requestIdleCallback(
-      () => {
-        idlePrefetchCallbackId = 0;
-        runIdlePrefetch();
-      },
-      { timeout: 2000 },
-    );
-    return;
-  }
-
-  idlePrefetchTimerId = window.setTimeout(() => {
-    idlePrefetchTimerId = 0;
-    runIdlePrefetch();
-  }, 1400);
-}
-
-function syncLocationFromWindow() {
-  currentPathname.value = normalizePathname(window.location.pathname);
-  currentSearch.value = String(window.location.search || "");
-}
-
-function buildPleiadUrl({ mode = "" } = {}) {
-  const routePath = resolvePleiadPath();
-  const query = new URLSearchParams();
-  if (mode === "screensaver") {
-    query.set("mode", "screensaver");
-  }
-  const rawQuery = query.toString();
-  return `${routePath}${rawQuery ? `?${rawQuery}` : ""}`;
-}
-
-function openPleiadRoute({ mode = "" } = {}) {
-  const targetUrl = buildPleiadUrl({ mode });
-  const currentUrl = `${currentPathname.value}${currentSearch.value || ""}`;
-  if (currentUrl === targetUrl) return;
-  window.history.pushState(
-    {
-      okoRoute: "pleiad",
-      from: lastDashboardUrl.value,
-    },
-    "",
-    targetUrl,
-  );
-  syncLocationFromWindow();
-}
-
-function closePleiadRoute() {
-  const fallbackUrl = lastDashboardUrl.value || resolveShellPath();
-
-  if (
-    window.history.length > 1 &&
-    window.history.state &&
-    window.history.state.okoRoute === "pleiad"
-  ) {
-    window.history.back();
-    window.setTimeout(() => {
-      if (!isPleiadPath(window.location.pathname)) return;
-      window.history.replaceState(
-        { okoRoute: "dashboard" },
-        "",
-        fallbackUrl,
-      );
-      syncLocationFromWindow();
-    }, 0);
-    return;
-  }
-
-  window.history.replaceState({ okoRoute: "dashboard" }, "", fallbackUrl);
-  syncLocationFromWindow();
-}
-
-function hideScreensaver() {
-  screensaverVisible.value = false;
-}
-
-function showAgentAuraDemo() {
+function showAgentAuraDemo(): void {
   agentAuraDemoVisible.value = true;
 }
 
-function hideAgentAuraDemo() {
+function hideAgentAuraDemo(): void {
   agentAuraDemoVisible.value = false;
 }
 
-function handleGlobalShortcut(event) {
+function clearApiErrorNotice(): void {
+  apiErrorNotice.value.message = "";
+  if (!apiErrorNoticeTimerId) return;
+  window.clearTimeout(apiErrorNoticeTimerId);
+  apiErrorNoticeTimerId = null;
+}
+
+function handleApiError(event: CustomEvent<{ message?: string }>): void {
+  const message = String(event?.detail?.message || "").trim();
+  if (!message) return;
+  apiErrorNotice.value.message = message;
+
+  if (apiErrorNoticeTimerId) {
+    window.clearTimeout(apiErrorNoticeTimerId);
+  }
+  apiErrorNoticeTimerId = window.setTimeout(() => {
+    apiErrorNoticeTimerId = null;
+    apiErrorNotice.value.message = "";
+  }, 6400);
+}
+
+function handleGlobalShortcut(event: KeyboardEvent): void {
   if (event.key === "Escape" && agentAuraDemoVisible.value) {
     event.preventDefault();
     hideAgentAuraDemo();
     return;
   }
 
-  if (event.key === "Escape" && screensaverVisible.value) {
+  if (event.key === "Escape" && isPleiadOverlayVisible.value) {
     event.preventDefault();
-    hideScreensaver();
+    void closeOverlay();
     return;
   }
 
-  if (event.key === "Escape" && isPleiadRoute.value) {
+  if (event.key === "Escape" && route.path === "/plugins") {
     event.preventDefault();
-    closePleiadRoute();
+    void goDashboard();
+    return;
+  }
+
+  if (event.key === "Escape" && route.path.startsWith("/plugins/")) {
+    event.preventDefault();
+    void goPluginsPanel();
+    return;
+  }
+
+  if (event.key === "Escape" && route.path === "/ui") {
+    event.preventDefault();
+    void goDashboard();
     return;
   }
 
@@ -293,6 +215,7 @@ function handleGlobalShortcut(event) {
     event.key.toLowerCase() === "k";
   if (isShortcut) {
     event.preventDefault();
+    if (!isDashboardRoute.value || isPleiadOverlayVisible.value) return;
     toggleCommandPalette();
     return;
   }
@@ -306,69 +229,116 @@ function handleGlobalShortcut(event) {
   if (event.key === "Escape" && settingsPanel.open) {
     event.preventDefault();
     closeSettingsPanel();
+    if (route.path === "/settings") {
+      void goDashboard();
+    }
   }
 }
 
-function handleDesktopAction(event) {
+function handleDesktopAction(event: CustomEvent<{ action?: string }>): void {
   const action = String(event?.detail?.action || "");
   if (!action) return;
 
   if (action === "open-search") {
+    if (!isDashboardRoute.value) {
+      void goDashboard().then(() => {
+        toggleCommandPalette();
+      });
+      return;
+    }
     toggleCommandPalette();
     return;
   }
 
   if (action === "open-settings") {
-    openSettingsPanel();
+    if (route.path === "/") {
+      openSettingsPanel();
+      return;
+    }
+    void goSettings();
   }
 }
 
-function handlePleiadOpenRequest(event) {
-  hideAgentAuraDemo();
-  const mode = String(event?.detail?.mode || "");
-  if (mode === "screensaver") {
-    screensaverVisible.value = true;
-    return;
-  }
-  openPleiadRoute();
-}
-
-function handleAgentAuraOpenRequest() {
-  if (isPleiadRoute.value) return;
-  screensaverVisible.value = false;
+function handleAgentAuraOpenRequest(): void {
+  if (isImmersiveRoute.value) return;
   showAgentAuraDemo();
 }
 
-function handlePopstate() {
-  syncLocationFromWindow();
-}
-
 onMounted(() => {
-  syncLocationFromWindow();
   window.addEventListener("keydown", handleGlobalShortcut);
-  window.addEventListener("oko:desktop-action", handleDesktopAction);
-  window.addEventListener("popstate", handlePopstate);
-  window.addEventListener(PLEIAD_OPEN_EVENT, handlePleiadOpenRequest);
-  window.addEventListener(AGENT_AURA_DEMO_OPEN_EVENT, handleAgentAuraOpenRequest);
-  scheduleIdlePrefetch();
-});
-
-onBeforeUnmount(() => {
-  if (idlePrefetchTimerId) {
-    window.clearTimeout(idlePrefetchTimerId);
-    idlePrefetchTimerId = 0;
-  }
-  if (idlePrefetchCallbackId && "cancelIdleCallback" in window) {
-    window.cancelIdleCallback(idlePrefetchCallbackId);
-    idlePrefetchCallbackId = 0;
-  }
-  window.removeEventListener("keydown", handleGlobalShortcut);
-  window.removeEventListener("oko:desktop-action", handleDesktopAction);
-  window.removeEventListener("popstate", handlePopstate);
-  window.removeEventListener(PLEIAD_OPEN_EVENT, handlePleiadOpenRequest);
-  window.removeEventListener(
+  removeDesktopActionListener = onOkoEvent(
+    EVENT_DESKTOP_ACTION,
+    handleDesktopAction,
+  );
+  removeAgentAuraOpenListener = onOkoEvent(
     AGENT_AURA_DEMO_OPEN_EVENT,
     handleAgentAuraOpenRequest,
   );
+  removeApiErrorListener = onOkoEvent(EVENT_API_ERROR, handleApiError);
+});
+
+onBeforeUnmount(() => {
+  if (apiErrorNoticeTimerId) {
+    window.clearTimeout(apiErrorNoticeTimerId);
+    apiErrorNoticeTimerId = null;
+  }
+  window.removeEventListener("keydown", handleGlobalShortcut);
+  removeDesktopActionListener();
+  removeDesktopActionListener = () => {};
+  removeAgentAuraOpenListener();
+  removeAgentAuraOpenListener = () => {};
+  removeApiErrorListener();
+  removeApiErrorListener = () => {};
 });
 </script>
+
+<style scoped>
+.api-error-toast {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 62;
+  width: min(440px, calc(100vw - 32px));
+  border: 1px solid rgba(203, 79, 79, 0.34);
+  border-radius: 12px;
+  background: rgba(19, 29, 44, 0.95);
+  color: #f3f7ff;
+  box-shadow: 0 12px 24px rgba(6, 10, 19, 0.32);
+  padding: 12px 14px 13px;
+}
+
+.api-error-toast header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+
+.api-error-toast strong {
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #ffabb0;
+}
+
+.api-error-toast p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: rgba(231, 239, 255, 0.93);
+}
+
+.api-error-toast-close {
+  appearance: none;
+  border: 1px solid rgba(163, 184, 214, 0.34);
+  border-radius: 999px;
+  background: rgba(11, 18, 33, 0.62);
+  color: rgba(233, 240, 253, 0.95);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+</style>

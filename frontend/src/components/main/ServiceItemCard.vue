@@ -2,10 +2,23 @@
   <article
     class="item-card"
     :class="itemCardClasses"
-    :title="isCompactServiceCardView ? item.title : undefined"
-    @click="onItemCardClick(groupKey, subgroupId, item)"
+    :title="isCompactServiceCardView ? serviceItem.title : undefined"
+    :role="editMode ? undefined : 'button'"
+    :tabindex="editMode ? -1 : 0"
+    @click="handleCardClick"
+    @keydown.enter.prevent="handleCardClick"
+    @keydown.space.prevent="handleCardClick"
   >
     <template v-if="isIconCardView">
+      <IconButton
+        v-if="editMode"
+        class="item-inline-edit item-inline-edit-compact"
+        title="Редактировать элемент"
+        aria-label="Редактировать элемент"
+        @click.stop="openEditItem"
+      >
+        <Pencil class="ui-icon item-action-icon" />
+      </IconButton>
       <div class="item-compact-body">
         <img
           v-if="itemFaviconSrc(item)"
@@ -22,6 +35,7 @@
           class="ui-icon item-icon compact-item-icon"
         />
         <span
+          v-if="showHealthIndicators"
           class="health-dot compact-health-dot"
           :class="healthVisualClass"
         ></span>
@@ -29,6 +43,15 @@
     </template>
 
     <template v-else-if="isTileCardView">
+      <IconButton
+        v-if="editMode"
+        class="item-inline-edit item-inline-edit-tile"
+        title="Редактировать элемент"
+        aria-label="Редактировать элемент"
+        @click.stop="openEditItem"
+      >
+        <Pencil class="ui-icon item-action-icon" />
+      </IconButton>
       <div class="item-tile-head">
         <img
           v-if="itemFaviconSrc(item)"
@@ -45,11 +68,12 @@
           class="ui-icon item-icon tile-item-icon"
         />
         <span
+          v-if="showHealthIndicators"
           class="health-dot tile-health-dot"
           :class="healthVisualClass"
         ></span>
       </div>
-      <p class="item-tile-title">{{ item.title }}</p>
+      <p class="item-tile-title">{{ serviceItem.title }}</p>
     </template>
 
     <template v-else>
@@ -69,14 +93,21 @@
             :is="resolveItemIcon(item)"
             class="ui-icon item-icon"
           />
-          <h4>{{ item.title }}</h4>
+          <h4>{{ serviceItem.title }}</h4>
         </div>
-        <span class="item-type">{{ item.type }}</span>
+        <div class="item-kind-pills">
+          <span class="item-type">{{ serviceItem.type }}</span>
+        </div>
       </div>
 
-      <p class="item-url">{{ item.url }}</p>
-
-      <div class="item-health">
+      <p class="item-url">{{ serviceItem.url }}</p>
+      <p
+        v-if="showHealthIndicators && serviceItem.check_url && serviceItem.check_url !== serviceItem.url"
+        class="item-check-url"
+      >
+        check: {{ serviceItem.check_url }}
+      </p>
+      <div v-if="showHealthIndicators" class="item-health">
         <span class="health-dot" :class="healthVisualClass"></span>
         <span
           class="health-text"
@@ -85,103 +116,90 @@
         >
       </div>
 
-      <div v-if="siteLabel || item.tags?.length" class="item-tags">
+      <div v-if="siteLabel || serviceItem.tags.length" class="item-tags">
         <span v-if="siteLabel" class="tag-pill site-pill"
           >site:{{ siteLabel }}</span
         >
-        <span v-for="tag in item.tags" :key="tag" class="tag-pill">{{
+        <span v-for="tag in serviceItem.tags" :key="tag" class="tag-pill">{{
           tag
         }}</span>
       </div>
 
+      <ServiceItemPluginExtensions
+        v-if="serviceItem.plugin_blocks.length"
+        :item-id="serviceItem.id"
+        :blocks="serviceItem.plugin_blocks"
+        @open-link="openPluginLink"
+        @copy-link="copyPluginText"
+      />
+      <slot name="plugin-content" :item="serviceItem"></slot>
+
       <div class="item-actions">
         <IconButton
-          :title="item.type === 'iframe' ? 'Открыть iframe' : 'Открыть'"
-          :aria-label="item.type === 'iframe' ? 'Открыть iframe' : 'Открыть'"
+          v-if="editMode"
+          title="Редактировать элемент"
+          aria-label="Редактировать элемент"
+          @click.stop="openEditItem"
+        >
+          <Pencil class="ui-icon item-action-icon" />
+        </IconButton>
+        <IconButton
+          :title="serviceItem.type === 'iframe' ? 'Открыть iframe' : 'Открыть'"
+          :aria-label="
+            serviceItem.type === 'iframe' ? 'Открыть iframe' : 'Открыть'
+          "
           @click.stop="openItem(item)"
         >
           <component
-            :is="item.type === 'iframe' ? Globe : Link2"
+            :is="serviceItem.type === 'iframe' ? Globe : ExternalLink"
             class="ui-icon item-action-icon"
           />
         </IconButton>
         <IconButton
-          title="Открыть в новой вкладке"
-          aria-label="Открыть в новой вкладке"
-          @click.stop="openItemInNewTab(item)"
-        >
-          <ExternalLink class="ui-icon item-action-icon" />
-        </IconButton>
-        <IconButton
-          title="Recheck health"
-          aria-label="Recheck health"
-          @click.stop="recheckItem(item.id)"
-        >
-          <RefreshCw class="ui-icon item-action-icon" />
-        </IconButton>
-        <IconButton
-          v-if="itemIpValue"
-          title="Копировать IP"
-          aria-label="Копировать IP"
-          @click.stop="copyItemIp(item.id)"
-        >
-          <Server class="ui-icon item-action-icon" />
-        </IconButton>
-        <IconButton
-          v-if="itemIpValue"
-          title="Копировать SSH shortcut"
-          aria-label="Копировать SSH shortcut"
-          @click.stop="copyItemSshShortcut(item.id)"
-        >
-          <Terminal class="ui-icon item-action-icon" />
-        </IconButton>
-        <IconButton
           title="Копировать URL"
           aria-label="Копировать URL"
-          @click.stop="copyUrl(item.url)"
+          @click.stop="copyUrl(serviceItem.url)"
         >
           <Copy class="ui-icon item-action-icon" />
         </IconButton>
       </div>
-
-      <p v-if="itemIpValue" class="item-ssh-shortcut">
-        SSH: <code>{{ sshShortcut }}</code>
-      </p>
     </template>
   </article>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed, onBeforeUnmount, ref, toRef, watch } from "vue";
+import { Copy, ExternalLink, Globe, Pencil } from "lucide-vue-next";
+import IconButton from "@/components/primitives/IconButton.vue";
+import ServiceItemPluginExtensions from "@/components/main/ServiceItemPluginExtensions.vue";
 import {
-  Copy,
-  ExternalLink,
-  Globe,
-  Link2,
-  RefreshCw,
-  Server,
-  Terminal,
-} from "lucide-vue-next";
-import IconButton from "../primitives/IconButton.vue";
-import { useDashboardStore } from "../../stores/dashboardStore.js";
+  normalizeServiceCardCore,
+  type ServiceCardCoreV1,
+  type ServiceCardOpenV1,
+} from "@/contracts/serviceCard";
+import { useDashboardStore } from "@/stores/dashboardStore";
 
-const props = defineProps({
-  groupKey: {
-    type: String,
-    required: true,
-  },
-  subgroupId: {
-    type: String,
-    required: true,
-  },
-  item: {
-    type: Object,
-    required: true,
-  },
-});
+interface ServiceItem {
+  id: string;
+  title?: string;
+  type?: string;
+  url?: string;
+  tags?: string[];
+  [key: string]: unknown;
+}
+
+const props = defineProps<{
+  groupKey: string;
+  subgroupId: string;
+  item: ServiceItem;
+}>();
+
 const groupKey = toRef(props, "groupKey");
 const subgroupId = toRef(props, "subgroupId");
 const item = toRef(props, "item");
+const serviceItem = computed<ServiceCardCoreV1>(() =>
+  normalizeServiceCardCore(item.value),
+);
 
 const dashboard = useDashboardStore();
 
@@ -190,91 +208,158 @@ const {
   isTileCardView,
   isCompactServiceCardView,
   isItemSelected,
+  editMode,
+  editItem,
   onItemCardClick,
   itemFaviconSrc,
   markItemFaviconFailed,
   resolveItemIcon,
   healthClass,
   healthLabel,
-  itemIp,
   itemSite,
-  copyItemIp,
-  copyItemSshShortcut,
   openItem,
-  openItemInNewTab,
-  recheckItem,
   copyUrl,
 } = dashboard;
 
-const healthVisualClass = computed(() => healthClass(item.value.id));
-const healthLabelText = computed(() => healthLabel(item.value.id));
-const itemIpValue = computed(() => itemIp(item.value.id));
-const sshShortcut = computed(() => `ssh ${itemIpValue.value}`);
-const siteLabel = computed(() => itemSite(item.value, groupKey.value));
+function parseBoolean(value: unknown): boolean | null {
+  if (typeof value === "boolean") return value;
+  if (typeof value === "string") {
+    const normalized = value.trim().toLowerCase();
+    if (["1", "true", "yes", "on"].includes(normalized)) return true;
+    if (["0", "false", "no", "off"].includes(normalized)) return false;
+  }
+  return null;
+}
+
+const healthcheckEnabled = computed<boolean>(() => {
+  const rawItem = item.value as Record<string, unknown>;
+  const explicit = parseBoolean(rawItem.monitor_health);
+  if (explicit != null) {
+    return explicit;
+  }
+  return Boolean(rawItem.healthcheck || rawItem.check_url);
+});
+
+type HealthVisualClass = "ok" | "degraded" | "down" | "unknown";
+
+const healthVisualClass = computed<HealthVisualClass>(() =>
+  healthClass(serviceItem.value.id),
+);
+const effectiveHealthVisualClass = computed<HealthVisualClass>(() =>
+  healthcheckEnabled.value ? healthVisualClass.value : "unknown",
+);
+const showHealthIndicators = computed<boolean>(() => healthcheckEnabled.value);
+const healthLabelText = computed<string>(() =>
+  String(healthLabel(serviceItem.value.id)),
+);
+const siteLabel = computed<string>(() =>
+  String(itemSite(serviceItem.value, groupKey.value) || ""),
+);
 const healthFlashActive = ref(false);
 const dataSweepActive = ref(false);
-let healthFlashTimer = 0;
-let dataSweepTimer = 0;
+let healthFlashTimer: number | null = null;
+let dataSweepTimer: number | null = null;
+const animatedHealthTransitions = new Set<string>([
+  "ok>degraded",
+  "degraded>ok",
+  "degraded>down",
+  "down>degraded",
+]);
 
 const itemCardClasses = computed(() => ({
-  selected: !isCompactServiceCardView.value && isItemSelected(item.value.id),
+  selected:
+    !isCompactServiceCardView.value && isItemSelected(serviceItem.value.id),
   compact: isCompactServiceCardView.value,
   tile: isTileCardView.value,
-  [`status-${healthVisualClass.value}`]: true,
+  editing: editMode.value,
+  [`status-${effectiveHealthVisualClass.value}`]: showHealthIndicators.value,
   "data-updated": dataSweepActive.value,
 }));
 
-function triggerHealthFlash() {
+function handleCardClick(): void {
+  if (editMode.value) return;
+  onItemCardClick(groupKey.value, subgroupId.value, item.value);
+}
+
+function openEditItem(): void {
+  const rawItem = item.value as Record<string, unknown>;
+  const resolvedGroupKey = String(rawItem.__originGroupKey || groupKey.value || "");
+  const resolvedSubgroupId = String(rawItem.__originSubgroupId || subgroupId.value || "");
+  const resolvedGroupId = resolvedGroupKey.startsWith("group:")
+    ? resolvedGroupKey.slice(6)
+    : resolvedGroupKey;
+  if (!resolvedGroupId || !resolvedSubgroupId) {
+    return;
+  }
+  void editItem(resolvedGroupId, resolvedSubgroupId, serviceItem.value.id);
+}
+
+function openPluginLink(url: string, openMode: ServiceCardOpenV1): void {
+  openItem({
+    type: "link",
+    url,
+    open: openMode,
+  });
+}
+
+function copyPluginText(value: string): void {
+  void copyUrl(value);
+}
+
+function triggerHealthFlash(): void {
   if (healthFlashTimer) {
-    clearTimeout(healthFlashTimer);
+    window.clearTimeout(healthFlashTimer);
   }
   healthFlashActive.value = false;
   window.requestAnimationFrame(() => {
     healthFlashActive.value = true;
     healthFlashTimer = window.setTimeout(() => {
       healthFlashActive.value = false;
-      healthFlashTimer = 0;
+      healthFlashTimer = null;
     }, 900);
   });
 }
 
-function triggerDataSweep() {
+function triggerDataSweep(): void {
   if (dataSweepTimer) {
-    clearTimeout(dataSweepTimer);
+    window.clearTimeout(dataSweepTimer);
   }
   dataSweepActive.value = false;
   window.requestAnimationFrame(() => {
     dataSweepActive.value = true;
     dataSweepTimer = window.setTimeout(() => {
       dataSweepActive.value = false;
-      dataSweepTimer = 0;
+      dataSweepTimer = null;
     }, 1250);
   });
 }
 
-watch(
-  [healthVisualClass, healthLabelText],
-  ([nextClass, nextLabel], [prevClass, prevLabel]) => {
-    if (prevClass === undefined && prevLabel === undefined) {
-      return;
-    }
-    if (nextClass !== prevClass || nextLabel !== prevLabel) {
-      triggerDataSweep();
-    }
-    if (nextLabel !== prevLabel) {
-      triggerHealthFlash();
-    }
-  },
-);
+function shouldAnimateHealthTransition(
+  prevClass: HealthVisualClass | undefined,
+  nextClass: HealthVisualClass,
+): boolean {
+  if (!prevClass || prevClass === nextClass) {
+    return false;
+  }
+  return animatedHealthTransitions.has(`${prevClass}>${nextClass}`);
+}
+
+watch(healthVisualClass, (nextClass, prevClass) => {
+  if (!shouldAnimateHealthTransition(prevClass, nextClass)) {
+    return;
+  }
+  triggerDataSweep();
+  triggerHealthFlash();
+});
 
 onBeforeUnmount(() => {
   if (healthFlashTimer) {
-    clearTimeout(healthFlashTimer);
-    healthFlashTimer = 0;
+    window.clearTimeout(healthFlashTimer);
+    healthFlashTimer = null;
   }
   if (dataSweepTimer) {
-    clearTimeout(dataSweepTimer);
-    dataSweepTimer = 0;
+    window.clearTimeout(dataSweepTimer);
+    dataSweepTimer = null;
   }
 });
 </script>

@@ -3,12 +3,12 @@
     <section class="pleiad-layout">
       <section class="pleiad-canvas-panel">
         <PleiadCanvas
-          :agents="demo.AGENTS"
+          :agents="canvasAgents"
           :center-agent-id="demo.primaryAgentId.value"
           :orbit-agent-ids="demo.orbitAgentIds.value"
           :avatar-zoom="AVATAR_ZOOM"
           :render-agent-faces="false"
-          :primary-transition="demo.primaryTransition.value"
+          :primary-transition="demo.primaryTransition.value || undefined"
           :active-links="demo.filteredActiveLinks.value"
           :highlighted-trace-id="demo.highlightedTraceId.value"
           :highlighted-agent-ids="demo.highlightedAgentIds.value"
@@ -168,8 +168,15 @@
   </section>
 </template>
 
-<script setup>
-import { computed, onBeforeUnmount, onMounted, reactive, ref } from "vue";
+<script setup lang="ts">
+import {
+  computed,
+  onBeforeUnmount,
+  onMounted,
+  reactive,
+  ref,
+  type CSSProperties,
+} from "vue";
 import {
   Brain,
   Circle,
@@ -179,23 +186,97 @@ import {
   X,
   Zap,
 } from "lucide-vue-next";
-import { usePleiadDemo } from "../../composables/usePleiadDemo.js";
-import { PLEIAD_PRIMARY_AGENT_EVENT } from "../../services/pleiadNavigation.js";
-import AgentAvatarSphereParticlesThree from "../agents/AgentAvatarSphereParticlesThree.vue";
-import PleiadCanvas from "./PleiadCanvas.vue";
+import { usePleiadDemo } from "@/composables/usePleiadDemo";
+import { PLEIAD_PRIMARY_AGENT_EVENT } from "@/services/pleiadNavigation";
+import AgentAvatarSphereParticlesThree from "@/components/agents/AgentAvatarSphereParticlesThree.vue";
+import PleiadCanvas from "@/components/pleiad/PleiadCanvas.vue";
 
-const props = defineProps({
-  mode: {
-    type: String,
-    default: "route",
+type PleiadMode = "route" | "screensaver";
+type PleiadKind = "all" | "action" | "warning" | "memory" | "info";
+type AvatarTransformMode = "avatar" | "vortex";
+
+interface LayoutNode {
+  id: string;
+  x: number;
+  y: number;
+  radius: number;
+  isCenter: boolean;
+}
+
+interface LayoutPayload {
+  width: number;
+  height: number;
+  nodes: LayoutNode[];
+}
+
+interface AgentHoverPayload {
+  id: string;
+  clientX: number;
+  clientY: number;
+}
+
+interface AgentSelectPayload {
+  id: string;
+  promote?: boolean;
+}
+
+interface AvatarLayerNode {
+  id: string;
+  avatarSrc: string;
+  isDisabled: boolean;
+  isDimmed: boolean;
+  size: number;
+  particleCount: number;
+  pointSize: number;
+  swirlSpeed: number;
+  streamCount: number;
+  transformMode: AvatarTransformMode;
+  animated: boolean;
+  ringAngleDeg: number;
+  ringTiltDeg: number;
+  ringYawDeg: number;
+  ringRadius: number;
+  ringBand: number;
+  maskStrength: number;
+  style: CSSProperties;
+}
+
+interface TooltipState {
+  visible: boolean;
+  x: number;
+  y: number;
+}
+
+interface PrimaryAgentOptions {
+  reason?: string;
+  durationMs?: number;
+}
+
+interface PrimaryAgentEventDetail {
+  agentId?: string;
+  id?: string;
+  reason?: string;
+  durationMs?: number;
+}
+
+const props = withDefaults(
+  defineProps<{
+    mode?: PleiadMode;
+  }>(),
+  {
+    mode: "route",
   },
-});
+);
 
-const emit = defineEmits(["close"]);
+const emit = defineEmits<{
+  close: [];
+}>();
 const demo = usePleiadDemo({
   autoStart: true,
   screensaverVisible: props.mode === "screensaver",
 });
+type DemoAgent = (typeof demo.AGENTS)[number];
+const canvasAgents = computed<DemoAgent[]>(() => [...demo.AGENTS]);
 const AVATAR_ZOOM = 3;
 const WINDOW_PLEIAD_API_KEY = "okoPleiadApi";
 
@@ -205,15 +286,19 @@ const kindOptions = [
   { id: "warning", title: "Warning", icon: TriangleAlert },
   { id: "memory", title: "Memory", icon: Brain },
   { id: "info", title: "Info", icon: Info },
-];
+ ] as const satisfies ReadonlyArray<{
+  id: PleiadKind;
+  title: string;
+  icon: unknown;
+}>;
 
-const tooltip = reactive({
+const tooltip = reactive<TooltipState>({
   visible: false,
   x: 0,
   y: 0,
 });
 const isFeedOpen = ref(false);
-const avatarLayout = ref({
+const avatarLayout = ref<LayoutPayload>({
   width: 0,
   height: 0,
   nodes: [],
@@ -223,14 +308,14 @@ const isScreensaver = computed(() => props.mode === "screensaver");
 const closeButtonLabel = computed(() =>
   isScreensaver.value ? "Close screensaver" : "Close",
 );
-const hoveredAgent = computed(
+const hoveredAgent = computed<DemoAgent | null>(
   () => demo.AGENT_BY_ID.get(demo.hoveredAgentId.value) || null,
 );
-const pinnedAgent = computed(
+const pinnedAgent = computed<DemoAgent | null>(
   () => demo.AGENT_BY_ID.get(demo.pinnedAgentId.value) || null,
 );
 const avatarNodeById = computed(() => {
-  const map = new Map();
+  const map = new Map<string, LayoutNode>();
   for (const node of avatarLayout.value.nodes || []) {
     const id = String(node?.id || "");
     if (!id) continue;
@@ -238,14 +323,14 @@ const avatarNodeById = computed(() => {
   }
   return map;
 });
-const avatarLayerEntries = computed(() => {
+const avatarLayerEntries = computed<AvatarLayerNode[]>(() => {
   const nodeById = avatarNodeById.value;
   const hasPin = Boolean(demo.pinnedAgentId.value);
   const highlightedSet = new Set(demo.highlightedAgentIds.value || []);
   const disabledSet = demo.disabledAgentIdSet.value;
   const orderedIds = [demo.primaryAgentId.value, ...demo.orbitAgentIds.value];
   const uniqueIds = [...new Set(orderedIds)];
-  const entries = [];
+  const entries: AvatarLayerNode[] = [];
 
   for (const agentId of uniqueIds) {
     const agent = demo.AGENT_BY_ID.get(agentId);
@@ -298,7 +383,7 @@ const avatarLayerEntries = computed(() => {
 
   return entries;
 });
-const tooltipStyle = computed(() => {
+const tooltipStyle = computed<CSSProperties>(() => {
   const viewportWidth =
     typeof window === "undefined" ? 1280 : window.innerWidth;
   const viewportHeight =
@@ -317,17 +402,17 @@ const timeFormatter = new Intl.DateTimeFormat("ru-RU", {
   second: "2-digit",
 });
 
-function formatEventTime(isoTs) {
+function formatEventTime(isoTs: string): string {
   const parsed = new Date(isoTs);
   if (Number.isNaN(parsed.getTime())) return "--:--:--";
   return timeFormatter.format(parsed);
 }
 
-function clamp(value, min, max) {
+function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
 }
 
-function handleAgentHover(payload) {
+function handleAgentHover(payload: AgentHoverPayload | null): void {
   if (!payload?.id) {
     demo.setHoveredAgent("");
     tooltip.visible = false;
@@ -340,7 +425,7 @@ function handleAgentHover(payload) {
   tooltip.visible = true;
 }
 
-function handleAgentSelect(agentId) {
+function handleAgentSelect(agentId: AgentSelectPayload | string): void {
   const selectedAgentId =
     typeof agentId === "string" ? agentId : String(agentId?.id || "");
   if (!selectedAgentId) return;
@@ -352,7 +437,7 @@ function handleAgentSelect(agentId) {
   demo.pinAgent(selectedAgentId);
 }
 
-function handleLayoutUpdate(payload) {
+function handleLayoutUpdate(payload: LayoutPayload | null): void {
   if (!payload || !Array.isArray(payload.nodes)) return;
   avatarLayout.value = {
     width: Number(payload.width || 0),
@@ -367,39 +452,45 @@ function handleLayoutUpdate(payload) {
   };
 }
 
-function toggleFeed() {
+function toggleFeed(): void {
   isFeedOpen.value = !isFeedOpen.value;
 }
 
-function emitClose() {
+function emitClose(): void {
   emit("close");
 }
 
-function handlePrimaryAgentEvent(event) {
+function handlePrimaryAgentEvent(event: Event): void {
+  const detail =
+    event instanceof CustomEvent
+      ? (event.detail as PrimaryAgentEventDetail | undefined)
+      : undefined;
   const agentId = String(
-    event?.detail?.agentId || event?.detail?.id || "",
+    detail?.agentId || detail?.id || "",
   )
     .trim()
     .toUpperCase();
   if (!agentId) return;
 
   demo.setPrimaryAgent(agentId, {
-    reason: String(event?.detail?.reason || "external-event"),
-    durationMs: Number(event?.detail?.durationMs || 0) || undefined,
+    reason: String(detail?.reason || "external-event"),
+    durationMs: Number(detail?.durationMs || 0) || undefined,
   });
 }
 
-function mountExternalApi() {
+function mountExternalApi(): () => void {
   if (typeof window === "undefined") {
     return () => {};
   }
 
-  const previousApi = window[WINDOW_PLEIAD_API_KEY];
+  const runtimeWindow = window as unknown as Window & Record<string, unknown>;
+  const previousApi = runtimeWindow[WINDOW_PLEIAD_API_KEY];
   const api = {
-    setPrimaryAgent: (agentId, options = {}) =>
+    setPrimaryAgent: (agentId: string, options: PrimaryAgentOptions = {}) =>
       demo.setPrimaryAgent(agentId, options),
-    resetPrimaryAgent: (options = {}) => demo.resetPrimaryAgent(options),
-    cyclePrimaryAgent: (step = 1, options = {}) =>
+    resetPrimaryAgent: (options: PrimaryAgentOptions = {}) =>
+      demo.resetPrimaryAgent(options),
+    cyclePrimaryAgent: (step = 1, options: PrimaryAgentOptions = {}) =>
       demo.cyclePrimaryAgent(step, options),
     getState: () => ({
       primaryAgentId: demo.primaryAgentId.value,
@@ -412,18 +503,18 @@ function mountExternalApi() {
     }),
   };
 
-  window[WINDOW_PLEIAD_API_KEY] = api;
+  runtimeWindow[WINDOW_PLEIAD_API_KEY] = api;
   return () => {
-    if (window[WINDOW_PLEIAD_API_KEY] !== api) return;
+    if (runtimeWindow[WINDOW_PLEIAD_API_KEY] !== api) return;
     if (previousApi && typeof previousApi === "object") {
-      window[WINDOW_PLEIAD_API_KEY] = previousApi;
+      runtimeWindow[WINDOW_PLEIAD_API_KEY] = previousApi;
       return;
     }
-    delete window[WINDOW_PLEIAD_API_KEY];
+    delete runtimeWindow[WINDOW_PLEIAD_API_KEY];
   };
 }
 
-let detachExternalApi = null;
+let detachExternalApi: (() => void) | null = null;
 
 onMounted(() => {
   window.addEventListener(PLEIAD_PRIMARY_AGENT_EVENT, handlePrimaryAgentEvent);

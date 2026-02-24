@@ -20,42 +20,6 @@
   overflow: hidden;
 }
 
-.page.page--lan {
-  grid-template-rows: auto minmax(0, 1fr);
-}
-
-.lan-workspace-backdrop {
-  position: fixed;
-  top: var(--desktop-drag-strip);
-  right: 0;
-  bottom: 0;
-  left: 0;
-  z-index: 18;
-  padding: clamp(2rem, 2.8vw, 4rem);
-  background: rgba(2, 8, 14, 0.74);
-  backdrop-filter: blur(5px);
-  display: grid;
-}
-
-.lan-workspace-shell {
-  width: 100%;
-  height: 100%;
-  min-height: 0;
-  border: 1px solid rgba(104, 240, 217, 0.36);
-  border-radius: calc(var(--card-radius) + 4px);
-  background: linear-gradient(
-    165deg,
-    rgba(10, 23, 35, 0.98),
-    rgba(6, 14, 23, 0.98)
-  );
-  box-shadow: var(--shadow);
-  display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
-  gap: var(--grid-gap);
-  padding: 16px;
-  overflow: hidden;
-}
-
 .page-right-shell {
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
@@ -82,11 +46,6 @@
 
 .page-right-bottom > * {
   min-width: 0;
-  min-height: 0;
-}
-
-.lan-workspace-shell .lan-scan-panel {
-  height: 100%;
   min-height: 0;
 }
 

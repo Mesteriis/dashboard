@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1.7
 
-ARG PYTHON_VERSION=3.14-slim
+ARG PYTHON_VERSION=3.11-slim
 ARG NODE_VERSION=20-alpine
 
 ############################
@@ -30,7 +30,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 COPY backend/ /app/backend/
 COPY alembic.ini /app/alembic.ini
 COPY backend/alembic/ /app/backend/alembic/
-COPY dashboard.yaml /app/dashboard.yaml
+COPY _dashboard.yaml /app/_dashboard.yaml
 COPY static/ /app/static/
 COPY templates/error/ /app/templates/error/
 
@@ -40,12 +40,10 @@ COPY --from=frontend_builder /dist/index.html /app/templates/index.html
 ENV PYTHONUNBUFFERED=1 \
     PYTHONPATH=/app/backend \
     PATH=/app/.venv/bin:$PATH \
-    DASHBOARD_PORT=8000 \
-    DASHBOARD_CONFIG_FILE=/app/dashboard.yaml \
-    LAN_SCAN_ENABLED=false \
-    LAN_SCAN_RUN_ON_STARTUP=false \
-    DASHBOARD_HEALTHCHECK_VERIFY_TLS=true \
-    LAN_SCAN_HTTP_VERIFY_TLS=true
+    OKO_RUNTIME_ROLE=backend \
+    DATABASE_URL=postgresql+asyncpg://oko:oko@postgres:5432/oko \
+    BROKER_URL=amqp://oko:oko@rabbitmq:5672/ \
+    OKO_BOOTSTRAP_CONFIG_FILE=/app/_dashboard.yaml
 
 EXPOSE 8000
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

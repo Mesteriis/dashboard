@@ -1,4 +1,4 @@
-@use "../abstracts/breakpoints" as bp;
+@use "@/styles/abstracts/breakpoints" as bp;
 
 .tab-btn:nth-child(4) {
   animation-delay: 360ms;

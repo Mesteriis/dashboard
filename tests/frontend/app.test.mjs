@@ -38,13 +38,13 @@ test('App.vue parses and compiles without SFC errors', async () => {
   assert.equal(templateResult.errors.length, 0, `Template compile errors: ${JSON.stringify(templateResult.errors)}`)
 })
 
-test('App.vue template is composed from views and modal components', async () => {
+test('App.vue template is composed around RouterView and global overlays', async () => {
   const { parse } = await loadCompiler()
   const source = await readFile(appPath, 'utf8')
   const { descriptor } = parse(source, { filename: appPath })
   const template = descriptor.template?.content || ''
 
-  const requiredTags = ['DashboardSidebarView', 'DashboardMainView', 'LanHostModal', 'IframeModal', 'ItemEditorModal']
+  const requiredTags = ['RouterView', 'PleiadExperience']
 
   for (const tag of requiredTags) {
     assert.ok(template.includes(`<${tag}`), `Expected <${tag}> in App template`)

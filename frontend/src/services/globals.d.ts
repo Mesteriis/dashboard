@@ -12,6 +12,8 @@ declare global {
 
   interface Window {
     __OKO_API_BASE__?: string
+    __OKO_ACTOR__?: string
+    __OKO_CAPABILITIES__?: string[]
     __OKO_DESKTOP_RUNTIME__?: {
       desktop: boolean
       mode: 'web' | 'embedded' | 'remote'
@@ -22,5 +24,10 @@ declare global {
       embeddedRunning: boolean
     }
     __TAURI_INTERNALS__?: unknown
+    particlesJS?: (containerId: string, config: unknown) => Promise<unknown>
+  }
+
+  interface Navigator {
+    deviceMemory?: number
   }
 }

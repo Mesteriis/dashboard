@@ -106,8 +106,8 @@
   </section>
 </template>
 
-<script setup>
-import { useDashboardStore } from "../../stores/dashboardStore.js";
+<script setup lang="ts">
+import { useDashboardStore } from "@/stores/dashboardStore";
 
 const dashboard = useDashboardStore();
 

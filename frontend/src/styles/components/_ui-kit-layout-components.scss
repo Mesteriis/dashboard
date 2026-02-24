@@ -1,0 +1,214 @@
+.ui-speed-dial {
+  position: relative;
+  width: 46px;
+  height: 46px;
+}
+
+.ui-speed-dial__main,
+.ui-speed-dial__action {
+  width: 46px;
+  height: 46px;
+  border-radius: 999px;
+}
+
+.ui-speed-dial__main {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.ui-speed-dial.is-open .ui-speed-dial__main {
+  transform: rotate(45deg);
+}
+
+.ui-speed-dial__actions {
+  position: absolute;
+  inset: 0;
+}
+
+.ui-speed-dial__action {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  opacity: 0;
+  transition:
+    opacity 160ms ease,
+    transform 160ms ease;
+}
+
+.ui-speed-dial__action-label {
+  position: absolute;
+  top: 50%;
+  left: calc(100% + 8px);
+  transform: translateY(-50%);
+  display: none;
+  white-space: nowrap;
+  font-size: 12px;
+  color: #d4e9f7;
+  border: 1px solid rgba(121, 164, 184, 0.35);
+  border-radius: 7px;
+  background: rgba(6, 16, 25, 0.92);
+  padding: 3px 6px;
+}
+
+.ui-speed-dial__action:hover .ui-speed-dial__action-label {
+  display: block;
+}
+
+.ui-accordion {
+  display: grid;
+  gap: 8px;
+}
+
+.ui-accordion.orientation-horizontal {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: start;
+}
+
+.ui-accordion__header {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 10px;
+}
+
+.ui-accordion__item.is-open .ui-accordion__header {
+  border-color: rgba(45, 212, 191, 0.56);
+}
+
+.ui-accordion__content {
+  border: 1px solid rgba(123, 164, 184, 0.28);
+  border-radius: 10px;
+  padding: 10px;
+  margin-top: 6px;
+  background: rgba(8, 21, 31, 0.64);
+}
+
+.ui-card {
+  border: 1px solid rgba(128, 170, 188, 0.3);
+  border-radius: 14px;
+  background: linear-gradient(160deg, rgba(11, 28, 41, 0.8), rgba(7, 19, 30, 0.86));
+  padding: 12px;
+  display: grid;
+  gap: 8px;
+}
+
+.ui-card__head h3,
+.ui-toolbar h2,
+.ui-kit-section h2,
+.ui-kit-section h3 {
+  margin: 0;
+}
+
+.ui-card__head p,
+.ui-toolbar p,
+.ui-kit-page__kicker {
+  margin: 0;
+  color: var(--muted);
+}
+
+.ui-divider {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ui-divider.orientation-horizontal {
+  height: 1px;
+  background: rgba(128, 171, 191, 0.3);
+  margin: 12px 0;
+}
+
+.ui-divider.orientation-vertical {
+  width: 1px;
+  height: 60px;
+  background: rgba(128, 171, 191, 0.3);
+}
+
+.ui-divider__label {
+  position: absolute;
+  top: -10px;
+  background: var(--bg);
+  color: var(--muted);
+  font-size: 11px;
+  padding: 0 6px;
+}
+
+.ui-fieldset {
+  border: 1px solid rgba(130, 170, 189, 0.3);
+  border-radius: 12px;
+  padding: 8px 10px 10px;
+}
+
+.ui-fieldset legend {
+  font-size: 12px;
+  color: var(--muted);
+  padding: 0 4px;
+}
+
+.ui-fieldset__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 8px;
+}
+
+.ui-stepper {
+  display: grid;
+  gap: 6px;
+}
+
+.ui-stepper__step {
+  width: 100%;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 8px;
+}
+
+.ui-stepper__step.is-active {
+  border-color: rgba(45, 212, 191, 0.6);
+  background: rgba(45, 212, 191, 0.15);
+}
+
+.ui-stepper__index {
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  background: rgba(84, 116, 138, 0.45);
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+}
+
+.ui-tabs {
+  display: grid;
+  gap: 8px;
+}
+
+.ui-tabs__header {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.ui-tabs__tab {
+  padding: 8px 10px;
+}
+
+.ui-tabs__tab.is-active {
+  border-color: rgba(45, 212, 191, 0.55);
+  background: linear-gradient(145deg, rgba(35, 143, 133, 0.42), rgba(13, 63, 71, 0.58));
+}
+
+.ui-tabs__panel {
+  border: 1px solid rgba(127, 164, 183, 0.26);
+  border-radius: 11px;
+  padding: 10px;
+  background: rgba(8, 21, 31, 0.58);
+}

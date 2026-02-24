@@ -1,0 +1,255 @@
+.ui-select-button {
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid rgba(131, 173, 193, 0.36);
+  border-radius: 12px;
+  background: linear-gradient(150deg, rgba(8, 20, 31, 0.9), rgba(6, 16, 25, 0.88));
+}
+
+.ui-select-button__item,
+.ui-pagination button,
+.ui-table__actions button,
+.ui-table__export,
+.ui-picklist__controls button,
+.ui-speed-dial__main,
+.ui-speed-dial__action,
+.ui-accordion__header,
+.ui-stepper__step,
+.ui-tabs__tab,
+.ui-modal__close,
+.ui-tree__node,
+.ui-fieldset__toggle {
+  border: 1px solid rgba(128, 170, 190, 0.3);
+  background: linear-gradient(155deg, rgba(12, 29, 42, 0.78), rgba(8, 21, 32, 0.86));
+  color: #d4e8f6;
+  border-radius: 9px;
+  cursor: pointer;
+  transition:
+    border-color 150ms ease,
+    background 150ms ease,
+    transform 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.ui-select-button__item:hover,
+.ui-pagination button:hover:not(:disabled),
+.ui-table__actions button:hover,
+.ui-table__export:hover,
+.ui-picklist__controls button:hover:not(:disabled),
+.ui-speed-dial__main:hover,
+.ui-speed-dial__action:hover,
+.ui-accordion__header:hover,
+.ui-stepper__step:hover,
+.ui-tabs__tab:hover,
+.ui-modal__close:hover,
+.ui-tree__node:hover,
+.ui-fieldset__toggle:hover {
+  border-color: rgba(117, 246, 223, 0.42);
+  background: linear-gradient(155deg, rgba(15, 42, 59, 0.84), rgba(10, 30, 44, 0.88));
+}
+
+.ui-select-button__item:focus-visible,
+.ui-pagination button:focus-visible,
+.ui-table__actions button:focus-visible,
+.ui-table__export:focus-visible,
+.ui-picklist__controls button:focus-visible,
+.ui-speed-dial__main:focus-visible,
+.ui-speed-dial__action:focus-visible,
+.ui-accordion__header:focus-visible,
+.ui-stepper__step:focus-visible,
+.ui-tabs__tab:focus-visible,
+.ui-modal__close:focus-visible,
+.ui-tree__node:focus-visible,
+.ui-fieldset__toggle:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(77, 220, 198, 0.16);
+}
+
+.ui-select-button__item {
+  padding: 7px 11px;
+}
+
+.ui-select-button__item.is-active {
+  border-color: rgba(45, 212, 191, 0.58);
+  background: linear-gradient(145deg, rgba(35, 143, 133, 0.42), rgba(13, 63, 71, 0.58));
+  color: #e9fffb;
+}
+
+.ui-table {
+  display: grid;
+  gap: 10px;
+}
+
+.ui-table__toolbar {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.ui-table__controls {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  flex: 1;
+}
+
+.ui-table__wrap {
+  overflow: auto;
+  border: 1px solid rgba(130, 172, 193, 0.24);
+  border-radius: 12px;
+  background: rgba(7, 18, 28, 0.58);
+}
+
+.ui-table table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.ui-table th,
+.ui-table td {
+  border-bottom: 1px solid rgba(122, 165, 185, 0.2);
+  padding: 10px 11px;
+  text-align: left;
+}
+
+.ui-table thead th {
+  background: rgba(10, 24, 36, 0.78);
+  color: #b8d3e5;
+  font-size: 12px;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.ui-table tbody tr:hover td {
+  background: rgba(37, 116, 128, 0.14);
+}
+
+.ui-table th.sortable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.ui-table th.sortable:hover {
+  color: #e9f8ff;
+}
+
+.ui-table th.sortable small {
+  margin-inline-start: 6px;
+  color: #83e9d8;
+}
+
+.ui-table__actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.ui-table__empty {
+  text-align: center;
+  color: var(--muted);
+  padding: 16px;
+}
+
+.ui-table__pagination,
+.ui-pagination {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.ui-pagination button,
+.ui-table__actions button,
+.ui-table__export,
+.ui-picklist__controls button {
+  padding: 6px 10px;
+}
+
+.ui-pagination button.is-active {
+  border-color: rgba(45, 212, 191, 0.58);
+  background: linear-gradient(145deg, rgba(35, 143, 133, 0.42), rgba(13, 63, 71, 0.58));
+}
+
+.ui-pagination button:disabled,
+.ui-picklist__controls button:disabled {
+  opacity: 0.46;
+  cursor: default;
+}
+
+.ui-picklist {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 10px;
+}
+
+.ui-picklist__list {
+  border: 1px solid rgba(126, 169, 189, 0.3);
+  border-radius: 10px;
+  background: rgba(9, 20, 31, 0.76);
+  padding: 8px;
+  display: grid;
+  gap: 6px;
+  max-height: 240px;
+  overflow: auto;
+}
+
+.ui-picklist__list header {
+  font-size: 12px;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+.ui-picklist__item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid rgba(122, 161, 179, 0.22);
+  border-radius: 8px;
+  padding: 6px 7px;
+}
+
+.ui-picklist__item.is-selected {
+  border-color: rgba(45, 212, 191, 0.56);
+  background: rgba(45, 212, 191, 0.14);
+}
+
+.ui-picklist__controls {
+  display: grid;
+  gap: 8px;
+  align-content: center;
+}
+
+.ui-tree {
+  border: 1px solid rgba(127, 166, 185, 0.3);
+  border-radius: 12px;
+  background: rgba(8, 20, 32, 0.8);
+  padding: 8px;
+  display: grid;
+  gap: 4px;
+}
+
+.ui-tree__node {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 9px;
+}
+
+.ui-tree__node.is-selected {
+  border-color: rgba(45, 212, 191, 0.58);
+  background: rgba(45, 212, 191, 0.18);
+  color: #e8fff9;
+}
+
+.ui-tree__toggle {
+  width: 16px;
+  text-align: center;
+  color: #9bc7de;
+}
+
+.ui-tree__toggle.is-empty {
+  opacity: 0.4;
+}

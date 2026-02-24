@@ -12,13 +12,13 @@
     "tauri:build:arm64": "node scripts/sync-default-config.mjs && node scripts/ensure-sidecar.mjs && tauri build --config ../tauri/tauri.conf.json --target aarch64-apple-darwin",
     "tauri:build:universal": "node scripts/sync-default-config.mjs && node scripts/ensure-sidecar.mjs && tauri build --config ../tauri/tauri.conf.json --target universal-apple-darwin",
     "preview": "vite preview --port 4173",
-    "format:check": "prettier --check \"src/**/*.{js,vue,scss}\" \"scripts/**/*.mjs\" \"*.js\" \"*.json\" \"*.md\" \"*.html\"",
-    "format:write": "prettier --write \"src/**/*.{js,vue,scss}\" \"scripts/**/*.mjs\" \"*.js\" \"*.json\" \"*.md\" \"*.html\"",
-    "lint": "eslint \"src/**/*.{js,vue}\" --max-warnings=0",
+    "format:check": "prettier --check \"src/**/*.{ts,vue,scss}\" \"scripts/**/*.mjs\" \"*.ts\" \"*.json\" \"*.html\"",
+    "format:write": "prettier --write \"src/**/*.{ts,vue,scss}\" \"scripts/**/*.mjs\" \"*.ts\" \"*.json\" \"*.html\"",
+    "lint": "node --import tsx ./node_modules/eslint/bin/eslint.js \"src/**/*.{vue,ts}\" --max-warnings=0",
     "typecheck:services": "tsc -p tsconfig.typecheck.services.json --noEmit",
     "typecheck:app": "vue-tsc -p tsconfig.typecheck.app.json --noEmit",
     "typecheck": "npm run typecheck:services && npm run typecheck:app",
-    "test": "node --test ../tests/frontend/*.test.mjs",
+    "test": "node --import tsx --test ../tests/frontend/*.test.mjs",
     "check:files": "node scripts/check-file-length.mjs"
   },
   "dependencies": {
@@ -30,11 +30,16 @@
     "lucide-vue-next": "0.575.0",
     "simple-icons": "16.9.0",
     "three": "^0.183.1",
-    "vue": "3.5.0"
+    "unplugin-vue-router": "^0.19.2",
+    "vue": "3.5.0",
+    "vue-router": "^4.6.4",
+    "yaml": "^2.8.2"
   },
   "devDependencies": {
     "@eslint/js": "9.38.0",
     "@tauri-apps/cli": "2.8.0",
+    "@types/three": "^0.183.1",
+    "@typescript-eslint/parser": "8.46.2",
     "@vitejs/plugin-vue": "5.1.2",
     "eslint": "9.38.0",
     "eslint-plugin-vue": "9.33.0",
@@ -42,6 +47,7 @@
     "knip": "5.63.1",
     "prettier": "3.6.2",
     "sass": "1.97.3",
+    "tsx": "4.20.6",
     "typescript": "5.9.3",
     "vite": "5.4.8",
     "vue-tsc": "2.2.12",

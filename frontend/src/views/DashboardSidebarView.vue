@@ -14,11 +14,11 @@
   </aside>
 </template>
 
-<script setup>
-import SidebarHeaderTabs from "../components/sidebar/SidebarHeaderTabs.vue";
-import SidebarIndicatorsAccordion from "../components/sidebar/SidebarIndicatorsAccordion.vue";
-import SidebarTreePanel from "../components/sidebar/SidebarTreePanel.vue";
-import { useDashboardStore } from "../stores/dashboardStore.js";
+<script setup lang="ts">
+import SidebarHeaderTabs from "@/components/sidebar/SidebarHeaderTabs.vue";
+import SidebarIndicatorsAccordion from "@/components/sidebar/SidebarIndicatorsAccordion.vue";
+import SidebarTreePanel from "@/components/sidebar/SidebarTreePanel.vue";
+import { useDashboardStore } from "@/stores/dashboardStore";
 
 const dashboard = useDashboardStore();
 const { isSidebarDetailed } = dashboard;

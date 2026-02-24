@@ -5,25 +5,27 @@
       :key="option.id"
       type="button"
       class="fx-toggle-btn"
-      :class="{ active: fxMode.value === option.id }"
-      :aria-pressed="fxMode.value === option.id"
+      :class="{ active: fxMode === option.id }"
+      :aria-pressed="fxMode === option.id"
       @click="selectMode(option.id)"
     >
       {{ option.label }}
     </button>
 
-    <span v-if="prefersReducedMotion.value" class="fx-toggle-hint">
+    <span v-if="prefersReducedMotion" class="fx-toggle-hint">
       Reduced motion: FX forced to OFF.
     </span>
   </div>
 </template>
 
-<script setup>
-import { useFxMode } from "../../composables/useFxMode";
+<script setup lang="ts">
+import { useFxMode, type FxMode } from "@/composables/useFxMode";
 
-const emit = defineEmits(["change"]);
+const emit = defineEmits<{
+  change: [mode: FxMode];
+}>();
 
-const options = [
+const options: ReadonlyArray<{ id: FxMode; label: string }> = [
   { id: "off", label: "OFF" },
   { id: "plasma", label: "PLASMA" },
   { id: "particles", label: "PARTICLES" },
@@ -31,7 +33,7 @@ const options = [
 
 const { fxMode, prefersReducedMotion, setFxMode } = useFxMode();
 
-function selectMode(mode) {
+function selectMode(mode: FxMode): void {
   setFxMode(mode, { source: "toggle" });
   emit("change", mode);
 }

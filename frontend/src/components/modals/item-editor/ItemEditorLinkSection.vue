@@ -1,14 +1,11 @@
 <template>
   <section class="editor-section">
     <div class="editor-section-title">
-      <label class="editor-check">
-        <input
-          v-model="itemEditor.form.healthcheckEnabled"
-          type="checkbox"
-          :disabled="itemEditor.submitting"
-        />
-        <span>Healthcheck</span>
-      </label>
+      <BaseSwitch
+        v-model="itemEditor.form.healthcheckEnabled"
+        :disabled="itemEditor.submitting"
+        label="Healthcheck"
+      />
     </div>
 
     <div v-if="itemEditor.form.healthcheckEnabled" class="editor-grid">
@@ -23,16 +20,16 @@
         />
       </label>
 
-      <label class="editor-field">
-        <span>Интервал (sec)</span>
-        <input
-          v-model.number="itemEditor.form.healthcheckIntervalSec"
-          type="number"
-          min="1"
-          max="3600"
-          :disabled="itemEditor.submitting"
-        />
-      </label>
+      <section class="editor-field editor-field--wide">
+        <span>TLS</span>
+        <div class="editor-switch-list">
+          <BaseSwitch
+            v-model="itemEditor.form.healthcheckTlsVerify"
+            :disabled="itemEditor.submitting"
+            label="Проверять TLS сертификат"
+          />
+        </div>
+      </section>
 
       <label class="editor-field">
         <span>Timeout (ms)</span>
@@ -44,12 +41,24 @@
           :disabled="itemEditor.submitting"
         />
       </label>
+
+      <label class="editor-field">
+        <span>Interval (sec)</span>
+        <input
+          v-model.number="itemEditor.form.healthcheckIntervalSec"
+          type="number"
+          min="5"
+          max="86400"
+          :disabled="itemEditor.submitting"
+        />
+      </label>
     </div>
   </section>
 </template>
 
-<script setup>
-import { useDashboardStore } from "../../../stores/dashboardStore.js";
+<script setup lang="ts">
+import BaseSwitch from "@/components/primitives/BaseSwitch.vue";
+import { useDashboardStore } from "@/stores/dashboardStore";
 
 const dashboard = useDashboardStore();
 const { itemEditor } = dashboard;

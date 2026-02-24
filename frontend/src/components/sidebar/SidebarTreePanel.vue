@@ -20,10 +20,10 @@
   </section>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { vAutoAnimate } from "@formkit/auto-animate/vue";
-import { useDashboardStore } from "../../stores/dashboardStore.js";
-import SidebarTreeGroupNode from "./SidebarTreeGroupNode.vue";
+import { useDashboardStore } from "@/stores/dashboardStore";
+import SidebarTreeGroupNode from "@/components/sidebar/SidebarTreeGroupNode.vue";
 
 const dashboard = useDashboardStore();
 

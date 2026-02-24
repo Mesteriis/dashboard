@@ -1,0 +1,40 @@
+name: oko-deps
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: oko-deps-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-oko}
+      POSTGRES_USER: ${POSTGRES_USER:-oko}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-oko}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - oko-deps-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-oko} -d ${POSTGRES_DB:-oko}"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    container_name: oko-deps-rabbitmq
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:-oko}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:-oko}
+      RABBITMQ_DEFAULT_VHOST: ${RABBITMQ_DEFAULT_VHOST:-/}
+    ports:
+      - "${RABBITMQ_AMQP_PORT:-5672}:5672"
+      - "${RABBITMQ_MANAGEMENT_PORT:-15672}:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+volumes:
+  oko-deps-postgres-data:

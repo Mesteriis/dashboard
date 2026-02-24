@@ -1,0 +1,13 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="06 Full Stack Down (docker)" type="PythonConfigurationType" factoryName="Python">
+    <module name="dashboard" />
+    <option name="ADD_CONTENT_ROOTS" value="true" />
+    <option name="ADD_SOURCE_ROOTS" value="true" />
+    <option name="EMULATE_TERMINAL" value="true" />
+    <option name="IS_MODULE_SDK" value="true" />
+    <option name="PARAMETERS" value="docker-down" />
+    <option name="SCRIPT_NAME" value="$PROJECT_DIR$/scripts/dev/stack.py" />
+    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+    <method v="2" />
+  </configuration>
+</component>

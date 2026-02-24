@@ -3,7 +3,6 @@
     class="page"
     :class="{
       'indicator-open': Boolean(activeIndicatorWidget),
-      'page--lan': isLanPage && !activeIndicatorWidget,
       'page--split-scroll': Boolean(activePage) && !loadingConfig && !configError,
     }"
   >
@@ -26,36 +25,33 @@
         <IndicatorTabPanel />
       </section>
 
-      <template v-else>
-        <section v-if="isLanPage" class="lan-workspace-backdrop">
-          <section class="lan-workspace-shell">
-            <section class="page-right-top">
-              <LanHeroPanel />
-            </section>
-
-            <section class="page-right-bottom page-motion-zone">
-              <LanPageView />
-            </section>
-          </section>
+      <section v-else class="page-right-shell">
+        <section class="page-right-top">
+          <ServicesHeroPanel />
         </section>
 
-        <section v-else class="page-right-shell">
-          <section class="page-right-top">
-            <ServicesHeroPanel />
-          </section>
-
-          <section class="page-right-bottom page-motion-zone">
-            <ServicesGroupsPanel />
-          </section>
+        <section class="page-right-bottom page-motion-zone">
+          <ServicesGroupsPanel />
         </section>
-      </template>
+      </section>
     </template>
 
     <section v-else class="panel status-panel">
-      <h2>Нет доступных страниц</h2>
-      <p class="subtitle">Проверьте `layout.pages` в конфигурации панели.</p>
+      <h2>Панель не настроена</h2>
+      <p class="subtitle">
+        Создайте новую панель или импортируйте `dashboard.yaml`.
+      </p>
     </section>
   </main>
+
+  <BootstrapDashboardModal
+    :open="showBootstrapModal"
+    :creating="creatingInitialDashboard"
+    :importing="importingInitialDashboard"
+    :error="bootstrapModalError"
+    @create="createInitialDashboard"
+    @import-yaml="importInitialDashboard"
+  />
 
   <section
     v-if="showConfigErrorPopup"
@@ -94,18 +90,16 @@
   </section>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed, defineAsyncComponent, ref, watch } from "vue";
-import LanHeroPanel from "../components/main/LanHeroPanel.vue";
-import ServicesGroupsPanel from "../components/main/ServicesGroupsPanel.vue";
-import ServicesHeroPanel from "../components/main/ServicesHeroPanel.vue";
-import { useDashboardStore } from "../stores/dashboardStore.js";
+import ServicesGroupsPanel from "@/components/main/ServicesGroupsPanel.vue";
+import ServicesHeroPanel from "@/components/main/ServicesHeroPanel.vue";
+import BootstrapDashboardModal from "@/components/modals/BootstrapDashboardModal.vue";
+import { restoreDashboardConfig } from "@/services/dashboardApi";
+import { useDashboardStore } from "@/stores/dashboardStore";
 
 const IndicatorTabPanel = defineAsyncComponent(
-  () => import("../components/main/IndicatorTabPanel.vue"),
-);
-const LanPageView = defineAsyncComponent(
-  () => import("../components/main/LanPageView.vue"),
+  () => import("@/components/main/IndicatorTabPanel.vue"),
 );
 
 const dashboard = useDashboardStore();
@@ -114,12 +108,22 @@ const {
   activeIndicatorWidget,
   loadingConfig,
   configError,
-  isLanPage,
+  bootstrapInitialDashboard,
   loadConfig,
+  saveError,
 } = dashboard;
 
 const dismissedConfigError = ref("");
 const popupOpen = ref(false);
+const creatingInitialDashboard = ref(false);
+const importingInitialDashboard = ref(false);
+const bootstrapModalError = ref("");
+const showBootstrapModal = computed(
+  () =>
+    !loadingConfig.value &&
+    !configError.value &&
+    !activePage.value,
+);
 
 const configErrorPopup = computed(() => {
   const rawError = String(configError.value || "").trim();
@@ -175,9 +179,68 @@ function dismissConfigErrorPopup() {
   popupOpen.value = false;
 }
 
+function resolveErrorMessage(error: unknown, fallback: string): string {
+  return error instanceof Error && error.message
+    ? error.message
+    : fallback;
+}
+
+async function createInitialDashboard() {
+  if (creatingInitialDashboard.value || importingInitialDashboard.value) return;
+  creatingInitialDashboard.value = true;
+  bootstrapModalError.value = "";
+
+  try {
+    const created = await bootstrapInitialDashboard();
+    if (!created && !activePage.value) {
+      bootstrapModalError.value =
+        "Не удалось создать стартовую страницу. Проверьте конфигурацию.";
+      return;
+    }
+  } catch (error: unknown) {
+    bootstrapModalError.value =
+      resolveErrorMessage(error, "") ||
+      saveError.value ||
+      "Не удалось создать стартовую панель";
+  } finally {
+    creatingInitialDashboard.value = false;
+  }
+}
+
+async function importInitialDashboard(payload: {
+  name: string;
+  yaml: string;
+}) {
+  void payload.name;
+  if (creatingInitialDashboard.value || importingInitialDashboard.value) return;
+  importingInitialDashboard.value = true;
+  bootstrapModalError.value = "";
+
+  try {
+    await restoreDashboardConfig(payload.yaml);
+    await loadConfig();
+  } catch (error: unknown) {
+    bootstrapModalError.value = resolveErrorMessage(
+      error,
+      "Не удалось импортировать dashboard.yaml",
+    );
+  } finally {
+    importingInitialDashboard.value = false;
+  }
+}
+
 async function retryLoadFromPopup() {
   dismissedConfigError.value = "";
   popupOpen.value = false;
   await loadConfig();
 }
+
+watch(
+  () => showBootstrapModal.value,
+  (visible) => {
+    if (!visible) {
+      bootstrapModalError.value = "";
+    }
+  },
+);
 </script>
