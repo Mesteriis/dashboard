@@ -70,7 +70,7 @@
   width: 100%;
   height: 100%;
   border: 0;
-  border-radius: 12px;
+  border-radius: var(--ui-radius);
   background: linear-gradient(
     152deg,
     rgba(10, 33, 48, 0.84),
@@ -153,7 +153,7 @@
   min-width: 100%;
   list-style: none;
   padding: 6px;
-  border-radius: 12px;
+  border-radius: var(--ui-radius);
   border: 1px solid rgba(108, 199, 222, 0.36);
   background: linear-gradient(
     162deg,
@@ -179,7 +179,7 @@
 .hero-dropdown-option {
   width: 100%;
   border: 0;
-  border-radius: 8px;
+  border-radius: var(--ui-radius);
   background: transparent;
   color: #d4e9f7;
   padding: 7px 8px;
@@ -238,7 +238,7 @@
 .hero-controls-trigger {
   border: 0;
   outline: 0;
-  border-radius: 10px;
+  border-radius: var(--ui-radius);
   background: rgba(8, 24, 36, 0.82);
   color: #d6ecf8;
   min-height: 0;
@@ -293,7 +293,7 @@
   gap: 8px;
   min-height: 0;
   border: 1px solid rgba(108, 168, 190, 0.28);
-  border-radius: calc(var(--card-radius) - 4px);
+  border-radius: var(--ui-radius);
   background: linear-gradient(
     145deg,
     rgba(11, 24, 36, 0.62),
@@ -308,6 +308,8 @@
   position: absolute;
   inset: 0;
   z-index: 0;
+  overflow: hidden;
+  border-radius: inherit;
   pointer-events: none;
   background:
     radial-gradient(
@@ -356,7 +358,7 @@
 .hero-page-tabs {
   --hero-page-tab-size: 52px;
   --hero-page-tab-icon-size: 17px;
-  --hero-page-tab-corner-radius: calc(var(--card-radius) - 2px);
+  --hero-page-tab-corner-radius: var(--ui-radius);
   --hero-tabs-unfold-duration: 760ms;
   --hero-tabs-slide-duration: 940ms;
   --hero-tabs-fade-duration: 520ms;
@@ -373,9 +375,10 @@
 }
 
 .hero-logo-square {
-  width: var(--hero-page-tab-size);
-  min-width: var(--hero-page-tab-size);
-  height: 100%;
+  inline-size: auto;
+  min-inline-size: 0;
+  block-size: 100%;
+  aspect-ratio: 1 / 1;
   border: 1px solid rgba(108, 168, 190, 0.28);
   border-top-left-radius: var(--hero-page-tab-corner-radius);
   border-bottom-left-radius: var(--hero-page-tab-corner-radius);
@@ -682,6 +685,43 @@
   border-color: rgba(113, 245, 222, 0.56);
   background: rgba(22, 83, 85, 0.36);
 }
+
+.hero-action-menu {
+  position: relative;
+  z-index: 52;
+  min-height: 0;
+  inline-size: auto;
+  block-size: 100%;
+  min-block-size: var(--hero-control-btn-min-size);
+  flex: 0 0 auto;
+}
+
+.hero-system-menu-trigger {
+  min-height: 0;
+  inline-size: auto;
+  block-size: 100%;
+  min-block-size: var(--hero-control-btn-min-size);
+  aspect-ratio: 1 / 1;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  align-self: stretch;
+}
+
+.hero-system-menu-item {
+  font-size: 0.76rem;
+}
+
+.hero-control-panel--menu,
+.hero-control-panel--menu.service-hero-controls {
+  overflow: visible;
+}
+
+.hero-control-panel--menu .ui-menu__list {
+  z-index: 96;
+}
+
 .service-hero-controls .hero-accordion-action.active {
   border: 0;
   box-shadow: none;
@@ -698,7 +738,7 @@
   min-block-size: var(--hero-control-btn-min-size);
   aspect-ratio: 1 / 1;
   border: 1px solid rgba(110, 170, 190, 0.34);
-  border-radius: 10px;
+  border-radius: var(--ui-radius);
   background: rgba(10, 23, 34, 0.62);
   display: inline-flex;
   align-items: center;

@@ -10,6 +10,7 @@
   --border: rgba(132, 170, 188, 0.22);
   --shadow: 0 28px 60px rgba(0, 0, 0, 0.48);
   --card-radius: 18px;
+  --ui-radius: calc(var(--card-radius) - 4px);
   --grid-gap: 14px;
   --layout-columns: 12;
   --glow-enabled: 1;
@@ -138,6 +139,9 @@ body {
 }
 
 .app-shell {
+  --shell-inset-top: 18px;
+  --shell-inset-bottom: 16px;
+  --shell-inset-inline: clamp(10px, 1.8vw, 22px);
   position: relative;
   z-index: 1;
   width: 100%;
@@ -146,7 +150,7 @@ body {
   display: grid;
   grid-template-columns: 420px minmax(0, 1fr);
   gap: var(--grid-gap);
-  padding: calc(24px + var(--desktop-drag-strip)) clamp(12px, 2.2vw, 28px) 24px;
+  padding: calc(var(--shell-inset-top) + var(--desktop-drag-strip)) var(--shell-inset-inline) var(--shell-inset-bottom);
   transition: grid-template-columns 280ms ease;
 }
 

@@ -1,6 +1,6 @@
 .ui-toolbar {
   border: 1px solid rgba(132, 174, 194, 0.32);
-  border-radius: 12px;
+  border-radius: var(--ui-radius);
   background: linear-gradient(158deg, rgba(10, 26, 39, 0.84), rgba(7, 18, 28, 0.9));
   padding: 10px 12px;
   display: grid;
@@ -27,7 +27,7 @@
 .ui-modal {
   width: min(620px, 100%);
   border: 1px solid rgba(136, 180, 201, 0.34);
-  border-radius: 14px;
+  border-radius: var(--ui-radius);
   background: linear-gradient(160deg, rgba(9, 25, 37, 0.96), rgba(6, 17, 27, 0.97));
   box-shadow: 0 24px 54px rgba(0, 0, 0, 0.45);
   display: grid;
@@ -85,7 +85,7 @@
 
 .ui-kit-section {
   border: 1px solid rgba(129, 171, 191, 0.28);
-  border-radius: 14px;
+  border-radius: var(--ui-radius);
   background:
     radial-gradient(
       120% 120% at 100% 0%,
@@ -100,7 +100,7 @@
 
 .ui-kit-node {
   border: 1px solid rgba(127, 168, 187, 0.24);
-  border-radius: 12px;
+  border-radius: var(--ui-radius);
   background: rgba(7, 19, 29, 0.55);
   padding: 10px;
   display: grid;
@@ -127,7 +127,7 @@
 .ui-kit-speed-zone {
   min-height: 260px;
   border: 1px dashed rgba(128, 169, 188, 0.34);
-  border-radius: 12px;
+  border-radius: var(--ui-radius);
   background: rgba(7, 18, 28, 0.52);
   padding: 12px;
   display: grid;

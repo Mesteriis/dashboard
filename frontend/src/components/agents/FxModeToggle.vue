@@ -50,7 +50,7 @@ function selectMode(mode: FxMode): void {
 .fx-toggle-btn {
   min-width: 88px;
   padding: 8px 12px;
-  border-radius: 10px;
+  border-radius: var(--ui-radius);
   border: 1px solid var(--border);
   background: var(--surface);
   color: var(--muted);

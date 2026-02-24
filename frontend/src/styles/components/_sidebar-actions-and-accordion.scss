@@ -13,7 +13,7 @@
 
 .tree-mini-btn {
   border: 1px solid rgba(118, 173, 194, 0.35);
-  border-radius: 8px;
+  border-radius: var(--ui-radius);
   width: 22px;
   height: 22px;
   background: rgba(9, 21, 33, 0.66);
@@ -60,7 +60,7 @@
 
 .sidebar-stats-toggle {
   border: 1px solid rgba(113, 175, 196, 0.28);
-  border-radius: 14px;
+  border-radius: var(--ui-radius);
   background: linear-gradient(
     150deg,
     rgba(12, 30, 45, 0.88),

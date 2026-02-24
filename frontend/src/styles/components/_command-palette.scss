@@ -13,7 +13,7 @@
   width: min(94vw, 820px);
   max-height: min(88vh, 760px);
   border: 1px solid rgba(112, 236, 215, 0.32);
-  border-radius: calc(var(--card-radius) + 2px);
+  border-radius: var(--ui-radius);
   background: linear-gradient(
     165deg,
     rgba(8, 22, 34, 0.98),
@@ -50,7 +50,7 @@
 
 .command-palette-shortcut {
   border: 1px solid rgba(114, 174, 198, 0.34);
-  border-radius: 8px;
+  border-radius: var(--ui-radius);
   padding: 4px 7px;
   font-size: 0.72rem;
   color: #b5d3e6;
@@ -106,7 +106,7 @@
 .command-palette-entry {
   width: 100%;
   border: 1px solid rgba(100, 145, 165, 0.22);
-  border-radius: 10px;
+  border-radius: var(--ui-radius);
   background: linear-gradient(
     150deg,
     rgba(10, 28, 40, 0.8),

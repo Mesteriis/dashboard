@@ -48,7 +48,7 @@
 
 .subgroup {
   border: 1px solid rgba(140, 173, 192, 0.16);
-  border-radius: calc(var(--card-radius) - 4px);
+  border-radius: var(--ui-radius);
   background: rgba(8, 19, 31, 0.42);
   padding: 12px;
   min-width: 0;
@@ -103,7 +103,7 @@
 
 .item-card {
   border: 1px solid rgba(138, 175, 194, 0.2);
-  border-radius: calc(var(--card-radius) - 6px);
+  border-radius: var(--ui-radius);
   background: linear-gradient(
     156deg,
     rgba(15, 30, 44, 0.58),

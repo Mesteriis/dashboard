@@ -81,8 +81,8 @@ import {
   normalizeLayoutBlocksInConfig,
 } from "@/stores/dashboard/storeConfigOps";
 import {
-  loadPersistedUiState,
-  savePersistedUiState,
+  loadPersistedUiStateByRoute,
+  savePersistedUiStateByRoute,
 } from "@/stores/dashboard/storeUiPersistence";
 import { createDashboardCrudSection } from "@/stores/dashboard/storeCrudSection";
 import { createDashboardCommandPaletteSection } from "@/stores/dashboard/sections/commandPaletteSection";
@@ -137,6 +137,7 @@ import type {
   ItemType,
   ItemWithOrigin,
   ParticlesConfig,
+  PersistedUiState,
   SaveStatus,
   SelectedNodeState,
   ServiceCardView,
@@ -245,68 +246,151 @@ export function createDashboardStore(
     itemId: "",
   });
   const itemFaviconFailures = reactive<Record<string, boolean>>({});
-  const persistedUiState = loadPersistedUiState(UI_STATE_STORAGE_KEY);
+  const persistedUiStateByRoute =
+    loadPersistedUiStateByRoute(UI_STATE_STORAGE_KEY).byRoute;
+  const currentUiRouteKey = ref(
+    resolveUiRouteKey(
+      typeof window === "undefined" ? "/" : window.location.pathname,
+    ),
+  );
+  let applyingPersistedUiState = false;
 
-  if (persistedUiState) {
-    const persistedCardView = String(persistedUiState.serviceCardView || "");
-    if (SERVICE_CARD_VIEW_VALUES.has(persistedCardView)) {
-      serviceCardView.value = persistedCardView as ServiceCardView;
-    }
+  function resolveUiRouteKey(routeKey: unknown): string {
+    const normalized = String(routeKey || "/").trim();
+    const basePath = normalized.split("?")[0].split("#")[0];
+    if (!basePath) return "/";
+    const prefixed = basePath.startsWith("/") ? basePath : `/${basePath}`;
+    if (prefixed.length <= 1) return "/";
+    return prefixed.endsWith("/") ? prefixed.slice(0, -1) : prefixed;
+  }
 
-    const persistedGrouping = String(
-      persistedUiState.serviceGroupingMode || "",
-    );
-    if (SERVICE_GROUPING_VALUES.has(persistedGrouping)) {
-      serviceGroupingMode.value = persistedGrouping as ServiceGroupingMode;
-    }
-
-    const persistedSidebarView = String(persistedUiState.sidebarView || "");
-    if (
-      SIDEBAR_VIEW_SEQUENCE.includes(persistedSidebarView as SidebarViewMode)
-    ) {
-      sidebarView.value = persistedSidebarView as SidebarViewMode;
-    }
-
-    const persistedSiteFilter = String(persistedUiState.siteFilter || "")
-      .trim()
-      .toLowerCase();
-    siteFilter.value = persistedSiteFilter || "all";
-    activePageId.value = String(persistedUiState.activePageId || "");
-    treeFilter.value = String(persistedUiState.treeFilter || "");
-    activeIndicatorViewId.value = String(
-      persistedUiState.activeIndicatorViewId || "",
-    );
-    statsExpanded.value = Boolean(persistedUiState.statsExpanded);
-    editMode.value = Boolean(persistedUiState.editMode);
-    settingsPanel.open = Boolean(persistedUiState.settingsPanelOpen);
-
-    const persistedSelectedNode = persistedUiState.selectedNode;
-    if (persistedSelectedNode && typeof persistedSelectedNode === "object") {
-      selectedNode.groupKey = String(
-        (persistedSelectedNode as Partial<SelectedNodeState>).groupKey || "",
-      );
-      selectedNode.subgroupId = String(
-        (persistedSelectedNode as Partial<SelectedNodeState>).subgroupId || "",
-      );
-      selectedNode.itemId = String(
-        (persistedSelectedNode as Partial<SelectedNodeState>).itemId || "",
-      );
-    }
-
-    const persistedExpandedGroups = persistedUiState.expandedGroups;
-    if (
-      persistedExpandedGroups &&
-      typeof persistedExpandedGroups === "object"
-    ) {
-      for (const [groupKey, expanded] of Object.entries(
-        persistedExpandedGroups,
-      )) {
-        const normalizedGroupKey = String(groupKey || "");
-        if (!normalizedGroupKey) continue;
-        expandedGroups[normalizedGroupKey] = Boolean(expanded);
-      }
+  function clearExpandedGroupsState(): void {
+    for (const groupKey of Object.keys(expandedGroups)) {
+      delete expandedGroups[groupKey];
     }
   }
+
+  function resetUiStateToDefaults(): void {
+    activePageId.value = "";
+    treeFilter.value = "";
+    activeIndicatorViewId.value = "";
+    statsExpanded.value = false;
+    editMode.value = false;
+    serviceCardView.value = "detailed";
+    serviceGroupingMode.value = "groups";
+    siteFilter.value = "all";
+    sidebarView.value = "detailed";
+    settingsPanel.open = false;
+    selectedNode.groupKey = "";
+    selectedNode.subgroupId = "";
+    selectedNode.itemId = "";
+    clearExpandedGroupsState();
+  }
+
+  function applyPersistedUiState(snapshot: PersistedUiState | null): void {
+    applyingPersistedUiState = true;
+
+    try {
+      resetUiStateToDefaults();
+      if (!snapshot) return;
+
+      const persistedCardView = String(snapshot.serviceCardView || "");
+      if (SERVICE_CARD_VIEW_VALUES.has(persistedCardView)) {
+        serviceCardView.value = persistedCardView as ServiceCardView;
+      }
+
+      const persistedGrouping = String(snapshot.serviceGroupingMode || "");
+      if (SERVICE_GROUPING_VALUES.has(persistedGrouping)) {
+        serviceGroupingMode.value = persistedGrouping as ServiceGroupingMode;
+      }
+
+      const persistedSidebarView = String(snapshot.sidebarView || "");
+      if (SIDEBAR_VIEW_SEQUENCE.includes(persistedSidebarView as SidebarViewMode)) {
+        sidebarView.value = persistedSidebarView as SidebarViewMode;
+      }
+
+      const persistedSiteFilter = String(snapshot.siteFilter || "")
+        .trim()
+        .toLowerCase();
+      siteFilter.value = persistedSiteFilter || "all";
+      activePageId.value = String(snapshot.activePageId || "");
+      treeFilter.value = String(snapshot.treeFilter || "");
+      activeIndicatorViewId.value = String(snapshot.activeIndicatorViewId || "");
+      statsExpanded.value = Boolean(snapshot.statsExpanded);
+      editMode.value = Boolean(snapshot.editMode);
+      settingsPanel.open = Boolean(snapshot.settingsPanelOpen);
+
+      const persistedSelectedNode = snapshot.selectedNode;
+      if (persistedSelectedNode && typeof persistedSelectedNode === "object") {
+        selectedNode.groupKey = String(
+          (persistedSelectedNode as Partial<SelectedNodeState>).groupKey || "",
+        );
+        selectedNode.subgroupId = String(
+          (persistedSelectedNode as Partial<SelectedNodeState>).subgroupId || "",
+        );
+        selectedNode.itemId = String(
+          (persistedSelectedNode as Partial<SelectedNodeState>).itemId || "",
+        );
+      }
+
+      const persistedExpandedGroups = snapshot.expandedGroups;
+      if (persistedExpandedGroups && typeof persistedExpandedGroups === "object") {
+        for (const [groupKey, expanded] of Object.entries(
+          persistedExpandedGroups,
+        )) {
+          const normalizedGroupKey = String(groupKey || "");
+          if (!normalizedGroupKey) continue;
+          expandedGroups[normalizedGroupKey] = Boolean(expanded);
+        }
+      }
+    } finally {
+      applyingPersistedUiState = false;
+    }
+  }
+
+  function createUiSnapshot(): PersistedUiState {
+    return {
+      activePageId: activePageId.value,
+      treeFilter: treeFilter.value,
+      activeIndicatorViewId: activeIndicatorViewId.value,
+      statsExpanded: statsExpanded.value,
+      editMode: editMode.value,
+      serviceCardView: serviceCardView.value,
+      serviceGroupingMode: serviceGroupingMode.value,
+      siteFilter: siteFilter.value,
+      sidebarView: sidebarView.value,
+      settingsPanelOpen: settingsPanel.open,
+      selectedNode: {
+        groupKey: selectedNode.groupKey,
+        subgroupId: selectedNode.subgroupId,
+        itemId: selectedNode.itemId,
+      },
+      expandedGroups: { ...expandedGroups },
+    };
+  }
+
+  function persistUiStateForRoute(routeKey: string): void {
+    const normalizedRouteKey = resolveUiRouteKey(routeKey);
+    if (!normalizedRouteKey) return;
+    persistedUiStateByRoute[normalizedRouteKey] = createUiSnapshot();
+    savePersistedUiStateByRoute(UI_STATE_STORAGE_KEY, persistedUiStateByRoute);
+  }
+
+  function setUiRouteScope(routeKey: string): void {
+    const normalizedRouteKey = resolveUiRouteKey(routeKey);
+    if (!normalizedRouteKey) return;
+    if (normalizedRouteKey === currentUiRouteKey.value) return;
+
+    persistUiStateForRoute(currentUiRouteKey.value);
+    currentUiRouteKey.value = normalizedRouteKey;
+    applyPersistedUiState(persistedUiStateByRoute[normalizedRouteKey] || null);
+  }
+
+  applyPersistedUiState(
+    persistedUiStateByRoute[currentUiRouteKey.value] ||
+      persistedUiStateByRoute["/"] ||
+      null,
+  );
 
   const iframeModal = reactive<IframeModalState>({
     open: false,
@@ -968,6 +1052,7 @@ export function createDashboardStore(
     serviceCardView,
     serviceGroupingMode,
     settingsPanel,
+    sidebarView,
     sidebarIndicators,
     siteFilter,
     siteFilterOptions,
@@ -1148,26 +1233,10 @@ export function createDashboardStore(
   );
 
   watch(
-    () => ({
-      activePageId: activePageId.value,
-      treeFilter: treeFilter.value,
-      activeIndicatorViewId: activeIndicatorViewId.value,
-      statsExpanded: statsExpanded.value,
-      editMode: editMode.value,
-      serviceCardView: serviceCardView.value,
-      serviceGroupingMode: serviceGroupingMode.value,
-      siteFilter: siteFilter.value,
-      sidebarView: sidebarView.value,
-      settingsPanelOpen: settingsPanel.open,
-      selectedNode: {
-        groupKey: selectedNode.groupKey,
-        subgroupId: selectedNode.subgroupId,
-        itemId: selectedNode.itemId,
-      },
-      expandedGroups: { ...expandedGroups },
-    }),
-    (snapshot) => {
-      savePersistedUiState(UI_STATE_STORAGE_KEY, snapshot);
+    () => createUiSnapshot(),
+    () => {
+      if (applyingPersistedUiState) return;
+      persistUiStateForRoute(currentUiRouteKey.value);
     },
     { deep: true },
   );
@@ -1244,6 +1313,7 @@ export function createDashboardStore(
     serviceCardView,
     serviceGroupingMode,
     settingsPanel,
+    setUiRouteScope,
     siteFilter,
     siteFilterOptions,
     sidebarView,

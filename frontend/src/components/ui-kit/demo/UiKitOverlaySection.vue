@@ -20,6 +20,16 @@
           <UiSpeedDial :items="speedItems" direction="down" @action="onSpeedAction" />
         </div>
       </article>
+
+      <article id="ui-node-dropdown-menu" class="ui-kit-node ui-kit-stack">
+        <h3>Dropdown Menu</h3>
+        <UiDropdownMenu
+          label="Системное меню"
+          :items="menuItems"
+          @action="onMenuAction"
+        />
+        <p class="ui-kit-note" v-if="menuActionLog">{{ menuActionLog }}</p>
+      </article>
     </div>
 
     <UiModal :open="modalOpen" title="Demo Modal" @close="modalOpen = false">
@@ -35,11 +45,13 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import UiButton from "@/components/ui-kit/primitives/UiButton.vue";
+import UiDropdownMenu from "@/components/ui-kit/primitives/UiDropdownMenu.vue";
 import UiModal from "@/components/ui-kit/primitives/UiModal.vue";
 import UiSpeedDial from "@/components/ui-kit/primitives/UiSpeedDial.vue";
 
 const modalOpen = ref(false);
 const speedActionLog = ref("");
+const menuActionLog = ref("");
 
 const speedItems = [
   { id: "edit", label: "Edit", icon: "✎" },
@@ -47,7 +59,18 @@ const speedItems = [
   { id: "delete", label: "Delete", icon: "⌫" },
 ];
 
+const menuItems = [
+  { id: "kiosk", label: "Режим киоска" },
+  { id: "profile", label: "Профиль" },
+  { id: "pleiad_lock", label: "Блокировка -> Плияды" },
+  { id: "exit", label: "Выход", danger: true },
+];
+
 function onSpeedAction(id: string): void {
   speedActionLog.value = `Last speed action: ${id}`;
+}
+
+function onMenuAction(id: string): void {
+  menuActionLog.value = `Last menu action: ${id}`;
 }
 </script>

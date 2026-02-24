@@ -9,7 +9,7 @@
 
 .tree-root-page {
   border: 1px solid rgba(113, 169, 189, 0.24);
-  border-radius: 12px;
+  border-radius: var(--ui-radius);
   background: linear-gradient(
     155deg,
     rgba(17, 46, 52, 0.42),
@@ -82,7 +82,7 @@
 .tree-node {
   width: 100%;
   border: 1px solid transparent;
-  border-radius: 11px;
+  border-radius: var(--ui-radius);
   background: rgba(9, 20, 31, 0.5);
   color: #dceaf4;
   font: inherit;

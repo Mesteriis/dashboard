@@ -3,7 +3,7 @@
   gap: 4px;
   padding: 4px;
   border: 1px solid rgba(131, 173, 193, 0.36);
-  border-radius: 12px;
+  border-radius: var(--ui-radius);
   background: linear-gradient(150deg, rgba(8, 20, 31, 0.9), rgba(6, 16, 25, 0.88));
 }
 
@@ -23,7 +23,7 @@
   border: 1px solid rgba(128, 170, 190, 0.3);
   background: linear-gradient(155deg, rgba(12, 29, 42, 0.78), rgba(8, 21, 32, 0.86));
   color: #d4e8f6;
-  border-radius: 9px;
+  border-radius: var(--ui-radius);
   cursor: pointer;
   transition:
     border-color 150ms ease,
@@ -98,7 +98,7 @@
 .ui-table__wrap {
   overflow: auto;
   border: 1px solid rgba(130, 172, 193, 0.24);
-  border-radius: 12px;
+  border-radius: var(--ui-radius);
   background: rgba(7, 18, 28, 0.58);
 }
 
@@ -187,7 +187,7 @@
 
 .ui-picklist__list {
   border: 1px solid rgba(126, 169, 189, 0.3);
-  border-radius: 10px;
+  border-radius: var(--ui-radius);
   background: rgba(9, 20, 31, 0.76);
   padding: 8px;
   display: grid;
@@ -207,7 +207,7 @@
   align-items: center;
   gap: 8px;
   border: 1px solid rgba(122, 161, 179, 0.22);
-  border-radius: 8px;
+  border-radius: var(--ui-radius);
   padding: 6px 7px;
 }
 
@@ -224,7 +224,7 @@
 
 .ui-tree {
   border: 1px solid rgba(127, 166, 185, 0.3);
-  border-radius: 12px;
+  border-radius: var(--ui-radius);
   background: rgba(8, 20, 32, 0.8);
   padding: 8px;
   display: grid;

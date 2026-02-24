@@ -139,6 +139,7 @@ const groups: PrimitiveGroup[] = [
     items: [
       { id: "ui-node-modal", label: "Modal" },
       { id: "ui-node-speeddial", label: "SpeedDial" },
+      { id: "ui-node-dropdown-menu", label: "Dropdown Menu" },
     ],
   },
   {

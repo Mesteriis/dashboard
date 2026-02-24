@@ -1,102 +1,78 @@
 <template>
-  <section class="hero-layout">
-    <header class="hero panel hero-title-panel">
-      <div class="hero-title-content">
-        <HeroPageTabs />
-      </div>
-    </header>
+  <UiHeroPanel
+    :active="editMode"
+    controls-class="hero-control-panel--menu service-hero-controls"
+  >
+    <template #title>
+      <HeroPageTabs />
+    </template>
 
-    <aside
-      class="panel hero-control-panel service-hero-controls"
-      :class="{ active: editMode }"
-    >
-      <div class="hero-controls-content">
-        <div class="hero-controls-accordion" :class="{ open: controlsOpen }">
-          <Transition name="hero-controls-drawer-transition">
-            <div
-              v-if="controlsOpen"
-              id="hero-controls-drawer"
-              class="hero-controls-drawer"
-            >
-              <IconButton
-                button-class="hero-icon-btn hero-accordion-action"
-                title="Панель настроек"
-                aria-label="Открыть панель настроек"
-                @click="openSettingsPanel"
-              >
-                <SlidersHorizontal class="ui-icon hero-action-icon" />
-              </IconButton>
-
-              <IconButton
-                button-class="hero-icon-btn hero-accordion-action"
-                :active="!isSidebarDetailed"
-                :title="sidebarViewToggleTitle"
-                :aria-label="sidebarViewToggleTitle"
-                @click="toggleSidebarView"
-              >
-                <FolderTree class="ui-icon hero-action-icon" />
-              </IconButton>
-
-              <IconButton
-                button-class="hero-icon-btn hero-accordion-action editor-toggle"
-                :active="editMode"
-                :title="
-                  editMode
-                    ? 'Выключить режим редактирования'
-                    : 'Включить режим редактирования'
-                "
-                :aria-label="
-                  editMode
-                    ? 'Выключить режим редактирования'
-                    : 'Включить режим редактирования'
-                "
-                @click="toggleEditMode"
-              >
-                <Pencil class="ui-icon hero-action-icon" />
-              </IconButton>
-
-              <IconButton
-                button-class="hero-icon-btn hero-accordion-action"
-                :disabled="!editMode"
-                title="Добавить сущность"
-                aria-label="Добавить сущность"
-                @click="openCreateChooser()"
-              >
-                <Plus class="ui-icon hero-action-icon" />
-              </IconButton>
-
-              <span
-                v-if="editMode"
-                class="hero-save-indicator hero-accordion-status"
-                :class="saveStatus"
-                role="status"
-                :title="saveStatusLabel"
-                :aria-label="saveStatusLabel"
-              >
-                <Circle class="ui-icon hero-save-icon" />
-              </span>
-            </div>
-          </Transition>
-
-          <button
-            class="hero-controls-trigger"
-            type="button"
-            :aria-expanded="controlsOpen"
-            aria-controls="hero-controls-drawer"
-            :title="
-              controlsOpen
-                ? 'Скрыть панель действий'
-                : 'Показать панель действий'
-            "
-            @click="controlsOpen = !controlsOpen"
+    <template #controls>
+      <UiHeroControlsAccordion
+        drawer-id="hero-controls-drawer"
+        :storage-key="heroControlsStorageKey"
+      >
+        <template #drawer>
+          <IconButton
+            button-class="hero-icon-btn hero-accordion-action"
+            title="Панель настроек"
+            aria-label="Открыть панель настроек"
+            @click="openSettingsPanel"
           >
-            <Wrench class="ui-icon hero-action-icon" />
-            <ChevronLeft
-              class="ui-icon hero-accordion-caret"
-              :class="{ open: controlsOpen }"
-            />
-          </button>
+            <SlidersHorizontal class="ui-icon hero-action-icon" />
+          </IconButton>
 
+          <IconButton
+            button-class="hero-icon-btn hero-accordion-action"
+            :active="!isSidebarDetailed"
+            :title="sidebarViewToggleTitle"
+            :aria-label="sidebarViewToggleTitle"
+            @click="toggleSidebarView"
+          >
+            <FolderTree class="ui-icon hero-action-icon" />
+          </IconButton>
+
+          <IconButton
+            button-class="hero-icon-btn hero-accordion-action editor-toggle"
+            :active="editMode"
+            :title="
+              editMode
+                ? 'Выключить режим редактирования'
+                : 'Включить режим редактирования'
+            "
+            :aria-label="
+              editMode
+                ? 'Выключить режим редактирования'
+                : 'Включить режим редактирования'
+            "
+            @click="toggleEditMode"
+          >
+            <Pencil class="ui-icon hero-action-icon" />
+          </IconButton>
+
+          <IconButton
+            button-class="hero-icon-btn hero-accordion-action"
+            :disabled="!editMode"
+            title="Добавить сущность"
+            aria-label="Добавить сущность"
+            @click="openCreateChooser()"
+          >
+            <Plus class="ui-icon hero-action-icon" />
+          </IconButton>
+
+          <span
+            v-if="editMode"
+            class="hero-save-indicator hero-accordion-status"
+            :class="saveStatus"
+            role="status"
+            :title="saveStatusLabel"
+            :aria-label="saveStatusLabel"
+          >
+            <Circle class="ui-icon hero-save-icon" />
+          </span>
+        </template>
+
+        <template #actions>
           <IconButton
             button-class="hero-icon-btn hero-accordion-action hero-plugin-panel-btn"
             title="Открыть панель плагинов"
@@ -106,91 +82,142 @@
             <Puzzle class="ui-icon hero-action-icon" />
           </IconButton>
 
-          <IconButton
-            button-class="hero-icon-btn hero-accordion-action hero-pleiad-lock-btn"
-            title="Открыть Pleiad"
-            aria-label="Открыть Pleiad"
-            @click="openPleiad"
+          <UiDropdownMenu
+            class="hero-action-menu"
+            aria-label="Системное меню"
+            :items="systemActions"
+            :show-caret="false"
+            trigger-class="hero-icon-btn hero-accordion-action hero-system-menu-trigger"
+            item-class="hero-system-menu-item"
+            @action="handleSystemAction"
           >
-            <Lock class="ui-icon hero-action-icon" />
-          </IconButton>
-        </div>
+            <template #trigger>
+              <Lock class="ui-icon hero-action-icon" />
+            </template>
+          </UiDropdownMenu>
+        </template>
 
-        <p v-if="editMode && saveError" class="editor-error hero-editor-error">
-          {{ saveError }}
-        </p>
-      </div>
-    </aside>
-  </section>
+        <template #footer>
+          <p v-if="editMode && saveError" class="editor-error hero-editor-error">
+            {{ saveError }}
+          </p>
+        </template>
+      </UiHeroControlsAccordion>
+    </template>
+  </UiHeroPanel>
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, watch } from "vue";
+import { computed } from "vue";
+import { useRoute } from "vue-router";
 import {
-  ChevronLeft,
   Circle,
   FolderTree,
   Lock,
-  Plus,
   Pencil,
+  Plus,
   Puzzle,
   SlidersHorizontal,
-  Wrench,
 } from "lucide-vue-next";
 import HeroPageTabs from "@/components/main/HeroPageTabs.vue";
 import IconButton from "@/components/primitives/IconButton.vue";
-import {
-  goPluginsPanel,
-  openPleiadOverlay,
-} from "@/core/navigation/nav";
+import UiHeroControlsAccordion from "@/components/primitives/UiHeroControlsAccordion.vue";
+import UiHeroPanel from "@/components/primitives/UiHeroPanel.vue";
+import UiDropdownMenu from "@/components/ui-kit/primitives/UiDropdownMenu.vue";
+import { goPluginsPanel, openPleiadOverlay } from "@/core/navigation/nav";
+import { getRuntimeProfile } from "@/services/desktopRuntime";
 import { useDashboardStore } from "@/stores/dashboardStore";
 
+const route = useRoute();
 const dashboard = useDashboardStore();
-const HERO_CONTROLS_OPEN_STORAGE_KEY = "oko:hero-controls-open:v1";
-const controlsOpen = ref(false);
 
 const {
   editMode,
   isSidebarDetailed,
-  saveStatus,
-  saveStatusLabel,
-  saveError,
-  sidebarViewToggleTitle,
-  toggleEditMode,
   openCreateChooser,
   openSettingsPanel,
+  saveError,
+  saveStatus,
+  saveStatusLabel,
+  sidebarViewToggleTitle,
+  toggleEditMode,
   toggleSidebarView,
 } = dashboard;
 
-function openPleiad() {
-  void openPleiadOverlay("route");
-}
+type SystemActionId = "kiosk" | "profile" | "pleiad_lock" | "exit";
+
+const systemActions: Array<{
+  id: SystemActionId;
+  label: string;
+  danger?: boolean;
+}> = [
+  { id: "kiosk", label: "Режим киоска" },
+  { id: "profile", label: "Профиль" },
+  { id: "pleiad_lock", label: "Блокировка -> Плияды" },
+  { id: "exit", label: "Выход", danger: true },
+];
+
+const heroControlsStorageKey = computed(() => {
+  const rawPath = String(route.path || "/").trim();
+  const normalizedPath = rawPath.length > 1 && rawPath.endsWith("/")
+    ? rawPath.slice(0, -1)
+    : rawPath;
+  return `oko:hero-controls-open:${normalizedPath || "/"}`;
+});
 
 function openPluginPanel() {
   void goPluginsPanel();
 }
 
-function getLocalStorageSafe() {
+async function toggleKioskMode(): Promise<void> {
+  if (typeof document === "undefined") return;
   try {
-    return window.localStorage || null;
+    if (document.fullscreenElement) {
+      await document.exitFullscreen();
+      return;
+    }
+    await document.documentElement.requestFullscreen();
   } catch {
-    return null;
+    // Keep UI responsive even if fullscreen API is unavailable.
   }
 }
 
-onMounted(() => {
-  const storage = getLocalStorageSafe();
-  if (!storage) return;
-  const raw = storage.getItem(HERO_CONTROLS_OPEN_STORAGE_KEY);
-  controlsOpen.value = raw === "1";
-});
+async function exitApp(): Promise<void> {
+  try {
+    if (getRuntimeProfile().desktop) {
+      const { getCurrentWindow } = await import("@tauri-apps/api/window");
+      await getCurrentWindow().close();
+      return;
+    }
+  } catch {
+    // Fall through to browser close attempt.
+  }
 
-watch(
-  () => controlsOpen.value,
-  (value) => {
-    const storage = getLocalStorageSafe();
-    if (!storage) return;
-    storage.setItem(HERO_CONTROLS_OPEN_STORAGE_KEY, value ? "1" : "0");
-  },
-);
+  if (typeof window !== "undefined") {
+    window.close();
+  }
+}
+
+function handleSystemAction(actionId: string): void {
+  const id = actionId as SystemActionId;
+
+  if (id === "kiosk") {
+    void toggleKioskMode();
+    return;
+  }
+
+  if (id === "profile") {
+    openSettingsPanel();
+    return;
+  }
+
+  if (id === "pleiad_lock") {
+    void openPleiadOverlay("route");
+    return;
+  }
+
+  if (id === "exit") {
+    void exitApp();
+  }
+}
 </script>

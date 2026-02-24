@@ -173,7 +173,7 @@ const showRemoteFallbackNotice = computed(() => {
 .plugin-page-notice {
   margin: 0 0 18px;
   padding: 10px 12px;
-  border-radius: 12px;
+  border-radius: var(--ui-radius);
   border: 1px solid rgba(124, 154, 188, 0.34);
   background: rgba(10, 21, 34, 0.74);
 }
@@ -181,7 +181,7 @@ const showRemoteFallbackNotice = computed(() => {
 .plugin-manifest-section {
   border: 1px solid rgba(96, 136, 170, 0.32);
   background: rgba(8, 16, 28, 0.64);
-  border-radius: 14px;
+  border-radius: var(--ui-radius);
   padding: 14px;
   margin-bottom: 12px;
 }
@@ -198,7 +198,7 @@ const showRemoteFallbackNotice = computed(() => {
 
 .plugin-manifest-card {
   border: 1px solid rgba(123, 157, 194, 0.28);
-  border-radius: 12px;
+  border-radius: var(--ui-radius);
   background: rgba(10, 20, 31, 0.72);
   padding: 12px;
 }
@@ -230,14 +230,14 @@ const showRemoteFallbackNotice = computed(() => {
 .plugin-manifest-iframe iframe {
   width: 100%;
   border: 1px solid rgba(103, 142, 182, 0.35);
-  border-radius: 12px;
+  border-radius: var(--ui-radius);
   background: #0b1220;
 }
 
 .plugin-manifest-settings {
   margin: 0;
   border: 1px solid rgba(116, 146, 176, 0.34);
-  border-radius: 12px;
+  border-radius: var(--ui-radius);
   padding: 10px 12px;
   background: rgba(9, 17, 30, 0.8);
   overflow-x: auto;

@@ -1,12 +1,20 @@
 .sidebar {
   position: sticky;
-  top: 18px;
-  height: calc(100vh - 36px);
-  height: calc(100dvh - 36px);
-  max-height: calc(100vh - 36px);
-  max-height: calc(100dvh - 36px);
+  top: var(--shell-inset-top, 18px);
+  height: calc(
+    100vh - var(--desktop-drag-strip) - var(--shell-inset-top, 18px) - var(--shell-inset-bottom, 16px)
+  );
+  height: calc(
+    100dvh - var(--desktop-drag-strip) - var(--shell-inset-top, 18px) - var(--shell-inset-bottom, 16px)
+  );
+  max-height: calc(
+    100vh - var(--desktop-drag-strip) - var(--shell-inset-top, 18px) - var(--shell-inset-bottom, 16px)
+  );
+  max-height: calc(
+    100dvh - var(--desktop-drag-strip) - var(--shell-inset-top, 18px) - var(--shell-inset-bottom, 16px)
+  );
   border: 1px solid rgba(76, 226, 204, 0.24);
-  border-radius: calc(var(--card-radius) + 4px);
+  border-radius: var(--ui-radius);
   overflow: hidden;
   background: linear-gradient(
     178deg,
@@ -72,7 +80,7 @@
   width: 50px;
   height: 50px;
   object-fit: contain;
-  border-radius: 12px;
+  border-radius: var(--ui-radius);
   background: rgba(0, 0, 0, 0.22);
 }
 
@@ -96,7 +104,7 @@
   gap: 8px;
   width: 100%;
   border: 1px solid rgba(117, 173, 220, 0.3);
-  border-radius: 12px;
+  border-radius: var(--ui-radius);
   background: linear-gradient(
     146deg,
     rgba(22, 45, 66, 0.5),

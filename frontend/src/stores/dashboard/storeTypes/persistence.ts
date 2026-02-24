@@ -15,3 +15,8 @@ export interface PersistedUiState {
   expandedGroups?: Record<string, boolean>;
   [key: string]: unknown;
 }
+
+export interface PersistedUiStateByRoute {
+  version?: number;
+  byRoute: Record<string, PersistedUiState>;
+}

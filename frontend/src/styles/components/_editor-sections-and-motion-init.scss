@@ -6,7 +6,7 @@
 
 .editor-section {
   border: 1px solid rgba(124, 172, 193, 0.24);
-  border-radius: 12px;
+  border-radius: var(--ui-radius);
   background: linear-gradient(
     165deg,
     rgba(8, 18, 30, 0.74),

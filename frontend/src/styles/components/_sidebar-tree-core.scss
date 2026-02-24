@@ -41,7 +41,7 @@
 
 .sidebar-tree {
   border: 1px solid rgba(109, 170, 192, 0.24);
-  border-radius: 16px;
+  border-radius: var(--ui-radius);
   background: linear-gradient(
     164deg,
     rgba(8, 22, 33, 0.72),
@@ -93,7 +93,7 @@
 .tree-search input {
   width: 100%;
   border: 1px solid rgba(109, 154, 176, 0.3);
-  border-radius: 10px;
+  border-radius: var(--ui-radius);
   background: rgba(7, 18, 29, 0.7);
   color: #e3eef7;
   font: inherit;

@@ -107,11 +107,12 @@
     <main class="panel plugins-panel-main">
       <HeroGlassTabsShell :emblem-src="EMBLEM_SRC">
         <nav
-          class="hero-page-tabs has-logo-tile plugins-main-tabs"
+          class="hero-page-tabs plugins-main-tabs"
+          :class="{ 'has-logo-tile': showLogoTile }"
           role="tablist"
           aria-label="Вкладки панели плагинов"
         >
-          <div class="hero-logo-square" aria-hidden="true">
+          <div v-if="showLogoTile" class="hero-logo-square" aria-hidden="true">
             <img :src="EMBLEM_SRC" alt="" />
           </div>
 
@@ -363,7 +364,7 @@ const emit = defineEmits<{
 }>();
 
 const dashboard = useDashboardStore();
-const { EMBLEM_SRC, config, initSidebarParticles } = dashboard;
+const { EMBLEM_SRC, config, initSidebarParticles, isSidebarHidden } = dashboard;
 const zipInputRef = ref<HTMLInputElement | null>(null);
 const githubInputRef = ref<HTMLInputElement | null>(null);
 const githubInstallModal = reactive<{
@@ -379,6 +380,7 @@ const githubInstallModal = reactive<{
 });
 
 const activeTab = computed<PluginPanelTab>(() => props.tab);
+const showLogoTile = computed(() => isSidebarHidden.value);
 
 const installedPlugins = computed<InstalledPlugin[]>(() => {
   const registry = new Map<

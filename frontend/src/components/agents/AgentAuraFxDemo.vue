@@ -384,7 +384,7 @@ onBeforeUnmount(() => {
   display: grid;
   gap: 16px;
   border: 1px solid var(--border);
-  border-radius: 14px;
+  border-radius: var(--ui-radius);
   padding: 14px;
   background: linear-gradient(180deg, var(--surface-strong), var(--surface));
 }
@@ -421,7 +421,7 @@ onBeforeUnmount(() => {
 .agent-aura-demo-pulse {
   height: 36px;
   padding: 0 12px;
-  border-radius: 10px;
+  border-radius: var(--ui-radius);
   border: 1px solid var(--border);
   background: var(--surface);
   color: var(--text);
@@ -440,7 +440,7 @@ onBeforeUnmount(() => {
   gap: 8px;
   padding: 10px;
   border: 1px solid color-mix(in oklab, var(--border), white 8%);
-  border-radius: 12px;
+  border-radius: var(--ui-radius);
   background: color-mix(in oklab, var(--surface), black 6%);
 }
 
@@ -460,7 +460,7 @@ onBeforeUnmount(() => {
   display: grid;
   gap: 12px;
   border: 1px solid color-mix(in oklab, var(--border), white 8%);
-  border-radius: 12px;
+  border-radius: var(--ui-radius);
   padding: 12px;
   background: color-mix(in oklab, var(--surface), black 6%);
 }
@@ -489,7 +489,7 @@ onBeforeUnmount(() => {
   display: inline-flex;
   align-items: center;
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: var(--ui-radius);
   overflow: hidden;
   background: color-mix(in oklab, var(--surface), black 4%);
 }
@@ -517,7 +517,7 @@ onBeforeUnmount(() => {
 .agent-aura-three-settings {
   height: 34px;
   padding: 0 12px;
-  border-radius: 10px;
+  border-radius: var(--ui-radius);
   border: 1px solid var(--border);
   background: var(--surface);
   color: var(--text);
@@ -528,7 +528,7 @@ onBeforeUnmount(() => {
   display: grid;
   place-items: center;
   min-height: 340px;
-  border-radius: 10px;
+  border-radius: var(--ui-radius);
   background:
     radial-gradient(circle at 50% 28%, rgba(96, 152, 220, 0.12), transparent 56%),
     color-mix(in oklab, var(--surface-strong), black 14%);
@@ -565,7 +565,7 @@ onBeforeUnmount(() => {
 
 .agent-aura-three-control input[type="text"] {
   height: 34px;
-  border-radius: 9px;
+  border-radius: var(--ui-radius);
   border: 1px solid var(--border);
   padding: 0 10px;
   background: color-mix(in oklab, var(--surface), black 2%);

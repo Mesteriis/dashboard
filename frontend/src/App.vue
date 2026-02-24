@@ -75,7 +75,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed, defineAsyncComponent, onBeforeUnmount, onMounted, ref } from "vue";
+import {
+  computed,
+  defineAsyncComponent,
+  onBeforeUnmount,
+  onMounted,
+  ref,
+  watch,
+} from "vue";
 import { RouterView, useRoute } from "vue-router";
 import PleiadExperience from "@/components/pleiad/PleiadExperience.vue";
 import { useIdleScreensaver } from "@/composables/useIdleScreensaver";
@@ -102,6 +109,7 @@ const {
   commandPaletteOpen,
   openSettingsPanel,
   settingsPanel,
+  setUiRouteScope,
   toggleCommandPalette,
 } = dashboard;
 const desktopShell = isDesktopShell();
@@ -123,6 +131,14 @@ const isUiRoute = computed(() => route.path === "/ui");
 const isDashboardRoute = computed(() => route.path === "/" || route.path === "/settings");
 const isImmersiveRoute = computed(
   () => isPleiadOverlayVisible.value || isPluginsRoute.value || isUiRoute.value,
+);
+
+watch(
+  () => route.path,
+  (path) => {
+    setUiRouteScope(path);
+  },
+  { immediate: true },
 );
 
 let apiErrorNoticeTimerId: number | null = null;
@@ -300,7 +316,7 @@ onBeforeUnmount(() => {
   z-index: 62;
   width: min(440px, calc(100vw - 32px));
   border: 1px solid rgba(203, 79, 79, 0.34);
-  border-radius: 12px;
+  border-radius: var(--ui-radius);
   background: rgba(19, 29, 44, 0.95);
   color: #f3f7ff;
   box-shadow: 0 12px 24px rgba(6, 10, 19, 0.32);

@@ -1,8 +1,11 @@
-@use "@/styles/abstracts/breakpoints" as bp;
+@use "../abstracts/breakpoints" as bp;
 
 @include bp.down(bp.$bp-sm) {
   .app-shell {
-    padding: 14px 12px 20px;
+    --shell-inset-top: 10px;
+    --shell-inset-bottom: 14px;
+    --shell-inset-inline: 10px;
+    padding: calc(var(--shell-inset-top) + var(--desktop-drag-strip)) var(--shell-inset-inline) var(--shell-inset-bottom);
   }
 
   .tab-list {

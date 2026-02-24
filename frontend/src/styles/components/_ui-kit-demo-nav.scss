@@ -8,7 +8,7 @@
 
 .ui-kit-nav {
   border: 1px solid rgba(110, 169, 191, 0.28);
-  border-radius: 14px;
+  border-radius: var(--ui-radius);
   background:
     radial-gradient(
       140% 120% at 0% 0%,
@@ -48,7 +48,7 @@
 .ui-kit-nav__search input {
   width: 100%;
   border: 1px solid rgba(116, 173, 196, 0.33);
-  border-radius: 10px;
+  border-radius: var(--ui-radius);
   background: linear-gradient(154deg, rgba(14, 35, 50, 0.78), rgba(8, 21, 33, 0.88));
   color: #e3eef7;
   min-height: 38px;
@@ -139,7 +139,7 @@
 .ui-kit-nav__item {
   width: 100%;
   border: 1px solid rgba(123, 169, 190, 0.28);
-  border-radius: 10px;
+  border-radius: var(--ui-radius);
   background: linear-gradient(152deg, rgba(11, 30, 43, 0.82), rgba(7, 19, 30, 0.9));
   color: #d6e9f7;
   padding: 8px 10px;

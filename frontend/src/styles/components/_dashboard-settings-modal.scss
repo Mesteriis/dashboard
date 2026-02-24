@@ -13,7 +13,7 @@
   width: min(75vw, 1180px);
   max-height: 75vh;
   border: 1px solid rgba(112, 236, 215, 0.3);
-  border-radius: calc(var(--card-radius) + 2px);
+  border-radius: var(--ui-radius);
   background: linear-gradient(
     165deg,
     rgba(8, 22, 34, 0.98),
@@ -58,7 +58,7 @@
 
 .settings-modal-section {
   border: 1px solid rgba(99, 145, 167, 0.24);
-  border-radius: 12px;
+  border-radius: var(--ui-radius);
   background: linear-gradient(
     155deg,
     rgba(10, 28, 40, 0.8),
@@ -109,7 +109,7 @@
 
 .settings-state-btn {
   border: 1px solid rgba(108, 162, 183, 0.28);
-  border-radius: 10px;
+  border-radius: var(--ui-radius);
   background: linear-gradient(
     148deg,
     rgba(10, 27, 39, 0.82),
@@ -165,7 +165,7 @@
 .settings-runtime-input {
   width: 100%;
   border: 1px solid rgba(100, 171, 191, 0.34);
-  border-radius: 10px;
+  border-radius: var(--ui-radius);
   background: rgba(7, 20, 32, 0.82);
   color: #d9edf9;
   font: inherit;
@@ -215,7 +215,7 @@
 .settings-nav-action {
   width: 100%;
   border: 1px solid rgba(100, 171, 191, 0.34);
-  border-radius: 11px;
+  border-radius: var(--ui-radius);
   background: linear-gradient(
     152deg,
     rgba(10, 33, 48, 0.76),

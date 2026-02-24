@@ -1,4 +1,4 @@
-@use "@/styles/abstracts/breakpoints" as bp;
+@use "../abstracts/breakpoints" as bp;
 
 .agent-aura-overlay-backdrop {
   position: fixed;
@@ -15,7 +15,7 @@
   width: min(1220px, 100%);
   max-height: calc(100dvh - 24px - var(--desktop-drag-strip));
   border: 1px solid var(--border);
-  border-radius: calc(var(--card-radius) + 2px);
+  border-radius: var(--ui-radius);
   overflow: auto;
   background: linear-gradient(162deg, var(--surface-strong), var(--surface));
   box-shadow: var(--shadow);
@@ -50,7 +50,7 @@
 .agent-aura-overlay-close {
   min-width: 72px;
   height: 34px;
-  border-radius: 10px;
+  border-radius: var(--ui-radius);
   border: 1px solid var(--border);
   background: var(--surface);
   color: var(--text);

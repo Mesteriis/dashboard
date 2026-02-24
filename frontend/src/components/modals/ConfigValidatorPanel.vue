@@ -152,7 +152,7 @@ defineExpose({ clear });
 .config-validator {
   background: var(--surface, rgba(255, 255, 255, 0.04));
   border: 1px solid var(--border, rgba(255, 255, 255, 0.08));
-  border-radius: 12px;
+  border-radius: var(--ui-radius);
   padding: 20px;
   margin-bottom: 20px;
 }
@@ -176,7 +176,7 @@ defineExpose({ clear });
   background: var(--accent, #2dd4bf);
   color: #000;
   border: none;
-  border-radius: 6px;
+  border-radius: var(--ui-radius);
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
@@ -204,7 +204,7 @@ defineExpose({ clear });
   padding: 12px;
   background: rgba(0, 0, 0, 0.3);
   border: 1px solid var(--border, rgba(255, 255, 255, 0.08));
-  border-radius: 8px;
+  border-radius: var(--ui-radius);
   color: var(--text-primary, #e5e7eb);
   font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
   font-size: 13px;
@@ -219,7 +219,7 @@ defineExpose({ clear });
 
 .validation-result {
   padding: 16px;
-  border-radius: 8px;
+  border-radius: var(--ui-radius);
   border: 1px solid;
 }
 
@@ -274,13 +274,13 @@ defineExpose({ clear });
   gap: 8px;
   padding: 8px 12px;
   background: rgba(0, 0, 0, 0.2);
-  border-radius: 6px;
+  border-radius: var(--ui-radius);
   font-size: 13px;
 }
 
 .issue-type {
   padding: 2px 8px;
-  border-radius: 4px;
+  border-radius: var(--ui-radius);
   font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
@@ -318,7 +318,7 @@ defineExpose({ clear });
   background: var(--accent, #2dd4bf);
   color: #000;
   border: none;
-  border-radius: 6px;
+  border-radius: var(--ui-radius);
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
@@ -336,7 +336,7 @@ defineExpose({ clear });
   padding: 12px;
   background: rgba(239, 68, 68, 0.1);
   border: 1px solid rgba(239, 68, 68, 0.3);
-  border-radius: 8px;
+  border-radius: var(--ui-radius);
 }
 
 .error-icon {

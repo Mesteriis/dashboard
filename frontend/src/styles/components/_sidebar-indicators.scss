@@ -36,7 +36,7 @@
 
 .sidebar-indicator {
   border: 1px solid var(--border);
-  border-radius: 14px;
+  border-radius: var(--ui-radius);
   padding: 12px;
   background: linear-gradient(
     152deg,

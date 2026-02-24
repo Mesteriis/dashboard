@@ -21,7 +21,7 @@
 .ui-table__filter {
   width: 100%;
   border: 1px solid rgba(118, 176, 201, 0.34);
-  border-radius: 10px;
+  border-radius: var(--ui-radius);
   background: linear-gradient(160deg, rgba(11, 27, 40, 0.82), rgba(8, 20, 31, 0.86));
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.04),

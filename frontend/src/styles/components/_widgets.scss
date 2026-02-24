@@ -43,7 +43,7 @@
 
 .widget-list li {
   border: 1px solid rgba(129, 166, 184, 0.2);
-  border-radius: 10px;
+  border-radius: var(--ui-radius);
   background: rgba(8, 18, 29, 0.55);
   padding: 8px 10px;
   display: flex;
