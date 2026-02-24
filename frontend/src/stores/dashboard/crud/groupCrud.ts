@@ -53,7 +53,11 @@ export function createDashboardCrudGroups(ctx: any) {
     const description = String(options.description || "").trim();
 
     return applyConfigMutation((cfg: DashboardConfig) => {
-      const groupIds = new Set((cfg.groups || []).map((group) => group.id));
+      const groupIds = new Set(
+        (cfg.groups || [])
+          .map((group) => String(group?.id || "").trim())
+          .filter(Boolean),
+      );
       const subgroupIds = allSubgroupIdsInConfig(cfg);
       const itemIds = allItemIdsInConfig(cfg);
 

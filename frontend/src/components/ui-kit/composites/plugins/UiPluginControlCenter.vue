@@ -1,171 +1,173 @@
 <template>
-  <section class="plugins-panel-layout">
-    <aside class="sidebar plugins-panel-nav">
-      <div
-        id="sidebar-particles"
-        class="sidebar-particles"
-        aria-hidden="true"
-      ></div>
+  <UiBlankLayout
+    class="plugins-panel-layout"
+    :emblem-src="EMBLEM_SRC"
+    :sidebar-hidden="isSidebarHidden"
+    :sidebar-particles-id="SIDEBAR_PARTICLES_ID"
+    canvas-aria-label="Plugin center content"
+  >
+    <template v-slot:[SLOT_APP_SIDEBAR_TOP]>
+      <header class="plugins-panel-brand">
+        <img :src="EMBLEM_SRC" alt="" aria-hidden="true" />
+        <div>
+          <p class="plugins-panel-brand-kicker">Oko Platform</p>
+          <h1>Plugin Center</h1>
+          <p class="plugins-panel-brand-note">
+            Manage extensions and capabilities
+          </p>
+        </div>
+      </header>
+    </template>
 
-      <div class="sidebar-content plugins-panel-sidebar-content">
-        <header class="plugins-panel-brand">
-          <img :src="EMBLEM_SRC" alt="" aria-hidden="true" />
-          <div>
-            <p class="plugins-panel-brand-kicker">Oko Platform</p>
-            <h1>Plugin Center</h1>
-            <p class="plugins-panel-brand-note">
-              Manage extensions and capabilities
-            </p>
-          </div>
-        </header>
-
-        <nav
-          class="plugins-panel-nav-links"
-          aria-label="Разделы панели плагинов"
+    <template v-slot:[SLOT_APP_SIDEBAR_MIDDLE]>
+      <nav
+        class="plugins-panel-nav-links"
+        aria-label="Разделы панели плагинов"
+      >
+        <button
+          class="plugins-panel-nav-link"
+          :class="{ active: activeTab === 'installed' }"
+          type="button"
+          :aria-current="activeTab === 'installed' ? 'page' : undefined"
+          @click="setActiveTab('installed')"
         >
-          <button
-            class="plugins-panel-nav-link"
-            :class="{ active: activeTab === 'installed' }"
-            type="button"
-            :aria-current="activeTab === 'installed' ? 'page' : undefined"
-            @click="setActiveTab('installed')"
-          >
-            <Package class="ui-icon" />
-            <span>Установленные плагины</span>
-            <strong>{{ installedPlugins.length }}</strong>
-          </button>
-
-          <button
-            class="plugins-panel-nav-link"
-            :class="{ active: activeTab === 'store' }"
-            type="button"
-            :aria-current="activeTab === 'store' ? 'page' : undefined"
-            @click="setActiveTab('store')"
-          >
-            <Store class="ui-icon" />
-            <span>Store</span>
-            <strong>soon</strong>
-          </button>
-
-          <button
-            class="plugins-panel-nav-link"
-            :class="{ active: activeTab === 'settings' }"
-            type="button"
-            :aria-current="activeTab === 'settings' ? 'page' : undefined"
-            @click="setActiveTab('settings')"
-          >
-            <Settings class="ui-icon" />
-            <span>Settings</span>
-            <strong>beta</strong>
-          </button>
-        </nav>
-
-        <section
-          class="plugins-install-actions"
-          aria-label="Установка плагинов"
-        >
-          <input
-            ref="zipInputRef"
-            class="plugins-install-zip-input"
-            type="file"
-            accept=".zip,application/zip"
-            @change="handleZipInputChange"
-          />
-
-          <button
-            class="plugins-install-btn"
-            type="button"
-            @click="handleInstallZipClick"
-          >
-            <FileArchive class="ui-icon" />
-            <span>Установить ZIP</span>
-          </button>
-
-          <button
-            class="plugins-install-btn"
-            type="button"
-            @click="handleInstallGithubLinkClick"
-          >
-            <Github class="ui-icon" />
-            <span>Установить GitHub link</span>
-          </button>
-        </section>
+          <Package class="ui-icon" />
+          <span>Установленные плагины</span>
+          <strong>{{ installedPlugins.length }}</strong>
+        </button>
 
         <button
-          class="ghost plugins-panel-back"
+          class="plugins-panel-nav-link"
+          :class="{ active: activeTab === 'store' }"
           type="button"
-          title="Вернуться в Dashboard"
-          aria-label="Вернуться в Dashboard"
-          @click="emitClose"
+          :aria-current="activeTab === 'store' ? 'page' : undefined"
+          @click="setActiveTab('store')"
         >
-          <ArrowLeft class="ui-icon" />
-          <span>Назад в Dashboard</span>
+          <Store class="ui-icon" />
+          <span>Store</span>
+          <strong>soon</strong>
         </button>
-      </div>
-    </aside>
 
-    <main class="panel plugins-panel-main">
-      <HeroGlassTabsShell :emblem-src="EMBLEM_SRC">
-        <nav
-          class="hero-page-tabs plugins-main-tabs"
-          :class="{ 'has-logo-tile': showLogoTile }"
-          role="tablist"
-          aria-label="Вкладки панели плагинов"
+        <button
+          class="plugins-panel-nav-link"
+          :class="{ active: activeTab === 'settings' }"
+          type="button"
+          :aria-current="activeTab === 'settings' ? 'page' : undefined"
+          @click="setActiveTab('settings')"
         >
-          <div v-if="showLogoTile" class="hero-logo-square" aria-hidden="true">
-            <img :src="EMBLEM_SRC" alt="" />
-          </div>
+          <Settings class="ui-icon" />
+          <span>Settings</span>
+          <strong>beta</strong>
+        </button>
+      </nav>
 
-          <button
-            class="hero-page-tab-btn"
-            :class="{ active: activeTab === 'installed' }"
-            type="button"
-            role="tab"
-            :aria-selected="activeTab === 'installed'"
-            @click="setActiveTab('installed')"
-          >
-            <Package class="ui-icon hero-page-tab-icon" />
-            <span class="hero-page-tab-label">Установленные плагины</span>
-          </button>
+      <section
+        class="plugins-install-actions"
+        aria-label="Установка плагинов"
+      >
+        <input
+          ref="zipInputRef"
+          class="plugins-install-zip-input"
+          type="file"
+          accept=".zip,application/zip"
+          @change="handleZipInputChange"
+        />
 
-          <button
-            class="hero-page-tab-btn"
-            :class="{ active: activeTab === 'store' }"
-            type="button"
-            role="tab"
-            :aria-selected="activeTab === 'store'"
-            @click="setActiveTab('store')"
-          >
-            <Store class="ui-icon hero-page-tab-icon" />
-            <span class="hero-page-tab-label">Store</span>
-          </button>
+        <button
+          class="plugins-install-btn"
+          type="button"
+          @click="handleInstallZipClick"
+        >
+          <FileArchive class="ui-icon" />
+          <span>Установить ZIP</span>
+        </button>
 
-          <button
-            class="hero-page-tab-btn"
-            :class="{ active: activeTab === 'settings' }"
-            type="button"
-            role="tab"
-            :aria-selected="activeTab === 'settings'"
-            @click="setActiveTab('settings')"
-          >
-            <Settings class="ui-icon hero-page-tab-icon" />
-            <span class="hero-page-tab-label">Settings</span>
-          </button>
-        </nav>
+        <button
+          class="plugins-install-btn"
+          type="button"
+          @click="handleInstallGithubLinkClick"
+        >
+          <Github class="ui-icon" />
+          <span>Установить GitHub link</span>
+        </button>
+      </section>
+    </template>
 
-        <template #actions>
-          <button
-            class="ghost plugins-panel-close"
-            type="button"
-            title="Закрыть"
-            aria-label="Закрыть"
-            @click="emitClose"
-          >
-            <X class="ui-icon" />
-          </button>
-        </template>
-      </HeroGlassTabsShell>
+    <template v-slot:[SLOT_APP_SIDEBAR_BOTTOM]>
+      <button
+        class="ghost plugins-panel-back"
+        type="button"
+        title="Вернуться в Dashboard"
+        aria-label="Вернуться в Dashboard"
+        @click="emitClose"
+      >
+        <ArrowLeft class="ui-icon" />
+        <span>Назад в Dashboard</span>
+      </button>
+    </template>
 
+    <template v-slot:[SLOT_APP_HEADER_TABS]>
+      <nav
+        class="hero-page-tabs plugins-main-tabs"
+        :class="{ 'has-logo-tile': showLogoTile }"
+        role="tablist"
+        aria-label="Вкладки панели плагинов"
+      >
+        <div v-if="showLogoTile" class="hero-logo-square" aria-hidden="true">
+          <img :src="EMBLEM_SRC" alt="" />
+        </div>
+
+        <button
+          class="hero-page-tab-btn"
+          :class="{ active: activeTab === 'installed' }"
+          type="button"
+          role="tab"
+          :aria-selected="activeTab === 'installed'"
+          @click="setActiveTab('installed')"
+        >
+          <Package class="ui-icon hero-page-tab-icon" />
+          <span class="hero-page-tab-label">Установленные плагины</span>
+        </button>
+
+        <button
+          class="hero-page-tab-btn"
+          :class="{ active: activeTab === 'store' }"
+          type="button"
+          role="tab"
+          :aria-selected="activeTab === 'store'"
+          @click="setActiveTab('store')"
+        >
+          <Store class="ui-icon hero-page-tab-icon" />
+          <span class="hero-page-tab-label">Store</span>
+        </button>
+
+        <button
+          class="hero-page-tab-btn"
+          :class="{ active: activeTab === 'settings' }"
+          type="button"
+          role="tab"
+          :aria-selected="activeTab === 'settings'"
+          @click="setActiveTab('settings')"
+        >
+          <Settings class="ui-icon hero-page-tab-icon" />
+          <span class="hero-page-tab-label">Settings</span>
+        </button>
+      </nav>
+    </template>
+
+    <template v-slot:[SLOT_APP_HEADER_ACTIONS]>
+      <button
+        class="ghost plugins-panel-close"
+        type="button"
+        title="Закрыть"
+        aria-label="Закрыть"
+        @click="emitClose"
+      >
+        <X class="ui-icon" />
+      </button>
+    </template>
+
+    <template v-slot:[SLOT_PAGE_CANVAS_MAIN]>
       <section
         v-if="activeTab === 'installed'"
         class="plugins-panel-content plugins-main-surface"
@@ -252,76 +254,78 @@
           </div>
         </section>
       </section>
-    </main>
-  </section>
+    </template>
 
-  <BaseModal
-    :open="githubInstallModal.open"
-    backdrop-class="plugins-github-modal-backdrop"
-    modal-class="plugins-github-modal"
-    @backdrop="closeGithubInstallModal"
-  >
-    <header class="plugins-github-modal-head">
-      <div>
-        <h3>Установка из GitHub</h3>
-        <p>Вставьте ссылку на репозиторий плагина.</p>
-      </div>
-      <button
-        class="ghost plugins-github-modal-close"
-        type="button"
-        aria-label="Закрыть окно установки из GitHub"
-        @click="closeGithubInstallModal"
+    <template v-slot:[SLOT_APP_MODALS]>
+      <UiBaseModal
+        :open="githubInstallModal.open"
+        backdrop-class="plugins-github-modal-backdrop"
+        modal-class="plugins-github-modal"
+        @backdrop="closeGithubInstallModal"
       >
-        <X class="ui-icon" />
-      </button>
-    </header>
+        <header class="plugins-github-modal-head">
+          <div>
+            <h3>Установка из GitHub</h3>
+            <p>Вставьте ссылку на репозиторий плагина.</p>
+          </div>
+          <button
+            class="ghost plugins-github-modal-close"
+            type="button"
+            aria-label="Закрыть окно установки из GitHub"
+            @click="closeGithubInstallModal"
+          >
+            <X class="ui-icon" />
+          </button>
+        </header>
 
-    <label class="plugins-github-field">
-      <Github class="ui-icon plugins-github-field-icon" />
-      <input
-        ref="githubInputRef"
-        v-model.trim="githubInstallModal.link"
-        type="text"
-        autocomplete="off"
-        spellcheck="false"
-        placeholder="https://github.com/owner/repo"
-        @keydown.enter.prevent="checkGithubLink"
-      />
-    </label>
+        <label class="plugins-github-field">
+          <Github class="ui-icon plugins-github-field-icon" />
+          <input
+            ref="githubInputRef"
+            v-model.trim="githubInstallModal.link"
+            type="text"
+            autocomplete="off"
+            spellcheck="false"
+            placeholder="https://github.com/owner/repo"
+            @keydown.enter.prevent="checkGithubLink"
+          />
+        </label>
 
-    <p
-      v-if="githubInstallModal.message"
-      class="plugins-github-status"
-      :class="{
-        ok: githubInstallModal.status === 'ok',
-        error: githubInstallModal.status === 'error',
-      }"
-      role="status"
-      aria-live="polite"
-    >
-      {{ githubInstallModal.message }}
-    </p>
+        <p
+          v-if="githubInstallModal.message"
+          class="plugins-github-status"
+          :class="{
+            ok: githubInstallModal.status === 'ok',
+            error: githubInstallModal.status === 'error',
+          }"
+          role="status"
+          aria-live="polite"
+        >
+          {{ githubInstallModal.message }}
+        </p>
 
-    <div class="plugins-github-actions">
-      <button class="ghost" type="button" @click="closeGithubInstallModal">
-        Отмена
-      </button>
-      <button
-        class="plugins-github-check-btn"
-        type="button"
-        @click="checkGithubLink"
-      >
-        Проверить
-      </button>
-      <button
-        class="plugins-github-install-btn"
-        type="button"
-        @click="submitGithubInstall"
-      >
-        Установить
-      </button>
-    </div>
-  </BaseModal>
+        <div class="plugins-github-actions">
+          <button class="ghost" type="button" @click="closeGithubInstallModal">
+            Отмена
+          </button>
+          <button
+            class="plugins-github-check-btn"
+            type="button"
+            @click="checkGithubLink"
+          >
+            Проверить
+          </button>
+          <button
+            class="plugins-github-install-btn"
+            type="button"
+            @click="submitGithubInstall"
+          >
+            Установить
+          </button>
+        </div>
+      </UiBaseModal>
+    </template>
+  </UiBlankLayout>
 </template>
 
 <script setup lang="ts">
@@ -335,9 +339,10 @@ import {
   Store,
   X,
 } from "lucide-vue-next";
-import BaseModal from "@/components/primitives/BaseModal.vue";
-import HeroGlassTabsShell from "@/components/primitives/HeroGlassTabsShell.vue";
-import { useDashboardStore } from "@/stores/dashboardStore";
+import UiBaseModal from "@/components/ui-kit/primitives/UiBaseModal.vue";
+import UiBlankLayout from "@/components/ui-kit/primitives/UiBlankLayout.vue";
+import { SIDEBAR_PARTICLES_ID } from "@/stores/ui/storeConstants";
+import { useUiStore } from "@/stores/uiStore";
 
 type PluginPanelTab = "installed" | "store" | "settings";
 
@@ -363,7 +368,14 @@ const emit = defineEmits<{
   openPlugin: [pluginId: string];
 }>();
 
-const dashboard = useDashboardStore();
+const SLOT_APP_SIDEBAR_TOP = "app.sidebar.top";
+const SLOT_APP_SIDEBAR_MIDDLE = "app.sidebar.middle";
+const SLOT_APP_SIDEBAR_BOTTOM = "app.sidebar.bottom";
+const SLOT_APP_HEADER_TABS = "app.header.tabs";
+const SLOT_APP_HEADER_ACTIONS = "app.header.actions";
+const SLOT_PAGE_CANVAS_MAIN = "page.canvas.main";
+const SLOT_APP_MODALS = "app.modals";
+const dashboard = useUiStore();
 const { EMBLEM_SRC, config, initSidebarParticles, isSidebarHidden } = dashboard;
 const zipInputRef = ref<HTMLInputElement | null>(null);
 const githubInputRef = ref<HTMLInputElement | null>(null);

@@ -544,7 +544,13 @@ export function createDashboardStore(
   const widgetById = computed(() => {
     const map = new Map<string, DashboardWidgetResolved>();
     for (const widget of widgets.value) {
-      map.set(widget.id, widget);
+      const rawId = widget.id;
+      const normalizedId = String(rawId || "");
+      if (normalizedId) {
+        map.set(normalizedId, widget);
+      }
+      if (typeof rawId === "string") continue;
+      map.set(rawId as unknown as string, widget);
     }
     return map;
   });
@@ -552,7 +558,13 @@ export function createDashboardStore(
   const groupById = computed(() => {
     const map = new Map<string, DashboardGroup>();
     for (const group of config.value?.groups || []) {
-      map.set(group.id, group);
+      const rawId = group.id;
+      const normalizedId = String(rawId || "");
+      if (normalizedId) {
+        map.set(normalizedId, group);
+      }
+      if (typeof rawId === "string") continue;
+      map.set(rawId as unknown as string, group);
     }
     return map;
   });
@@ -564,7 +576,13 @@ export function createDashboardStore(
     >();
     for (const group of config.value?.groups || []) {
       for (const subgroup of group.subgroups || []) {
-        map.set(subgroup.id, { group, subgroup });
+        const rawId = subgroup.id;
+        const normalizedId = String(rawId || "");
+        if (normalizedId) {
+          map.set(normalizedId, { group, subgroup });
+        }
+        if (typeof rawId === "string") continue;
+        map.set(rawId as unknown as string, { group, subgroup });
       }
     }
     return map;
@@ -613,8 +631,10 @@ export function createDashboardStore(
       for (const block of page.blocks || []) {
         if (block?.type !== "groups") continue;
         for (const blockGroupId of block.group_ids || []) {
-          if (!map.has(blockGroupId)) {
-            map.set(blockGroupId, page.id);
+          const normalizedGroupId = String(blockGroupId || "").trim();
+          if (!normalizedGroupId) continue;
+          if (!map.has(normalizedGroupId)) {
+            map.set(normalizedGroupId, String(page.id || ""));
           }
         }
       }
@@ -791,7 +811,9 @@ export function createDashboardStore(
 
   const activePage = computed(
     () =>
-      pages.value.find((page) => page.id === activePageId.value) ||
+      pages.value.find(
+        (page) => String(page.id || "") === String(activePageId.value || ""),
+      ) ||
       pages.value[0] ||
       null,
   );
@@ -991,6 +1013,12 @@ export function createDashboardStore(
     return activePageWidgetIds.value.includes(widget.id) ? widget : null;
   });
 
+  function clearSelectedNodeState(): void {
+    selectedNode.groupKey = "";
+    selectedNode.subgroupId = "";
+    selectedNode.itemId = "";
+  }
+
   const sectionCtx: any = {
     EVENTS_STREAM_PATH,
     EVENT_STREAM_RECONNECT_MS,
@@ -1001,7 +1029,10 @@ export function createDashboardStore(
     activeIndicatorViewId,
     activePageId,
     actionBusy,
+    allItemIdsInConfig,
+    allSubgroupIdsInConfig,
     authProfileOptions,
+    clearSelectedNode: clearSelectedNodeState,
     commandPaletteActiveIndex,
     commandPaletteOpen,
     commandPaletteQuery,
@@ -1021,9 +1052,12 @@ export function createDashboardStore(
     errorMessage,
     expandedGroups,
     fetchDashboardConfig,
+    findGroupInConfig,
+    findSubgroupInConfig,
     groupById,
     healthStates,
     iframeModal,
+    isDirectGroupNode,
     isDocumentVisible,
     isSidebarDetailed,
     isSidebarHidden,
@@ -1035,6 +1069,7 @@ export function createDashboardStore(
     moveItemBeforeInConfig,
     moveItemToSubgroupEndInConfig,
     moveSubgroupInConfig,
+    makeUniqueId,
     normalizeId,
     normalizeLayoutBlocksInConfig,
     pages,

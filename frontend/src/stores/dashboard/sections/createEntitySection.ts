@@ -9,11 +9,19 @@ import type {
 export function createDashboardCreateEntitySection(ctx: any) {
   function resolveDefaultDashboardId(preferredDashboardId = ""): string {
     const normalized = String(preferredDashboardId || "").trim();
-    if (normalized && ctx.pages.value.some((page: any) => page.id === normalized)) {
+    if (
+      normalized &&
+      ctx.pages.value.some(
+        (page: any) => String(page?.id || "") === normalized,
+      )
+    ) {
       return normalized;
     }
     const activeId = String(ctx.activePageId.value || "").trim();
-    if (activeId && ctx.pages.value.some((page: any) => page.id === activeId)) {
+    if (
+      activeId &&
+      ctx.pages.value.some((page: any) => String(page?.id || "") === activeId)
+    ) {
       return activeId;
     }
     return String(ctx.pages.value[0]?.id || "");
@@ -68,16 +76,17 @@ export function createDashboardCreateEntitySection(ctx: any) {
     }
     const normalized = String(preferredSubgroupId || "").trim();
     const hasExplicit = (group.subgroups || []).some(
-      (subgroup: any) => subgroup.id === normalized,
+      (subgroup: any) => String(subgroup?.id || "") === normalized,
     );
     if (hasExplicit) {
       return normalized;
     }
     const hasSelected = (group.subgroups || []).some(
-      (subgroup: any) => subgroup.id === ctx.selectedNode.subgroupId,
+      (subgroup: any) =>
+        String(subgroup?.id || "") === String(ctx.selectedNode.subgroupId || ""),
     );
     if (hasSelected) {
-      return ctx.selectedNode.subgroupId;
+      return String(ctx.selectedNode.subgroupId || "");
     }
     return String(group.subgroups?.[0]?.id || "");
   }

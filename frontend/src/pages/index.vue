@@ -1,7 +1,7 @@
 <template>
-  <DashboardShellView />
+  <UiHomePageFacade />
 </template>
 
 <script setup lang="ts">
-import DashboardShellView from "@/views/DashboardShellView.vue";
+import UiHomePageFacade from "@/components/ui-kit/facades/pages/UiHomePageFacade.vue";
 </script>

@@ -69,7 +69,7 @@
 <script setup lang="ts">
 import { GripVertical, Pencil, Plus, Trash2 } from "lucide-vue-next";
 import { useDashboardStore } from "@/stores/dashboardStore";
-import SidebarTreeItemNode from "@/components/sidebar/SidebarTreeItemNode.vue";
+import SidebarTreeItemNode from "@/components/ui-kit/composites/dashboard/UiSidebarTreeItemNode.vue";
 
 defineProps({
   group: { type: Object, required: true },

@@ -20,7 +20,7 @@
         />
       </label>
 
-      <HeroDropdown
+      <UiHeroDropdown
         v-if="showSiteFilter"
         class="sidebar-nav-filter-dropdown"
         :model-value="siteFilter"
@@ -35,7 +35,7 @@
             <span class="sidebar-nav-filter-label">Site</span>
           </span>
         </template>
-      </HeroDropdown>
+      </UiHeroDropdown>
     </div>
   </div>
 </template>
@@ -43,7 +43,7 @@
 <script setup lang="ts">
 import { computed, watch } from "vue";
 import { Filter, Search } from "lucide-vue-next";
-import HeroDropdown from "@/components/primitives/HeroDropdown.vue";
+import UiHeroDropdown from "@/components/ui-kit/primitives/UiHeroDropdown.vue";
 import { useDashboardStore } from "@/stores/dashboardStore";
 
 const dashboard = useDashboardStore();

@@ -16,7 +16,7 @@ export function createDashboardTreeSelectionSection(ctx: any) {
     const subgroupRef = ctx.subgroupById.value.get(subgroupId);
     if (subgroupRef) {
       return (
-        ctx.pageByBlockGroupId.value.get(subgroupRef.group.id) ||
+        ctx.pageByBlockGroupId.value.get(String(subgroupRef.group.id || "")) ||
         ctx.pageByBlockGroupId.value.get(subgroupId) ||
         ""
       );
@@ -27,11 +27,17 @@ export function createDashboardTreeSelectionSection(ctx: any) {
   function activatePageForGroupKey(groupKey: string): void {
     const pageId = resolvePageForGroupKey(groupKey);
     if (!pageId) return;
-    if (!ctx.pages.value.some((page: any) => page.id === pageId)) return;
-    if (ctx.activePageId.value !== pageId) {
+    if (
+      !ctx.pages.value.some(
+        (page: any) => String(page?.id || "") === String(pageId || ""),
+      )
+    ) {
+      return;
+    }
+    if (String(ctx.activePageId.value || "") !== String(pageId || "")) {
       ctx.preserveTreeSelectionOnPageSwitch = true;
     }
-    ctx.activePageId.value = pageId;
+    ctx.activePageId.value = String(pageId || "");
   }
 
   function toggleGroupNode(groupKey: string): void {

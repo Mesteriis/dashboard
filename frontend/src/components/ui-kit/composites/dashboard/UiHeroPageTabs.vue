@@ -1,83 +1,59 @@
 <template>
-  <UiHeroPanel controls-class="hero-control-panel--menu service-hero-controls">
-    <template #title>
-      <nav
-        ref="tabsRef"
-        class="hero-page-tabs hero-page-tabs--js-smooth"
+  <nav
+    ref="tabsRef"
+    class="hero-page-tabs"
+    :class="{
+      'hero-page-tabs--js-smooth': !homeOnly,
+      'hero-page-tabs--intro': !homeOnly && shouldPlayIntro,
+      'has-logo-tile': showLogoTile,
+    }"
+    :aria-label="homeOnly ? 'Навигация' : 'Разделы'"
+    :role="homeOnly ? undefined : 'tablist'"
+  >
+    <div v-if="showLogoTile" class="hero-logo-square" aria-hidden="true">
+      <img :src="EMBLEM_SRC" alt="" />
+    </div>
+
+    <template v-if="homeOnly">
+      <button
+        v-if="homePage"
+        class="hero-page-tab-btn hero-page-tab-btn--home"
+        :class="{ active: isPageActive(homePage) }"
+        type="button"
+        :title="homeButtonTitle"
+        :aria-label="homeButtonTitle"
+        @click="openHomePage"
+      >
+        <House class="ui-icon hero-page-tab-icon" />
+      </button>
+    </template>
+
+    <template v-else>
+      <button
+        v-for="page in pages"
+        :key="page.id"
+        class="hero-page-tab-btn"
+        :data-page-id="pageIdKey(page.id)"
         :class="{
-          'hero-page-tabs--intro': shouldPlayIntro,
-          'has-logo-tile': showLogoTile,
+          active: isPageActive(page),
+          'hero-page-tab-btn--intro-active':
+            shouldPlayIntro && isPageActive(page),
         }"
-        role="tablist"
-        aria-label="Разделы blank страницы"
+        type="button"
+        role="tab"
+        :title="page.title"
+        :aria-label="page.title"
+        :aria-selected="isPageActive(page)"
+        @click="activatePage(page.id)"
       >
-        <div v-if="showLogoTile" class="hero-logo-square" aria-hidden="true">
-          <img :src="EMBLEM_SRC" alt="" />
-        </div>
-
-        <button
-          v-for="tab in demoTabs"
-          :key="tab.id"
-          :id="`blank-tab-${tab.id}`"
-          class="hero-page-tab-btn"
-          :data-page-id="tab.id"
-          :class="{
-            active: activeTabId === tab.id,
-            'hero-page-tab-btn--intro-active':
-              shouldPlayIntro && activeTabId === tab.id,
-          }"
-          type="button"
-          role="tab"
-          :title="tab.label"
-          :aria-label="tab.label"
-          :aria-selected="activeTabId === tab.id"
-          :tabindex="activeTabId === tab.id ? 0 : -1"
-          :aria-controls="`blank-panel-${tab.id}`"
-          @click="activeTabId = tab.id"
-        >
-          <component :is="tab.icon" class="ui-icon hero-page-tab-icon" />
-          <span class="hero-page-tab-label">{{ tab.label }}</span>
-        </button>
-      </nav>
+        <component
+          :is="resolvePageIcon(page)"
+          class="ui-icon hero-page-tab-icon"
+        />
+        <span class="hero-page-tab-label">{{ page.title }}</span>
+      </button>
     </template>
-
-    <template #controls>
-      <UiHeroControlsAccordion
-        drawer-id="blank-hero-controls-drawer"
-        :storage-key="heroControlsStorageKey"
-        :initial-open="resolvedHeroControlsOpen"
-        @open-change="handleHeroControlsOpenChange"
-      >
-        <template #drawer>
-          <IconButton
-            button-class="hero-icon-btn hero-accordion-action"
-            :active="!isSidebarDetailed"
-            :title="sidebarViewToggleTitle"
-            :aria-label="sidebarViewToggleTitle"
-            @click="handleSidebarToggle"
-          >
-            <FolderTree class="ui-icon hero-action-icon" />
-          </IconButton>
-        </template>
-
-        <template #actions>
-          <UiDropdownMenu
-            class="hero-action-menu"
-            aria-label="Системное меню"
-            :items="systemActions"
-            :show-caret="false"
-            trigger-class="hero-icon-btn hero-accordion-action hero-system-menu-trigger"
-            item-class="hero-system-menu-item"
-            @action="handleSystemAction"
-          >
-            <template #trigger>
-              <Lock class="ui-icon hero-action-icon" />
-            </template>
-          </UiDropdownMenu>
-        </template>
-      </UiHeroControlsAccordion>
-    </template>
-  </UiHeroPanel>
+  </nav>
 </template>
 
 <script setup lang="ts">
@@ -88,103 +64,50 @@ import {
   onMounted,
   ref,
   watch,
-  type Component,
 } from "vue";
-import { useRoute } from "vue-router";
-import { FolderTree, Lock } from "lucide-vue-next";
-import IconButton from "@/components/primitives/IconButton.vue";
-import UiHeroControlsAccordion from "@/components/primitives/UiHeroControlsAccordion.vue";
-import UiHeroPanel from "@/components/primitives/UiHeroPanel.vue";
-import UiDropdownMenu from "@/components/ui-kit/primitives/UiDropdownMenu.vue";
-import { openPleiadOverlay } from "@/core/navigation/nav";
-import { getRuntimeProfile } from "@/services/desktopRuntime";
+import { House } from "lucide-vue-next";
 import { useDashboardStore } from "@/stores/dashboardStore";
-
-type BlankTabId = "overview" | "operations";
-type BlankTabDefinition = {
-  id: BlankTabId;
-  label: string;
-  icon: Component;
-};
 
 const props = withDefaults(
   defineProps<{
-    modelValue?: BlankTabId;
-    heroControlsOpen?: boolean;
+    variant?: "full" | "home";
   }>(),
   {
-    modelValue: "overview",
-    heroControlsOpen: true,
+    variant: "full",
   },
 );
 
-const emit = defineEmits<{
-  "update:modelValue": [tabId: BlankTabId];
-  "update:heroControlsOpen": [value: boolean];
-}>();
+let hasPlayedHeroTabsIntro = false;
 
-let hasPlayedBlankTabsIntro = false;
-const route = useRoute();
 const dashboard = useDashboardStore();
 const {
   EMBLEM_SRC,
   isSidebarHidden,
-  isSidebarDetailed,
-  openSettingsPanel,
-  sidebarView,
-  sidebarViewToggleTitle,
-  toggleSidebarView,
+  pages,
+  activePage,
+  activePageId,
+  resolvePageIcon,
 } = dashboard;
-const demoTabs: BlankTabDefinition[] = [
-  { id: "overview", label: "Обзор пространства", icon: FolderTree },
-  { id: "operations", label: "Оперативный контур", icon: Lock },
-];
-const tabsRef = ref<HTMLElement | null>(null);
-const shouldPlayIntro = ref(!hasPlayedBlankTabsIntro);
-
-type SystemActionId = "kiosk" | "profile" | "pleiad_lock" | "exit";
-
-const systemActions: Array<{
-  id: SystemActionId;
-  label: string;
-  danger?: boolean;
-}> = [
-  { id: "kiosk", label: "Режим киоска" },
-  { id: "profile", label: "Профиль" },
-  { id: "pleiad_lock", label: "Блокировка -> Плияды" },
-  { id: "exit", label: "Выход", danger: true },
-];
-
-const heroControlsStorageKey = computed(() => {
-  const rawPath = String(route.path || "/").trim();
-  const normalizedPath = rawPath.length > 1 && rawPath.endsWith("/")
-    ? rawPath.slice(0, -1)
-    : rawPath;
-  return `oko:hero-controls-open:${normalizedPath || "/"}`;
-});
+const shouldPlayIntro = ref(!hasPlayedHeroTabsIntro);
 const showLogoTile = computed(() => isSidebarHidden.value);
-const resolvedHeroControlsOpen = computed(() => Boolean(props.heroControlsOpen));
-const tabIdsSignature = computed(() => demoTabs.map((tab) => tab.id).join("|"));
-const activeTabId = computed<BlankTabId>({
-  get: () => {
-    const value = String(props.modelValue || "overview") as BlankTabId;
-    return demoTabs.some((tab) => tab.id === value) ? value : "overview";
-  },
-  set: (value) => {
-    emit("update:modelValue", value);
-  },
-});
+const homeOnly = computed(() => props.variant === "home");
+const homePage = computed(() => pages.value?.[0] || null);
+const pageIdsSignature = computed(() =>
+  (pages.value || [])
+    .map((page: { id?: unknown }) => String(page?.id || ""))
+    .join("|"),
+);
+const homeButtonTitle = computed(
+  () =>
+    `Домой${homePage.value?.title ? ` (${String(homePage.value.title)})` : ""}`,
+);
+const tabsRef = ref<HTMLElement | null>(null);
 
-function handleSidebarToggle(): void {
-  const before = sidebarView.value;
-  toggleSidebarView();
-  if (sidebarView.value !== before) return;
-  sidebarView.value = before === "hidden" ? "detailed" : "hidden";
-}
-
-function handleHeroControlsOpenChange(value: boolean): void {
-  emit("update:heroControlsOpen", value);
-}
+let introTimeoutId: number | null = null;
+let tabsAnimationFrameId: number | null = null;
+let tabsResizeFrameId: number | null = null;
+let tabsResizeObserver: ResizeObserver | null = null;
+let fallbackResizeListenerAttached = false;
 
 interface TabMetrics {
   collapsedWidth: number;
@@ -203,11 +126,23 @@ interface TabDescriptor {
   to: number;
 }
 
-let introTimeoutId: number | null = null;
-let tabsAnimationFrameId: number | null = null;
-let tabsResizeFrameId: number | null = null;
-let tabsResizeObserver: ResizeObserver | null = null;
-let fallbackResizeListenerAttached = false;
+function openHomePage(): void {
+  if (!homePage.value?.id) return;
+  activePageId.value = pageIdKey(homePage.value.id);
+}
+
+function activatePage(pageId: unknown): void {
+  activePageId.value = pageIdKey(pageId);
+}
+
+function pageIdKey(pageId: unknown): string {
+  return String(pageId || "");
+}
+
+function isPageActive(page: { id?: unknown } | null | undefined): boolean {
+  if (!page) return false;
+  return pageIdKey(page.id) === pageIdKey(activePageId.value);
+}
 
 function parseCssNumber(rawValue: unknown, fallback: number): number {
   const parsed = Number.parseFloat(String(rawValue || ""));
@@ -348,13 +283,20 @@ function easeInOutQuart(progress: number): number {
 }
 
 function animateTabsLayout({ instant = false }: { instant?: boolean } = {}): void {
+  if (homeOnly.value) return;
+
   const buttons = getTabButtons();
   if (!buttons.length) return;
 
   const metrics = resolveTabMetrics(buttons);
   if (!metrics) return;
 
-  const activeId = String(activeTabId.value || demoTabs[0]?.id || "");
+  const activeId = String(
+    pageIdKey(activePageId.value) ||
+      pageIdKey(activePage.value?.id) ||
+      pageIdKey(pages.value?.[0]?.id) ||
+      buttons[0]?.dataset?.pageId,
+  );
   let activeIndex = buttons.findIndex(
     (button) => String(button.dataset.pageId || "") === activeId,
   );
@@ -403,6 +345,7 @@ function animateTabsLayout({ instant = false }: { instant?: boolean } = {}): voi
 }
 
 function scheduleInstantTabsLayout(): void {
+  if (homeOnly.value) return;
   stopResizeSchedule();
   tabsResizeFrameId = globalThis.requestAnimationFrame(() => {
     tabsResizeFrameId = null;
@@ -410,85 +353,37 @@ function scheduleInstantTabsLayout(): void {
   });
 }
 
-async function toggleKioskMode(): Promise<void> {
-  if (typeof document === "undefined") return;
-  try {
-    if (document.fullscreenElement) {
-      await document.exitFullscreen();
-      return;
-    }
-    await document.documentElement.requestFullscreen();
-  } catch {
-    // Keep UI responsive even if fullscreen API is unavailable.
-  }
-}
-
-async function exitApp(): Promise<void> {
-  try {
-    if (getRuntimeProfile().desktop) {
-      const { getCurrentWindow } = await import("@tauri-apps/api/window");
-      await getCurrentWindow().close();
-      return;
-    }
-  } catch {
-    // Fall through to browser close attempt.
-  }
-
-  if (typeof window !== "undefined") {
-    window.close();
-  }
-}
-
-function handleSystemAction(actionId: string): void {
-  const id = actionId as SystemActionId;
-
-  if (id === "kiosk") {
-    void toggleKioskMode();
-    return;
-  }
-
-  if (id === "profile") {
-    openSettingsPanel();
-    return;
-  }
-
-  if (id === "pleiad_lock") {
-    void openPleiadOverlay("route");
-    return;
-  }
-
-  if (id === "exit") {
-    void exitApp();
-  }
-}
-
 onMounted(() => {
-  nextTick(() => {
-    animateTabsLayout({ instant: true });
-  });
-
-  if ("ResizeObserver" in globalThis) {
-    tabsResizeObserver = new globalThis.ResizeObserver(() => {
-      scheduleInstantTabsLayout();
+  if (!homeOnly.value) {
+    nextTick(() => {
+      animateTabsLayout({ instant: true });
     });
-    if (tabsRef.value) {
-      tabsResizeObserver.observe(tabsRef.value);
+
+    if ("ResizeObserver" in globalThis) {
+      tabsResizeObserver = new globalThis.ResizeObserver(() => {
+        scheduleInstantTabsLayout();
+      });
+      if (tabsRef.value) {
+        tabsResizeObserver.observe(tabsRef.value);
+      }
+    } else {
+      globalThis.addEventListener("resize", scheduleInstantTabsLayout);
+      fallbackResizeListenerAttached = true;
     }
-  } else {
-    globalThis.addEventListener("resize", scheduleInstantTabsLayout);
-    fallbackResizeListenerAttached = true;
   }
 
-  if (!shouldPlayIntro.value) return;
+  if (homeOnly.value || !shouldPlayIntro.value) return;
+
   introTimeoutId = globalThis.setTimeout(() => {
     shouldPlayIntro.value = false;
-    hasPlayedBlankTabsIntro = true;
+    hasPlayedHeroTabsIntro = true;
   }, 700);
 });
 
 watch(
-  [activeTabId, tabIdsSignature, showLogoTile],
-  async () => {
+  [() => activePage.value?.id || "", pageIdsSignature, showLogoTile, homeOnly],
+  async ([, , , isHome]) => {
+    if (isHome) return;
     await nextTick();
     animateTabsLayout({ instant: false });
   },
@@ -507,12 +402,13 @@ onBeforeUnmount(() => {
     fallbackResizeListenerAttached = false;
   }
 
+  if (homeOnly.value) return;
   if (introTimeoutId) {
     globalThis.clearTimeout(introTimeoutId);
     introTimeoutId = null;
   }
   if (shouldPlayIntro.value) {
-    hasPlayedBlankTabsIntro = true;
+    hasPlayedHeroTabsIntro = true;
   }
 });
 </script>

@@ -10,7 +10,7 @@
     @keydown.space.prevent="handleCardClick"
   >
     <template v-if="isIconCardView">
-      <IconButton
+      <UiIconButton
         v-if="editMode"
         class="item-inline-edit item-inline-edit-compact"
         title="Редактировать элемент"
@@ -18,7 +18,7 @@
         @click.stop="openEditItem"
       >
         <Pencil class="ui-icon item-action-icon" />
-      </IconButton>
+      </UiIconButton>
       <div class="item-compact-body">
         <img
           v-if="itemFaviconSrc(item)"
@@ -43,7 +43,7 @@
     </template>
 
     <template v-else-if="isTileCardView">
-      <IconButton
+      <UiIconButton
         v-if="editMode"
         class="item-inline-edit item-inline-edit-tile"
         title="Редактировать элемент"
@@ -51,7 +51,7 @@
         @click.stop="openEditItem"
       >
         <Pencil class="ui-icon item-action-icon" />
-      </IconButton>
+      </UiIconButton>
       <div class="item-tile-head">
         <img
           v-if="itemFaviconSrc(item)"
@@ -135,15 +135,15 @@
       <slot name="plugin-content" :item="serviceItem"></slot>
 
       <div class="item-actions">
-        <IconButton
+        <UiIconButton
           v-if="editMode"
           title="Редактировать элемент"
           aria-label="Редактировать элемент"
           @click.stop="openEditItem"
         >
           <Pencil class="ui-icon item-action-icon" />
-        </IconButton>
-        <IconButton
+        </UiIconButton>
+        <UiIconButton
           :title="serviceItem.type === 'iframe' ? 'Открыть iframe' : 'Открыть'"
           :aria-label="
             serviceItem.type === 'iframe' ? 'Открыть iframe' : 'Открыть'
@@ -154,14 +154,14 @@
             :is="serviceItem.type === 'iframe' ? Globe : ExternalLink"
             class="ui-icon item-action-icon"
           />
-        </IconButton>
-        <IconButton
+        </UiIconButton>
+        <UiIconButton
           title="Копировать URL"
           aria-label="Копировать URL"
           @click.stop="copyUrl(serviceItem.url)"
         >
           <Copy class="ui-icon item-action-icon" />
-        </IconButton>
+        </UiIconButton>
       </div>
     </template>
   </article>
@@ -170,8 +170,8 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref, toRef, watch } from "vue";
 import { Copy, ExternalLink, Globe, Pencil } from "lucide-vue-next";
-import IconButton from "@/components/primitives/IconButton.vue";
-import ServiceItemPluginExtensions from "@/components/main/ServiceItemPluginExtensions.vue";
+import ServiceItemPluginExtensions from "@/components/ui-kit/composites/dashboard/UiServiceItemPluginExtensions.vue";
+import UiIconButton from "@/components/ui-kit/primitives/UiIconButton.vue";
 import {
   normalizeServiceCardCore,
   type ServiceCardCoreV1,

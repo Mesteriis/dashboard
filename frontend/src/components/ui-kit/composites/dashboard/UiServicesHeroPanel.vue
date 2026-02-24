@@ -4,7 +4,7 @@
     controls-class="hero-control-panel--menu service-hero-controls"
   >
     <template #title>
-      <HeroPageTabs />
+      <UiHeroPageTabs />
     </template>
 
     <template #controls>
@@ -13,16 +13,16 @@
         :storage-key="heroControlsStorageKey"
       >
         <template #drawer>
-          <IconButton
+          <UiIconButton
             button-class="hero-icon-btn hero-accordion-action"
             title="Панель настроек"
             aria-label="Открыть панель настроек"
             @click="openSettingsPanel"
           >
             <SlidersHorizontal class="ui-icon hero-action-icon" />
-          </IconButton>
+          </UiIconButton>
 
-          <IconButton
+          <UiIconButton
             button-class="hero-icon-btn hero-accordion-action"
             :active="!isSidebarDetailed"
             :title="sidebarViewToggleTitle"
@@ -30,9 +30,9 @@
             @click="toggleSidebarView"
           >
             <FolderTree class="ui-icon hero-action-icon" />
-          </IconButton>
+          </UiIconButton>
 
-          <IconButton
+          <UiIconButton
             button-class="hero-icon-btn hero-accordion-action editor-toggle"
             :active="editMode"
             :title="
@@ -48,9 +48,9 @@
             @click="toggleEditMode"
           >
             <Pencil class="ui-icon hero-action-icon" />
-          </IconButton>
+          </UiIconButton>
 
-          <IconButton
+          <UiIconButton
             button-class="hero-icon-btn hero-accordion-action"
             :disabled="!editMode"
             title="Добавить сущность"
@@ -58,7 +58,7 @@
             @click="openCreateChooser()"
           >
             <Plus class="ui-icon hero-action-icon" />
-          </IconButton>
+          </UiIconButton>
 
           <span
             v-if="editMode"
@@ -73,14 +73,14 @@
         </template>
 
         <template #actions>
-          <IconButton
+          <UiIconButton
             button-class="hero-icon-btn hero-accordion-action hero-plugin-panel-btn"
             title="Открыть панель плагинов"
             aria-label="Открыть панель плагинов"
             @click="openPluginPanel"
           >
             <Puzzle class="ui-icon hero-action-icon" />
-          </IconButton>
+          </UiIconButton>
 
           <UiDropdownMenu
             class="hero-action-menu"
@@ -119,11 +119,11 @@ import {
   Puzzle,
   SlidersHorizontal,
 } from "lucide-vue-next";
-import HeroPageTabs from "@/components/main/HeroPageTabs.vue";
-import IconButton from "@/components/primitives/IconButton.vue";
-import UiHeroControlsAccordion from "@/components/primitives/UiHeroControlsAccordion.vue";
-import UiHeroPanel from "@/components/primitives/UiHeroPanel.vue";
+import UiHeroPageTabs from "@/components/ui-kit/composites/dashboard/UiHeroPageTabs.vue";
+import UiHeroControlsAccordion from "@/components/ui-kit/primitives/UiHeroControlsAccordion.vue";
 import UiDropdownMenu from "@/components/ui-kit/primitives/UiDropdownMenu.vue";
+import UiHeroPanel from "@/components/ui-kit/primitives/UiHeroPanel.vue";
+import UiIconButton from "@/components/ui-kit/primitives/UiIconButton.vue";
 import { goPluginsPanel, openPleiadOverlay } from "@/core/navigation/nav";
 import { getRuntimeProfile } from "@/services/desktopRuntime";
 import { useDashboardStore } from "@/stores/dashboardStore";

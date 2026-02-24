@@ -1,9 +1,9 @@
 <template>
-  <UiPrimitivesDemoView @close="handleClose" />
+  <UiKitShowcasePageFacade @close="handleClose" />
 </template>
 
 <script setup lang="ts">
-import UiPrimitivesDemoView from "@/views/UiPrimitivesDemoView.vue";
+import UiKitShowcasePageFacade from "@/components/ui-kit/facades/pages/UiKitShowcasePageFacade.vue";
 import { goDashboard } from "@/core/navigation/nav";
 
 function handleClose(): void {

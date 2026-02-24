@@ -12,9 +12,12 @@ export function createDashboardConfigLoadSection(ctx: any) {
 
       if (
         !ctx.activePageId.value ||
-        !ctx.pages.value.some((page: any) => page.id === ctx.activePageId.value)
+        !ctx.pages.value.some(
+          (page: any) =>
+            String(page?.id || "") === String(ctx.activePageId.value || ""),
+        )
       ) {
-        ctx.activePageId.value = ctx.pages.value[0]?.id || "";
+        ctx.activePageId.value = String(ctx.pages.value[0]?.id || "");
       }
 
       ctx.syncTreeGroupsState();

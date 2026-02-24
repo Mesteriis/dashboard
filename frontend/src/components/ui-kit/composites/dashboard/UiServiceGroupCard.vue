@@ -34,7 +34,7 @@
 </template>
 
 <script setup lang="ts">
-import VirtualizedItemGrid from "@/components/main/VirtualizedItemGrid.vue";
+import VirtualizedItemGrid from "@/components/ui-kit/composites/dashboard/UiVirtualizedItemGrid.vue";
 import { useDashboardStore } from "@/stores/dashboardStore";
 
 interface ServiceSubgroup {

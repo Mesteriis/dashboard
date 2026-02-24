@@ -31,7 +31,11 @@ function ensurePageBlocks(page: DashboardLayoutPage): DashboardLayoutBlock[] {
 }
 
 export function normalizeLayoutBlocks(cfg: DashboardConfigTree): void {
-  const validGroupIds = new Set((cfg.groups ?? []).map((group) => group.id));
+  const validGroupIds = new Set(
+    (cfg.groups ?? [])
+      .map((group) => String(group?.id || "").trim())
+      .filter(Boolean),
+  );
   const validSubgroupIds = allSubgroupIds(cfg);
   const validGroupRefs = new Set([...validGroupIds, ...validSubgroupIds]);
 
@@ -41,9 +45,9 @@ export function normalizeLayoutBlocks(cfg: DashboardConfigTree): void {
     for (const block of ensurePageBlocks(page)) {
       if (block.type === "groups") {
         const groupsBlock = asGroupBlock(block);
-        groupsBlock.group_ids = groupsBlock.group_ids.filter((groupId) =>
-          validGroupRefs.has(groupId),
-        );
+        groupsBlock.group_ids = groupsBlock.group_ids
+          .map((groupId) => String(groupId || "").trim())
+          .filter((groupId) => Boolean(groupId) && validGroupRefs.has(groupId));
         if (groupsBlock.group_ids.length) {
           nextBlocks.push(groupsBlock);
         }
@@ -65,24 +69,34 @@ export function ensurePageGroupsReference(
   pageId: string,
   groupId: string,
 ): void {
+  const normalizedPageId = String(pageId || "").trim();
+  const normalizedGroupId = String(groupId || "").trim();
+  if (!normalizedGroupId) return;
+
   const pagesList = cfg.layout?.pages ?? [];
   if (!pagesList.length) return;
 
-  const page = pagesList.find((entry) => entry.id === pageId) || pagesList[0];
+  const page =
+    pagesList.find(
+      (entry) => String(entry?.id || "").trim() === normalizedPageId,
+    ) || pagesList[0];
   const pageBlocks = ensurePageBlocks(page);
   let groupsBlock = pageBlocks.find((block) => block.type === "groups");
 
   if (!groupsBlock) {
     groupsBlock = {
       type: "groups",
-      group_ids: [groupId],
+      group_ids: [normalizedGroupId],
     };
     pageBlocks.push(groupsBlock);
     return;
   }
 
   const normalizedGroupsBlock = asGroupBlock(groupsBlock);
-  if (!normalizedGroupsBlock.group_ids.includes(groupId)) {
-    normalizedGroupsBlock.group_ids.push(groupId);
+  const normalizedGroupIds = normalizedGroupsBlock.group_ids.map((id) =>
+    String(id || "").trim(),
+  );
+  if (!normalizedGroupIds.includes(normalizedGroupId)) {
+    normalizedGroupsBlock.group_ids.push(normalizedGroupId);
   }
 }

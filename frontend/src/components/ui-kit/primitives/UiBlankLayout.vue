@@ -149,6 +149,12 @@ const hasHeaderLeft = computed(() => Boolean(slots["app.header.left"]));
   display: contents;
 }
 
+.blank-sidebar-top,
+.blank-sidebar-middle,
+.blank-sidebar-bottom {
+  display: contents;
+}
+
 .blank-canvas {
   position: relative;
   z-index: 1;

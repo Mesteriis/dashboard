@@ -37,7 +37,7 @@ import {
   toRef,
   watch,
 } from "vue";
-import ServiceItemCard from "@/components/main/ServiceItemCard.vue";
+import ServiceItemCard from "@/components/ui-kit/composites/dashboard/UiServiceItemCard.vue";
 import { useDashboardStore } from "@/stores/dashboardStore";
 
 const VIRTUALIZATION_THRESHOLD = 120;

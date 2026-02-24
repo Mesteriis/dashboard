@@ -23,7 +23,7 @@
 <script setup lang="ts">
 import { vAutoAnimate } from "@formkit/auto-animate/vue";
 import { useDashboardStore } from "@/stores/dashboardStore";
-import SidebarTreeGroupNode from "@/components/sidebar/SidebarTreeGroupNode.vue";
+import SidebarTreeGroupNode from "@/components/ui-kit/composites/dashboard/UiSidebarTreeGroupNode.vue";
 
 const dashboard = useDashboardStore();
 

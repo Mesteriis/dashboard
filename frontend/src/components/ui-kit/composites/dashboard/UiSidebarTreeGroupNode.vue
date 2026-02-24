@@ -5,9 +5,9 @@
       dragging:
         dragState.type === 'group' &&
         dragState.groupId === group.id &&
-        isDirectGroupNode(group),
+        isDirectGroupNodeLocal(group),
     }"
-    :draggable="editMode && isDirectGroupNode(group)"
+    :draggable="editMode && isDirectGroupNodeLocal(group)"
     @dragstart.stop="onGroupDragStart($event, group)"
     @dragend.stop="clearDragState"
     @dragover.stop="onGroupDragOver($event, group)"
@@ -29,7 +29,7 @@
       </button>
 
       <div
-        v-if="editMode && isDirectGroupNode(group)"
+        v-if="editMode && isDirectGroupNodeLocal(group)"
         class="tree-inline-actions"
       >
         <GripVertical class="ui-icon tree-grip" />
@@ -74,7 +74,8 @@
 <script setup lang="ts">
 import { GripVertical, Pencil, Plus, Trash2 } from "lucide-vue-next";
 import { useDashboardStore } from "@/stores/dashboardStore";
-import SidebarTreeSubgroupNode from "@/components/sidebar/SidebarTreeSubgroupNode.vue";
+import SidebarTreeSubgroupNode from "@/components/ui-kit/composites/dashboard/UiSidebarTreeSubgroupNode.vue";
+import { isDirectGroupNode as isDirectGroupNodeLocal } from "@/stores/dashboard/configTreeUtils";
 
 defineProps({
   group: { type: Object, required: true },
@@ -85,7 +86,6 @@ const dashboard = useDashboardStore();
 const {
   dragState,
   editMode,
-  isDirectGroupNode,
   onGroupDragStart,
   clearDragState,
   onGroupDragOver,

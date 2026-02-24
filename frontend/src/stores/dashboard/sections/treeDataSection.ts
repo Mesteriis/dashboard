@@ -5,7 +5,8 @@ export function createDashboardTreeDataSection(ctx: any) {
     const resolved: TreeGroupNode[] = [];
 
     for (const id of groupIds) {
-      const group = ctx.groupById.value.get(id);
+      const normalizedId = String(id || "");
+      const group = ctx.groupById.value.get(normalizedId);
       if (group) {
         resolved.push({
           key: `group:${group.id}`,
@@ -19,7 +20,7 @@ export function createDashboardTreeDataSection(ctx: any) {
         continue;
       }
 
-      const subgroupRef = ctx.subgroupById.value.get(id);
+      const subgroupRef = ctx.subgroupById.value.get(normalizedId);
       if (subgroupRef) {
         resolved.push({
           key: `subgroup:${subgroupRef.subgroup.id}`,

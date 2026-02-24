@@ -29,7 +29,8 @@ export function allSubgroupIds(cfg: DashboardConfigTree): Set<string> {
   const ids = new Set<string>();
   for (const group of cfg.groups ?? []) {
     for (const subgroup of group.subgroups ?? []) {
-      ids.add(subgroup.id);
+      const normalized = String(subgroup?.id || "").trim();
+      if (normalized) ids.add(normalized);
     }
   }
   return ids;
@@ -40,7 +41,8 @@ export function allItemIds(cfg: DashboardConfigTree): Set<string> {
   for (const group of cfg.groups ?? []) {
     for (const subgroup of group.subgroups ?? []) {
       for (const item of subgroup.items ?? []) {
-        ids.add(item.id);
+        const normalized = String(item?.id || "").trim();
+        if (normalized) ids.add(normalized);
       }
     }
   }
@@ -51,7 +53,12 @@ export function findGroup(
   cfg: DashboardConfigTree,
   groupId: string,
 ): DashboardGroup | null {
-  return (cfg.groups ?? []).find((group) => group.id === groupId) || null;
+  const normalizedId = String(groupId || "");
+  return (
+    (cfg.groups ?? []).find(
+      (group) => String(group?.id || "") === normalizedId,
+    ) || null
+  );
 }
 
 export function findSubgroup(
@@ -61,9 +68,11 @@ export function findSubgroup(
 ): DashboardSubgroup | null {
   const group = findGroup(cfg, groupId);
   if (!group) return null;
+  const normalizedSubgroupId = String(subgroupId || "");
   return (
-    (group.subgroups ?? []).find((subgroup) => subgroup.id === subgroupId) ||
-    null
+    (group.subgroups ?? []).find(
+      (subgroup) => String(subgroup?.id || "") === normalizedSubgroupId,
+    ) || null
   );
 }
 

@@ -2,6 +2,7 @@
   <main
     class="page"
     :class="{
+      'page--embedded': hideHero,
       'indicator-open': Boolean(activeIndicatorWidget),
       'page--split-scroll': Boolean(activePage) && !loadingConfig && !configError,
     }"
@@ -22,16 +23,20 @@
         v-if="activeIndicatorWidget"
         class="page-right-bottom page-motion-zone"
       >
-        <IndicatorTabPanel />
+        <UiIndicatorTabPanelFacade />
+      </section>
+
+      <section v-else-if="hideHero" class="page-right-bottom page-motion-zone">
+        <UiServicesGroupsPanelFacade />
       </section>
 
       <section v-else class="page-right-shell">
         <section class="page-right-top">
-          <ServicesHeroPanel />
+          <UiServicesHeroPanelFacade />
         </section>
 
         <section class="page-right-bottom page-motion-zone">
-          <ServicesGroupsPanel />
+          <UiServicesGroupsPanelFacade />
         </section>
       </section>
     </template>
@@ -44,7 +49,7 @@
     </section>
   </main>
 
-  <BootstrapDashboardModal
+  <UiBootstrapDashboardModalFacade
     :open="showBootstrapModal"
     :creating="creatingInitialDashboard"
     :importing="importingInitialDashboard"
@@ -92,14 +97,23 @@
 
 <script setup lang="ts">
 import { computed, defineAsyncComponent, ref, watch } from "vue";
-import ServicesGroupsPanel from "@/components/main/ServicesGroupsPanel.vue";
-import ServicesHeroPanel from "@/components/main/ServicesHeroPanel.vue";
-import BootstrapDashboardModal from "@/components/modals/BootstrapDashboardModal.vue";
+import UiBootstrapDashboardModalFacade from "@/components/ui-kit/facades/dashboard/UiBootstrapDashboardModalFacade.vue";
+import UiServicesGroupsPanelFacade from "@/components/ui-kit/facades/dashboard/UiServicesGroupsPanelFacade.vue";
+import UiServicesHeroPanelFacade from "@/components/ui-kit/facades/dashboard/UiServicesHeroPanelFacade.vue";
 import { restoreDashboardConfig } from "@/services/dashboardApi";
 import { useDashboardStore } from "@/stores/dashboardStore";
 
-const IndicatorTabPanel = defineAsyncComponent(
-  () => import("@/components/main/IndicatorTabPanel.vue"),
+withDefaults(
+  defineProps<{
+    hideHero?: boolean;
+  }>(),
+  {
+    hideHero: false,
+  },
+);
+
+const UiIndicatorTabPanelFacade = defineAsyncComponent(
+  () => import("@/components/ui-kit/facades/dashboard/UiIndicatorTabPanelFacade.vue"),
 );
 
 const dashboard = useDashboardStore();
@@ -244,3 +258,14 @@ watch(
   },
 );
 </script>
+
+<style scoped>
+.page.page--embedded {
+  height: 100%;
+  min-height: 100%;
+}
+
+.page.page--embedded .page-right-bottom {
+  min-height: 100%;
+}
+</style>

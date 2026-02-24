@@ -1,5 +1,5 @@
 <template>
-  <PluginControlCenter
+  <UiPluginsCenterPageFacade
     :tab="activeTab"
     @close="handleClose"
     @set-tab="handleSetTab"
@@ -10,7 +10,7 @@
 <script setup lang="ts">
 import { computed, watch } from "vue";
 import { useRoute } from "vue-router";
-import PluginControlCenter from "@/components/plugins/PluginControlCenter.vue";
+import UiPluginsCenterPageFacade from "@/components/ui-kit/facades/pages/UiPluginsCenterPageFacade.vue";
 import {
   goDashboard,
   goPlugin,

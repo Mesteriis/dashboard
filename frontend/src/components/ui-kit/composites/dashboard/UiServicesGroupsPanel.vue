@@ -35,7 +35,7 @@
 <script setup lang="ts">
 import { nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { vAutoAnimate } from "@formkit/auto-animate/vue";
-import ServiceGroupCard from "@/components/main/ServiceGroupCard.vue";
+import ServiceGroupCard from "@/components/ui-kit/composites/dashboard/UiServiceGroupCard.vue";
 import { useDashboardStore } from "@/stores/dashboardStore";
 
 const dashboard = useDashboardStore();
@@ -93,3 +93,9 @@ onBeforeUnmount(() => {
   visibilityObserver = null;
 });
 </script>
+
+<style scoped>
+.page-stack {
+  min-height: 100%;
+}
+</style>

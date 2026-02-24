@@ -1,5 +1,5 @@
 <template>
-  <BaseModal
+  <UiBaseModal
     :open="open"
     backdrop-class="bootstrap-modal-backdrop"
     modal-class="bootstrap-modal"
@@ -70,12 +70,12 @@
       Поддерживаются файлы с расширением <code>.yaml</code> и <code>.yml</code>.
     </p>
     <p v-if="error" class="bootstrap-modal-error">{{ error }}</p>
-  </BaseModal>
+  </UiBaseModal>
 </template>
 
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
-import BaseModal from "@/components/primitives/BaseModal.vue";
+import UiBaseModal from "@/components/ui-kit/primitives/UiBaseModal.vue";
 
 const props = defineProps<{
   open: boolean;
