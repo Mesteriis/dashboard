@@ -28,7 +28,7 @@
     </aside>
 
     <section class="blank-main">
-      <HeroGlassTabsShell :emblem-src="emblemSrc">
+      <UiHeroGlassTabsShell :emblem-src="emblemSrc">
         <div class="blank-header-main">
           <div v-if="hasHeaderLeft" class="blank-header-left">
             <slot name="app.header.left" />
@@ -41,7 +41,7 @@
         <template #actions>
           <slot name="app.header.actions" />
         </template>
-      </HeroGlassTabsShell>
+      </UiHeroGlassTabsShell>
 
       <section class="blank-canvas" :aria-label="canvasAriaLabel">
         <section class="blank-canvas-top">
@@ -76,7 +76,7 @@
 
 <script setup lang="ts">
 import { computed, useSlots } from "vue";
-import HeroGlassTabsShell from "@/components/primitives/HeroGlassTabsShell.vue";
+import UiHeroGlassTabsShell from "@/components/ui-kit/primitives/UiHeroGlassTabsShell.vue";
 
 withDefaults(
   defineProps<{

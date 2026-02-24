@@ -44,7 +44,15 @@
             :disabled="Boolean(item.disabled)"
             @click="selectItem(item.id)"
           >
-            {{ item.label }}
+            <span class="ui-menu__item-content">
+              <component
+                :is="resolveItemIcon(item.icon)"
+                v-if="item.icon"
+                class="ui-icon ui-menu__item-icon"
+                aria-hidden="true"
+              />
+              <span>{{ item.label }}</span>
+            </span>
           </button>
         </li>
       </ul>
@@ -53,12 +61,19 @@
 </template>
 
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref } from "vue";
-import { ChevronDown } from "lucide-vue-next";
+import { computed, onBeforeUnmount, onMounted, ref, type Component } from "vue";
+import { ChevronDown, LogOut, Monitor, Shield, UserRound } from "lucide-vue-next";
+
+type DropdownMenuIconName =
+  | "kiosk"
+  | "profile"
+  | "lock"
+  | "exit";
 
 interface DropdownMenuItem {
   id: string;
   label: string;
+  icon?: DropdownMenuIconName;
   danger?: boolean;
   disabled?: boolean;
 }
@@ -93,6 +108,17 @@ const emit = defineEmits<{
 
 const open = ref(false);
 const rootRef = ref<HTMLElement | null>(null);
+const menuIcons = computed<Record<DropdownMenuIconName, Component>>(() => ({
+  kiosk: Monitor,
+  profile: UserRound,
+  lock: Shield,
+  exit: LogOut,
+}));
+
+function resolveItemIcon(name?: DropdownMenuIconName): Component | null {
+  if (!name) return null;
+  return menuIcons.value[name] || null;
+}
 
 function toggleOpen(): void {
   if (props.disabled) return;

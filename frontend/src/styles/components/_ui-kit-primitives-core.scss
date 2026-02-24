@@ -202,6 +202,18 @@
     color 140ms ease;
 }
 
+.ui-menu__item-content {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ui-menu__item-icon {
+  width: 14px;
+  height: 14px;
+  flex: 0 0 auto;
+}
+
 .ui-menu__item:hover:not(:disabled) {
   background: rgba(26, 81, 96, 0.32);
   color: #ecf9ff;

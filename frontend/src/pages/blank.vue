@@ -75,11 +75,11 @@
 
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
-import UiHeroBlankPanel from "@/components/main/UiHeroBlankPanel.vue";
-import UiBlankLayout from "@/components/primitives/UiBlankLayout.vue";
+import UiHeroBlankPanel from "@/components/ui-kit/primitives/UiHeroBlankPanel.vue";
+import UiBlankLayout from "@/components/ui-kit/primitives/UiBlankLayout.vue";
 import { EVENT_FX_MODE_CHANGE, onOkoEvent } from "@/services/events";
 import { ensureParticlesJs } from "@/services/particlesLoader";
-import { useDashboardStore } from "@/stores/dashboardStore";
+import { useUiStore } from "@/stores/uiStore";
 import {
   type BlankPrimaryTabId,
   loadBlankLayoutState,
@@ -89,15 +89,15 @@ import {
 import {
   EMBLEM_SRC,
   SIDEBAR_PARTICLES_CONFIG,
-} from "@/stores/dashboard/storeConstants";
-import type { ParticlesConfig } from "@/stores/dashboard/storeTypes";
+} from "@/stores/ui/storeConstants";
+import type { ParticlesConfig } from "@/stores/ui/storeTypes";
 
 const BLANK_SIDEBAR_PARTICLES_ID = "blank-sidebar-particles";
 const SLOT_APP_SIDEBAR_TOP = "app.sidebar.top";
 const SLOT_APP_HEADER_TABS = "app.header.tabs";
 const SLOT_PAGE_CANVAS_MAIN = "page.canvas.main";
 let removeFxModeListener: () => void = () => {};
-const dashboard = useDashboardStore();
+const uiStore = useUiStore();
 const restoredBlankLayoutState = loadBlankLayoutState();
 const activeBlankTab = ref<BlankPrimaryTabId>(
   restoredBlankLayoutState.levelTwo.activeTabId,
@@ -106,7 +106,7 @@ const heroControlsOpen = ref(
   restoredBlankLayoutState.levelOne.heroControlsExpanded,
 );
 const isSidebarHidden = computed(
-  () => dashboard.sidebarView.value === "hidden",
+  () => uiStore.sidebarView.value === "hidden",
 );
 
 function currentFxMode(): string {
@@ -171,7 +171,7 @@ async function initSidebarParticles(): Promise<void> {
 }
 
 onMounted(() => {
-  dashboard.sidebarView.value =
+  uiStore.sidebarView.value =
     restoredBlankLayoutState.levelOne.sidebarVisibility === "hidden"
       ? "hidden"
       : "detailed";
@@ -197,7 +197,7 @@ watch(
 );
 
 watch(
-  () => dashboard.sidebarView.value,
+  () => uiStore.sidebarView.value,
   (value) => {
     patchBlankLayoutLevelOne({
       sidebarVisibility: value === "hidden" ? "hidden" : "open",
