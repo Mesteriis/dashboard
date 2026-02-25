@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { requestJson } from '../../frontend/src/services/dashboardApi.ts'
+import { requestJson } from '../../frontend/src/features/services/dashboardApi.ts'
 
 const originalFetch = globalThis.fetch
 const hadWindow = 'window' in globalThis

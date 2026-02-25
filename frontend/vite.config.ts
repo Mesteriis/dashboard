@@ -1,7 +1,6 @@
 import { defineConfig } from "vite";
 import { fileURLToPath, URL } from "node:url";
 import vue from "@vitejs/plugin-vue";
-import VueRouter from "unplugin-vue-router/vite";
 
 const DEV_BACKEND_TARGET = "http://127.0.0.1:8000";
 
@@ -24,11 +23,6 @@ function resolveBase(command) {
 
 export default defineConfig(({ command }) => ({
   plugins: [
-    VueRouter({
-      dts: "src/typed-router.d.ts",
-      routesFolder: "src/pages",
-      extensions: [".vue"],
-    }),
     vue(),
   ],
   resolve: {

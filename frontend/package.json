@@ -57,10 +57,10 @@
   },
   "knip": {
     "ignore": [
-      "src/components/primitives/HeroDropdown.vue",
+      "src/primitives/HeroDropdown.vue",
       "src/components/sidebar/SidebarIconRail.vue",
       "src/components/sidebar/SidebarTreeItemNode.vue",
-      "src/services/globals.d.ts"
+      "src/features/services/globals.d.ts"
     ],
     "ignoreDependencies": [
       "prettier"

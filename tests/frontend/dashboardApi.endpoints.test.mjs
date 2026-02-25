@@ -6,7 +6,7 @@ import {
   restoreDashboardConfig,
   updateDashboardConfig,
   validateDashboardYaml,
-} from '../../frontend/src/services/dashboardApi.ts'
+} from '../../frontend/src/features/services/dashboardApi.ts'
 
 const originalFetch = globalThis.fetch
 const hadWindow = 'window' in globalThis

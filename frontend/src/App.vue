@@ -84,20 +84,20 @@ import {
   watch,
 } from "vue";
 import { RouterView, useRoute } from "vue-router";
-import PleiadExperience from "@/components/pleiad/PleiadExperience.vue";
-import { useIdleScreensaver } from "@/composables/useIdleScreensaver";
-import { closeOverlay, goDashboard, goPluginsPanel, goSettings, openPleiadOverlay } from "@/core/navigation/nav";
-import { AGENT_AURA_DEMO_OPEN_EVENT } from "@/services/agentAuraNavigation";
-import { isDesktopShell } from "@/services/desktopRuntime";
+import PleiadExperience from "@/views/overlays/pleiad/PleiadExperience.vue";
+import { useIdleScreensaver } from "@/features/composables/useIdleScreensaver";
+import { closeOverlay, goDashboard, goPluginsPanel, goSettings, openPleiadOverlay } from "@/app/navigation/nav";
+import { AGENT_AURA_DEMO_OPEN_EVENT } from "@/features/services/agentAuraNavigation";
+import { isDesktopShell } from "@/features/services/desktopRuntime";
 import {
   EVENT_API_ERROR,
   EVENT_DESKTOP_ACTION,
   onOkoEvent,
-} from "@/services/events";
-import { useDashboardStore } from "@/stores/dashboardStore";
+} from "@/features/services/events";
+import { useDashboardStore } from "@/features/stores/dashboardStore";
 
 const AgentAuraFxDemo = defineAsyncComponent(
-  () => import("@/components/agents/AgentAuraFxDemo.vue"),
+  () => import("@/views/overlays/agents/AgentAuraFxDemo.vue"),
 );
 
 const route = useRoute();

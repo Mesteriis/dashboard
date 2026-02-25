@@ -2,10 +2,10 @@ import { createApp } from "vue";
 import { MotionPlugin } from "@vueuse/motion";
 import App from "@/App.vue";
 import router from "@/router";
-import { bindNavigationRouter } from "@/core/navigation/nav";
-import { initDesktopRuntimeBridge } from "@/services/desktopRuntime";
-import { EVENT_FX_MODE_CHANGE, emitOkoEvent } from "@/services/events";
-import { initDevPerfTelemetry } from "@/services/perfTelemetry";
+import { bindNavigationRouter } from "@/app/navigation/nav";
+import { initDesktopRuntimeBridge } from "@/features/services/desktopRuntime";
+import { EVENT_FX_MODE_CHANGE, emitOkoEvent } from "@/features/services/events";
+import { initDevPerfTelemetry } from "@/features/services/perfTelemetry";
 import "./styles.scss";
 
 type LegacyFxMode = "off" | "lite" | "full";

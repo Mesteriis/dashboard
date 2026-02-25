@@ -3,7 +3,7 @@ import test from "node:test";
 import {
   normalizePluginBlocks,
   normalizeServiceCardCore,
-} from "../../frontend/src/contracts/serviceCard.ts";
+} from "../../frontend/src/shared/contracts/serviceCard.ts";
 
 test("normalizeServiceCardCore keeps mandatory service-card fields", () => {
   const normalized = normalizeServiceCardCore({

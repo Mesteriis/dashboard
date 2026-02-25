@@ -5,7 +5,7 @@ import test from "node:test";
 
 const serviceItemCardPath = path.resolve(
   process.cwd(),
-  "src/components/main/ServiceItemCard.vue",
+  "src/views/dashboard/components/UiServiceItemCard.vue",
 );
 
 test("ServiceItemCard keeps open and copy as core actions", async () => {
