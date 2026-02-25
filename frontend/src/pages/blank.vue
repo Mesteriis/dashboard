@@ -3,6 +3,8 @@
     :emblem-src="EMBLEM_SRC"
     :sidebar-hidden="isSidebarHidden"
     :sidebar-particles-id="BLANK_SIDEBAR_PARTICLES_ID"
+    sidebar-bottom-accordion-label="Демо-аккордеон"
+    :sidebar-bottom-accordion-initially-open="false"
   >
     <template v-slot:[SLOT_APP_SIDEBAR_TOP]>
       <header class="brand">
@@ -12,6 +14,44 @@
           <p class="brand-subtitle">Your Infrastructure in Sight</p>
         </div>
       </header>
+    </template>
+
+    <template v-slot:[SLOT_APP_SIDEBAR_MIDDLE]>
+      <section class="blank-sidebar-demo-main">
+        <p class="blank-sidebar-demo-eyebrow">Основной слот</p>
+        <h2>Вертикальная зона #2</h2>
+        <p>
+          Этот блок всегда виден и занимает оставшееся пространство в
+          <code>sidebar-content</code>.
+        </p>
+
+        <div class="blank-sidebar-demo-cards">
+          <article class="blank-sidebar-demo-card">
+            <h3>Текущая вкладка</h3>
+            <p>{{ activeBlankTabLabel }}</p>
+          </article>
+
+          <article class="blank-sidebar-demo-card">
+            <h3>Режим hero controls</h3>
+            <p>{{ heroControlsOpen ? "Раскрыт" : "Свернут" }}</p>
+          </article>
+        </div>
+      </section>
+    </template>
+
+    <template v-slot:[SLOT_APP_SIDEBAR_BOTTOM]>
+      <section class="blank-sidebar-demo-accordion">
+        <h3>Контент нижнего аккордеона</h3>
+        <p>
+          Этот блок появляется только когда передан слот
+          <code>app.sidebar.bottom</code>.
+        </p>
+        <ul>
+          <li>Пункт 01: вспомогательные быстрые действия</li>
+          <li>Пункт 02: статусные мини-индикаторы</li>
+          <li>Пункт 03: короткие заметки оператора</li>
+        </ul>
+      </section>
     </template>
 
     <template v-slot:[SLOT_APP_HEADER_TABS]>
@@ -32,7 +72,9 @@
       >
         <header>
           <h2>Обзор пространства</h2>
-          <p>Демонстрационный таб: основной контент переключается из hero-tabs.</p>
+          <p>
+            Демонстрационный таб: основной контент переключается из hero-tabs.
+          </p>
         </header>
         <div class="blank-demo-grid">
           <section class="blank-demo-card">
@@ -56,7 +98,9 @@
       >
         <header>
           <h2>Оперативный контур</h2>
-          <p>Второй демо-таб для проверки плавного раскрытия и смены контента.</p>
+          <p>
+            Второй демо-таб для проверки плавного раскрытия и смены контента.
+          </p>
         </header>
         <div class="blank-demo-stack">
           <section class="blank-demo-strip">
@@ -94,6 +138,8 @@ import type { ParticlesConfig } from "@/stores/ui/storeTypes";
 
 const BLANK_SIDEBAR_PARTICLES_ID = "blank-sidebar-particles";
 const SLOT_APP_SIDEBAR_TOP = "app.sidebar.top";
+const SLOT_APP_SIDEBAR_MIDDLE = "app.sidebar.middle";
+const SLOT_APP_SIDEBAR_BOTTOM = "app.sidebar.bottom";
 const SLOT_APP_HEADER_TABS = "app.header.tabs";
 const SLOT_PAGE_CANVAS_MAIN = "page.canvas.main";
 let removeFxModeListener: () => void = () => {};
@@ -105,8 +151,11 @@ const activeBlankTab = ref<BlankPrimaryTabId>(
 const heroControlsOpen = ref(
   restoredBlankLayoutState.levelOne.heroControlsExpanded,
 );
-const isSidebarHidden = computed(
-  () => uiStore.sidebarView.value === "hidden",
+const isSidebarHidden = computed(() => uiStore.sidebarView.value === "hidden");
+const activeBlankTabLabel = computed(() =>
+  activeBlankTab.value === "operations"
+    ? "Оперативный контур"
+    : "Обзор пространства",
 );
 
 function currentFxMode(): string {
@@ -232,6 +281,88 @@ onBeforeUnmount(() => {
   );
   backdrop-filter: blur(4px) saturate(115%);
   padding: clamp(14px, 2vw, 24px);
+}
+
+.blank-sidebar-demo-main {
+  height: 100%;
+  min-height: 0;
+  border: 1px solid rgba(95, 153, 177, 0.24);
+  border-radius: var(--ui-radius);
+  background: linear-gradient(
+    152deg,
+    rgba(8, 24, 37, 0.45),
+    rgba(7, 18, 30, 0.28)
+  );
+  padding: 12px;
+  display: grid;
+  align-content: start;
+  gap: 10px;
+}
+
+.blank-sidebar-demo-main h2 {
+  margin: 0;
+  font-size: 0.95rem;
+  letter-spacing: 0.04em;
+}
+
+.blank-sidebar-demo-main > p {
+  margin: 0;
+  color: #a9c6d9;
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+.blank-sidebar-demo-eyebrow {
+  margin: 0;
+  color: #8bb0c6;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.blank-sidebar-demo-cards {
+  display: grid;
+  gap: 8px;
+}
+
+.blank-sidebar-demo-card {
+  border: 1px solid rgba(106, 166, 194, 0.26);
+  border-radius: var(--ui-radius);
+  background: rgba(9, 29, 45, 0.4);
+  padding: 10px;
+}
+
+.blank-sidebar-demo-card h3 {
+  margin: 0;
+  font-size: 0.8rem;
+  letter-spacing: 0.03em;
+}
+
+.blank-sidebar-demo-card p {
+  margin: 6px 0 0;
+  color: #c2d9e8;
+  font-size: 0.78rem;
+}
+
+.blank-sidebar-demo-accordion h3 {
+  margin: 0;
+  font-size: 0.84rem;
+}
+
+.blank-sidebar-demo-accordion p {
+  margin: 6px 0 0;
+  color: #a6c3d7;
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.blank-sidebar-demo-accordion ul {
+  margin: 10px 0 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 6px;
+  color: #c2d8e8;
+  font-size: 0.76rem;
 }
 
 .blank-demo > header h2 {

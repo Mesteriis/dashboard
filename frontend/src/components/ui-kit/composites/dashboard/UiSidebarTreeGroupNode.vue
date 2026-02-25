@@ -14,10 +14,9 @@
     @drop.stop="onGroupDrop($event, group)"
   >
     <div class="tree-node-row">
-      <button
-        class="tree-node tree-group"
-        :class="{ active: isGroupSelected(group.key) }"
-        type="button"
+      <UiSidebarListItem
+        variant="group"
+        :active="isGroupSelected(group.key)"
         @click="toggleGroupNode(group.key)"
       >
         <span class="tree-caret" :class="{ open: isGroupExpanded(group.key) }"
@@ -26,7 +25,7 @@
         <component :is="resolveGroupIcon(group)" class="ui-icon tree-icon" />
         <span class="tree-text">{{ group.title }}</span>
         <span class="tree-meta">{{ groupTotalItems(group) }}</span>
-      </button>
+      </UiSidebarListItem>
 
       <div
         v-if="editMode && isDirectGroupNodeLocal(group)"
@@ -75,6 +74,7 @@
 import { GripVertical, Pencil, Plus, Trash2 } from "lucide-vue-next";
 import { useDashboardStore } from "@/stores/dashboardStore";
 import SidebarTreeSubgroupNode from "@/components/ui-kit/composites/dashboard/UiSidebarTreeSubgroupNode.vue";
+import UiSidebarListItem from "@/components/ui-kit/primitives/UiSidebarListItem.vue";
 import { isDirectGroupNode as isDirectGroupNodeLocal } from "@/stores/dashboard/configTreeUtils";
 
 defineProps({

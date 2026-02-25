@@ -6,7 +6,11 @@
     </p>
 
     <div class="ui-kit-grid cols-2">
-      <article id="ui-node-html-tags" class="ui-html-card">
+      <article
+        v-show="isNodeVisible('ui-node-html-tags')"
+        id="ui-node-html-tags"
+        class="ui-html-card"
+      >
         <header class="ui-html-card__head">
           <h3>Typography & Semantics</h3>
           <time datetime="2026-02-24">2026-02-24</time>
@@ -39,7 +43,11 @@
         <hr />
       </article>
 
-      <article id="ui-node-html-table-lists" class="ui-html-card">
+      <article
+        v-show="isNodeVisible('ui-node-html-table-lists')"
+        id="ui-node-html-table-lists"
+        class="ui-html-card"
+      >
         <header class="ui-html-card__head">
           <h3>Lists & Table</h3>
           <data value="128">128 records</data>
@@ -95,7 +103,11 @@
     </div>
 
     <div class="ui-kit-grid cols-2">
-      <article id="ui-node-html-media" class="ui-html-card">
+      <article
+        v-show="isNodeVisible('ui-node-html-media')"
+        id="ui-node-html-media"
+        class="ui-html-card"
+      >
         <header class="ui-html-card__head">
           <h3>Media & Embeds</h3>
         </header>
@@ -127,7 +139,7 @@
         <progress :value="68" max="100">68%</progress>
         <meter min="0" max="100" low="40" high="75" optimum="90" :value="84">84</meter>
       </article>
-      <UiKitHtmlFormCard />
+      <UiKitHtmlFormCard v-show="isNodeVisible('ui-node-html-form-tags')" />
     </div>
   </section>
 </template>
@@ -136,7 +148,21 @@
 import { onMounted, ref } from "vue";
 import UiKitHtmlFormCard from "@/components/ui-kit/demo/UiKitHtmlFormCard.vue";
 
+const props = withDefaults(
+  defineProps<{
+    activeNodeId?: string;
+  }>(),
+  {
+    activeNodeId: "",
+  },
+);
+
 const canvasRef = ref<HTMLCanvasElement | null>(null);
+
+function isNodeVisible(nodeId: string): boolean {
+  if (!props.activeNodeId) return true;
+  return props.activeNodeId === nodeId;
+}
 
 onMounted(() => {
   const canvas = canvasRef.value;

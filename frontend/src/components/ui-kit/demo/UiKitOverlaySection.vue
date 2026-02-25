@@ -3,13 +3,21 @@
     <h2>Overlay & Actions</h2>
 
     <div class="ui-kit-grid cols-2">
-      <article id="ui-node-modal" class="ui-kit-node ui-kit-stack">
+      <article
+        v-show="isNodeVisible('ui-node-modal')"
+        id="ui-node-modal"
+        class="ui-kit-node ui-kit-stack"
+      >
         <h3>Modal</h3>
         <UiButton label="Open Modal" @click="modalOpen = true" />
         <p class="ui-kit-note">Modal независим и управляется только prop `open` + event `close`.</p>
       </article>
 
-      <article id="ui-node-speeddial" class="ui-kit-node ui-kit-speed-zone">
+      <article
+        v-show="isNodeVisible('ui-node-speeddial')"
+        id="ui-node-speeddial"
+        class="ui-kit-node ui-kit-speed-zone"
+      >
         <h3>SpeedDial</h3>
         <p class="ui-kit-note">SpeedDial with 4 directions</p>
         <p class="ui-kit-note" v-if="speedActionLog">{{ speedActionLog }}</p>
@@ -21,7 +29,11 @@
         </div>
       </article>
 
-      <article id="ui-node-dropdown-menu" class="ui-kit-node ui-kit-stack">
+      <article
+        v-show="isNodeVisible('ui-node-dropdown-menu')"
+        id="ui-node-dropdown-menu"
+        class="ui-kit-node ui-kit-stack"
+      >
         <h3>Dropdown Menu</h3>
         <UiDropdownMenu
           label="Системное меню"
@@ -48,6 +60,20 @@ import UiButton from "@/components/ui-kit/primitives/UiButton.vue";
 import UiDropdownMenu from "@/components/ui-kit/primitives/UiDropdownMenu.vue";
 import UiModal from "@/components/ui-kit/primitives/UiModal.vue";
 import UiSpeedDial from "@/components/ui-kit/primitives/UiSpeedDial.vue";
+
+const props = withDefaults(
+  defineProps<{
+    activeNodeId?: string;
+  }>(),
+  {
+    activeNodeId: "",
+  },
+);
+
+function isNodeVisible(nodeId: string): boolean {
+  if (!props.activeNodeId) return true;
+  return props.activeNodeId === nodeId;
+}
 
 const modalOpen = ref(false);
 const speedActionLog = ref("");

@@ -3,6 +3,8 @@
     :emblem-src="EMBLEM_SRC"
     :sidebar-hidden="isSidebarHidden"
     :sidebar-particles-id="SIDEBAR_PARTICLES_ID"
+    sidebar-bottom-accordion-label="Индикаторы"
+    :sidebar-bottom-visible="isSidebarDetailed"
     canvas-aria-label="Dashboard content"
   >
     <template v-slot:[SLOT_APP_SIDEBAR_TOP]>

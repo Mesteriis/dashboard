@@ -11,10 +11,9 @@
     @drop.stop="onItemDrop($event, group.id, subgroup.id, item.id)"
   >
     <div class="tree-node-row">
-      <button
-        class="tree-node tree-item"
-        :class="{ active: isItemSelected(item.id) }"
-        type="button"
+      <UiSidebarListItem
+        variant="item"
+        :active="isItemSelected(item.id)"
         @click="selectItemNode(group.key, subgroup.id, item.id)"
       >
         <span class="health-dot" :class="healthClass(item.id)"></span>
@@ -33,7 +32,7 @@
           class="ui-icon tree-icon tree-item-icon"
         />
         <span class="tree-text">{{ item.title }}</span>
-      </button>
+      </UiSidebarListItem>
 
       <div v-if="editMode" class="tree-inline-actions">
         <GripVertical class="ui-icon tree-grip" />
@@ -61,6 +60,7 @@
 <script setup lang="ts">
 import { GripVertical, Pencil, Trash2 } from "lucide-vue-next";
 import { useDashboardStore } from "@/stores/dashboardStore";
+import UiSidebarListItem from "@/components/ui-kit/primitives/UiSidebarListItem.vue";
 
 defineProps({
   group: { type: Object, required: true },

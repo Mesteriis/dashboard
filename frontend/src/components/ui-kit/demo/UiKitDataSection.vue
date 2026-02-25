@@ -2,7 +2,11 @@
   <section class="ui-kit-section">
     <h2>Data Components</h2>
 
-    <article id="ui-node-datatable" class="ui-kit-node">
+    <article
+      v-show="isNodeVisible('ui-node-datatable')"
+      id="ui-node-datatable"
+      class="ui-kit-node"
+    >
       <h3>DataTable</h3>
       <UiDataTable
         :rows="tableRows"
@@ -21,12 +25,20 @@
     </article>
 
     <div class="ui-kit-grid cols-2">
-      <article id="ui-node-pagination" class="ui-kit-node ui-kit-stack">
+      <article
+        v-show="isNodeVisible('ui-node-pagination')"
+        id="ui-node-pagination"
+        class="ui-kit-node ui-kit-stack"
+      >
         <h3>Pagination</h3>
         <UiPagination :total="128" :page="paginationPage" :page-size="10" @update:page="paginationPage = $event" />
       </article>
 
-      <article id="ui-node-picklist" class="ui-kit-node ui-kit-stack">
+      <article
+        v-show="isNodeVisible('ui-node-picklist')"
+        id="ui-node-picklist"
+        class="ui-kit-node ui-kit-stack"
+      >
         <h3>PickList</h3>
         <UiPickList
           v-model:source-items="sourceItems"
@@ -35,7 +47,11 @@
       </article>
     </div>
 
-    <article id="ui-node-tree" class="ui-kit-node ui-kit-stack">
+    <article
+      v-show="isNodeVisible('ui-node-tree')"
+      id="ui-node-tree"
+      class="ui-kit-node ui-kit-stack"
+    >
       <h3>Tree</h3>
       <UiTree v-model="selectedNode" :nodes="treeNodes" :default-expanded="['root-1']" />
       <p class="ui-kit-note">Selected node: {{ selectedNode }}</p>
@@ -49,6 +65,20 @@ import UiDataTable from "@/components/ui-kit/primitives/UiDataTable.vue";
 import UiPagination from "@/components/ui-kit/primitives/UiPagination.vue";
 import UiPickList from "@/components/ui-kit/primitives/UiPickList.vue";
 import UiTree from "@/components/ui-kit/primitives/UiTree.vue";
+
+const props = withDefaults(
+  defineProps<{
+    activeNodeId?: string;
+  }>(),
+  {
+    activeNodeId: "",
+  },
+);
+
+function isNodeVisible(nodeId: string): boolean {
+  if (!props.activeNodeId) return true;
+  return props.activeNodeId === nodeId;
+}
 
 const tableColumns = [
   { key: "name", label: "Name", sortable: true, filterable: true },

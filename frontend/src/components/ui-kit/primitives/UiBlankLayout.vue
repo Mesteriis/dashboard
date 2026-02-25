@@ -15,14 +15,39 @@
       ></div>
 
       <div class="sidebar-content">
-        <section class="blank-sidebar-top">
+        <section class="blank-sidebar-logo">
           <slot name="app.sidebar.top" />
         </section>
-        <section class="blank-sidebar-middle">
+
+        <section class="blank-sidebar-main">
           <slot name="app.sidebar.middle" />
         </section>
-        <section class="blank-sidebar-bottom">
-          <slot name="app.sidebar.bottom" />
+
+        <section
+          v-if="hasSidebarBottomContent"
+          class="blank-sidebar-accordion"
+          :class="{ 'is-open': isSidebarBottomOpen }"
+        >
+          <div
+            :id="sidebarBottomPanelId"
+            class="blank-sidebar-accordion__panel"
+            role="region"
+            :aria-label="sidebarBottomAccordionLabel"
+            :aria-hidden="!isSidebarBottomOpen"
+          >
+            <slot name="app.sidebar.bottom" />
+          </div>
+
+          <button
+            type="button"
+            class="blank-sidebar-accordion__trigger"
+            :aria-expanded="isSidebarBottomOpen"
+            :aria-controls="sidebarBottomPanelId"
+            @click="toggleSidebarBottom"
+          >
+            <span>{{ sidebarBottomAccordionLabel }}</span>
+            <ChevronUp class="ui-icon blank-sidebar-accordion__trigger-icon" />
+          </button>
         </section>
       </div>
     </aside>
@@ -75,14 +100,20 @@
 </template>
 
 <script setup lang="ts">
-import { computed, useSlots } from "vue";
+import { computed, ref, useSlots, watch } from "vue";
+import { ChevronUp } from "lucide-vue-next";
 import UiHeroGlassTabsShell from "@/components/ui-kit/primitives/UiHeroGlassTabsShell.vue";
 
-withDefaults(
+let sidebarBottomPanelCounter = 0;
+
+const props = withDefaults(
   defineProps<{
     emblemSrc: string;
     sidebarHidden?: boolean;
     sidebarParticlesId?: string;
+    sidebarBottomAccordionLabel?: string;
+    sidebarBottomAccordionInitiallyOpen?: boolean;
+    sidebarBottomVisible?: boolean | null;
     canvasAriaLabel?: string;
     layoutApiVersion?: "v1";
     entityContextObject?: Record<string, unknown> | null;
@@ -91,6 +122,9 @@ withDefaults(
   {
     sidebarHidden: false,
     sidebarParticlesId: "",
+    sidebarBottomAccordionLabel: "Sidebar details",
+    sidebarBottomAccordionInitiallyOpen: true,
+    sidebarBottomVisible: null,
     canvasAriaLabel: "Blank page",
     layoutApiVersion: "v1",
     entityContextObject: null,
@@ -100,6 +134,44 @@ withDefaults(
 
 const slots = useSlots();
 const hasHeaderLeft = computed(() => Boolean(slots["app.header.left"]));
+const isSidebarBottomOpen = ref(
+  Boolean(props.sidebarBottomAccordionInitiallyOpen),
+);
+const sidebarBottomPanelId = `blank-sidebar-bottom-panel-${++sidebarBottomPanelCounter}`;
+const hasSidebarBottomSlot = computed(() =>
+  Boolean(slots["app.sidebar.bottom"]),
+);
+
+const hasSidebarBottomContent = computed(() => {
+  if (!hasSidebarBottomSlot.value) return false;
+  if (typeof props.sidebarBottomVisible === "boolean") {
+    return props.sidebarBottomVisible;
+  }
+  return true;
+});
+
+let hadSidebarBottomContent = false;
+watch(
+  () => hasSidebarBottomContent.value,
+  (hasContent) => {
+    if (!hasContent) {
+      isSidebarBottomOpen.value = false;
+      hadSidebarBottomContent = false;
+      return;
+    }
+    if (!hadSidebarBottomContent) {
+      isSidebarBottomOpen.value = Boolean(
+        props.sidebarBottomAccordionInitiallyOpen,
+      );
+      hadSidebarBottomContent = true;
+    }
+  },
+  { immediate: true },
+);
+
+function toggleSidebarBottom(): void {
+  isSidebarBottomOpen.value = !isSidebarBottomOpen.value;
+}
 </script>
 
 <style scoped>
@@ -149,10 +221,112 @@ const hasHeaderLeft = computed(() => Boolean(slots["app.header.left"]));
   display: contents;
 }
 
-.blank-sidebar-top,
-.blank-sidebar-middle,
-.blank-sidebar-bottom {
-  display: contents;
+.blank-sidebar {
+  min-height: 0;
+}
+
+.blank-sidebar .sidebar-content {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  gap: 10px;
+}
+
+.blank-sidebar-logo {
+  flex: 0 0 auto;
+  min-height: 0;
+}
+
+.blank-sidebar-main {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.blank-sidebar-accordion {
+  flex: 0 0 auto;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: 8px;
+}
+
+.blank-sidebar-accordion__panel {
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+  transform: translateY(10px);
+  border-radius: var(--ui-radius);
+  border: 1px solid transparent;
+  background: linear-gradient(
+    146deg,
+    rgba(15, 34, 51, 0.5),
+    rgba(10, 24, 40, 0.36)
+  );
+  padding: 0 10px;
+  transition:
+    max-height 230ms ease,
+    opacity 170ms ease,
+    transform 230ms ease,
+    border-color 230ms ease,
+    padding 230ms ease;
+}
+
+.blank-sidebar-accordion.is-open .blank-sidebar-accordion__panel {
+  max-height: min(42vh, 340px);
+  opacity: 1;
+  transform: translateY(0);
+  border-color: rgba(120, 183, 218, 0.28);
+  padding: 10px;
+  overflow-y: auto;
+}
+
+.blank-sidebar-accordion__trigger {
+  width: 100%;
+  border: 1px solid rgba(110, 171, 208, 0.28);
+  border-radius: var(--ui-radius);
+  background: linear-gradient(
+    146deg,
+    rgba(20, 45, 68, 0.56),
+    rgba(12, 30, 48, 0.45)
+  );
+  color: rgba(220, 237, 250, 0.95);
+  padding: 9px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 0.82rem;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  transition:
+    border-color 170ms ease,
+    box-shadow 170ms ease,
+    background 170ms ease;
+}
+
+.blank-sidebar-accordion__trigger:hover {
+  border-color: rgba(157, 216, 250, 0.52);
+  background: linear-gradient(
+    146deg,
+    rgba(30, 63, 93, 0.58),
+    rgba(17, 41, 65, 0.52)
+  );
+}
+
+.blank-sidebar-accordion__trigger:focus-visible {
+  outline: none;
+  border-color: rgba(166, 225, 255, 0.65);
+  box-shadow: 0 0 0 3px rgba(103, 177, 219, 0.25);
+}
+
+.blank-sidebar-accordion__trigger-icon {
+  transition: transform 220ms ease;
+  transform: rotate(180deg);
+}
+
+.blank-sidebar-accordion.is-open .blank-sidebar-accordion__trigger-icon {
+  transform: rotate(0deg);
 }
 
 .blank-canvas {

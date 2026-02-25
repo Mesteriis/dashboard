@@ -23,6 +23,8 @@
   },
   "dependencies": {
     "@formkit/auto-animate": "0.9.0",
+    "@heroicons/vue": "^2.2.0",
+    "@tabler/icons-vue": "^3.37.1",
     "@tauri-apps/api": "2.8.0",
     "@tsparticles/engine": "^3.9.1",
     "@tsparticles/slim": "^3.9.1",
