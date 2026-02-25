@@ -5,22 +5,22 @@
   display: grid;
   place-items: center;
   padding: 20px;
-  background: rgba(3, 9, 16, 0.78);
+  background: var(--create-entity-flow-modal-color-001);
   backdrop-filter: blur(5px) saturate(120%);
 }
 
 .create-chooser-modal {
   width: min(980px, 96vw);
-  border: 1px solid rgba(104, 240, 217, 0.34);
+  border: 1px solid var(--create-entity-flow-modal-color-002);
   border-radius: var(--ui-radius);
   background: linear-gradient(
     164deg,
-    rgba(9, 23, 36, 0.98),
-    rgba(6, 14, 23, 0.99)
+    var(--create-entity-flow-modal-color-003),
+    var(--create-entity-flow-modal-color-004)
   );
   box-shadow:
-    0 30px 70px rgba(1, 6, 13, 0.68),
-    inset 0 1px 0 rgba(214, 255, 247, 0.09);
+    0 30px 70px var(--create-entity-flow-modal-color-005),
+    inset 0 1px 0 var(--create-entity-flow-modal-color-006);
   display: grid;
   gap: 14px;
   padding: 18px;
@@ -45,10 +45,10 @@
 }
 
 .create-chooser-option {
-  border: 1px solid rgba(118, 176, 201, 0.34);
+  border: 1px solid var(--create-entity-flow-modal-color-007);
   border-radius: var(--ui-radius);
-  background: rgba(10, 22, 34, 0.76);
-  color: #e0edf9;
+  background: var(--create-entity-flow-modal-color-008);
+  color: var(--create-entity-flow-modal-color-009);
   padding: 14px;
   text-align: left;
   display: grid;
@@ -61,8 +61,8 @@
 }
 
 .create-chooser-option:hover {
-  border-color: rgba(117, 246, 223, 0.72);
-  background: rgba(11, 27, 40, 0.92);
+  border-color: var(--create-entity-flow-modal-color-010);
+  background: var(--create-entity-flow-modal-color-011);
   transform: translateY(-1px);
 }
 
@@ -72,7 +72,7 @@
 }
 
 .create-chooser-subtitle {
-  color: #b7cedf;
+  color: var(--create-entity-flow-modal-color-012);
   font-size: 0.78rem;
 }
 
@@ -87,8 +87,8 @@
 }
 
 .create-entity-kind-switcher .ghost.active {
-  border-color: rgba(117, 246, 223, 0.72);
-  background: rgba(11, 27, 40, 0.92);
+  border-color: var(--create-entity-flow-modal-color-010);
+  background: var(--create-entity-flow-modal-color-011);
 }
 
 .editor-field--wide {
@@ -97,7 +97,7 @@
 
 .create-entity-note {
   margin: 0;
-  color: #b7cedf;
+  color: var(--create-entity-flow-modal-color-012);
   font-size: 0.8rem;
   line-height: 1.4;
   grid-column: 1 / -1;

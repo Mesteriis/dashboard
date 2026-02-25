@@ -23,7 +23,7 @@
   width: 52px;
   height: 52px;
   border-radius: var(--ui-radius);
-  background: rgba(0, 0, 0, 0.2);
+  background: var(--plugins-panel-color-001);
 }
 
 .plugins-panel-brand-kicker {
@@ -31,7 +31,7 @@
   font-size: 0.72rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: rgba(140, 224, 223, 0.9);
+  color: var(--plugins-panel-color-002);
 }
 
 .plugins-panel-brand h1 {
@@ -43,7 +43,7 @@
 
 .plugins-panel-brand-note {
   margin: 4px 0 0;
-  color: #9ab3c5;
+  color: var(--plugins-panel-color-003);
   font-size: 0.82rem;
 }
 
@@ -62,14 +62,14 @@
 }
 
 .plugins-panel-nav-link {
-  border: 1px solid rgba(117, 184, 209, 0.28);
+  border: 1px solid var(--plugins-panel-color-004);
   border-radius: var(--ui-radius);
   background: linear-gradient(
     152deg,
-    rgba(10, 31, 46, 0.76),
-    rgba(8, 22, 35, 0.74)
+    var(--plugins-panel-color-005),
+    var(--plugins-panel-color-006)
   );
-  color: #d5e8f5;
+  color: var(--plugins-panel-color-007);
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
@@ -94,25 +94,25 @@
 
 .plugins-panel-nav-link strong {
   font-size: 0.76rem;
-  color: #9fc0d6;
+  color: var(--plugins-panel-color-008);
 }
 
 .plugins-panel-nav-link:hover {
-  border-color: rgba(115, 243, 221, 0.48);
+  border-color: var(--plugins-panel-color-009);
   background: linear-gradient(
     152deg,
-    rgba(15, 49, 69, 0.78),
-    rgba(11, 31, 48, 0.75)
+    var(--plugins-panel-color-010),
+    var(--plugins-panel-color-011)
   );
   transform: translateY(-1px);
 }
 
 .plugins-panel-nav-link.active {
-  border-color: rgba(125, 239, 221, 0.58);
+  border-color: var(--plugins-panel-color-012);
   background: linear-gradient(
     152deg,
-    rgba(18, 62, 83, 0.76),
-    rgba(13, 43, 59, 0.75)
+    var(--plugins-panel-color-013),
+    var(--plugins-panel-color-014)
   );
 }
 
@@ -126,14 +126,14 @@
 }
 
 .plugins-install-btn {
-  border: 1px solid rgba(117, 184, 209, 0.28);
+  border: 1px solid var(--plugins-panel-color-004);
   border-radius: var(--ui-radius);
   background: linear-gradient(
     152deg,
-    rgba(10, 31, 46, 0.66),
-    rgba(8, 22, 35, 0.64)
+    var(--plugins-panel-color-015),
+    var(--plugins-panel-color-016)
   );
-  color: #d5e8f5;
+  color: var(--plugins-panel-color-007);
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -150,11 +150,11 @@
 }
 
 .plugins-install-btn:hover {
-  border-color: rgba(115, 243, 221, 0.48);
+  border-color: var(--plugins-panel-color-009);
   background: linear-gradient(
     152deg,
-    rgba(15, 49, 69, 0.72),
-    rgba(11, 31, 48, 0.7)
+    var(--plugins-panel-color-017),
+    var(--plugins-panel-color-018)
   );
   transform: translateY(-1px);
 }
@@ -189,8 +189,8 @@
 .plugins-panel-close {
   position: relative;
   z-index: 1;
-  width: 52px;
-  height: 52px;
+  width: calc(52px * 1.19);
+  height: calc(52px * 1.19);
   border-radius: var(--ui-radius);
   align-self: stretch;
 }
@@ -202,16 +202,16 @@
 }
 
 .plugins-main-surface {
-  border: 1px solid rgba(111, 175, 196, 0.22);
+  border: 1px solid var(--plugins-panel-color-019);
   border-radius: var(--ui-radius);
   background: linear-gradient(
     160deg,
-    rgba(6, 18, 30, 0.82),
-    rgba(4, 12, 22, 0.78)
+    var(--plugins-panel-color-020),
+    var(--plugins-panel-color-021)
   );
   box-shadow:
-    0 16px 30px rgba(2, 9, 17, 0.32),
-    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    0 16px 30px var(--plugins-panel-color-022),
+    inset 0 1px 0 var(--plugins-panel-color-023);
   padding: 14px;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
@@ -221,24 +221,24 @@
 .plugins-main-surface-head h3 {
   margin: 0;
   font-size: 1.03rem;
-  color: #e7f4ff;
+  color: var(--plugins-panel-color-024);
 }
 
 .plugins-main-surface-head p {
   margin: 6px 0 0;
   font-size: 0.82rem;
-  color: #9db8cb;
+  color: var(--plugins-panel-color-025);
 }
 
 .plugins-main-tile-wrap {
-  border: 1px solid rgba(96, 153, 177, 0.24);
+  border: 1px solid var(--plugins-panel-color-026);
   border-radius: var(--ui-radius);
   min-height: 0;
   padding: 10px;
   background: linear-gradient(
     160deg,
-    rgba(7, 22, 35, 0.66),
-    rgba(5, 15, 25, 0.62)
+    var(--plugins-panel-color-027),
+    var(--plugins-panel-color-028)
   );
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
@@ -249,7 +249,7 @@
 .plugins-main-tile-head h4 {
   margin: 0;
   font-size: 0.96rem;
-  color: #d8ebf8;
+  color: var(--plugins-panel-color-029);
 }
 
 .plugins-main-tile-grid {
@@ -262,13 +262,13 @@
 }
 
 .plugins-main-tile-card {
-  border: 1px solid rgba(113, 178, 201, 0.3);
+  border: 1px solid var(--plugins-panel-color-030);
   border-radius: var(--ui-radius);
   padding: 12px;
   background: linear-gradient(
     150deg,
-    rgba(24, 58, 72, 0.36),
-    rgba(8, 20, 33, 0.84)
+    var(--plugins-panel-color-031),
+    var(--plugins-panel-color-032)
   );
   display: grid;
   gap: 8px;
@@ -285,7 +285,7 @@
 .plugins-main-tile-card h5 {
   margin: 0;
   font-size: 0.94rem;
-  color: #dff1ff;
+  color: var(--plugins-panel-color-033);
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -293,26 +293,26 @@
 }
 
 .plugins-main-tile-chip {
-  border: 1px solid rgba(110, 176, 197, 0.34);
+  border: 1px solid var(--plugins-panel-color-034);
   border-radius: 999px;
   padding: 2px 8px;
   font-size: 0.68rem;
-  color: #a9c8db;
-  background: rgba(8, 27, 40, 0.58);
+  color: var(--plugins-panel-color-035);
+  background: var(--plugins-panel-color-036);
   text-transform: lowercase;
 }
 
 .plugins-main-tile-id {
   margin: 0;
   font-size: 0.76rem;
-  color: #98b7cb;
+  color: var(--plugins-panel-color-037);
   word-break: break-all;
 }
 
 .plugins-main-tile-meta {
   margin: 0;
   font-size: 0.78rem;
-  color: #8edecf;
+  color: var(--plugins-panel-color-038);
 }
 
 .plugins-main-tile-actions {
@@ -323,9 +323,9 @@
 }
 
 .plugins-empty-state {
-  border: 1px dashed rgba(118, 185, 208, 0.32);
+  border: 1px dashed var(--plugins-panel-color-039);
   border-radius: var(--ui-radius);
-  background: rgba(8, 22, 33, 0.48);
+  background: var(--plugins-panel-color-040);
   padding: 18px;
 }
 
@@ -336,7 +336,7 @@
 
 .plugins-empty-state p {
   margin: 8px 0 0;
-  color: #9ab4c6;
+  color: var(--plugins-panel-color-041);
   font-size: 0.84rem;
 }
 
@@ -347,22 +347,22 @@
   display: grid;
   place-items: center;
   padding: 14px;
-  background: rgba(2, 8, 14, 0.76);
+  background: var(--plugins-panel-color-042);
   backdrop-filter: blur(6px) saturate(122%);
 }
 
 .plugins-github-modal {
   width: min(94vw, 620px);
-  border: 1px solid rgba(112, 236, 215, 0.3);
+  border: 1px solid var(--plugins-panel-color-043);
   border-radius: var(--ui-radius);
   background: linear-gradient(
     165deg,
-    rgba(8, 22, 34, 0.98),
-    rgba(5, 14, 23, 0.98)
+    var(--plugins-panel-color-044),
+    var(--plugins-panel-color-045)
   );
   box-shadow:
     var(--shadow),
-    inset 0 0 0 1px rgba(214, 248, 255, 0.03);
+    inset 0 0 0 1px var(--plugins-panel-color-046);
   display: grid;
   gap: 12px;
   padding: 14px;
@@ -383,7 +383,7 @@
 
 .plugins-github-modal-head p {
   margin: 4px 0 0;
-  color: #9ab4c8;
+  color: var(--plugins-panel-color-047);
   font-size: 0.78rem;
 }
 
@@ -398,20 +398,20 @@
   grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
   gap: 8px;
-  border: 1px solid rgba(116, 177, 199, 0.32);
+  border: 1px solid var(--plugins-panel-color-048);
   border-radius: var(--ui-radius);
   background: linear-gradient(
     146deg,
-    rgba(22, 45, 66, 0.5),
-    rgba(14, 31, 49, 0.42)
+    var(--plugins-panel-color-049),
+    var(--plugins-panel-color-050)
   );
-  color: rgba(218, 235, 251, 0.92);
+  color: var(--plugins-panel-color-051);
   padding: 8px 10px;
 }
 
 .plugins-github-field:focus-within {
-  border-color: rgba(110, 244, 221, 0.64);
-  box-shadow: 0 0 0 2px rgba(74, 210, 186, 0.2);
+  border-color: var(--plugins-panel-color-052);
+  box-shadow: 0 0 0 2px var(--plugins-panel-color-053);
 }
 
 .plugins-github-field input {
@@ -420,35 +420,35 @@
   outline: 0;
   min-width: 0;
   background: transparent;
-  color: #e3eef7;
+  color: var(--plugins-panel-color-054);
   font: inherit;
   font-size: 0.84rem;
   line-height: 1.2;
 }
 
 .plugins-github-field input::placeholder {
-  color: #8ea6bb;
+  color: var(--plugins-panel-color-055);
 }
 
 .plugins-github-field-icon {
   width: 14px;
   height: 14px;
-  color: #9ec6dd;
+  color: var(--plugins-panel-color-056);
   flex: 0 0 auto;
 }
 
 .plugins-github-status {
   margin: 0;
   font-size: 0.79rem;
-  color: #9eb9cb;
+  color: var(--plugins-panel-color-057);
 }
 
 .plugins-github-status.ok {
-  color: #8df0d6;
+  color: var(--plugins-panel-color-058);
 }
 
 .plugins-github-status.error {
-  color: #ffb4c1;
+  color: var(--plugins-panel-color-059);
 }
 
 .plugins-github-actions {
@@ -474,33 +474,33 @@
 }
 
 .plugins-github-check-btn {
-  border: 1px solid rgba(111, 175, 196, 0.34);
-  background: rgba(10, 30, 42, 0.7);
-  color: #d2e9f8;
+  border: 1px solid var(--plugins-panel-color-060);
+  background: var(--plugins-panel-color-061);
+  color: var(--plugins-panel-color-062);
 }
 
 .plugins-github-check-btn:hover {
-  border-color: rgba(113, 237, 217, 0.56);
-  background: rgba(15, 44, 58, 0.76);
+  border-color: var(--plugins-panel-color-063);
+  background: var(--plugins-panel-color-064);
   transform: translateY(-1px);
 }
 
 .plugins-github-install-btn {
-  border: 1px solid rgba(114, 236, 214, 0.5);
+  border: 1px solid var(--plugins-panel-color-065);
   background: linear-gradient(
     148deg,
-    rgba(17, 70, 74, 0.76),
-    rgba(10, 47, 52, 0.78)
+    var(--plugins-panel-color-066),
+    var(--plugins-panel-color-067)
   );
-  color: #dffcf3;
+  color: var(--plugins-panel-color-068);
 }
 
 .plugins-github-install-btn:hover {
-  border-color: rgba(131, 250, 229, 0.62);
+  border-color: var(--plugins-panel-color-069);
   background: linear-gradient(
     148deg,
-    rgba(20, 87, 90, 0.8),
-    rgba(12, 57, 63, 0.8)
+    var(--plugins-panel-color-070),
+    var(--plugins-panel-color-071)
   );
   transform: translateY(-1px);
 }

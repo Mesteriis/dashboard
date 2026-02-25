@@ -1,5 +1,8 @@
 <template>
-  <UiHeroPanel controls-class="hero-control-panel--menu service-hero-controls">
+  <UiHeroPanel
+    v-if="segment === 'full'"
+    controls-class="hero-control-panel--menu service-hero-controls"
+  >
     <template #title>
       <nav
         ref="tabsRef"
@@ -78,6 +81,71 @@
       </UiHeroControlsAccordion>
     </template>
   </UiHeroPanel>
+
+  <nav
+    v-else-if="segment === 'tabs'"
+    ref="tabsRef"
+    class="hero-page-tabs hero-page-tabs--js-smooth"
+    :class="{
+      'hero-page-tabs--intro': shouldPlayIntro,
+      'has-logo-tile': showLogoTile,
+    }"
+    role="tablist"
+    aria-label="Разделы blank страницы"
+  >
+    <div v-if="showLogoTile" class="hero-logo-square" aria-hidden="true">
+      <img :src="EMBLEM_SRC" alt="" />
+    </div>
+
+    <button
+      v-for="tab in demoTabs"
+      :key="tab.id"
+      :id="`blank-tab-${tab.id}`"
+      class="hero-page-tab-btn"
+      :data-page-id="tab.id"
+      :class="{
+        active: activeTabId === tab.id,
+        'hero-page-tab-btn--intro-active':
+          shouldPlayIntro && activeTabId === tab.id,
+      }"
+      type="button"
+      role="tab"
+      :title="tab.label"
+      :aria-label="tab.label"
+      :aria-selected="activeTabId === tab.id"
+      :tabindex="activeTabId === tab.id ? 0 : -1"
+      :aria-controls="`blank-panel-${tab.id}`"
+      @click="activeTabId = tab.id"
+    >
+      <component :is="tab.icon" class="ui-icon hero-page-tab-icon" />
+      <span class="hero-page-tab-label">{{ tab.label }}</span>
+    </button>
+  </nav>
+
+  <UiIconButton
+    v-else-if="segment === 'panel.drawer'"
+    button-class="hero-icon-btn hero-accordion-action"
+    :active="!isSidebarDetailed"
+    :title="sidebarViewToggleTitle"
+    :aria-label="sidebarViewToggleTitle"
+    @click="handleSidebarToggle"
+  >
+    <FolderTree class="ui-icon hero-action-icon" />
+  </UiIconButton>
+
+  <UiDropdownMenu
+    v-else-if="segment === 'panel.menu'"
+    aria-label="Системное меню"
+    :items="systemActions"
+    :show-caret="false"
+    trigger-class="hero-icon-btn hero-accordion-action hero-system-menu-trigger"
+    item-class="hero-system-menu-item"
+    @action="handleSystemAction"
+  >
+    <template #trigger>
+      <ChevronDown class="ui-icon hero-action-icon" />
+    </template>
+  </UiDropdownMenu>
 </template>
 
 <script setup lang="ts">
@@ -106,13 +174,16 @@ type BlankTabDefinition = {
   label: string;
   icon: Component;
 };
+type UiHeroBlankPanelSegment = "full" | "tabs" | "panel.drawer" | "panel.menu";
 
 const props = withDefaults(
   defineProps<{
+    segment?: UiHeroBlankPanelSegment;
     modelValue?: BlankTabId;
     heroControlsOpen?: boolean;
   }>(),
   {
+    segment: "full",
     modelValue: "overview",
     heroControlsOpen: true,
   },
@@ -135,6 +206,7 @@ const {
   sidebarViewToggleTitle,
   toggleSidebarView,
 } = dashboard;
+const segment = computed(() => props.segment);
 const demoTabs: BlankTabDefinition[] = [
   { id: "overview", label: "Обзор пространства", icon: FolderTree },
   { id: "operations", label: "Оперативный контур", icon: Lock },
@@ -262,10 +334,17 @@ function resolveTabMetrics(buttons: HTMLElement[]): TabMetrics | null {
     collapsedWidth * buttons.length,
     host.clientWidth - logoWidth + overlapCompensation,
   );
-  const activeWidth = Math.max(
+  const unconstrainedActiveWidth = Math.max(
     collapsedWidth,
     availableWidth - collapsedWidth * (buttons.length - 1),
   );
+  const activeWidth =
+    buttons.length <= 1
+      ? availableWidth
+      : Math.min(
+          unconstrainedActiveWidth,
+          Math.max(collapsedWidth, Math.min(availableWidth * 0.72, 620)),
+        );
 
   return {
     collapsedWidth,

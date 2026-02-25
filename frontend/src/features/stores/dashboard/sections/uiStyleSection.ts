@@ -1,4 +1,13 @@
-import type { DashboardGrid, DashboardTheme } from "@/features/stores/dashboard/storeTypes";
+import {
+  setThemeMode as applyThemeMode,
+  setThemePalette as applyThemePalette,
+} from "@/features/services/themeMode";
+import type {
+  DashboardGrid,
+  DashboardTheme,
+  ThemeMode,
+  ThemePalette,
+} from "@/features/stores/dashboard/storeTypes";
 
 export function createDashboardUiStyleSection(ctx: any) {
   function applyTheme(theme: DashboardTheme | undefined): void {
@@ -36,6 +45,16 @@ export function createDashboardUiStyleSection(ctx: any) {
     if (grid.columns != null) {
       root.style.setProperty("--layout-columns", String(Number(grid.columns)));
     }
+  }
+
+  function setThemeMode(mode: ThemeMode): void {
+    const nextMode = applyThemeMode(mode);
+    ctx.themeMode.value = nextMode;
+  }
+
+  function setThemePalette(palette: ThemePalette): void {
+    const nextPalette = applyThemePalette(palette);
+    ctx.themePalette.value = nextPalette;
   }
 
   function toggleEditMode(): void {
@@ -100,6 +119,8 @@ export function createDashboardUiStyleSection(ctx: any) {
     applyTheme,
     closeSettingsPanel,
     openSettingsPanel,
+    setThemePalette,
+    setThemeMode,
     toggleEditMode,
     toggleServiceCardView,
     toggleSettingsPanel,

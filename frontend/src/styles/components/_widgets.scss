@@ -12,7 +12,7 @@
 }
 
 .widget-icon {
-  color: #9dd8d0;
+  color: var(--widgets-color-001);
 }
 
 .widget-head h3 {
@@ -42,14 +42,14 @@
 }
 
 .widget-list li {
-  border: 1px solid rgba(129, 166, 184, 0.2);
+  border: 1px solid var(--widgets-color-002);
   border-radius: var(--ui-radius);
-  background: rgba(8, 18, 29, 0.55);
+  background: var(--widgets-color-003);
   padding: 8px 10px;
   display: flex;
   justify-content: space-between;
   gap: 8px;
-  color: #d5e4f1;
+  color: var(--widgets-color-004);
 }
 
 .widget-table-wrap {
@@ -64,18 +64,18 @@
 
 .widget-table th,
 .widget-table td {
-  border-bottom: 1px solid rgba(123, 164, 184, 0.2);
+  border-bottom: 1px solid var(--widgets-color-005);
   padding: 8px;
   text-align: left;
 }
 
 .widget-table th {
-  color: #cbe3f3;
+  color: var(--widgets-color-006);
   font-weight: 600;
 }
 
 .widget-table td {
-  color: #d9e8f4;
+  color: var(--widgets-color-007);
 }
 
 .widget-actions {

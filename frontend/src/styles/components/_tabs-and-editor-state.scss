@@ -1,18 +1,18 @@
 .editor-status.saving {
-  color: #d8f5ff;
+  color: var(--tabs-and-editor-state-color-001);
 }
 
 .editor-status.saved {
-  color: #70edcf;
+  color: var(--tabs-and-editor-state-color-002);
 }
 
 .editor-status.error {
-  color: #ff9191;
+  color: var(--tabs-and-editor-state-color-003);
 }
 
 .editor-error {
   margin: -6px 4px 2px;
-  color: #ff9e9e;
+  color: var(--tabs-and-editor-state-color-004);
   font-size: 0.76rem;
 }
 
@@ -37,8 +37,8 @@
   border-radius: var(--ui-radius);
   background: linear-gradient(
     145deg,
-    rgba(11, 22, 34, 0.9),
-    rgba(8, 16, 27, 0.85)
+    var(--tabs-and-editor-state-color-005),
+    var(--tabs-and-editor-state-color-006)
   );
   color: var(--text);
   height: var(--tab-tile-size);
@@ -82,7 +82,7 @@
 }
 
 .tab-btn:hover {
-  border-color: rgba(91, 241, 219, 0.4);
+  border-color: var(--tabs-and-editor-state-color-007);
   transform: translateY(-1px);
 }
 
@@ -91,13 +91,13 @@
   flex-basis: var(--tab-tile-size);
   justify-content: flex-start;
   padding: 0 14px;
-  border-color: rgba(96, 247, 223, 0.64);
+  border-color: var(--tabs-and-editor-state-color-008);
   background: linear-gradient(
     138deg,
-    rgba(12, 79, 81, 0.62),
-    rgba(9, 19, 30, 0.92)
+    var(--tabs-and-editor-state-color-009),
+    var(--tabs-and-editor-state-color-010)
   );
   box-shadow:
-    0 12px 30px rgba(0, 171, 153, 0.26),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    0 12px 30px var(--tabs-and-editor-state-color-011),
+    inset 0 1px 0 var(--tabs-and-editor-state-color-012);
 }

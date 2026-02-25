@@ -1,5 +1,6 @@
 <template>
   <UiHeroPanel
+    v-if="segment === 'full'"
     :active="editMode"
     controls-class="hero-control-panel--menu service-hero-controls"
   >
@@ -105,6 +106,100 @@
       </UiHeroControlsAccordion>
     </template>
   </UiHeroPanel>
+
+  <UiHeroPageTabs v-else-if="segment === 'tabs'" />
+
+  <template v-else-if="segment === 'panel.drawer'">
+    <UiIconButton
+      button-class="hero-icon-btn hero-accordion-action"
+      title="Панель настроек"
+      aria-label="Открыть панель настроек"
+      @click="openSettingsPanel"
+    >
+      <SlidersHorizontal class="ui-icon hero-action-icon" />
+    </UiIconButton>
+
+    <UiIconButton
+      button-class="hero-icon-btn hero-accordion-action"
+      :active="!isSidebarDetailed"
+      :title="sidebarViewToggleTitle"
+      :aria-label="sidebarViewToggleTitle"
+      @click="toggleSidebarView"
+    >
+      <FolderTree class="ui-icon hero-action-icon" />
+    </UiIconButton>
+
+    <UiIconButton
+      button-class="hero-icon-btn hero-accordion-action editor-toggle"
+      :active="editMode"
+      :title="
+        editMode
+          ? 'Выключить режим редактирования'
+          : 'Включить режим редактирования'
+      "
+      :aria-label="
+        editMode
+          ? 'Выключить режим редактирования'
+          : 'Включить режим редактирования'
+      "
+      @click="toggleEditMode"
+    >
+      <Pencil class="ui-icon hero-action-icon" />
+    </UiIconButton>
+
+    <UiIconButton
+      button-class="hero-icon-btn hero-accordion-action"
+      :disabled="!editMode"
+      title="Добавить сущность"
+      aria-label="Добавить сущность"
+      @click="openCreateChooser()"
+    >
+      <Plus class="ui-icon hero-action-icon" />
+    </UiIconButton>
+
+    <span
+      v-if="editMode"
+      class="hero-save-indicator hero-accordion-status"
+      :class="saveStatus"
+      role="status"
+      :title="saveStatusLabel"
+      :aria-label="saveStatusLabel"
+    >
+      <Circle class="ui-icon hero-save-icon" />
+    </span>
+  </template>
+
+  <template v-else-if="segment === 'panel.actions'">
+    <UiIconButton
+      button-class="hero-icon-btn hero-accordion-action hero-plugin-panel-btn"
+      title="Открыть панель плагинов"
+      aria-label="Открыть панель плагинов"
+      @click="openPluginPanel"
+    >
+      <Puzzle class="ui-icon hero-action-icon" />
+    </UiIconButton>
+  </template>
+
+  <UiDropdownMenu
+    v-else-if="segment === 'panel.menu'"
+    aria-label="Системное меню"
+    :items="systemActions"
+    :show-caret="false"
+    trigger-class="hero-icon-btn hero-accordion-action hero-system-menu-trigger"
+    item-class="hero-system-menu-item"
+    @action="handleSystemAction"
+  >
+    <template #trigger>
+      <Lock class="ui-icon hero-action-icon" />
+    </template>
+  </UiDropdownMenu>
+
+  <p
+    v-else-if="segment === 'panel.footer' && editMode && saveError"
+    class="editor-error hero-editor-error"
+  >
+    {{ saveError }}
+  </p>
 </template>
 
 <script setup lang="ts">
@@ -128,6 +223,24 @@ import { goPluginsPanel, openPleiadOverlay } from "@/app/navigation/nav";
 import { getRuntimeProfile } from "@/features/services/desktopRuntime";
 import { useDashboardStore } from "@/features/stores/dashboardStore";
 
+type UiServicesHeroPanelSegment =
+  | "full"
+  | "tabs"
+  | "panel.drawer"
+  | "panel.actions"
+  | "panel.menu"
+  | "panel.footer";
+
+const props = withDefaults(
+  defineProps<{
+    segment?: UiServicesHeroPanelSegment;
+  }>(),
+  {
+    segment: "full",
+  },
+);
+
+const segment = computed(() => props.segment);
 const route = useRoute();
 const dashboard = useDashboardStore();
 

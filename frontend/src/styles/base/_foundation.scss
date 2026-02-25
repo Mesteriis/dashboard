@@ -1,20 +1,22 @@
 :root {
-  --bg: #06121a;
-  --bg-soft: #0a1a24;
-  --surface: rgba(8, 20, 31, 0.76);
-  --surface-strong: rgba(10, 24, 36, 0.9);
-  --text: #e7eff6;
-  --muted: #9db3c5;
-  --accent: #2dd4bf;
-  --accent-soft: #6ef2dc;
-  --border: rgba(132, 170, 188, 0.22);
-  --shadow: 0 28px 60px rgba(0, 0, 0, 0.48);
+  --bg: var(--foundation-color-001);
+  --bg-soft: var(--foundation-color-002);
+  --surface: var(--foundation-color-003);
+  --surface-strong: var(--foundation-color-004);
+  --text: var(--foundation-color-005);
+  --muted: var(--foundation-color-006);
+  --accent: var(--foundation-color-007);
+  --accent-soft: var(--foundation-color-008);
+  --border: var(--foundation-color-009);
+  --shadow: 0 28px 60px var(--foundation-color-010);
   --card-radius: 18px;
   --ui-radius: calc(var(--card-radius) - 4px);
   --grid-gap: 14px;
   --layout-columns: 12;
   --glow-enabled: 1;
   --desktop-drag-strip: 0px;
+  --theme-color-scheme: dark;
+  color-scheme: var(--theme-color-scheme);
 }
 
 * {
@@ -38,16 +40,16 @@ body {
   background-image:
     radial-gradient(
       circle at 62% -4%,
-      rgba(46, 157, 168, 0.14),
+      var(--foundation-color-011),
       transparent 30%
     ),
     radial-gradient(
       circle at 18% 10%,
-      rgba(26, 140, 131, 0.22),
+      var(--foundation-color-012),
       transparent 38%
     ),
-    radial-gradient(circle at 82% 84%, rgba(18, 96, 98, 0.2), transparent 42%),
-    linear-gradient(168deg, #02060d 0%, #05131c 40%, #062118 74%, #030c14 100%);
+    radial-gradient(circle at 82% 84%, var(--foundation-color-013), transparent 42%),
+    linear-gradient(168deg, var(--foundation-color-014) 0%, var(--foundation-color-015) 40%, var(--foundation-color-016) 74%, var(--foundation-color-017) 100%);
 }
 
 .shell {
@@ -79,13 +81,13 @@ body {
   background:
     linear-gradient(
       180deg,
-      rgba(2, 6, 10, 0.44) 0%,
-      rgba(2, 8, 14, 0.06) 44%,
-      rgba(2, 7, 12, 0.5) 100%
+      var(--foundation-color-018) 0%,
+      var(--foundation-color-019) 44%,
+      var(--foundation-color-020) 100%
     ),
     radial-gradient(
       circle at 50% -8%,
-      rgba(127, 229, 216, 0.08),
+      var(--foundation-color-021),
       transparent 38%
     );
 }
@@ -99,20 +101,20 @@ body {
   background:
     radial-gradient(
       circle at 8% 18%,
-      rgba(83, 236, 215, 0.08),
+      var(--foundation-color-022),
       transparent 36%
     ),
     radial-gradient(
       circle at 92% 82%,
-      rgba(85, 172, 224, 0.08),
+      var(--foundation-color-023),
       transparent 34%
     ),
     repeating-linear-gradient(
       0deg,
-      rgba(213, 240, 255, 0.016) 0,
-      rgba(213, 240, 255, 0.016) 1px,
-      rgba(2, 7, 13, 0) 1px,
-      rgba(2, 7, 13, 0) 4px
+      var(--foundation-color-024) 0,
+      var(--foundation-color-024) 1px,
+      var(--foundation-color-025) 1px,
+      var(--foundation-color-025) 4px
     );
   opacity: calc(0.84 * var(--glow-enabled));
   mix-blend-mode: screen;
@@ -131,7 +133,7 @@ body {
   pointer-events: none;
   opacity: calc(0.11 * var(--glow-enabled));
   filter: drop-shadow(
-      0 0 calc(42px * var(--glow-enabled)) rgba(55, 224, 199, 0.26)
+      0 0 calc(42px * var(--glow-enabled)) var(--foundation-color-026)
     )
     saturate(1.12) contrast(1.03);
   mix-blend-mode: screen;

@@ -10,6 +10,47 @@
     <meta name="description" content="Oko — Your Infrastructure in Sight." />
     <meta name="theme-color" content="#0f1724" />
     <meta name="color-scheme" content="dark" />
+    <script>
+      (() => {
+        const storageKey = "oko:theme-mode:v1";
+        const prefersDarkQuery = "(prefers-color-scheme: dark)";
+        const root = document.documentElement;
+        const normalizeThemeMode = (value) => {
+          const normalized = String(value || "")
+            .trim()
+            .toLowerCase();
+          if (normalized === "dark" || normalized === "light" || normalized === "system") {
+            return normalized;
+          }
+          return "system";
+        };
+
+        let mode = "system";
+        try {
+          mode = normalizeThemeMode(window.localStorage?.getItem(storageKey));
+        } catch {
+          mode = "system";
+        }
+
+        const prefersDark = window.matchMedia?.(prefersDarkQuery).matches;
+        const appliedTheme = mode === "system" ? (prefersDark ? "dark" : "light") : mode;
+        root.dataset.themeMode = mode;
+        root.dataset.theme = appliedTheme;
+        root.style.setProperty("--theme-color-scheme", appliedTheme);
+
+        const colorSchemeMeta = document.querySelector('meta[name="color-scheme"]');
+        if (colorSchemeMeta) {
+          colorSchemeMeta.setAttribute("content", appliedTheme);
+        }
+        const themeColorMeta = document.querySelector('meta[name="theme-color"]');
+        if (themeColorMeta) {
+          themeColorMeta.setAttribute(
+            "content",
+            appliedTheme === "dark" ? "#0f1724" : "#e9f0f5",
+          );
+        }
+      })();
+    </script>
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta

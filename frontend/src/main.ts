@@ -6,6 +6,7 @@ import { bindNavigationRouter } from "@/app/navigation/nav";
 import { initDesktopRuntimeBridge } from "@/features/services/desktopRuntime";
 import { EVENT_FX_MODE_CHANGE, emitOkoEvent } from "@/features/services/events";
 import { initDevPerfTelemetry } from "@/features/services/perfTelemetry";
+import { initThemeMode } from "@/features/services/themeMode";
 import "./styles.scss";
 
 type LegacyFxMode = "off" | "lite" | "full";
@@ -52,6 +53,7 @@ function initFxModeProfile(): void {
   }
 }
 
+initThemeMode();
 initFxModeProfile();
 initDevPerfTelemetry({ enabled: import.meta.env.DEV });
 

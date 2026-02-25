@@ -8,7 +8,7 @@
 .tab-tile-icon {
   width: 17px;
   height: 17px;
-  color: #9dd9cf;
+  color: var(--tabs-and-icon-rail-color-001);
   transition: transform 576ms cubic-bezier(0.22, 0.72, 0.14, 1);
 }
 
@@ -45,8 +45,8 @@
   justify-content: center;
   padding: 0;
   box-shadow:
-    0 10px 24px rgba(0, 171, 153, 0.22),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    0 10px 24px var(--tabs-and-icon-rail-color-002),
+    inset 0 1px 0 var(--tabs-and-icon-rail-color-003);
 }
 
 .tab-list.compact .tab-tile-label {
@@ -71,14 +71,14 @@
   min-width: 42px;
   max-width: 42px;
   height: 42px;
-  border: 1px solid rgba(113, 170, 190, 0.34);
+  border: 1px solid var(--tabs-and-icon-rail-color-004);
   border-radius: var(--ui-radius);
   background: linear-gradient(
     152deg,
-    rgba(11, 24, 36, 0.88),
-    rgba(8, 18, 30, 0.9)
+    var(--tabs-and-icon-rail-color-005),
+    var(--tabs-and-icon-rail-color-006)
   );
-  color: #cfe1ef;
+  color: var(--tabs-and-icon-rail-color-007);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -91,6 +91,6 @@
 }
 
 .sidebar-icon-btn:hover {
-  border-color: rgba(126, 245, 224, 0.54);
+  border-color: var(--tabs-and-icon-rail-color-008);
   transform: translateY(-1px);
 }

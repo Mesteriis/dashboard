@@ -1,19 +1,19 @@
 .tree-search input::placeholder {
-  color: #8ea6bb;
+  color: var(--sidebar-tree-structure-color-001);
 }
 
 .tree-search input:focus {
-  border-color: rgba(108, 240, 219, 0.5);
-  box-shadow: 0 0 0 3px rgba(59, 198, 178, 0.16);
+  border-color: var(--sidebar-tree-structure-color-002);
+  box-shadow: 0 0 0 3px var(--sidebar-tree-structure-color-003);
 }
 
 .tree-root-page {
-  border: 1px solid rgba(113, 169, 189, 0.24);
+  border: 1px solid var(--sidebar-tree-structure-color-004);
   border-radius: var(--ui-radius);
   background: linear-gradient(
     155deg,
-    rgba(17, 46, 52, 0.42),
-    rgba(10, 22, 33, 0.64)
+    var(--sidebar-tree-structure-color-005),
+    var(--sidebar-tree-structure-color-006)
   );
   display: flex;
   align-items: center;
@@ -32,29 +32,29 @@
 .root-icon {
   width: 15px;
   height: 15px;
-  color: #9cecdf;
+  color: var(--sidebar-tree-structure-color-007);
 }
 
 .tree-root-title {
   margin: 0;
   font-weight: 600;
   font-size: 0.9rem;
-  color: #dff0fc;
+  color: var(--sidebar-tree-structure-color-008);
 }
 
 .tree-root-subtitle {
   margin: 2px 0 0;
   font-size: 0.72rem;
-  color: #8ea8bb;
+  color: var(--sidebar-tree-structure-color-009);
   text-transform: uppercase;
   letter-spacing: 0.07em;
 }
 
 .tree-root-meta {
-  border: 1px solid rgba(120, 239, 219, 0.34);
+  border: 1px solid var(--sidebar-tree-structure-color-010);
   border-radius: 999px;
-  background: rgba(17, 75, 75, 0.28);
-  color: #d3fff5;
+  background: var(--sidebar-tree-structure-color-011);
+  color: var(--sidebar-tree-structure-color-012);
   font-size: 0.74rem;
   padding: 2px 8px;
 }
@@ -83,8 +83,8 @@
   width: 100%;
   border: 1px solid transparent;
   border-radius: var(--ui-radius);
-  background: rgba(9, 20, 31, 0.5);
-  color: #dceaf4;
+  background: var(--sidebar-tree-structure-color-013);
+  color: var(--sidebar-tree-structure-color-014);
   font: inherit;
   font-size: 0.81rem;
   padding: 7px 9px;

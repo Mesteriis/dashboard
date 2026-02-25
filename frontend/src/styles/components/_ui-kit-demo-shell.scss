@@ -1,7 +1,7 @@
 .ui-toolbar {
-  border: 1px solid rgba(132, 174, 194, 0.32);
+  border: 1px solid var(--ui-kit-demo-shell-color-001);
   border-radius: var(--ui-radius);
-  background: linear-gradient(158deg, rgba(10, 26, 39, 0.84), rgba(7, 18, 28, 0.9));
+  background: linear-gradient(158deg, var(--ui-kit-demo-shell-color-002), var(--ui-kit-demo-shell-color-003));
   padding: 10px 12px;
   display: grid;
   grid-template-columns: auto 1fr auto;
@@ -18,7 +18,7 @@
   position: fixed;
   inset: 0;
   z-index: 64;
-  background: rgba(2, 8, 14, 0.72);
+  background: var(--ui-kit-demo-shell-color-004);
   display: grid;
   place-items: center;
   padding: 20px;
@@ -26,10 +26,10 @@
 
 .ui-modal {
   width: min(620px, 100%);
-  border: 1px solid rgba(136, 180, 201, 0.34);
+  border: 1px solid var(--ui-kit-demo-shell-color-005);
   border-radius: var(--ui-radius);
-  background: linear-gradient(160deg, rgba(9, 25, 37, 0.96), rgba(6, 17, 27, 0.97));
-  box-shadow: 0 24px 54px rgba(0, 0, 0, 0.45);
+  background: linear-gradient(160deg, var(--ui-kit-demo-shell-color-006), var(--ui-kit-demo-shell-color-007));
+  box-shadow: 0 24px 54px var(--ui-kit-demo-shell-color-008);
   display: grid;
   gap: 10px;
   padding: 12px;
@@ -84,24 +84,24 @@
 }
 
 .ui-kit-section {
-  border: 1px solid rgba(129, 171, 191, 0.28);
+  border: 1px solid var(--ui-kit-demo-shell-color-009);
   border-radius: var(--ui-radius);
   background:
     radial-gradient(
       120% 120% at 100% 0%,
-      rgba(45, 212, 191, 0.06),
-      rgba(8, 21, 32, 0.84) 52%
+      var(--ui-kit-demo-shell-color-010),
+      var(--ui-kit-demo-shell-color-011) 52%
     ),
-    rgba(8, 21, 32, 0.84);
+    var(--ui-kit-demo-shell-color-011);
   padding: 14px;
   display: grid;
   gap: 12px;
 }
 
 .ui-kit-node {
-  border: 1px solid rgba(127, 168, 187, 0.24);
+  border: 1px solid var(--ui-kit-demo-shell-color-012);
   border-radius: var(--ui-radius);
-  background: rgba(7, 19, 29, 0.55);
+  background: var(--ui-kit-demo-shell-color-013);
   padding: 10px;
   display: grid;
   gap: 8px;
@@ -110,7 +110,7 @@
 
 .ui-kit-node > h3 {
   margin: 0;
-  color: #c0d8e8;
+  color: var(--ui-kit-demo-shell-color-014);
   font-size: 0.86rem;
   letter-spacing: 0.02em;
 }
@@ -126,9 +126,9 @@
 
 .ui-kit-speed-zone {
   min-height: 260px;
-  border: 1px dashed rgba(128, 169, 188, 0.34);
+  border: 1px dashed var(--ui-kit-demo-shell-color-015);
   border-radius: var(--ui-radius);
-  background: rgba(7, 18, 28, 0.52);
+  background: var(--ui-kit-demo-shell-color-016);
   padding: 12px;
   display: grid;
   align-content: start;

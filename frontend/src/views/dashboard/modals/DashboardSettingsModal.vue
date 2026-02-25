@@ -19,6 +19,48 @@
       <section class="settings-modal-section">
         <h4>Отображение</h4>
         <div class="settings-state-group">
+          <p class="settings-state-label">Тема</p>
+          <div
+            class="settings-state-switcher"
+            role="radiogroup"
+            aria-label="Тема интерфейса"
+          >
+            <button
+              v-for="option in themeModeOptions"
+              :key="`theme:${option.value}`"
+              class="settings-state-btn"
+              :class="{ active: themeMode === option.value }"
+              type="button"
+              :aria-pressed="themeMode === option.value"
+              @click="setThemeMode(option.value)"
+            >
+              {{ option.label }}
+            </button>
+          </div>
+        </div>
+
+        <div class="settings-state-group">
+          <p class="settings-state-label">Палитра</p>
+          <div
+            class="settings-state-switcher"
+            role="radiogroup"
+            aria-label="Цветовая палитра"
+          >
+            <button
+              v-for="option in themePaletteOptions"
+              :key="`palette:${option.value}`"
+              class="settings-state-btn"
+              :class="{ active: themePalette === option.value }"
+              type="button"
+              :aria-pressed="themePalette === option.value"
+              @click="setThemePalette(option.value)"
+            >
+              {{ option.label }}
+            </button>
+          </div>
+        </div>
+
+        <div class="settings-state-group">
           <p class="settings-state-label">Вид</p>
           <div
             class="settings-state-switcher"
@@ -346,7 +388,13 @@ const {
   settingsPanel,
   siteFilter,
   siteFilterOptions,
+  themeMode,
+  themeModeOptions,
+  themePalette,
+  themePaletteOptions,
   setSiteFilter,
+  setThemePalette,
+  setThemeMode,
   toggleEditMode,
   toggleSidebarView,
   loadConfig,

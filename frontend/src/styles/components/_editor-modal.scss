@@ -1,16 +1,16 @@
 .editor-modal {
   width: min(96vw, 920px);
   max-height: min(92vh, 980px);
-  border: 1px solid rgba(104, 240, 217, 0.34);
+  border: 1px solid var(--editor-modal-color-001);
   border-radius: var(--ui-radius);
   background: linear-gradient(
     164deg,
-    rgba(9, 23, 36, 0.98),
-    rgba(6, 14, 23, 0.99)
+    var(--editor-modal-color-002),
+    var(--editor-modal-color-003)
   );
   box-shadow:
-    0 30px 70px rgba(1, 6, 13, 0.68),
-    inset 0 1px 0 rgba(214, 255, 247, 0.09);
+    0 30px 70px var(--editor-modal-color-004),
+    inset 0 1px 0 var(--editor-modal-color-005);
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
   overflow: hidden;
@@ -23,11 +23,11 @@
   justify-content: space-between;
   gap: 10px;
   padding: 14px 16px;
-  border-bottom: 1px solid rgba(126, 162, 180, 0.2);
+  border-bottom: 1px solid var(--editor-modal-color-006);
   background: linear-gradient(
     180deg,
-    rgba(14, 35, 49, 0.65),
-    rgba(8, 18, 29, 0.28)
+    var(--editor-modal-color-007),
+    var(--editor-modal-color-008)
   );
 }
 
@@ -53,12 +53,12 @@
   align-items: center;
   gap: 8px;
   padding: 2px;
-  border: 1px solid rgba(124, 172, 193, 0.24);
+  border: 1px solid var(--editor-modal-color-009);
   border-radius: var(--ui-radius);
   background: linear-gradient(
     160deg,
-    rgba(8, 18, 30, 0.66),
-    rgba(8, 20, 32, 0.48)
+    var(--editor-modal-color-010),
+    var(--editor-modal-color-011)
   );
 }
 
@@ -66,7 +66,7 @@
   border: 1px solid transparent;
   border-radius: var(--ui-radius);
   background: transparent;
-  color: #b7cedf;
+  color: var(--editor-modal-color-012);
   font: inherit;
   font-size: 0.82rem;
   font-weight: 580;
@@ -81,18 +81,18 @@
 }
 
 .editor-modal-tab:hover {
-  border-color: rgba(117, 246, 223, 0.32);
-  color: #dceefb;
+  border-color: var(--editor-modal-color-013);
+  color: var(--editor-modal-color-014);
 }
 
 .editor-modal-tab.active {
-  border-color: rgba(117, 246, 223, 0.58);
+  border-color: var(--editor-modal-color-015);
   background: linear-gradient(
     136deg,
-    rgba(10, 80, 90, 0.5),
-    rgba(10, 30, 43, 0.74)
+    var(--editor-modal-color-016),
+    var(--editor-modal-color-017)
   );
-  color: #e8f6ff;
+  color: var(--editor-modal-color-018);
 }
 
 .editor-grid {
@@ -108,17 +108,17 @@
 
 .editor-field > span {
   font-size: 0.76rem;
-  color: #b7cedf;
+  color: var(--editor-modal-color-012);
   letter-spacing: 0.02em;
 }
 
 .editor-field input,
 .editor-field select {
   width: 100%;
-  border: 1px solid rgba(118, 176, 201, 0.34);
+  border: 1px solid var(--editor-modal-color-019);
   border-radius: var(--ui-radius);
-  background: rgba(10, 22, 34, 0.76);
-  color: #e0edf9;
+  background: var(--editor-modal-color-020);
+  color: var(--editor-modal-color-021);
   font: inherit;
   font-size: 0.86rem;
   padding: 9px 11px;
@@ -151,19 +151,19 @@
 }
 
 .editor-field input::placeholder {
-  color: rgba(172, 199, 217, 0.62);
+  color: var(--editor-modal-color-022);
 }
 
 .editor-field input:hover,
 .editor-field select:hover {
-  border-color: rgba(132, 205, 224, 0.45);
+  border-color: var(--editor-modal-color-023);
 }
 
 .editor-field input:focus,
 .editor-field select:focus {
-  border-color: rgba(117, 246, 223, 0.72);
-  background: rgba(11, 27, 40, 0.92);
-  box-shadow: 0 0 0 3px rgba(77, 220, 198, 0.16);
+  border-color: var(--editor-modal-color-024);
+  background: var(--editor-modal-color-025);
+  box-shadow: 0 0 0 3px var(--editor-modal-color-026);
 }
 
 @media (max-width: 760px) {

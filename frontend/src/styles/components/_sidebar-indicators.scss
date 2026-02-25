@@ -1,5 +1,5 @@
 .sidebar-stats-toggle-caret {
-  color: #9ec1d7;
+  color: var(--sidebar-indicators-color-001);
   transition: transform 220ms ease;
 }
 
@@ -40,8 +40,8 @@
   padding: 12px;
   background: linear-gradient(
     152deg,
-    rgba(15, 33, 48, 0.62),
-    rgba(8, 19, 30, 0.76)
+    var(--sidebar-indicators-color-002),
+    var(--sidebar-indicators-color-003)
   );
   display: grid;
   gap: 8px;
@@ -56,18 +56,18 @@
 }
 
 .sidebar-indicator.interactive:hover {
-  border-color: rgba(106, 244, 220, 0.52);
+  border-color: var(--sidebar-indicators-color-004);
   transform: translateY(-1px);
 }
 
 .sidebar-indicator.active {
-  border-color: rgba(106, 244, 220, 0.62);
+  border-color: var(--sidebar-indicators-color-005);
   background: linear-gradient(
     154deg,
-    rgba(20, 80, 82, 0.38),
-    rgba(10, 23, 36, 0.78)
+    var(--sidebar-indicators-color-006),
+    var(--sidebar-indicators-color-007)
   );
-  box-shadow: 0 10px 24px rgba(0, 165, 147, 0.14);
+  box-shadow: 0 10px 24px var(--sidebar-indicators-color-008);
 }
 
 .sidebar-indicator-head .item-type {
@@ -89,7 +89,7 @@
 
 .sidebar-indicator-hint {
   margin: 0;
-  color: #9bb9cf;
+  color: var(--sidebar-indicators-color-009);
   font-size: 0.74rem;
 }
 

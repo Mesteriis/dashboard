@@ -1,12 +1,16 @@
 <template>
+  <!-- Корневой контейнер layout: общий каркас страницы -->
   <main
     class="app-shell blank-page"
     :class="{ 'sidebar-hidden': sidebarHidden }"
     :data-layout-api-version="layoutApiVersion"
   >
+    <!-- Фоновый слой layout (декор/эффекты от родителя) -->
     <slot name="app.shell.background" />
 
+    <!-- Левый сайдбар (скрывается при sidebarHidden) -->
     <aside v-if="!sidebarHidden" class="sidebar blank-sidebar">
+      <!-- Контейнер для частиц/визуального эффекта в сайдбаре -->
       <div
         v-if="sidebarParticlesId"
         :id="sidebarParticlesId"
@@ -15,19 +19,23 @@
       ></div>
 
       <div class="sidebar-content">
+        <!-- Верх сайдбара: обычно логотип/бренд -->
         <section class="blank-sidebar-logo">
           <slot name="app.sidebar.top" />
         </section>
 
+        <!-- Основная часть сайдбара: навигация/контент -->
         <section class="blank-sidebar-main">
           <slot name="app.sidebar.middle" />
         </section>
 
+        <!-- Нижний блок сайдбара: сворачиваемая секция с доп. контентом -->
         <section
           v-if="hasSidebarBottomContent"
           class="blank-sidebar-accordion"
           :class="{ 'is-open': isSidebarBottomOpen }"
         >
+          <!-- Панель аккордеона (контент снизу сайдбара) -->
           <div
             :id="sidebarBottomPanelId"
             class="blank-sidebar-accordion__panel"
@@ -38,6 +46,7 @@
             <slot name="app.sidebar.bottom" />
           </div>
 
+          <!-- Кнопка открытия/закрытия нижней панели -->
           <button
             type="button"
             class="blank-sidebar-accordion__trigger"
@@ -59,39 +68,97 @@
       </div>
     </aside>
 
+    <!-- Основная область страницы -->
     <section class="blank-main">
-      <UiHeroGlassTabsShell :emblem-src="emblemSrc">
-        <div class="blank-header-main">
-          <div v-if="hasHeaderLeft" class="blank-header-left">
-            <slot name="app.header.left" />
+      <!-- Верхняя панель: табы/заголовок + панель действий -->
+      <section class="blank-main-header hero-layout">
+        <!-- Блок заголовка c табами и эмблемой -->
+        <UiHeroGlassTabsShell class="hero-title-panel" :emblem-src="emblemSrc">
+          <div class="blank-header-main">
+            <!-- Левая часть header (опционально) -->
+            <div v-if="hasHeaderLeft" class="blank-header-left">
+              <slot name="app.header.left" />
+            </div>
+            <!-- Основные header tabs -->
+            <div class="blank-header-tabs">
+              <slot name="app.header.tabs" />
+            </div>
           </div>
-          <div class="blank-header-tabs">
-            <slot name="app.header.tabs" />
-          </div>
-        </div>
+        </UiHeroGlassTabsShell>
 
-        <template #actions>
-          <slot name="app.header.actions" />
-        </template>
-      </UiHeroGlassTabsShell>
+        <!-- Правая панель управления (drawer/actions/footer) -->
+        <aside
+          class="panel hero-control-panel hero-control-panel--menu service-hero-controls"
+          :class="{ active: headerPanelActive }"
+        >
+          <UiHeroControlsAccordion
+            :drawer-id="headerPanelDrawerId"
+            :storage-key="resolvedHeaderPanelStorageKey"
+            :initial-open="headerPanelInitiallyOpen"
+            @open-change="handleHeaderPanelOpenChange"
+          >
+            <!-- Триггер drawer: можно переопределить через slot -->
+            <template #drawer>
+              <slot name="app.header.panel.drawer">
+                <!-- Fallback-кнопка переключения режима сайдбара -->
+                <UiIconButton
+                  button-class="hero-icon-btn hero-accordion-action"
+                  :active="!isSidebarDetailed"
+                  :title="sidebarViewToggleTitle"
+                  :aria-label="sidebarViewToggleTitle"
+                  @click="handleSidebarToggle"
+                >
+                  <FolderTree class="ui-icon hero-action-icon" />
+                </UiIconButton>
+              </slot>
+            </template>
 
+            <!-- Действия в header-панели -->
+            <template #actions>
+              <slot name="app.header.panel.actions" />
+              <slot name="app.header.actions" />
+
+              <!-- Dropdown-меню действий (из panel.menu или actions.menu) -->
+              <div
+                v-if="hasHeaderPanelMenu"
+                class="ui-menu align-right hero-action-menu"
+              >
+                <slot v-if="hasHeaderPanelMenuSlot" name="app.header.panel.menu" />
+                <slot v-else name="app.header.actions.menu" />
+              </div>
+            </template>
+
+            <!-- Нижняя часть панели управления (опционально) -->
+            <template v-if="hasHeaderPanelFooterSlot" #footer>
+              <slot name="app.header.panel.footer" />
+            </template>
+          </UiHeroControlsAccordion>
+        </aside>
+      </section>
+
+      <!-- Основной canvas страницы: верх, тело, низ -->
       <section class="blank-canvas" :aria-label="canvasAriaLabel">
+        <!-- Верхняя зона canvas -->
         <section class="blank-canvas-top">
           <slot name="page.canvas.top" />
         </section>
+        <!-- Центральная зона canvas (основной контент) -->
         <section class="blank-canvas-main">
           <slot name="page.canvas.main" />
         </section>
+        <!-- Нижняя зона canvas -->
         <section class="blank-canvas-bottom">
           <slot name="page.canvas.bottom" />
         </section>
       </section>
     </section>
 
+    <!-- Глобальные UI-слоты приложения -->
     <slot name="app.notifications" />
     <slot name="app.modals" />
     <slot name="app.command_palette" />
 
+    <!-- Расширения для карточек сущностей -->
     <slot
       name="entity.card.actions"
       :context-object="entityContextObject"
@@ -108,7 +175,12 @@
 
 <script setup lang="ts">
 import { computed, ref, useSlots, watch } from "vue";
+import { useRoute } from "vue-router";
+import { FolderTree } from "lucide-vue-next";
 import UiHeroGlassTabsShell from "@/components/layout/UiHeroGlassTabsShell.vue";
+import UiHeroControlsAccordion from "@/components/layout/UiHeroControlsAccordion.vue";
+import UiIconButton from "@/ui/actions/UiIconButton.vue";
+import { useDashboardStore } from "@/features/stores/dashboardStore";
 
 let sidebarBottomPanelCounter = 0;
 
@@ -121,6 +193,10 @@ const props = withDefaults(
     sidebarBottomAccordionInitiallyOpen?: boolean;
     sidebarBottomVisible?: boolean | null;
     canvasAriaLabel?: string;
+    headerPanelActive?: boolean;
+    headerPanelDrawerId?: string;
+    headerPanelStorageKey?: string;
+    headerPanelInitiallyOpen?: boolean | null;
     layoutApiVersion?: "v1";
     entityContextObject?: Record<string, unknown> | null;
     entityRequiredCapabilities?: string[];
@@ -132,14 +208,42 @@ const props = withDefaults(
     sidebarBottomAccordionInitiallyOpen: true,
     sidebarBottomVisible: null,
     canvasAriaLabel: "Blank page",
+    headerPanelActive: false,
+    headerPanelDrawerId: "blank-hero-controls-drawer",
+    headerPanelStorageKey: "",
+    headerPanelInitiallyOpen: null,
     layoutApiVersion: "v1",
     entityContextObject: null,
     entityRequiredCapabilities: () => ["read.entity"],
   },
 );
 
+const emit = defineEmits<{
+  "header-panel-open-change": [value: boolean];
+}>();
+
+const route = useRoute();
+const dashboard = useDashboardStore();
+const {
+  isSidebarDetailed,
+  sidebarView,
+  sidebarViewToggleTitle,
+  toggleSidebarView,
+} = dashboard;
 const slots = useSlots();
 const hasHeaderLeft = computed(() => Boolean(slots["app.header.left"]));
+const hasHeaderPanelMenuSlot = computed(() =>
+  Boolean(slots["app.header.panel.menu"]),
+);
+const hasHeaderActionsMenuSlot = computed(() =>
+  Boolean(slots["app.header.actions.menu"]),
+);
+const hasHeaderPanelMenu = computed(
+  () => hasHeaderPanelMenuSlot.value || hasHeaderActionsMenuSlot.value,
+);
+const hasHeaderPanelFooterSlot = computed(() =>
+  Boolean(slots["app.header.panel.footer"]),
+);
 const isSidebarBottomOpen = ref(
   Boolean(props.sidebarBottomAccordionInitiallyOpen),
 );
@@ -147,6 +251,16 @@ const sidebarBottomPanelId = `blank-sidebar-bottom-panel-${++sidebarBottomPanelC
 const hasSidebarBottomSlot = computed(() =>
   Boolean(slots["app.sidebar.bottom"]),
 );
+const resolvedHeaderPanelStorageKey = computed(() => {
+  const customKey = String(props.headerPanelStorageKey || "").trim();
+  if (customKey) return customKey;
+  const rawPath = String(route.path || "/").trim();
+  const normalizedPath =
+    rawPath.length > 1 && rawPath.endsWith("/")
+      ? rawPath.slice(0, -1)
+      : rawPath;
+  return `oko:hero-controls-open:${normalizedPath || "/"}`;
+});
 
 const hasSidebarBottomContent = computed(() => {
   if (!hasSidebarBottomSlot.value) return false;
@@ -178,11 +292,28 @@ watch(
 function toggleSidebarBottom(): void {
   isSidebarBottomOpen.value = !isSidebarBottomOpen.value;
 }
+
+function handleSidebarToggle(): void {
+  const before = sidebarView.value;
+  toggleSidebarView();
+  if (sidebarView.value !== before) return;
+  sidebarView.value = before === "hidden" ? "detailed" : "hidden";
+}
+
+function handleHeaderPanelOpenChange(value: boolean): void {
+  emit("header-panel-open-change", value);
+}
 </script>
 
 <style scoped>
 .blank-page {
   grid-template-columns: 420px minmax(0, 1fr);
+}
+
+.blank-page,
+.blank-page :deep(*) {
+  animation: none !important;
+  transition: none !important;
 }
 
 .blank-page.sidebar-hidden {
@@ -199,22 +330,22 @@ function toggleSidebarBottom(): void {
   overflow: visible;
 }
 
-.blank-main :deep(.hero-glass-tabs-shell) {
+.blank-main-header {
+  position: relative;
+  z-index: 50;
+}
+
+.blank-main-header :deep(.hero-glass-tabs-shell) {
   position: relative;
   z-index: 40;
   overflow: visible;
 }
 
-.blank-main :deep(.hero-layout) {
-  position: relative;
-  z-index: 50;
-}
-
-.blank-main :deep(.hero-action-menu) {
+.blank-main-header :deep(.hero-action-menu) {
   z-index: 240;
 }
 
-.blank-main :deep(.hero-control-panel--menu .ui-menu__list) {
+.blank-main-header :deep(.hero-control-panel--menu .ui-menu__list) {
   z-index: 280;
 }
 

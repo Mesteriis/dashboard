@@ -155,7 +155,7 @@
       </nav>
     </template>
 
-    <template v-slot:[SLOT_APP_HEADER_ACTIONS]>
+    <template v-slot:[SLOT_APP_HEADER_PANEL_ACTIONS]>
       <button
         class="ghost plugins-panel-close"
         type="button"
@@ -372,7 +372,7 @@ const SLOT_APP_SIDEBAR_TOP = "app.sidebar.top";
 const SLOT_APP_SIDEBAR_MIDDLE = "app.sidebar.middle";
 const SLOT_APP_SIDEBAR_BOTTOM = "app.sidebar.bottom";
 const SLOT_APP_HEADER_TABS = "app.header.tabs";
-const SLOT_APP_HEADER_ACTIONS = "app.header.actions";
+const SLOT_APP_HEADER_PANEL_ACTIONS = "app.header.panel.actions";
 const SLOT_PAGE_CANVAS_MAIN = "page.canvas.main";
 const SLOT_APP_MODALS = "app.modals";
 const dashboard = useUiStore();

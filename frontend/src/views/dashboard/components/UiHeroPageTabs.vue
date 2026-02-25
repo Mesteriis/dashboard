@@ -196,10 +196,17 @@ function resolveTabMetrics(buttons: HTMLElement[]): TabMetrics | null {
     collapsedWidth * buttons.length,
     host.clientWidth - logoWidth + overlapCompensation,
   );
-  const activeWidth = Math.max(
+  const unconstrainedActiveWidth = Math.max(
     collapsedWidth,
     availableWidth - collapsedWidth * (buttons.length - 1),
   );
+  const activeWidth =
+    buttons.length <= 1
+      ? availableWidth
+      : Math.min(
+          unconstrainedActiveWidth,
+          Math.max(collapsedWidth, Math.min(availableWidth * 0.72, 620)),
+        );
 
   return {
     collapsedWidth,

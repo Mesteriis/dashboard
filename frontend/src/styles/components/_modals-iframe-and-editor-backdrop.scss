@@ -3,18 +3,18 @@
 }
 
 .widget-empty {
-  color: #bfd0de;
+  color: var(--modals-iframe-and-editor-backdrop-color-001);
 }
 
 .widget-error {
-  color: #ff9b9b;
+  color: var(--modals-iframe-and-editor-backdrop-color-002);
 }
 
 .ghost {
-  border: 1px solid rgba(110, 242, 220, 0.38);
+  border: 1px solid var(--modals-iframe-and-editor-backdrop-color-003);
   border-radius: var(--ui-radius);
-  background: rgba(18, 51, 56, 0.26);
-  color: #d8fff7;
+  background: var(--modals-iframe-and-editor-backdrop-color-004);
+  color: var(--modals-iframe-and-editor-backdrop-color-005);
   padding: 7px 11px;
   font: inherit;
   font-size: 0.8rem;
@@ -26,8 +26,8 @@
 }
 
 .ghost:hover:not(:disabled) {
-  background: rgba(31, 98, 101, 0.4);
-  border-color: rgba(120, 248, 226, 0.56);
+  background: var(--modals-iframe-and-editor-backdrop-color-006);
+  border-color: var(--modals-iframe-and-editor-backdrop-color-007);
   transform: none;
 }
 
@@ -40,7 +40,7 @@
   position: fixed;
   inset: 0;
   z-index: 30;
-  background: rgba(2, 6, 12, 0.7);
+  background: var(--modals-iframe-and-editor-backdrop-color-008);
   backdrop-filter: blur(4px);
   display: grid;
   place-items: center;
@@ -50,12 +50,12 @@
 .iframe-modal {
   width: min(96vw, 1700px);
   height: min(94vh, 1100px);
-  border: 1px solid rgba(104, 240, 217, 0.36);
+  border: 1px solid var(--modals-iframe-and-editor-backdrop-color-009);
   border-radius: var(--ui-radius);
   background: linear-gradient(
     165deg,
-    rgba(10, 23, 35, 0.98),
-    rgba(6, 14, 23, 0.98)
+    var(--modals-iframe-and-editor-backdrop-color-010),
+    var(--modals-iframe-and-editor-backdrop-color-011)
   );
   box-shadow: var(--shadow);
   display: grid;
@@ -68,7 +68,7 @@
   justify-content: space-between;
   align-items: center;
   gap: 10px;
-  border-bottom: 1px solid rgba(126, 162, 180, 0.2);
+  border-bottom: 1px solid var(--modals-iframe-and-editor-backdrop-color-012);
   padding: 12px 14px;
 }
 
@@ -81,7 +81,7 @@
   border: 0;
   width: 100%;
   height: 100%;
-  background: #050b12;
+  background: var(--modals-iframe-and-editor-backdrop-color-013);
 }
 
 .iframe-modal-status {
@@ -95,7 +95,7 @@
   display: grid;
   place-items: center;
   padding: 20px;
-  background: rgba(3, 9, 16, 0.78);
+  background: var(--modals-iframe-and-editor-backdrop-color-014);
   backdrop-filter: blur(5px) saturate(120%);
 }
 
@@ -106,18 +106,18 @@
   display: grid;
   place-items: center;
   padding: 20px;
-  background: rgba(3, 8, 14, 0.7);
+  background: var(--modals-iframe-and-editor-backdrop-color-015);
   backdrop-filter: blur(4px);
 }
 
 .system-popup {
   width: min(560px, 96vw);
-  border: 1px solid rgba(250, 124, 124, 0.45);
+  border: 1px solid var(--modals-iframe-and-editor-backdrop-color-016);
   border-radius: var(--ui-radius);
   background: linear-gradient(
     164deg,
-    rgba(50, 20, 29, 0.96),
-    rgba(23, 11, 18, 0.96)
+    var(--modals-iframe-and-editor-backdrop-color-017),
+    var(--modals-iframe-and-editor-backdrop-color-018)
   );
   box-shadow: var(--shadow);
   padding: 18px;
@@ -128,22 +128,22 @@
 .system-popup h3 {
   margin: 0;
   font-size: 1rem;
-  color: #ffe9ea;
+  color: var(--modals-iframe-and-editor-backdrop-color-019);
 }
 
 .system-popup p {
   margin: 0;
-  color: #f1d3d8;
+  color: var(--modals-iframe-and-editor-backdrop-color-020);
   line-height: 1.4;
 }
 
 .system-popup-hint {
-  color: #f7b9c2;
+  color: var(--modals-iframe-and-editor-backdrop-color-021);
 }
 
 .system-popup-details {
   font-size: 0.82rem;
-  color: #d4a4ad;
+  color: var(--modals-iframe-and-editor-backdrop-color-022);
 }
 
 .system-popup-actions {
@@ -155,10 +155,10 @@
 }
 
 .system-popup-primary {
-  border: 1px solid rgba(255, 178, 188, 0.62);
+  border: 1px solid var(--modals-iframe-and-editor-backdrop-color-023);
   border-radius: var(--ui-radius);
-  background: rgba(185, 65, 88, 0.42);
-  color: #fff5f6;
+  background: var(--modals-iframe-and-editor-backdrop-color-024);
+  color: var(--modals-iframe-and-editor-backdrop-color-025);
   padding: 7px 12px;
   font: inherit;
   font-size: 0.82rem;
@@ -169,8 +169,8 @@
 }
 
 .system-popup-primary:hover:not(:disabled) {
-  background: rgba(204, 78, 102, 0.52);
-  border-color: rgba(255, 201, 209, 0.75);
+  background: var(--modals-iframe-and-editor-backdrop-color-026);
+  border-color: var(--modals-iframe-and-editor-backdrop-color-027);
 }
 
 .bootstrap-modal-backdrop {
@@ -180,18 +180,18 @@
   display: grid;
   place-items: center;
   padding: 20px;
-  background: rgba(3, 8, 14, 0.72);
+  background: var(--modals-iframe-and-editor-backdrop-color-028);
   backdrop-filter: blur(5px) saturate(120%);
 }
 
 .bootstrap-modal {
   width: min(1240px, 96vw);
-  border: 1px solid rgba(108, 245, 222, 0.46);
+  border: 1px solid var(--modals-iframe-and-editor-backdrop-color-029);
   border-radius: var(--ui-radius);
   background: linear-gradient(
     162deg,
-    rgba(12, 34, 46, 0.97),
-    rgba(6, 16, 27, 0.97)
+    var(--modals-iframe-and-editor-backdrop-color-030),
+    var(--modals-iframe-and-editor-backdrop-color-031)
   );
   box-shadow: var(--shadow);
   padding: 22px;
@@ -208,20 +208,20 @@
 .bootstrap-modal-header h3 {
   margin: 0;
   font-size: 1.03rem;
-  color: #e9fffb;
+  color: var(--modals-iframe-and-editor-backdrop-color-032);
 }
 
 .bootstrap-modal-header p {
   margin: 0;
-  color: #c4e8e3;
+  color: var(--modals-iframe-and-editor-backdrop-color-033);
   line-height: 1.45;
 }
 
 .bootstrap-modal-header code {
-  border: 1px solid rgba(136, 223, 211, 0.42);
+  border: 1px solid var(--modals-iframe-and-editor-backdrop-color-034);
   border-radius: var(--ui-radius);
-  background: rgba(24, 63, 71, 0.35);
-  color: #cffff6;
+  background: var(--modals-iframe-and-editor-backdrop-color-035);
+  color: var(--modals-iframe-and-editor-backdrop-color-036);
   padding: 0 6px;
 }
 
@@ -233,12 +233,12 @@
 }
 
 .bootstrap-panel {
-  border: 1px solid rgba(94, 197, 189, 0.34);
+  border: 1px solid var(--modals-iframe-and-editor-backdrop-color-037);
   border-radius: var(--ui-radius);
   background: linear-gradient(
     150deg,
-    rgba(18, 50, 60, 0.63),
-    rgba(9, 23, 33, 0.72)
+    var(--modals-iframe-and-editor-backdrop-color-038),
+    var(--modals-iframe-and-editor-backdrop-color-039)
   );
   padding: 16px;
   display: grid;
@@ -255,7 +255,7 @@
 
 .bootstrap-panel-eyebrow {
   margin: 0;
-  color: #8ccfc7;
+  color: var(--modals-iframe-and-editor-backdrop-color-040);
   font-size: 0.72rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -263,26 +263,26 @@
 
 .bootstrap-panel h4 {
   margin: 0;
-  color: #e2fffa;
+  color: var(--modals-iframe-and-editor-backdrop-color-041);
   font-size: 1.03rem;
 }
 
 .bootstrap-panel p {
   margin: 0;
-  color: #b7ddd7;
+  color: var(--modals-iframe-and-editor-backdrop-color-042);
   line-height: 1.45;
 }
 
 .bootstrap-modal-primary {
   inline-size: 100%;
-  border: 1px solid rgba(137, 250, 232, 0.65);
+  border: 1px solid var(--modals-iframe-and-editor-backdrop-color-043);
   border-radius: var(--ui-radius);
   background: linear-gradient(
     130deg,
-    rgba(47, 175, 152, 0.62),
-    rgba(30, 121, 110, 0.58)
+    var(--modals-iframe-and-editor-backdrop-color-044),
+    var(--modals-iframe-and-editor-backdrop-color-045)
   );
-  color: #ebfffb;
+  color: var(--modals-iframe-and-editor-backdrop-color-046);
   padding: 14px 16px;
   font: inherit;
   font-size: 0.94rem;
@@ -297,10 +297,10 @@
 .bootstrap-modal-primary:hover:not(:disabled) {
   background: linear-gradient(
     130deg,
-    rgba(59, 194, 169, 0.7),
-    rgba(36, 143, 131, 0.64)
+    var(--modals-iframe-and-editor-backdrop-color-047),
+    var(--modals-iframe-and-editor-backdrop-color-048)
   );
-  border-color: rgba(173, 255, 243, 0.78);
+  border-color: var(--modals-iframe-and-editor-backdrop-color-049);
   transform: translateY(-1px);
 }
 
@@ -314,12 +314,12 @@
   display: grid;
   place-content: center;
   gap: 8px;
-  border: 1px dashed rgba(133, 228, 217, 0.48);
+  border: 1px dashed var(--modals-iframe-and-editor-backdrop-color-050);
   border-radius: var(--ui-radius);
   background: linear-gradient(
     170deg,
-    rgba(12, 35, 43, 0.75),
-    rgba(8, 20, 30, 0.82)
+    var(--modals-iframe-and-editor-backdrop-color-051),
+    var(--modals-iframe-and-editor-backdrop-color-052)
   );
   min-height: 210px;
   padding: 14px;
@@ -334,11 +334,11 @@
 .bootstrap-dropzone:hover,
 .bootstrap-dropzone:focus-visible,
 .bootstrap-dropzone.is-over {
-  border-color: rgba(180, 255, 244, 0.76);
+  border-color: var(--modals-iframe-and-editor-backdrop-color-053);
   background: linear-gradient(
     170deg,
-    rgba(17, 49, 61, 0.8),
-    rgba(11, 28, 41, 0.85)
+    var(--modals-iframe-and-editor-backdrop-color-054),
+    var(--modals-iframe-and-editor-backdrop-color-055)
   );
   transform: translateY(-1px);
   outline: none;
@@ -352,14 +352,14 @@
 
 .bootstrap-dropzone-main {
   margin: 0;
-  color: #ddfffa;
+  color: var(--modals-iframe-and-editor-backdrop-color-056);
   font-size: 0.95rem;
   font-weight: 600;
 }
 
 .bootstrap-dropzone-sub {
   margin: 0;
-  color: #9ecdc6;
+  color: var(--modals-iframe-and-editor-backdrop-color-057);
   font-size: 0.82rem;
 }
 
@@ -373,19 +373,19 @@
 
 .bootstrap-modal-hint {
   margin: 0;
-  color: #8ec9c0;
+  color: var(--modals-iframe-and-editor-backdrop-color-058);
   font-size: 0.82rem;
 }
 
 .bootstrap-modal-hint code {
-  border: 1px solid rgba(117, 209, 199, 0.35);
+  border: 1px solid var(--modals-iframe-and-editor-backdrop-color-059);
   border-radius: var(--ui-radius);
-  background: rgba(17, 46, 53, 0.42);
+  background: var(--modals-iframe-and-editor-backdrop-color-060);
   padding: 0 5px;
 }
 
 .bootstrap-modal-error {
   margin: 0;
-  color: #ffadb3;
+  color: var(--modals-iframe-and-editor-backdrop-color-061);
   font-size: 0.84rem;
 }

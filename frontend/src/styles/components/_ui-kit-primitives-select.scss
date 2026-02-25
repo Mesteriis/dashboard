@@ -33,7 +33,7 @@
 
 .ui-select__caret {
   font-size: 13px;
-  color: #9bc7de;
+  color: var(--ui-kit-primitives-select-color-001);
   transition: transform 140ms ease;
 }
 
@@ -47,12 +47,12 @@
   top: calc(100% + 6px);
   left: 0;
   width: 100%;
-  background: linear-gradient(162deg, rgba(8, 22, 34, 0.98), rgba(6, 17, 29, 0.96));
-  border: 1px solid rgba(108, 199, 222, 0.36);
+  background: linear-gradient(162deg, var(--ui-kit-primitives-select-color-002), var(--ui-kit-primitives-select-color-003));
+  border: 1px solid var(--ui-kit-primitives-select-color-004);
   border-radius: var(--ui-radius);
   box-shadow:
-    0 16px 34px rgba(2, 7, 14, 0.64),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    0 16px 34px var(--ui-kit-primitives-select-color-005),
+    inset 0 1px 0 var(--ui-kit-primitives-select-color-006);
   padding: 6px;
   display: grid;
   gap: 4px;
@@ -65,7 +65,7 @@
   top: 0;
   z-index: 1;
   padding-bottom: 4px;
-  background: linear-gradient(162deg, rgba(8, 22, 34, 0.98), rgba(6, 17, 29, 0.96));
+  background: linear-gradient(162deg, var(--ui-kit-primitives-select-color-002), var(--ui-kit-primitives-select-color-003));
 }
 
 .ui-select__search-input {
@@ -81,7 +81,7 @@
   padding: 7px 8px;
   background: transparent;
   border: 0;
-  color: #d4e9f7;
+  color: var(--ui-kit-primitives-select-color-007);
   font: inherit;
   font-size: 13px;
   text-align: left;
@@ -90,14 +90,14 @@
 
 .ui-select__option:hover,
 .ui-select__option:focus-visible {
-  background: rgba(26, 81, 96, 0.32);
-  color: #ecf9ff;
+  background: var(--ui-kit-primitives-select-color-008);
+  color: var(--ui-kit-primitives-select-color-009);
   outline: none;
 }
 
 .ui-select__option.is-active {
-  background: rgba(25, 96, 95, 0.42);
-  color: #e6fff8;
+  background: var(--ui-kit-primitives-select-color-010);
+  color: var(--ui-kit-primitives-select-color-011);
 }
 
 .ui-select__option.is-disabled {
@@ -108,7 +108,7 @@
 .ui-select__check {
   width: 16px;
   text-align: center;
-  color: #7df4df;
+  color: var(--ui-kit-primitives-select-color-012);
 }
 
 .ui-select__empty {

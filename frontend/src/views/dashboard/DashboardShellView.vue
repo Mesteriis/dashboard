@@ -3,6 +3,7 @@
     :emblem-src="EMBLEM_SRC"
     :sidebar-hidden="isSidebarHidden"
     :sidebar-particles-id="SIDEBAR_PARTICLES_ID"
+    :header-panel-active="editMode"
     sidebar-bottom-accordion-label="Индикаторы"
     :sidebar-bottom-visible="isSidebarDetailed"
     canvas-aria-label="Dashboard content"
@@ -20,7 +21,23 @@
     </template>
 
     <template v-slot:[SLOT_APP_HEADER_TABS]>
-      <UiServicesHeroPanelFacade />
+      <UiServicesHeroPanelFacade segment="tabs" />
+    </template>
+
+    <template v-slot:[SLOT_APP_HEADER_PANEL_DRAWER]>
+      <UiServicesHeroPanelFacade segment="panel.drawer" />
+    </template>
+
+    <template v-slot:[SLOT_APP_HEADER_PANEL_ACTIONS]>
+      <UiServicesHeroPanelFacade segment="panel.actions" />
+    </template>
+
+    <template v-slot:[SLOT_APP_HEADER_PANEL_MENU]>
+      <UiServicesHeroPanelFacade segment="panel.menu" />
+    </template>
+
+    <template v-slot:[SLOT_APP_HEADER_PANEL_FOOTER]>
+      <UiServicesHeroPanelFacade segment="panel.footer" />
     </template>
 
     <template v-slot:[SLOT_PAGE_CANVAS_MAIN]>
@@ -75,6 +92,10 @@ const SLOT_APP_SIDEBAR_TOP = "app.sidebar.top";
 const SLOT_APP_SIDEBAR_MIDDLE = "app.sidebar.middle";
 const SLOT_APP_SIDEBAR_BOTTOM = "app.sidebar.bottom";
 const SLOT_APP_HEADER_TABS = "app.header.tabs";
+const SLOT_APP_HEADER_PANEL_DRAWER = "app.header.panel.drawer";
+const SLOT_APP_HEADER_PANEL_ACTIONS = "app.header.panel.actions";
+const SLOT_APP_HEADER_PANEL_MENU = "app.header.panel.menu";
+const SLOT_APP_HEADER_PANEL_FOOTER = "app.header.panel.footer";
 const SLOT_PAGE_CANVAS_MAIN = "page.canvas.main";
 const SLOT_APP_MODALS = "app.modals";
 const SLOT_APP_COMMAND_PALETTE = "app.command_palette";
@@ -83,6 +104,7 @@ const {
   commandPaletteOpen,
   createChooser,
   createEntityEditor,
+  editMode,
   iframeModal,
   isSidebarDetailed,
   isSidebarHidden,

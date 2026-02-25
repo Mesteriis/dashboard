@@ -46,6 +46,15 @@ export const SERVICE_GROUPING_OPTIONS = Object.freeze([
   { value: "tags", label: "Только теги" },
   { value: "flat", label: "Без групп (плитка)" },
 ] as const);
+export const THEME_MODE_OPTIONS = Object.freeze([
+  { value: "system", label: "Системная" },
+  { value: "dark", label: "Темная" },
+  { value: "light", label: "Светлая" },
+] as const);
+export const THEME_PALETTE_OPTIONS = Object.freeze([
+  { value: "emerald", label: "Изумруд" },
+  { value: "amethyst", label: "Аметист" },
+] as const);
 
 export const SIDEBAR_VIEW_SEQUENCE: SidebarViewMode[] = [
   "detailed",

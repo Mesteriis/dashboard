@@ -7,17 +7,17 @@
 .tree-grip {
   width: 13px;
   height: 13px;
-  color: #86a8bf;
+  color: var(--sidebar-actions-and-accordion-color-001);
   opacity: 0.86;
 }
 
 .tree-mini-btn {
-  border: 1px solid rgba(118, 173, 194, 0.35);
+  border: 1px solid var(--sidebar-actions-and-accordion-color-002);
   border-radius: var(--ui-radius);
   width: 22px;
   height: 22px;
-  background: rgba(9, 21, 33, 0.66);
-  color: #d3e9f7;
+  background: var(--sidebar-actions-and-accordion-color-003);
+  color: var(--sidebar-actions-and-accordion-color-004);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -35,19 +35,19 @@
 }
 
 .tree-mini-btn:hover {
-  border-color: rgba(115, 247, 224, 0.52);
-  background: rgba(21, 68, 72, 0.42);
+  border-color: var(--sidebar-actions-and-accordion-color-005);
+  background: var(--sidebar-actions-and-accordion-color-006);
   transform: translateY(-1px);
 }
 
 .tree-mini-btn.danger {
-  border-color: rgba(230, 103, 117, 0.46);
-  color: #ffd7de;
+  border-color: var(--sidebar-actions-and-accordion-color-007);
+  color: var(--sidebar-actions-and-accordion-color-008);
 }
 
 .tree-mini-btn.danger:hover {
-  border-color: rgba(244, 121, 134, 0.64);
-  background: rgba(90, 29, 40, 0.36);
+  border-color: var(--sidebar-actions-and-accordion-color-009);
+  background: var(--sidebar-actions-and-accordion-color-010);
 }
 
 .sidebar-stats-accordion {
@@ -59,14 +59,14 @@
 }
 
 .sidebar-stats-toggle {
-  border: 1px solid rgba(113, 175, 196, 0.28);
+  border: 1px solid var(--sidebar-actions-and-accordion-color-011);
   border-radius: var(--ui-radius);
   background: linear-gradient(
     150deg,
-    rgba(12, 30, 45, 0.88),
-    rgba(9, 20, 32, 0.84)
+    var(--sidebar-actions-and-accordion-color-012),
+    var(--sidebar-actions-and-accordion-color-013)
   );
-  color: #d8ebf8;
+  color: var(--sidebar-actions-and-accordion-color-014);
   font: inherit;
   width: 100%;
   padding: 10px 12px;
@@ -81,7 +81,7 @@
 }
 
 .sidebar-stats-toggle:hover {
-  border-color: rgba(108, 240, 218, 0.46);
+  border-color: var(--sidebar-actions-and-accordion-color-015);
   transform: translateY(-1px);
 }
 
@@ -89,11 +89,11 @@
   font-size: 0.8rem;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: #b4cbdd;
+  color: var(--sidebar-actions-and-accordion-color-016);
 }
 
 .sidebar-stats-toggle-values {
   margin-left: auto;
   font-size: 0.82rem;
-  color: #e3f4ff;
+  color: var(--sidebar-actions-and-accordion-color-017);
 }

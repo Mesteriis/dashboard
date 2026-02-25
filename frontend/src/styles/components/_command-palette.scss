@@ -5,23 +5,23 @@
   display: grid;
   place-items: center;
   padding: 14px;
-  background: rgba(2, 8, 14, 0.76);
+  background: var(--command-palette-color-001);
   backdrop-filter: blur(6px) saturate(122%);
 }
 
 .command-palette-modal {
   width: min(94vw, 820px);
   max-height: min(88vh, 760px);
-  border: 1px solid rgba(112, 236, 215, 0.32);
+  border: 1px solid var(--command-palette-color-002);
   border-radius: var(--ui-radius);
   background: linear-gradient(
     165deg,
-    rgba(8, 22, 34, 0.98),
-    rgba(5, 14, 23, 0.98)
+    var(--command-palette-color-003),
+    var(--command-palette-color-004)
   );
   box-shadow:
     var(--shadow),
-    inset 0 0 0 1px rgba(214, 248, 255, 0.03);
+    inset 0 0 0 1px var(--command-palette-color-005);
   display: grid;
   grid-template-rows: auto auto minmax(0, 1fr);
   overflow: hidden;
@@ -34,7 +34,7 @@
   justify-content: space-between;
   gap: 8px;
   padding: 12px 14px 10px;
-  border-bottom: 1px solid rgba(124, 167, 186, 0.22);
+  border-bottom: 1px solid var(--command-palette-color-006);
 }
 
 .command-palette-header h3 {
@@ -45,16 +45,16 @@
 .command-palette-header p {
   margin: 4px 0 0;
   font-size: 0.73rem;
-  color: #99b5c8;
+  color: var(--command-palette-color-007);
 }
 
 .command-palette-shortcut {
-  border: 1px solid rgba(114, 174, 198, 0.34);
+  border: 1px solid var(--command-palette-color-008);
   border-radius: var(--ui-radius);
   padding: 4px 7px;
   font-size: 0.72rem;
-  color: #b5d3e6;
-  background: rgba(12, 32, 44, 0.56);
+  color: var(--command-palette-color-009);
+  background: var(--command-palette-color-010);
 }
 
 .command-palette-search {
@@ -62,14 +62,14 @@
   align-items: center;
   gap: 8px;
   padding: 9px 14px;
-  border-bottom: 1px solid rgba(102, 146, 165, 0.18);
-  background: rgba(7, 21, 32, 0.7);
+  border-bottom: 1px solid var(--command-palette-color-011);
+  background: var(--command-palette-color-012);
 }
 
 .command-palette-search-icon {
   width: 15px;
   height: 15px;
-  color: #a9c7da;
+  color: var(--command-palette-color-013);
   flex: 0 0 auto;
 }
 
@@ -77,14 +77,14 @@
   width: 100%;
   border: 0;
   background: transparent;
-  color: #e3f0fa;
+  color: var(--command-palette-color-014);
   font: inherit;
   font-size: 0.83rem;
   outline: none;
 }
 
 .command-palette-input::placeholder {
-  color: #93adbf;
+  color: var(--command-palette-color-015);
 }
 
 .command-palette-list {
@@ -105,14 +105,14 @@
 
 .command-palette-entry {
   width: 100%;
-  border: 1px solid rgba(100, 145, 165, 0.22);
+  border: 1px solid var(--command-palette-color-016);
   border-radius: var(--ui-radius);
   background: linear-gradient(
     150deg,
-    rgba(10, 28, 40, 0.8),
-    rgba(7, 18, 30, 0.82)
+    var(--command-palette-color-017),
+    var(--command-palette-color-018)
   );
-  color: #d9ebf8;
+  color: var(--command-palette-color-019);
   padding: 8px 10px;
   text-align: left;
   display: grid;
@@ -126,21 +126,21 @@
 
 .command-palette-entry:hover,
 .command-palette-entry.active {
-  border-color: rgba(111, 236, 214, 0.46);
+  border-color: var(--command-palette-color-020);
   background: linear-gradient(
     150deg,
-    rgba(13, 41, 56, 0.82),
-    rgba(7, 21, 33, 0.86)
+    var(--command-palette-color-021),
+    var(--command-palette-color-022)
   );
   transform: translateY(-1px);
 }
 
 .command-palette-entry.is-action {
-  border-color: rgba(118, 236, 214, 0.34);
+  border-color: var(--command-palette-color-023);
   background: linear-gradient(
     148deg,
-    rgba(11, 40, 54, 0.82),
-    rgba(8, 23, 35, 0.86)
+    var(--command-palette-color-024),
+    var(--command-palette-color-025)
   );
 }
 
@@ -154,13 +154,13 @@
   flex-wrap: wrap;
   gap: 5px;
   font-size: 0.72rem;
-  color: #9db8ca;
+  color: var(--command-palette-color-026);
 }
 
 .command-palette-entry-meta span {
   border-radius: 999px;
   padding: 1px 7px;
-  background: rgba(21, 52, 66, 0.5);
+  background: var(--command-palette-color-027);
 }
 
 .command-palette-copy {
@@ -174,7 +174,7 @@
 .command-palette-empty {
   margin: 0;
   padding: 16px 14px;
-  color: #9db8ca;
+  color: var(--command-palette-color-026);
   font-size: 0.82rem;
 }
 

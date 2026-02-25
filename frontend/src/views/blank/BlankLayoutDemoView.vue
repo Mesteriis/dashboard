@@ -3,8 +3,10 @@
     :emblem-src="EMBLEM_SRC"
     :sidebar-hidden="isSidebarHidden"
     :sidebar-particles-id="BLANK_SIDEBAR_PARTICLES_ID"
+    :header-panel-initially-open="heroControlsOpen"
     sidebar-bottom-accordion-label="Демо-аккордеон"
     :sidebar-bottom-accordion-initially-open="false"
+    @header-panel-open-change="handleHeaderPanelOpenChange"
   >
     <template v-slot:[SLOT_APP_SIDEBAR_TOP]>
       <header class="brand">
@@ -55,10 +57,15 @@
     </template>
 
     <template v-slot:[SLOT_APP_HEADER_TABS]>
-      <UiHeroBlankPanel
-        v-model="activeBlankTab"
-        v-model:hero-controls-open="heroControlsOpen"
-      />
+      <UiHeroBlankPanel v-model="activeBlankTab" segment="tabs" />
+    </template>
+
+    <template v-slot:[SLOT_APP_HEADER_PANEL_DRAWER]>
+      <UiHeroBlankPanel v-model="activeBlankTab" segment="panel.drawer" />
+    </template>
+
+    <template v-slot:[SLOT_APP_HEADER_PANEL_MENU]>
+      <UiHeroBlankPanel v-model="activeBlankTab" segment="panel.menu" />
     </template>
 
     <template v-slot:[SLOT_PAGE_CANVAS_MAIN]>
@@ -141,6 +148,8 @@ const SLOT_APP_SIDEBAR_TOP = "app.sidebar.top";
 const SLOT_APP_SIDEBAR_MIDDLE = "app.sidebar.middle";
 const SLOT_APP_SIDEBAR_BOTTOM = "app.sidebar.bottom";
 const SLOT_APP_HEADER_TABS = "app.header.tabs";
+const SLOT_APP_HEADER_PANEL_DRAWER = "app.header.panel.drawer";
+const SLOT_APP_HEADER_PANEL_MENU = "app.header.panel.menu";
 const SLOT_PAGE_CANVAS_MAIN = "page.canvas.main";
 let removeFxModeListener: () => void = () => {};
 const uiStore = useUiStore();
@@ -157,6 +166,10 @@ const activeBlankTabLabel = computed(() =>
     ? "Оперативный контур"
     : "Обзор пространства",
 );
+
+function handleHeaderPanelOpenChange(value: boolean): void {
+  heroControlsOpen.value = value;
+}
 
 function currentFxMode(): string {
   return document.documentElement?.dataset?.fxMode || "full";

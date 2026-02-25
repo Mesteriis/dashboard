@@ -65,8 +65,11 @@ import {
   SIDEBAR_PARTICLES_CONFIG,
   SIDEBAR_PARTICLES_ID,
   SIDEBAR_VIEW_SEQUENCE,
+  THEME_MODE_OPTIONS,
+  THEME_PALETTE_OPTIONS,
   UI_STATE_STORAGE_KEY,
 } from "@/features/stores/dashboard/storeConstants";
+import { getThemeMode, getThemePalette } from "@/features/services/themeMode";
 import {
   allItemIdsInConfig,
   allSubgroupIdsInConfig,
@@ -144,6 +147,8 @@ import type {
   ServiceGroupingMode,
   SidebarIconNode,
   SidebarViewMode,
+  ThemeMode,
+  ThemePalette,
   TreeGroupNode,
   WidgetRuntimeState,
   WidgetStatListEntry,
@@ -209,6 +214,8 @@ export function createDashboardStore(
   );
   const serviceCardView = ref<ServiceCardView>("detailed");
   const serviceGroupingMode = ref<ServiceGroupingMode>("groups");
+  const themeMode = ref<ThemeMode>(getThemeMode());
+  const themePalette = ref<ThemePalette>(getThemePalette());
   const siteFilter = ref("all");
   const sidebarView = ref<SidebarViewMode>("detailed");
   const saveStatus = ref<SaveStatus>("idle");
@@ -495,6 +502,8 @@ export function createDashboardStore(
     () => SERVICE_PRESENTATION_OPTIONS,
   );
   const serviceGroupingOptions = computed(() => SERVICE_GROUPING_OPTIONS);
+  const themeModeOptions = computed(() => THEME_MODE_OPTIONS);
+  const themePaletteOptions = computed(() => THEME_PALETTE_OPTIONS);
   const isIconCardView = computed(() => serviceCardView.value === "icon");
   const isTileCardView = computed(() => serviceCardView.value === "tile");
   const isCompactServiceCardView = computed(
@@ -1091,6 +1100,10 @@ export function createDashboardStore(
     sidebarIndicators,
     siteFilter,
     siteFilterOptions,
+    themeMode,
+    themeModeOptions,
+    themePalette,
+    themePaletteOptions,
     subgroupById,
     treeFilter,
     treeGroups,
@@ -1351,6 +1364,10 @@ export function createDashboardStore(
     setUiRouteScope,
     siteFilter,
     siteFilterOptions,
+    themeMode,
+    themeModeOptions,
+    themePalette,
+    themePaletteOptions,
     sidebarView,
     subgroupById,
     treeFilter,

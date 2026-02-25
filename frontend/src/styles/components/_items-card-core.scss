@@ -14,7 +14,7 @@
   width: 42px;
   height: 42px;
   border-radius: var(--ui-radius);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.24);
+  box-shadow: 0 4px 10px var(--items-card-core-color-001);
 }
 
 .compact-health-dot {
@@ -68,7 +68,7 @@
 
 .tile-item-favicon {
   border-radius: var(--ui-radius);
-  box-shadow: 0 2px 7px rgba(0, 0, 0, 0.22);
+  box-shadow: 0 2px 7px var(--items-card-core-color-002);
 }
 
 .tile-health-dot {
@@ -78,7 +78,7 @@
 .item-tile-title {
   margin: 0;
   font-size: 0.82rem;
-  color: #dceaf4;
+  color: var(--items-card-core-color-003);
   font-weight: 500;
   letter-spacing: 0.01em;
   text-align: left;
@@ -105,7 +105,7 @@
 }
 
 .item-icon {
-  color: #9cc8e1;
+  color: var(--items-card-core-color-004);
   transition:
     color 220ms ease,
     filter 220ms ease;
@@ -115,13 +115,13 @@
   width: 16px;
   height: 16px;
   border-radius: var(--ui-radius);
-  box-shadow: 0 2px 8px rgba(2, 10, 18, 0.3);
+  box-shadow: 0 2px 8px var(--items-card-core-color-005);
 }
 
 .item-head h4 {
   margin: 0;
   font-size: 0.98rem;
-  color: #e6f1fb;
+  color: var(--items-card-core-color-006);
   font-weight: 560;
   letter-spacing: 0.005em;
   min-width: 0;
@@ -133,12 +133,12 @@
 .item-type {
   display: inline-flex;
   align-items: center;
-  border: 1px solid rgba(102, 237, 214, 0.28);
-  background: rgba(20, 82, 82, 0.26);
+  border: 1px solid var(--items-card-core-color-007);
+  background: var(--items-card-core-color-008);
   border-radius: 999px;
   padding: 2px 8px;
   font-size: 0.71rem;
-  color: #c0e9df;
+  color: var(--items-card-core-color-009);
   letter-spacing: 0.02em;
   white-space: nowrap;
 }
@@ -151,7 +151,7 @@
 
 .item-url {
   margin: 0;
-  color: #99b0c2;
+  color: var(--items-card-core-color-010);
   font-size: 0.78rem;
   overflow-wrap: anywhere;
   word-break: break-word;
@@ -160,7 +160,7 @@
 
 .item-check-url {
   margin: 0;
-  color: #a8c3d6;
+  color: var(--items-card-core-color-011);
   font-size: 0.74rem;
   overflow-wrap: anywhere;
   word-break: break-word;
@@ -180,10 +180,10 @@
   height: 8px;
   border-radius: 50%;
   flex: 0 0 auto;
-  background: #9baebf;
+  background: var(--items-card-core-color-012);
   box-shadow:
-    0 0 0 3px rgba(138, 160, 176, 0.16),
-    0 0 10px rgba(138, 160, 176, 0.24);
+    0 0 0 3px var(--items-card-core-color-013),
+    0 0 10px var(--items-card-core-color-014);
 }
 
 .health-dot::after {
@@ -192,7 +192,7 @@
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
-  background: rgba(5, 12, 18, 0.56);
+  background: var(--items-card-core-color-015);
 }
 
 .health-dot.ok::after {
@@ -222,15 +222,15 @@
 }
 
 .item-card.status-ok .item-icon {
-  color: #88dbc8;
+  color: var(--items-card-core-color-016);
 }
 
 .item-card.status-degraded .item-icon {
-  color: #e1c08d;
+  color: var(--items-card-core-color-017);
 }
 
 .item-card.status-down .item-icon {
-  color: #e5a2a8;
+  color: var(--items-card-core-color-018);
 }
 
 .item-card.editing {
@@ -243,20 +243,20 @@
 
 @keyframes health-value-flash {
   0% {
-    color: #eaf7ff;
-    text-shadow: 0 0 0 rgba(143, 242, 229, 0);
+    color: var(--items-card-core-color-019);
+    text-shadow: 0 0 0 var(--items-card-core-color-020);
     transform: translateY(0);
   }
 
   35% {
-    color: #c8fff0;
-    text-shadow: 0 0 12px rgba(143, 242, 229, 0.38);
+    color: var(--items-card-core-color-021);
+    text-shadow: 0 0 12px var(--items-card-core-color-022);
     transform: translateY(-0.5px);
   }
 
   100% {
     color: var(--muted);
-    text-shadow: 0 0 0 rgba(143, 242, 229, 0);
+    text-shadow: 0 0 0 var(--items-card-core-color-020);
     transform: translateY(0);
   }
 }

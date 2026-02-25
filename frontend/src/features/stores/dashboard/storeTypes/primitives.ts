@@ -1,6 +1,8 @@
 export type ServiceCardView = "detailed" | "tile" | "icon";
 export type ServiceGroupingMode = "groups" | "tags_in_groups" | "tags" | "flat";
 export type SidebarViewMode = "detailed" | "hidden";
+export type ThemeMode = "system" | "dark" | "light";
+export type ThemePalette = "emerald" | "amethyst";
 export type SaveStatus = "idle" | "saving" | "saved" | "error";
 export type ItemEditorMode = "create" | "edit";
 export type ItemOpenMode = "new_tab" | "same_tab";

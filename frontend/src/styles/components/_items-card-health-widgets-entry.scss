@@ -1,29 +1,29 @@
 .health-dot.ok {
-  background: #35d8aa;
+  background: var(--items-card-health-widgets-entry-color-001);
   box-shadow:
-    0 0 0 3px rgba(53, 216, 170, 0.2),
-    0 0 13px rgba(53, 216, 170, 0.4);
+    0 0 0 3px var(--items-card-health-widgets-entry-color-002),
+    0 0 13px var(--items-card-health-widgets-entry-color-003);
 }
 
 .health-dot.degraded {
-  background: #ffbe73;
+  background: var(--items-card-health-widgets-entry-color-004);
   box-shadow:
-    0 0 0 3px rgba(255, 190, 115, 0.22),
-    0 0 14px rgba(255, 190, 115, 0.34);
+    0 0 0 3px var(--items-card-health-widgets-entry-color-005),
+    0 0 14px var(--items-card-health-widgets-entry-color-006);
 }
 
 .health-dot.down {
-  background: #ff7f87;
+  background: var(--items-card-health-widgets-entry-color-007);
   box-shadow:
-    0 0 0 3px rgba(255, 127, 135, 0.2),
-    0 0 12px rgba(255, 127, 135, 0.28);
+    0 0 0 3px var(--items-card-health-widgets-entry-color-008),
+    0 0 12px var(--items-card-health-widgets-entry-color-009);
 }
 
 .health-dot.unknown {
-  background: #b8cad8;
+  background: var(--items-card-health-widgets-entry-color-010);
   box-shadow:
-    0 0 0 3px rgba(184, 202, 216, 0.18),
-    0 0 8px rgba(184, 202, 216, 0.2);
+    0 0 0 3px var(--items-card-health-widgets-entry-color-011),
+    0 0 8px var(--items-card-health-widgets-entry-color-012);
 }
 
 .item-card .health-dot.ok {
@@ -60,24 +60,24 @@
 
 .tag-pill {
   display: inline-flex;
-  border: 1px solid rgba(136, 167, 187, 0.26);
+  border: 1px solid var(--items-card-health-widgets-entry-color-013);
   border-radius: 999px;
   padding: 2px 8px;
-  color: #cae0ef;
+  color: var(--items-card-health-widgets-entry-color-014);
   font-size: 0.72rem;
-  background: rgba(7, 17, 28, 0.56);
+  background: var(--items-card-health-widgets-entry-color-015);
 }
 
 .tag-pill.site-pill {
-  border-color: rgba(109, 239, 216, 0.4);
-  background: rgba(10, 44, 48, 0.46);
-  color: #cffff1;
+  border-color: var(--items-card-health-widgets-entry-color-016);
+  background: var(--items-card-health-widgets-entry-color-017);
+  color: var(--items-card-health-widgets-entry-color-018);
 }
 
 .item-plugin-zone {
-  border: 1px solid rgba(129, 167, 188, 0.2);
+  border: 1px solid var(--items-card-health-widgets-entry-color-019);
   border-radius: var(--ui-radius);
-  background: rgba(8, 20, 31, 0.45);
+  background: var(--items-card-health-widgets-entry-color-020);
   padding: 10px;
   display: grid;
   gap: 8px;
@@ -85,7 +85,7 @@
 
 .item-plugin-title {
   margin: 0;
-  color: #bcd6e6;
+  color: var(--items-card-health-widgets-entry-color-021);
   font-size: 0.72rem;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -103,39 +103,39 @@
 }
 
 .item-plugin-label {
-  color: #90adc1;
+  color: var(--items-card-health-widgets-entry-color-022);
   font-size: 0.7rem;
 }
 
 .item-plugin-value {
-  color: #d6e8f5;
+  color: var(--items-card-health-widgets-entry-color-023);
   font-size: 0.8rem;
 }
 
 .item-plugin-badge {
   inline-size: fit-content;
-  border: 1px solid rgba(137, 170, 188, 0.3);
+  border: 1px solid var(--items-card-health-widgets-entry-color-024);
   border-radius: 999px;
   padding: 2px 8px;
   font-size: 0.72rem;
-  color: #d7e9f8;
-  background: rgba(15, 39, 52, 0.44);
+  color: var(--items-card-health-widgets-entry-color-025);
+  background: var(--items-card-health-widgets-entry-color-026);
 }
 
 .item-plugin-badge.tone-info {
-  border-color: rgba(104, 179, 242, 0.34);
+  border-color: var(--items-card-health-widgets-entry-color-027);
 }
 
 .item-plugin-badge.tone-success {
-  border-color: rgba(111, 235, 194, 0.36);
+  border-color: var(--items-card-health-widgets-entry-color-028);
 }
 
 .item-plugin-badge.tone-warning {
-  border-color: rgba(253, 196, 110, 0.36);
+  border-color: var(--items-card-health-widgets-entry-color-029);
 }
 
 .item-plugin-badge.tone-danger {
-  border-color: rgba(247, 127, 136, 0.38);
+  border-color: var(--items-card-health-widgets-entry-color-030);
 }
 
 .item-plugin-link-row {
@@ -148,7 +148,7 @@
 
 .item-plugin-link-label {
   margin: 0;
-  color: #d4e7f6;
+  color: var(--items-card-health-widgets-entry-color-031);
   font-size: 0.78rem;
   min-width: 0;
   overflow: hidden;
@@ -174,14 +174,14 @@
 .item-plugin-html-frame {
   width: 100%;
   min-height: 84px;
-  border: 1px solid rgba(129, 167, 188, 0.26);
+  border: 1px solid var(--items-card-health-widgets-entry-color-032);
   border-radius: var(--ui-radius);
-  background: rgba(5, 13, 21, 0.84);
+  background: var(--items-card-health-widgets-entry-color-033);
 }
 
 .item-plugin-html-denied {
   margin: 0;
-  color: #e8a6ad;
+  color: var(--items-card-health-widgets-entry-color-034);
   font-size: 0.74rem;
 }
 
@@ -205,10 +205,10 @@
 
 .item-actions .icon-btn:focus-visible {
   outline: none;
-  border-color: rgba(120, 248, 226, 0.62);
+  border-color: var(--items-card-health-widgets-entry-color-035);
   box-shadow:
-    0 0 0 2px rgba(120, 248, 226, 0.22),
-    0 0 12px rgba(86, 232, 209, 0.32);
+    0 0 0 2px var(--items-card-health-widgets-entry-color-036),
+    0 0 12px var(--items-card-health-widgets-entry-color-037);
 }
 
 .item-action-icon {
@@ -219,16 +219,16 @@
 
 .item-ssh-shortcut {
   margin: 0;
-  color: #9fb8c9;
+  color: var(--items-card-health-widgets-entry-color-038);
   font-size: 0.72rem;
 }
 
 .item-ssh-shortcut code {
   font-family: "JetBrains Mono", "Fira Code", monospace;
-  color: #d7ffef;
+  color: var(--items-card-health-widgets-entry-color-039);
   border-radius: var(--ui-radius);
   padding: 2px 6px;
-  background: rgba(8, 28, 34, 0.58);
+  background: var(--items-card-health-widgets-entry-color-040);
 }
 
 @keyframes health-ok-pulse {
@@ -236,14 +236,14 @@
   74%,
   100% {
     box-shadow:
-      0 0 0 3px rgba(53, 216, 170, 0.2),
-      0 0 12px rgba(53, 216, 170, 0.28);
+      0 0 0 3px var(--items-card-health-widgets-entry-color-002),
+      0 0 12px var(--items-card-health-widgets-entry-color-041);
   }
 
   84% {
     box-shadow:
-      0 0 0 4px rgba(53, 216, 170, 0.28),
-      0 0 18px rgba(53, 216, 170, 0.44);
+      0 0 0 4px var(--items-card-health-widgets-entry-color-041),
+      0 0 18px var(--items-card-health-widgets-entry-color-042);
   }
 }
 
@@ -251,20 +251,20 @@
   0%,
   100% {
     box-shadow:
-      0 0 0 3px rgba(255, 190, 115, 0.22),
-      0 0 12px rgba(255, 190, 115, 0.26);
+      0 0 0 3px var(--items-card-health-widgets-entry-color-005),
+      0 0 12px var(--items-card-health-widgets-entry-color-043);
   }
 
   40% {
     box-shadow:
-      0 0 0 3px rgba(255, 190, 115, 0.3),
-      0 0 18px rgba(255, 173, 84, 0.42);
+      0 0 0 3px var(--items-card-health-widgets-entry-color-044),
+      0 0 18px var(--items-card-health-widgets-entry-color-045);
   }
 
   65% {
     box-shadow:
-      0 0 0 4px rgba(255, 190, 115, 0.24),
-      0 0 11px rgba(255, 163, 64, 0.24);
+      0 0 0 4px var(--items-card-health-widgets-entry-color-046),
+      0 0 11px var(--items-card-health-widgets-entry-color-047);
   }
 }
 
@@ -272,22 +272,22 @@
   0% {
     transform: scale(0.85);
     box-shadow:
-      0 0 0 1px rgba(255, 127, 135, 0.32),
-      0 0 4px rgba(255, 127, 135, 0.32);
+      0 0 0 1px var(--items-card-health-widgets-entry-color-048),
+      0 0 4px var(--items-card-health-widgets-entry-color-048);
   }
 
   65% {
     transform: scale(1.08);
     box-shadow:
-      0 0 0 5px rgba(255, 127, 135, 0.16),
-      0 0 18px rgba(255, 127, 135, 0.36);
+      0 0 0 5px var(--items-card-health-widgets-entry-color-049),
+      0 0 18px var(--items-card-health-widgets-entry-color-050);
   }
 
   100% {
     transform: scale(1);
     box-shadow:
-      0 0 0 3px rgba(255, 127, 135, 0.2),
-      0 0 12px rgba(255, 127, 135, 0.28);
+      0 0 0 3px var(--items-card-health-widgets-entry-color-008),
+      0 0 12px var(--items-card-health-widgets-entry-color-009);
   }
 }
 
@@ -309,9 +309,9 @@
 }
 
 .widget-card {
-  border: 1px solid rgba(133, 172, 190, 0.24);
+  border: 1px solid var(--items-card-health-widgets-entry-color-051);
   border-radius: var(--ui-radius);
-  background: linear-gradient(160deg, rgba(13, 27, 40, 0.44), var(--surface));
+  background: linear-gradient(160deg, var(--items-card-health-widgets-entry-color-052), var(--surface));
   padding: 12px;
   display: grid;
   gap: 10px;

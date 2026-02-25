@@ -5,23 +5,23 @@
   display: grid;
   place-items: center;
   padding: 14px;
-  background: rgba(2, 8, 14, 0.72);
+  background: var(--dashboard-settings-modal-color-001);
   backdrop-filter: blur(6px) saturate(122%);
 }
 
 .settings-modal {
   width: min(75vw, 1180px);
   max-height: 75vh;
-  border: 1px solid rgba(112, 236, 215, 0.3);
+  border: 1px solid var(--dashboard-settings-modal-color-002);
   border-radius: var(--ui-radius);
   background: linear-gradient(
     165deg,
-    rgba(8, 22, 34, 0.98),
-    rgba(5, 14, 23, 0.98)
+    var(--dashboard-settings-modal-color-003),
+    var(--dashboard-settings-modal-color-004)
   );
   box-shadow:
     var(--shadow),
-    inset 0 0 0 1px rgba(214, 248, 255, 0.03);
+    inset 0 0 0 1px var(--dashboard-settings-modal-color-005);
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
   gap: 0;
@@ -34,7 +34,7 @@
   justify-content: space-between;
   gap: 10px;
   padding: 14px;
-  border-bottom: 1px solid rgba(124, 167, 186, 0.22);
+  border-bottom: 1px solid var(--dashboard-settings-modal-color-006);
 }
 
 .settings-modal-header h3 {
@@ -44,7 +44,7 @@
 
 .settings-modal-header p {
   margin: 4px 0 0;
-  color: #99b5c8;
+  color: var(--dashboard-settings-modal-color-007);
   font-size: 0.75rem;
 }
 
@@ -57,12 +57,12 @@
 }
 
 .settings-modal-section {
-  border: 1px solid rgba(99, 145, 167, 0.24);
+  border: 1px solid var(--dashboard-settings-modal-color-008);
   border-radius: var(--ui-radius);
   background: linear-gradient(
     155deg,
-    rgba(10, 28, 40, 0.8),
-    rgba(7, 18, 30, 0.82)
+    var(--dashboard-settings-modal-color-009),
+    var(--dashboard-settings-modal-color-010)
   );
   padding: 12px;
   display: grid;
@@ -77,7 +77,7 @@
   margin: 0;
   font-size: 0.82rem;
   letter-spacing: 0.02em;
-  color: #d8ebf8;
+  color: var(--dashboard-settings-modal-color-011);
 }
 
 .settings-state-group {
@@ -90,7 +90,7 @@
   font-size: 0.74rem;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: #a8c4d6;
+  color: var(--dashboard-settings-modal-color-012);
 }
 
 .settings-state-switcher {
@@ -108,14 +108,14 @@
 }
 
 .settings-state-btn {
-  border: 1px solid rgba(108, 162, 183, 0.28);
+  border: 1px solid var(--dashboard-settings-modal-color-013);
   border-radius: var(--ui-radius);
   background: linear-gradient(
     148deg,
-    rgba(10, 27, 39, 0.82),
-    rgba(7, 18, 30, 0.84)
+    var(--dashboard-settings-modal-color-014),
+    var(--dashboard-settings-modal-color-015)
   );
-  color: #d5e8f6;
+  color: var(--dashboard-settings-modal-color-016);
   font: inherit;
   font-size: 0.79rem;
   font-weight: 600;
@@ -130,20 +130,20 @@
 }
 
 .settings-state-btn:hover {
-  border-color: rgba(120, 241, 220, 0.5);
+  border-color: var(--dashboard-settings-modal-color-017);
   transform: translateY(-1px);
 }
 
 .settings-state-btn.active {
-  border-color: rgba(118, 236, 214, 0.62);
+  border-color: var(--dashboard-settings-modal-color-018);
   background: linear-gradient(
     144deg,
-    rgba(14, 61, 70, 0.68),
-    rgba(8, 22, 35, 0.88)
+    var(--dashboard-settings-modal-color-019),
+    var(--dashboard-settings-modal-color-020)
   );
   box-shadow:
-    0 8px 18px rgba(0, 167, 148, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    0 8px 18px var(--dashboard-settings-modal-color-021),
+    inset 0 1px 0 var(--dashboard-settings-modal-color-022);
 }
 
 .settings-state-btn:disabled {
@@ -155,19 +155,19 @@
 .settings-state-hint {
   margin: 0;
   font-size: 0.72rem;
-  color: #93afc2;
+  color: var(--dashboard-settings-modal-color-023);
 }
 
 .settings-state-error {
-  color: #ff9f9f;
+  color: var(--dashboard-settings-modal-color-024);
 }
 
 .settings-runtime-input {
   width: 100%;
-  border: 1px solid rgba(100, 171, 191, 0.34);
+  border: 1px solid var(--dashboard-settings-modal-color-025);
   border-radius: var(--ui-radius);
-  background: rgba(7, 20, 32, 0.82);
-  color: #d9edf9;
+  background: var(--dashboard-settings-modal-color-026);
+  color: var(--dashboard-settings-modal-color-027);
   font: inherit;
   font-size: 0.82rem;
   padding: 9px 11px;
@@ -178,8 +178,8 @@
 }
 
 .settings-runtime-input:focus-visible {
-  border-color: rgba(118, 236, 214, 0.58);
-  box-shadow: 0 0 0 2px rgba(108, 240, 218, 0.28);
+  border-color: var(--dashboard-settings-modal-color-028);
+  box-shadow: 0 0 0 2px var(--dashboard-settings-modal-color-029);
 }
 
 .settings-runtime-input:disabled {
@@ -214,14 +214,14 @@
 
 .settings-nav-action {
   width: 100%;
-  border: 1px solid rgba(100, 171, 191, 0.34);
+  border: 1px solid var(--dashboard-settings-modal-color-025);
   border-radius: var(--ui-radius);
   background: linear-gradient(
     152deg,
-    rgba(10, 33, 48, 0.76),
-    rgba(7, 22, 34, 0.8)
+    var(--dashboard-settings-modal-color-030),
+    var(--dashboard-settings-modal-color-031)
   );
-  color: #d9edf9;
+  color: var(--dashboard-settings-modal-color-027);
   font: inherit;
   font-size: 0.83rem;
   font-weight: 600;
@@ -248,32 +248,32 @@
 .settings-nav-action-icon {
   width: 14px;
   height: 14px;
-  color: #9cc3d8;
+  color: var(--dashboard-settings-modal-color-032);
   flex: 0 0 auto;
 }
 
 .settings-nav-action-caret {
   width: 13px;
   height: 13px;
-  color: #8fb4c8;
+  color: var(--dashboard-settings-modal-color-033);
   flex: 0 0 auto;
 }
 
 .settings-nav-action:hover {
-  border-color: rgba(118, 236, 214, 0.5);
+  border-color: var(--dashboard-settings-modal-color-034);
   background: linear-gradient(
     152deg,
-    rgba(14, 46, 66, 0.8),
-    rgba(9, 28, 42, 0.82)
+    var(--dashboard-settings-modal-color-035),
+    var(--dashboard-settings-modal-color-036)
   );
   transform: translateY(-1px);
   box-shadow:
-    0 12px 22px rgba(0, 150, 133, 0.14),
-    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    0 12px 22px var(--dashboard-settings-modal-color-037),
+    inset 0 1px 0 var(--dashboard-settings-modal-color-038);
 }
 
 .settings-nav-action:focus-visible {
   outline: none;
-  border-color: rgba(118, 236, 214, 0.58);
-  box-shadow: 0 0 0 2px rgba(108, 240, 218, 0.3);
+  border-color: var(--dashboard-settings-modal-color-028);
+  box-shadow: 0 0 0 2px var(--dashboard-settings-modal-color-039);
 }

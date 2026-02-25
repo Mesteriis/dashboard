@@ -5,7 +5,7 @@
   inset: 0;
   z-index: 58;
   padding: 0;
-  background: rgba(3, 9, 16, 0.72);
+  background: var(--pleiad-color-001);
   backdrop-filter: blur(6px) saturate(116%);
 }
 
@@ -23,16 +23,16 @@
   background-image:
     radial-gradient(
       circle at 62% -4%,
-      rgba(46, 157, 168, 0.14),
+      var(--pleiad-color-002),
       transparent 30%
     ),
     radial-gradient(
       circle at 18% 10%,
-      rgba(26, 140, 131, 0.22),
+      var(--pleiad-color-003),
       transparent 38%
     ),
-    radial-gradient(circle at 82% 84%, rgba(18, 96, 98, 0.2), transparent 42%),
-    linear-gradient(168deg, #02060d 0%, #05131c 40%, #062118 74%, #030c14 100%);
+    radial-gradient(circle at 82% 84%, var(--pleiad-color-004), transparent 42%),
+    linear-gradient(168deg, var(--pleiad-color-005) 0%, var(--pleiad-color-006) 40%, var(--pleiad-color-007) 74%, var(--pleiad-color-008) 100%);
 }
 
 .pleiad-root.pleiad-root--screensaver {
@@ -139,7 +139,7 @@
   border: 1px solid var(--border);
   border-radius: var(--ui-radius);
   background: linear-gradient(162deg, var(--surface-strong), var(--surface));
-  box-shadow: 0 10px 24px rgba(1, 10, 18, 0.3);
+  box-shadow: 0 10px 24px var(--pleiad-color-009);
   backdrop-filter: blur(9px) saturate(118%);
 }
 
@@ -161,9 +161,9 @@
   width: var(--pleiad-btn-size);
   height: var(--pleiad-btn-size);
   border-radius: var(--ui-radius);
-  border: 1px solid rgba(110, 242, 220, 0.38);
-  background: rgba(18, 51, 56, 0.26);
-  color: #d8fff7;
+  border: 1px solid var(--pleiad-color-010);
+  background: var(--pleiad-color-011);
+  color: var(--pleiad-color-012);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -174,13 +174,13 @@
 }
 
 .pleiad-feed-toggle:hover {
-  border-color: rgba(120, 248, 226, 0.56);
-  background: rgba(31, 98, 101, 0.4);
+  border-color: var(--pleiad-color-013);
+  background: var(--pleiad-color-014);
 }
 
 .pleiad-feed-toggle.active {
-  border-color: rgba(120, 248, 226, 0.68);
-  background: rgba(25, 96, 95, 0.46);
+  border-color: var(--pleiad-color-015);
+  background: var(--pleiad-color-016);
 }
 
 .pleiad-feed-toggle-icon {
@@ -252,10 +252,10 @@
 .pleiad-feed-close {
   width: var(--pleiad-btn-size);
   height: var(--pleiad-btn-size);
-  border: 1px solid rgba(110, 242, 220, 0.38);
+  border: 1px solid var(--pleiad-color-010);
   border-radius: var(--ui-radius);
-  background: rgba(18, 51, 56, 0.26);
-  color: #d8fff7;
+  background: var(--pleiad-color-011);
+  color: var(--pleiad-color-012);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -266,8 +266,8 @@
 }
 
 .pleiad-feed-close:hover {
-  border-color: rgba(120, 248, 226, 0.56);
-  background: rgba(31, 98, 101, 0.4);
+  border-color: var(--pleiad-color-013);
+  background: var(--pleiad-color-014);
 }
 
 .pleiad-feed-close .ui-icon {
@@ -284,9 +284,9 @@
 .pleiad-kind-chip {
   width: var(--pleiad-btn-size);
   height: var(--pleiad-btn-size);
-  border: 1px solid rgba(140, 173, 192, 0.3);
+  border: 1px solid var(--pleiad-color-017);
   border-radius: 999px;
-  background: rgba(8, 19, 31, 0.5);
+  background: var(--pleiad-color-018);
   color: var(--muted);
   display: inline-flex;
   align-items: center;
@@ -299,54 +299,54 @@
 }
 
 .pleiad-kind-chip:hover {
-  border-color: rgba(156, 190, 208, 0.48);
-  background: rgba(9, 24, 36, 0.68);
+  border-color: var(--pleiad-color-019);
+  background: var(--pleiad-color-020);
 }
 
 .pleiad-kind-chip.active {
-  border-color: rgba(110, 242, 220, 0.66);
-  background: rgba(25, 96, 95, 0.44);
-  color: #e6fff8;
+  border-color: var(--pleiad-color-021);
+  background: var(--pleiad-color-022);
+  color: var(--pleiad-color-023);
 }
 
 .pleiad-kind-chip.kind-all {
-  color: #c4d4e2;
+  color: var(--pleiad-color-024);
 }
 
 .pleiad-kind-chip.kind-action {
-  color: #97d9cc;
+  color: var(--pleiad-color-025);
 }
 
 .pleiad-kind-chip.kind-action.active {
-  border-color: rgba(81, 231, 183, 0.72);
-  background: rgba(28, 112, 101, 0.52);
+  border-color: var(--pleiad-color-026);
+  background: var(--pleiad-color-027);
 }
 
 .pleiad-kind-chip.kind-warning {
-  color: #ffd3a4;
+  color: var(--pleiad-color-028);
 }
 
 .pleiad-kind-chip.kind-warning.active {
-  border-color: rgba(255, 191, 108, 0.74);
-  background: rgba(130, 89, 42, 0.54);
+  border-color: var(--pleiad-color-029);
+  background: var(--pleiad-color-030);
 }
 
 .pleiad-kind-chip.kind-memory {
-  color: #c3b9de;
+  color: var(--pleiad-color-031);
 }
 
 .pleiad-kind-chip.kind-memory.active {
-  border-color: rgba(166, 186, 204, 0.74);
-  background: rgba(79, 66, 112, 0.54);
+  border-color: var(--pleiad-color-032);
+  background: var(--pleiad-color-033);
 }
 
 .pleiad-kind-chip.kind-info {
-  color: #9fcfe8;
+  color: var(--pleiad-color-034);
 }
 
 .pleiad-kind-chip.kind-info.active {
-  border-color: rgba(110, 208, 242, 0.74);
-  background: rgba(43, 80, 116, 0.54);
+  border-color: var(--pleiad-color-035);
+  background: var(--pleiad-color-036);
 }
 
 .pleiad-kind-icon {
@@ -364,12 +364,12 @@
 }
 
 .pleiad-event-item {
-  border: 1px solid rgba(129, 166, 184, 0.2);
+  border: 1px solid var(--pleiad-color-037);
   border-radius: var(--ui-radius);
   padding: 9px;
   text-align: left;
-  background: rgba(8, 18, 29, 0.55);
-  color: #d5e4f1;
+  background: var(--pleiad-color-038);
+  color: var(--pleiad-color-039);
   cursor: pointer;
   transition:
     border-color 140ms ease,
@@ -378,32 +378,32 @@
 }
 
 .pleiad-event-item:hover {
-  border-color: rgba(156, 190, 208, 0.32);
-  background: rgba(8, 19, 31, 0.66);
+  border-color: var(--pleiad-color-040);
+  background: var(--pleiad-color-041);
 }
 
 .pleiad-event-item.active {
-  border-color: rgba(116, 248, 225, 0.56);
+  border-color: var(--pleiad-color-042);
   box-shadow:
-    0 10px 22px rgba(2, 18, 30, 0.32),
-    0 0 0 1px rgba(121, 252, 231, 0.14);
-  background: rgba(10, 28, 36, 0.78);
+    0 10px 22px var(--pleiad-color-043),
+    0 0 0 1px var(--pleiad-color-044);
+  background: var(--pleiad-color-045);
 }
 
 .pleiad-event-item.kind-warning {
-  border-left-color: rgba(255, 191, 108, 0.64);
+  border-left-color: var(--pleiad-color-046);
 }
 
 .pleiad-event-item.kind-action {
-  border-left-color: rgba(81, 231, 183, 0.56);
+  border-left-color: var(--pleiad-color-047);
 }
 
 .pleiad-event-item.kind-memory {
-  border-left-color: rgba(166, 186, 204, 0.62);
+  border-left-color: var(--pleiad-color-048);
 }
 
 .pleiad-event-item.kind-info {
-  border-left-color: rgba(110, 208, 242, 0.56);
+  border-left-color: var(--pleiad-color-049);
 }
 
 .pleiad-event-line {
@@ -416,7 +416,7 @@
 .pleiad-route {
   font-size: 0.78rem;
   letter-spacing: 0.04em;
-  color: #d5e4f1;
+  color: var(--pleiad-color-039);
 }
 
 .pleiad-kind {
@@ -430,7 +430,7 @@
   margin: 7px 0 0;
   font-size: 0.79rem;
   line-height: 1.4;
-  color: #d5e4f1;
+  color: var(--pleiad-color-039);
 }
 
 .pleiad-event-meta {
@@ -458,7 +458,7 @@
   border: 1px solid var(--border);
   background: linear-gradient(162deg, var(--surface-strong), var(--surface));
   pointer-events: none;
-  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 16px 34px var(--pleiad-color-050);
 }
 
 .pleiad-tooltip strong {
