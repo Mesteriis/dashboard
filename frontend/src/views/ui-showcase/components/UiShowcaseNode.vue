@@ -7,74 +7,87 @@
       <slot />
     </div>
 
-    <div class="ui-showcase-node__output">
-      <slot name="output">
-        <div class="ui-showcase-node__output-row">
-          <strong>value</strong>
-          <code>{{ formattedValue }}</code>
-        </div>
-        <div class="ui-showcase-node__output-row">
-          <strong>type</strong>
-          <code>{{ resolvedType }}</code>
-        </div>
-      </slot>
-    </div>
+    <UiDivider class="ui-showcase-node__divider" />
 
-    <div class="ui-showcase-node__api">
-      <section class="ui-showcase-node__api-group">
-        <h4>props</h4>
-        <div class="ui-showcase-node__chips">
-          <code
-            v-for="item in apiProps"
-            :key="`prop-${item}`"
-            class="ui-showcase-node__chip"
+    <div class="ui-showcase-node__meta">
+      <UiTabs v-model="activeMetaTab" :tabs="metaTabs">
+        <template #default="{ activeTab }">
+          <div
+            v-if="activeTab?.id === META_TAB_VALUE"
+            class="ui-showcase-node__output"
           >
-            {{ item }}
-          </code>
-        </div>
-      </section>
-      <section class="ui-showcase-node__api-group">
-        <h4>slots</h4>
-        <div class="ui-showcase-node__chips">
-          <code
-            v-for="item in apiSlots"
-            :key="`slot-${item}`"
-            class="ui-showcase-node__chip"
-          >
-            {{ item }}
-          </code>
-        </div>
-      </section>
-      <section class="ui-showcase-node__api-group">
-        <h4>signals</h4>
-        <div class="ui-showcase-node__chips">
-          <code
-            v-for="item in apiSignals"
-            :key="`signal-${item}`"
-            class="ui-showcase-node__chip"
-          >
-            {{ item }}
-          </code>
-        </div>
-      </section>
-      <section class="ui-showcase-node__api-group">
-        <h4>model</h4>
-        <div class="ui-showcase-node__chips">
-          <code
-            v-for="item in apiModel"
-            :key="`model-${item}`"
-            class="ui-showcase-node__chip"
-          >
-            {{ item }}
-          </code>
-        </div>
-      </section>
+            <slot name="output">
+              <div class="ui-showcase-node__output-row">
+                <strong>value</strong>
+                <code>{{ formattedValue }}</code>
+              </div>
+              <div class="ui-showcase-node__output-row">
+                <strong>type</strong>
+                <code>{{ resolvedType }}</code>
+              </div>
+            </slot>
+          </div>
+
+          <div v-else class="ui-showcase-node__api">
+            <section class="ui-showcase-node__api-group">
+              <h4>props</h4>
+              <div class="ui-showcase-node__chips">
+                <code
+                  v-for="item in apiProps"
+                  :key="`prop-${item}`"
+                  class="ui-showcase-node__chip"
+                >
+                  {{ item }}
+                </code>
+              </div>
+            </section>
+            <section class="ui-showcase-node__api-group">
+              <h4>slots</h4>
+              <div class="ui-showcase-node__chips">
+                <code
+                  v-for="item in apiSlots"
+                  :key="`slot-${item}`"
+                  class="ui-showcase-node__chip"
+                >
+                  {{ item }}
+                </code>
+              </div>
+            </section>
+            <section class="ui-showcase-node__api-group">
+              <h4>signals</h4>
+              <div class="ui-showcase-node__chips">
+                <code
+                  v-for="item in apiSignals"
+                  :key="`signal-${item}`"
+                  class="ui-showcase-node__chip"
+                >
+                  {{ item }}
+                </code>
+              </div>
+            </section>
+            <section class="ui-showcase-node__api-group">
+              <h4>model</h4>
+              <div class="ui-showcase-node__chips">
+                <code
+                  v-for="item in apiModel"
+                  :key="`model-${item}`"
+                  class="ui-showcase-node__chip"
+                >
+                  {{ item }}
+                </code>
+              </div>
+            </section>
+          </div>
+        </template>
+      </UiTabs>
     </div>
   </article>
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, ref } from "vue";
+import UiTabs from "@/primitives/navigation/UiTabs.vue";
+import UiDivider from "@/ui/surfaces/UiDivider.vue";
 import type { ShowcaseNodeApi } from "@/views/ui-showcase/showcaseNodeApi";
 
 const props = defineProps<{
@@ -84,6 +97,15 @@ const props = defineProps<{
   typeLabel?: string;
   api?: ShowcaseNodeApi;
 }>();
+
+const META_TAB_VALUE = "value";
+const META_TAB_API = "api";
+
+const activeMetaTab = ref(META_TAB_VALUE);
+const metaTabs = [
+  { id: META_TAB_VALUE, label: "Value" },
+  { id: META_TAB_API, label: "API" },
+];
 
 const apiProps = computed(() =>
   props.api?.props && props.api.props.length ? props.api.props : ["none"],
@@ -160,6 +182,21 @@ const formattedValue = computed(() => {
 .ui-showcase-node__content {
   display: grid;
   gap: 8px;
+}
+
+.ui-showcase-node__divider {
+  margin-top: 2px;
+}
+
+.ui-showcase-node__meta {
+  display: grid;
+  gap: 8px;
+}
+
+.ui-showcase-node__meta :deep(.ui-tabs__panel) {
+  background: transparent;
+  border: 0;
+  padding: 0;
 }
 
 .ui-showcase-node__output {
