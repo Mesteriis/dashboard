@@ -179,8 +179,12 @@ const visibleGroups = computed<UiKitPrimitiveGroup[]>(() => {
 
 function handleGroupChange(groupId: GroupFilterId): void {
   activeGroup.value = groupId;
-  const filteredGroup = visibleGroups.value.find((group) => group.id === groupId);
-  const baseGroup = UI_KIT_SHOWCASE_GROUPS.find((group) => group.id === groupId);
+  const filteredGroup = visibleGroups.value.find(
+    (group) => group.id === groupId,
+  );
+  const baseGroup = UI_KIT_SHOWCASE_GROUPS.find(
+    (group) => group.id === groupId,
+  );
   const firstNodeId = filteredGroup?.items[0]?.id || baseGroup?.items[0]?.id;
   if (!firstNodeId) return;
   activeNodeId.value = firstNodeId;

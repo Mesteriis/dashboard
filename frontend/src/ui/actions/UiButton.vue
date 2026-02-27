@@ -13,7 +13,9 @@
     <span v-if="$slots.icon && iconPosition === 'left'" class="ui-btn__icon">
       <slot name="icon" />
     </span>
-    <span class="ui-btn__label"><slot>{{ label }}</slot></span>
+    <span class="ui-btn__label"
+      ><slot>{{ label }}</slot></span
+    >
     <span v-if="$slots.icon && iconPosition === 'right'" class="ui-btn__icon">
       <slot name="icon" />
     </span>

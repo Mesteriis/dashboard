@@ -22,31 +22,41 @@
           />
           <BaseSwitch
             :model-value="sandboxAllowScripts"
-            :disabled="itemEditor.submitting || sandboxUseDefault || !sandboxEnabled"
+            :disabled="
+              itemEditor.submitting || sandboxUseDefault || !sandboxEnabled
+            "
             label="allow-scripts"
             @update:model-value="setSandboxAllowScripts"
           />
           <BaseSwitch
             :model-value="sandboxAllowSameOrigin"
-            :disabled="itemEditor.submitting || sandboxUseDefault || !sandboxEnabled"
+            :disabled="
+              itemEditor.submitting || sandboxUseDefault || !sandboxEnabled
+            "
             label="allow-same-origin"
             @update:model-value="setSandboxAllowSameOrigin"
           />
           <BaseSwitch
             :model-value="sandboxAllowForms"
-            :disabled="itemEditor.submitting || sandboxUseDefault || !sandboxEnabled"
+            :disabled="
+              itemEditor.submitting || sandboxUseDefault || !sandboxEnabled
+            "
             label="allow-forms"
             @update:model-value="setSandboxAllowForms"
           />
           <BaseSwitch
             :model-value="sandboxAllowPopups"
-            :disabled="itemEditor.submitting || sandboxUseDefault || !sandboxEnabled"
+            :disabled="
+              itemEditor.submitting || sandboxUseDefault || !sandboxEnabled
+            "
             label="allow-popups"
             @update:model-value="setSandboxAllowPopups"
           />
           <BaseSwitch
             :model-value="sandboxAllowModals"
-            :disabled="itemEditor.submitting || sandboxUseDefault || !sandboxEnabled"
+            :disabled="
+              itemEditor.submitting || sandboxUseDefault || !sandboxEnabled
+            "
             label="allow-modals"
             @update:model-value="setSandboxAllowModals"
           />
@@ -106,7 +116,9 @@ type SandboxMode =
   | "disabled";
 
 function currentSandboxMode(): SandboxMode {
-  const mode = String(itemEditor.form.iframeSandboxMode || "default") as SandboxMode;
+  const mode = String(
+    itemEditor.form.iframeSandboxMode || "default",
+  ) as SandboxMode;
   if (
     [
       "default",
@@ -153,14 +165,21 @@ function applySandboxFlags(payload: {
   itemEditor.form.iframeSandboxMode = "enabled";
 }
 
-const sandboxUseDefault = computed<boolean>(() => currentSandboxMode() === "default");
+const sandboxUseDefault = computed<boolean>(
+  () => currentSandboxMode() === "default",
+);
 const sandboxEnabled = computed<boolean>(() =>
-  ["enabled", "enabled_same_origin", "enabled_scripts", "enabled_scripts_same_origin"].includes(
-    currentSandboxMode(),
-  ),
+  [
+    "enabled",
+    "enabled_same_origin",
+    "enabled_scripts",
+    "enabled_scripts_same_origin",
+  ].includes(currentSandboxMode()),
 );
 const sandboxAllowScripts = computed<boolean>(() =>
-  ["enabled_scripts", "enabled_scripts_same_origin"].includes(currentSandboxMode()),
+  ["enabled_scripts", "enabled_scripts_same_origin"].includes(
+    currentSandboxMode(),
+  ),
 );
 const sandboxAllowSameOrigin = computed<boolean>(() =>
   ["enabled_same_origin", "enabled_scripts_same_origin"].includes(

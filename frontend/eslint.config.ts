@@ -15,7 +15,8 @@ const noParentRelativeImports = [
     patterns: [
       {
         group: ["../*", "../../*", "../../../*", "../../../../*"],
-        message: "Use @/ alias imports inside src instead of parent-relative paths.",
+        message:
+          "Use @/ alias imports inside src instead of parent-relative paths.",
       },
     ],
   },

@@ -91,7 +91,11 @@
 .ui-card {
   border: 1px solid var(--ui-kit-layout-components-color-007);
   border-radius: var(--ui-radius);
-  background: linear-gradient(160deg, var(--ui-kit-layout-components-color-008), var(--ui-kit-layout-components-color-009));
+  background: linear-gradient(
+    160deg,
+    var(--ui-kit-layout-components-color-008),
+    var(--ui-kit-layout-components-color-009)
+  );
   padding: 12px;
   display: grid;
   gap: 8px;
@@ -203,7 +207,11 @@
 
 .ui-tabs__tab.is-active {
   border-color: var(--ui-kit-layout-components-color-015);
-  background: linear-gradient(145deg, var(--ui-kit-layout-components-color-016), var(--ui-kit-layout-components-color-017));
+  background: linear-gradient(
+    145deg,
+    var(--ui-kit-layout-components-color-016),
+    var(--ui-kit-layout-components-color-017)
+  );
 }
 
 .ui-tabs__panel {

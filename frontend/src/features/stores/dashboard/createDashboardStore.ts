@@ -23,7 +23,10 @@ import {
   BRAND_ICON_BY_KEY,
   createBrandIcon,
 } from "@/features/stores/dashboard/icons/brandIcons";
-import { ICON_BY_KEY, ICON_RULES } from "@/features/stores/dashboard/icons/keywordIcons";
+import {
+  ICON_BY_KEY,
+  ICON_RULES,
+} from "@/features/stores/dashboard/icons/keywordIcons";
 import {
   fromToken,
   normalizeIconToken,
@@ -102,7 +105,10 @@ import { createDashboardTreeDataSection } from "@/features/stores/dashboard/sect
 import { createDashboardTreeSelectionSection } from "@/features/stores/dashboard/sections/treeSelectionSection";
 import { createDashboardUiStyleSection } from "@/features/stores/dashboard/sections/uiStyleSection";
 import { createDashboardWidgetRuntimeSection } from "@/features/stores/dashboard/sections/widgetRuntimeSection";
-import { ensureAbsoluteHttpUrl, originFromHttpUrl } from "@/features/stores/dashboard/urlUtils";
+import {
+  ensureAbsoluteHttpUrl,
+  originFromHttpUrl,
+} from "@/features/stores/dashboard/urlUtils";
 import type {
   AuthProfile,
   CommandPaletteEntry,
@@ -311,7 +317,9 @@ export function createDashboardStore(
       }
 
       const persistedSidebarView = String(snapshot.sidebarView || "");
-      if (SIDEBAR_VIEW_SEQUENCE.includes(persistedSidebarView as SidebarViewMode)) {
+      if (
+        SIDEBAR_VIEW_SEQUENCE.includes(persistedSidebarView as SidebarViewMode)
+      ) {
         sidebarView.value = persistedSidebarView as SidebarViewMode;
       }
 
@@ -321,7 +329,9 @@ export function createDashboardStore(
       siteFilter.value = persistedSiteFilter || "all";
       activePageId.value = String(snapshot.activePageId || "");
       treeFilter.value = String(snapshot.treeFilter || "");
-      activeIndicatorViewId.value = String(snapshot.activeIndicatorViewId || "");
+      activeIndicatorViewId.value = String(
+        snapshot.activeIndicatorViewId || "",
+      );
       statsExpanded.value = Boolean(snapshot.statsExpanded);
       editMode.value = Boolean(snapshot.editMode);
       settingsPanel.open = Boolean(snapshot.settingsPanelOpen);
@@ -332,7 +342,8 @@ export function createDashboardStore(
           (persistedSelectedNode as Partial<SelectedNodeState>).groupKey || "",
         );
         selectedNode.subgroupId = String(
-          (persistedSelectedNode as Partial<SelectedNodeState>).subgroupId || "",
+          (persistedSelectedNode as Partial<SelectedNodeState>).subgroupId ||
+            "",
         );
         selectedNode.itemId = String(
           (persistedSelectedNode as Partial<SelectedNodeState>).itemId || "",
@@ -340,7 +351,10 @@ export function createDashboardStore(
       }
 
       const persistedExpandedGroups = snapshot.expandedGroups;
-      if (persistedExpandedGroups && typeof persistedExpandedGroups === "object") {
+      if (
+        persistedExpandedGroups &&
+        typeof persistedExpandedGroups === "object"
+      ) {
         for (const [groupKey, expanded] of Object.entries(
           persistedExpandedGroups,
         )) {

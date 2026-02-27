@@ -20,10 +20,7 @@
     </template>
 
     <template v-slot:[SLOT_APP_SIDEBAR_MIDDLE]>
-      <nav
-        class="plugins-panel-nav-links"
-        aria-label="Разделы панели плагинов"
-      >
+      <nav class="plugins-panel-nav-links" aria-label="Разделы панели плагинов">
         <button
           class="plugins-panel-nav-link"
           :class="{ active: activeTab === 'installed' }"
@@ -61,10 +58,7 @@
         </button>
       </nav>
 
-      <section
-        class="plugins-install-actions"
-        aria-label="Установка плагинов"
-      >
+      <section class="plugins-install-actions" aria-label="Установка плагинов">
         <input
           ref="zipInputRef"
           class="plugins-install-zip-input"

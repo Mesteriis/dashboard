@@ -1,8 +1,13 @@
 import type { DashboardConfig } from "@/features/stores/dashboard/storeTypes";
 
 export function createDashboardCrudEntityManage(ctx: any) {
-  const { applyConfigMutation, config, editMode, findGroupInConfig, findSubgroupInConfig } =
-    ctx as any;
+  const {
+    applyConfigMutation,
+    config,
+    editMode,
+    findGroupInConfig,
+    findSubgroupInConfig,
+  } = ctx as any;
 
   async function editGroup(groupId: string): Promise<void> {
     if (!editMode.value || !config.value) return;
@@ -87,7 +92,9 @@ export function createDashboardCrudEntityManage(ctx: any) {
     if (!window.confirm(`Удалить группу "${group.title}"?`)) return;
 
     await applyConfigMutation((cfg: DashboardConfig) => {
-      const index = (cfg.groups || []).findIndex((entry) => entry.id === groupId);
+      const index = (cfg.groups || []).findIndex(
+        (entry) => entry.id === groupId,
+      );
       if (index < 0) return false;
       cfg.groups.splice(index, 1);
 
@@ -140,7 +147,9 @@ export function createDashboardCrudEntityManage(ctx: any) {
     if (!editMode.value || !config.value) return;
 
     const subgroup = findSubgroupInConfig(config.value, groupId, subgroupId);
-    const item = (subgroup?.items || []).find((entry: any) => entry.id === itemId);
+    const item = (subgroup?.items || []).find(
+      (entry: any) => entry.id === itemId,
+    );
     if (!subgroup || !item) return;
 
     if (subgroup.items.length <= 1) {

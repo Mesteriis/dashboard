@@ -48,5 +48,9 @@
 
 .error-state {
   border-color: var(--hero-status-color-007);
-  background: linear-gradient(165deg, var(--hero-status-color-008), var(--hero-status-color-009));
+  background: linear-gradient(
+    165deg,
+    var(--hero-status-color-008),
+    var(--hero-status-color-009)
+  );
 }

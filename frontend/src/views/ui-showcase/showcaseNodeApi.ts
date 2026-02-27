@@ -7,7 +7,17 @@ export interface ShowcaseNodeApi {
 
 export const SHOWCASE_NODE_API: Record<string, ShowcaseNodeApi> = {
   "ui-node-inputgroup": {
-    props: ["modelValue", "label", "placeholder", "type", "hint", "error", "prefix", "suffix", "disabled"],
+    props: [
+      "modelValue",
+      "label",
+      "placeholder",
+      "type",
+      "hint",
+      "error",
+      "prefix",
+      "suffix",
+      "disabled",
+    ],
     slots: ["prefix", "suffix"],
     signals: ["update:modelValue", "focus", "blur"],
     model: ["v-model<string>"],
@@ -25,7 +35,15 @@ export const SHOWCASE_NODE_API: Record<string, ShowcaseNodeApi> = {
     model: ["v-model<string[]>"],
   },
   "ui-node-select": {
-    props: ["modelValue", "label", "options", "placeholder", "search", "multiple", "disabled"],
+    props: [
+      "modelValue",
+      "label",
+      "options",
+      "placeholder",
+      "search",
+      "multiple",
+      "disabled",
+    ],
     slots: ["option", "selected"],
     signals: ["update:modelValue"],
     model: ["v-model<string>"],
@@ -73,7 +91,16 @@ export const SHOWCASE_NODE_API: Record<string, ShowcaseNodeApi> = {
     model: ["v-model<boolean>"],
   },
   "ui-node-button": {
-    props: ["label", "variant", "size", "type", "disabled", "loading", "block", "iconPosition"],
+    props: [
+      "label",
+      "variant",
+      "size",
+      "type",
+      "disabled",
+      "loading",
+      "block",
+      "iconPosition",
+    ],
     slots: ["default", "icon"],
     signals: ["click"],
     model: [],
@@ -94,7 +121,15 @@ export const SHOWCASE_NODE_API: Record<string, ShowcaseNodeApi> = {
     model: ["v-model<string>"],
   },
   "ui-node-datatable": {
-    props: ["rows", "columns", "actions", "showSearch", "showFilters", "showExport", "showPagination"],
+    props: [
+      "rows",
+      "columns",
+      "actions",
+      "showSearch",
+      "showFilters",
+      "showExport",
+      "showPagination",
+    ],
     slots: [],
     signals: ["action", "export"],
     model: [],

@@ -2,16 +2,28 @@
   position: sticky;
   top: var(--shell-inset-top, 18px);
   height: calc(
-    100vh - var(--desktop-drag-strip) - var(--shell-inset-top, 18px) - var(--shell-inset-bottom, 16px)
+    100vh - var(--desktop-drag-strip) - var(--shell-inset-top, 18px) - var(
+        --shell-inset-bottom,
+        16px
+      )
   );
   height: calc(
-    100dvh - var(--desktop-drag-strip) - var(--shell-inset-top, 18px) - var(--shell-inset-bottom, 16px)
+    100dvh - var(--desktop-drag-strip) - var(--shell-inset-top, 18px) - var(
+        --shell-inset-bottom,
+        16px
+      )
   );
   max-height: calc(
-    100vh - var(--desktop-drag-strip) - var(--shell-inset-top, 18px) - var(--shell-inset-bottom, 16px)
+    100vh - var(--desktop-drag-strip) - var(--shell-inset-top, 18px) - var(
+        --shell-inset-bottom,
+        16px
+      )
   );
   max-height: calc(
-    100dvh - var(--desktop-drag-strip) - var(--shell-inset-top, 18px) - var(--shell-inset-bottom, 16px)
+    100dvh - var(--desktop-drag-strip) - var(--shell-inset-top, 18px) - var(
+        --shell-inset-bottom,
+        16px
+      )
   );
   border: 1px solid var(--sidebar-shell-color-001);
   border-radius: var(--ui-radius);

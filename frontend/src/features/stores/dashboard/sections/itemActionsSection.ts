@@ -1,4 +1,7 @@
-import type { DashboardItem, IframeReferrerPolicy } from "@/features/stores/dashboard/storeTypes";
+import type {
+  DashboardItem,
+  IframeReferrerPolicy,
+} from "@/features/stores/dashboard/storeTypes";
 
 export function createDashboardItemActionsSection(ctx: any) {
   async function openIframeItem(item: DashboardItem): Promise<void> {

@@ -434,9 +434,9 @@ const appClientModeOptions: ReadonlyArray<Option<AppClientModeDraft>> = [
 ];
 let removeApiBaseListener: () => void = () => {};
 
-const desktopRuntimeModeDraft = computed<Extract<RuntimeMode, "embedded" | "remote">>(() =>
-  appClientModeDraft.value === "thick" ? "embedded" : "remote",
-);
+const desktopRuntimeModeDraft = computed<
+  Extract<RuntimeMode, "embedded" | "remote">
+>(() => (appClientModeDraft.value === "thick" ? "embedded" : "remote"));
 const runtimeStatusHint = computed(() => {
   if (deploymentModeDraft.value !== "app") {
     return "Для web-режимов backend управляется внешним окружением.";
@@ -543,10 +543,7 @@ async function downloadConfigBackup(): Promise<void> {
     URL.revokeObjectURL(blobUrl);
     backupSuccess.value = `Backup сохранен: ${link.download}`;
   } catch (error: unknown) {
-    backupError.value = resolveErrorMessage(
-      error,
-      "Не удалось скачать backup",
-    );
+    backupError.value = resolveErrorMessage(error, "Не удалось скачать backup");
   } finally {
     backupBusy.value = false;
   }

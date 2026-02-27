@@ -64,7 +64,10 @@ function resolveRuntimeMode(mode: unknown): RuntimeMode {
   return "web";
 }
 
-function resolveAppClientMode(mode: RuntimeMode, desktop: boolean): AppClientMode {
+function resolveAppClientMode(
+  mode: RuntimeMode,
+  desktop: boolean,
+): AppClientMode {
   if (!desktop) return null;
   return mode === "embedded" ? "thick" : "thin";
 }
@@ -81,7 +84,8 @@ function readProfileField(
 }
 
 function applyRuntimeProfile(nextProfile: unknown): RuntimeProfile {
-  const payload = (nextProfile as RuntimeProfilePayload | null | undefined) ?? null;
+  const payload =
+    (nextProfile as RuntimeProfilePayload | null | undefined) ?? null;
   const desktop = Boolean(readProfileField(payload, "desktop", "desktop"));
   const mode = resolveRuntimeMode(readProfileField(payload, "mode", "mode"));
   const normalized: RuntimeProfile = {

@@ -1,5 +1,11 @@
-import { findGroup, findSubgroup } from "@/features/stores/dashboard/configTreeIds";
-import type { DashboardConfigTree, DashboardSubgroup } from "@/features/stores/dashboard/types";
+import {
+  findGroup,
+  findSubgroup,
+} from "@/features/stores/dashboard/configTreeIds";
+import type {
+  DashboardConfigTree,
+  DashboardSubgroup,
+} from "@/features/stores/dashboard/types";
 
 export function moveGroup(
   cfg: DashboardConfigTree,

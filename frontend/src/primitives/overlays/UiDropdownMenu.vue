@@ -1,9 +1,5 @@
 <template>
-  <div
-    ref="rootRef"
-    class="ui-menu"
-    :class="[`align-${align}`, { open }]"
-  >
+  <div ref="rootRef" class="ui-menu" :class="[`align-${align}`, { open }]">
     <button
       class="ui-menu__trigger"
       :class="triggerClass"
@@ -34,39 +30,43 @@
         role="menu"
         :aria-label="ariaLabel || label"
       >
-        <li
-          v-for="item in items"
-          :key="item.id"
-          role="none"
-        >
-          <button
-            class="ui-menu__item"
-            :class="[itemClass, { 'is-danger': item.danger }]"
-            type="button"
-            role="menuitem"
-            :disabled="Boolean(item.disabled)"
-            @click="selectItem(item.id)"
-          >
-            <span class="ui-menu__item-content">
-              <slot name="item-icon" :item="item">
-                <component
-                  :is="item.icon"
-                  v-if="isComponentIcon(item.icon)"
-                  class="ui-icon ui-menu__item-icon"
-                  aria-hidden="true"
-                />
-                <span
-                  v-else-if="typeof item.icon === 'string' && item.icon.trim()"
-                  class="ui-icon ui-menu__item-icon"
-                  aria-hidden="true"
-                >
-                  {{ item.icon }}
-                </span>
-              </slot>
-              <span>{{ item.label }}</span>
-            </span>
-          </button>
-        </li>
+        <template v-for="item in items" :key="item.id">
+          <!-- Divider -->
+          <li v-if="item.divider" class="ui-menu__divider" role="separator" />
+
+          <!-- Menu Item -->
+          <li v-else role="none">
+            <button
+              class="ui-menu__item"
+              :class="[itemClass, { 'is-danger': item.danger }]"
+              type="button"
+              role="menuitem"
+              :disabled="Boolean(item.disabled)"
+              @click="selectItem(item)"
+            >
+              <span class="ui-menu__item-content">
+                <slot name="item-icon" :item="item">
+                  <component
+                    :is="item.icon"
+                    v-if="isComponentIcon(item.icon)"
+                    class="ui-icon ui-menu__item-icon"
+                    aria-hidden="true"
+                  />
+                  <span
+                    v-else-if="
+                      typeof item.icon === 'string' && item.icon.trim()
+                    "
+                    class="ui-icon ui-menu__item-icon"
+                    aria-hidden="true"
+                  >
+                    {{ item.icon }}
+                  </span>
+                </slot>
+                <span>{{ item.label }}</span>
+              </span>
+            </button>
+          </li>
+        </template>
       </ul>
     </Transition>
   </div>
@@ -81,6 +81,9 @@ interface DropdownMenuItem {
   icon?: Component | string;
   danger?: boolean;
   disabled?: boolean;
+  divider?: boolean;
+  route?: string;
+  action?: () => void | Promise<void>;
 }
 
 const props = withDefaults(
@@ -108,7 +111,7 @@ const props = withDefaults(
 );
 
 const emit = defineEmits<{
-  action: [id: string];
+  action: [item: DropdownMenuItem];
 }>();
 
 const open = ref(false);
@@ -127,8 +130,8 @@ function closeMenu(): void {
   open.value = false;
 }
 
-function selectItem(id: string): void {
-  emit("action", id);
+function selectItem(item: DropdownMenuItem): void {
+  emit("action", item);
   if (props.closeOnSelect) {
     closeMenu();
   }
@@ -159,3 +162,11 @@ onBeforeUnmount(() => {
   window.removeEventListener("keydown", handleEscape);
 });
 </script>
+
+<style scoped>
+.ui-menu__divider {
+  height: 1px;
+  margin: 8px 0;
+  background-color: rgba(120, 183, 218, 0.2);
+}
+</style>

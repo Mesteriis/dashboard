@@ -1,7 +1,10 @@
 const PARTICLES_TIMEOUT_MS = 7000;
 
 type LegacyKeyMap = Record<string, string>;
-type ParticlesCompatFn = (containerId: string, config: unknown) => Promise<unknown>;
+type ParticlesCompatFn = (
+  containerId: string,
+  config: unknown,
+) => Promise<unknown>;
 
 interface TsParticlesCompatLoader {
   load: (params: { id: string; options: unknown }) => Promise<unknown>;
@@ -39,7 +42,10 @@ function normalizeLegacyConfig(value: unknown): unknown {
   return normalized;
 }
 
-async function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
+async function withTimeout<T>(
+  promise: Promise<T>,
+  timeoutMs: number,
+): Promise<T> {
   return await new Promise((resolve, reject) => {
     const timeoutId = window.setTimeout(() => {
       reject(new Error("tsParticles initialization timeout"));

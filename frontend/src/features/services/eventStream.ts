@@ -1,4 +1,7 @@
-import { buildOkoRequestHeaders, resolveRequestUrl } from "@/features/services/requestJson";
+import {
+  buildOkoRequestHeaders,
+  resolveRequestUrl,
+} from "@/features/services/requestJson";
 
 export interface OkoSseEvent {
   id: string;
@@ -36,7 +39,8 @@ function parseEventFrame(frame: string): ParsedEventFrame | null {
     }
 
     const splitIndex = line.indexOf(":");
-    const field = splitIndex >= 0 ? line.slice(0, splitIndex).trim() : line.trim();
+    const field =
+      splitIndex >= 0 ? line.slice(0, splitIndex).trim() : line.trim();
     const value = splitIndex >= 0 ? line.slice(splitIndex + 1).trimStart() : "";
 
     if (field === "id") {

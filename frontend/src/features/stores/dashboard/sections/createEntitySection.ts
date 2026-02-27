@@ -11,9 +11,7 @@ export function createDashboardCreateEntitySection(ctx: any) {
     const normalized = String(preferredDashboardId || "").trim();
     if (
       normalized &&
-      ctx.pages.value.some(
-        (page: any) => String(page?.id || "") === normalized,
-      )
+      ctx.pages.value.some((page: any) => String(page?.id || "") === normalized)
     ) {
       return normalized;
     }
@@ -69,7 +67,10 @@ export function createDashboardCreateEntitySection(ctx: any) {
     return ctx.createEntityGroupOptions.value[0]?.id || "";
   }
 
-  function resolveDefaultSubgroupId(groupId: string, preferredSubgroupId = ""): string {
+  function resolveDefaultSubgroupId(
+    groupId: string,
+    preferredSubgroupId = "",
+  ): string {
     const group = ctx.groupById.value.get(String(groupId || "").trim());
     if (!group) {
       return "";
@@ -83,7 +84,8 @@ export function createDashboardCreateEntitySection(ctx: any) {
     }
     const hasSelected = (group.subgroups || []).some(
       (subgroup: any) =>
-        String(subgroup?.id || "") === String(ctx.selectedNode.subgroupId || ""),
+        String(subgroup?.id || "") ===
+        String(ctx.selectedNode.subgroupId || ""),
     );
     if (hasSelected) {
       return String(ctx.selectedNode.subgroupId || "");
@@ -102,7 +104,10 @@ export function createDashboardCreateEntitySection(ctx: any) {
     const resolvedGroupId = resolveDefaultGroupId(groupId);
     ctx.createChooser.open = true;
     ctx.createChooser.groupId = resolvedGroupId;
-    ctx.createChooser.subgroupId = resolveDefaultSubgroupId(resolvedGroupId, subgroupId);
+    ctx.createChooser.subgroupId = resolveDefaultSubgroupId(
+      resolvedGroupId,
+      subgroupId,
+    );
   }
 
   function closeCreateEntityEditor(force: boolean | MouseEvent = false): void {
@@ -123,7 +128,9 @@ export function createDashboardCreateEntitySection(ctx: any) {
     ctx.createEntityEditor.form.parentDashboardId = resolvedDashboardId;
 
     const groupIds = resolveGroupIdsForDashboard(resolvedDashboardId);
-    const preferredGroupId = String(ctx.createEntityEditor.form.parentGroupId || "");
+    const preferredGroupId = String(
+      ctx.createEntityEditor.form.parentGroupId || "",
+    );
     const nextGroupId = groupIds.includes(preferredGroupId)
       ? preferredGroupId
       : String(groupIds[0] || "");
@@ -161,12 +168,19 @@ export function createDashboardCreateEntitySection(ctx: any) {
     const dashboardId = resolveDefaultDashboardId(ctx.activePageId.value);
     const itemDashboardGroupIds = resolveGroupIdsForDashboard(dashboardId);
     const preferredItemGroupId = String(ctx.createChooser.groupId || "").trim();
-    const defaultItemGroupId = itemDashboardGroupIds.includes(preferredItemGroupId)
+    const defaultItemGroupId = itemDashboardGroupIds.includes(
+      preferredItemGroupId,
+    )
       ? preferredItemGroupId
       : String(itemDashboardGroupIds[0] || "");
     const groupId =
-      kind === "item" ? defaultItemGroupId : resolveDefaultGroupId(ctx.createChooser.groupId);
-    const subgroupId = resolveDefaultSubgroupId(groupId, ctx.createChooser.subgroupId);
+      kind === "item"
+        ? defaultItemGroupId
+        : resolveDefaultGroupId(ctx.createChooser.groupId);
+    const subgroupId = resolveDefaultSubgroupId(
+      groupId,
+      ctx.createChooser.subgroupId,
+    );
 
     ctx.createEntityEditor.open = true;
     ctx.createEntityEditor.submitting = false;
@@ -194,7 +208,9 @@ export function createDashboardCreateEntitySection(ctx: any) {
     openCreateEntityEditor("item");
   }
 
-  function isSidebarIconActive(node: SidebarIconNode | null | undefined): boolean {
+  function isSidebarIconActive(
+    node: SidebarIconNode | null | undefined,
+  ): boolean {
     if (!node) return false;
     if (node.type === "group") return ctx.isGroupSelected(node.groupKey);
     if (node.type === "subgroup") {
@@ -203,7 +219,9 @@ export function createDashboardCreateEntitySection(ctx: any) {
     return false;
   }
 
-  function sidebarIconNodeTitle(node: SidebarIconNode | null | undefined): string {
+  function sidebarIconNodeTitle(
+    node: SidebarIconNode | null | undefined,
+  ): string {
     if (!node) return "";
     if (node.type === "group") {
       return `Группа: ${node.group?.title || ""}`;
@@ -214,7 +232,9 @@ export function createDashboardCreateEntitySection(ctx: any) {
     return "";
   }
 
-  function selectSidebarIconNode(node: SidebarIconNode | null | undefined): void {
+  function selectSidebarIconNode(
+    node: SidebarIconNode | null | undefined,
+  ): void {
     if (!node) return;
 
     if (node.type === "group") {

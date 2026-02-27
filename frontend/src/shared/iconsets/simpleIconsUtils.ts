@@ -91,7 +91,9 @@ export function isSimpleIconLike(value: unknown): value is SimpleIconLike {
 }
 
 export function uniqueKeywords(words: string[]): string[] {
-  return Array.from(new Set(words.map((word) => word.trim().toLowerCase()).filter(Boolean)));
+  return Array.from(
+    new Set(words.map((word) => word.trim().toLowerCase()).filter(Boolean)),
+  );
 }
 
 function splitWords(source: string): string[] {
@@ -107,12 +109,17 @@ export function isInfraSlug(slug: string): boolean {
   return SIMPLE_INFRA_HINTS.some((hint) => normalized.includes(hint));
 }
 
-export function isInfraIcon(icon: Pick<SimpleIconLike, "slug" | "title">): boolean {
+export function isInfraIcon(
+  icon: Pick<SimpleIconLike, "slug" | "title">,
+): boolean {
   const haystack = `${icon.slug} ${icon.title}`.toLowerCase();
   return SIMPLE_INFRA_HINTS.some((hint) => haystack.includes(hint));
 }
 
-export function simpleToOption(icon: SimpleIconLike, pack: string): BuiltinIconPickerOption {
+export function simpleToOption(
+  icon: SimpleIconLike,
+  pack: string,
+): BuiltinIconPickerOption {
   return {
     id: `simple:${icon.slug}`,
     label: icon.title,

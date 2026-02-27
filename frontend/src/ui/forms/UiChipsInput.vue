@@ -4,7 +4,11 @@
     <div class="ui-chips__box" @click="focusInput">
       <span v-for="chip in modelValue" :key="chip" class="ui-chips__item">
         {{ chip }}
-        <button type="button" class="ui-chips__remove" @click.stop="removeChip(chip)">
+        <button
+          type="button"
+          class="ui-chips__remove"
+          @click.stop="removeChip(chip)"
+        >
           ×
         </button>
       </span>

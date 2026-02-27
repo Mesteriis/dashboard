@@ -48,8 +48,18 @@ body {
       var(--foundation-color-012),
       transparent 38%
     ),
-    radial-gradient(circle at 82% 84%, var(--foundation-color-013), transparent 42%),
-    linear-gradient(168deg, var(--foundation-color-014) 0%, var(--foundation-color-015) 40%, var(--foundation-color-016) 74%, var(--foundation-color-017) 100%);
+    radial-gradient(
+      circle at 82% 84%,
+      var(--foundation-color-013),
+      transparent 42%
+    ),
+    linear-gradient(
+      168deg,
+      var(--foundation-color-014) 0%,
+      var(--foundation-color-015) 40%,
+      var(--foundation-color-016) 74%,
+      var(--foundation-color-017) 100%
+    );
 }
 
 .shell {
@@ -152,7 +162,8 @@ body {
   display: grid;
   grid-template-columns: 420px minmax(0, 1fr);
   gap: var(--grid-gap);
-  padding: calc(var(--shell-inset-top) + var(--desktop-drag-strip)) var(--shell-inset-inline) var(--shell-inset-bottom);
+  padding: calc(var(--shell-inset-top) + var(--desktop-drag-strip))
+    var(--shell-inset-inline) var(--shell-inset-bottom);
   transition: grid-template-columns 280ms ease;
 }
 

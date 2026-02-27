@@ -154,7 +154,8 @@ export function createDashboardWidgetRuntimeSection(ctx: any) {
       initialLoads.push(refreshWidget(widget.id));
 
       if (!normalizeEndpoint(widget.data?.endpoint)) continue;
-      const intervalMs = Math.max(1, Number(widget.data?.refresh_sec || 0)) * 1000;
+      const intervalMs =
+        Math.max(1, Number(widget.data?.refresh_sec || 0)) * 1000;
 
       const timer = window.setInterval(() => {
         refreshWidget(widget.id);

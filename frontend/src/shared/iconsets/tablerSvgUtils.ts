@@ -21,8 +21,17 @@ export function labelFromSlug(slug: string): string {
     .join(" ");
 }
 
-export function keywordsFromSlug(slug: string, extras: string[] = []): string[] {
-  return Array.from(new Set([...splitSlug(slug), ...extras.map((item) => item.trim())].filter(Boolean)));
+export function keywordsFromSlug(
+  slug: string,
+  extras: string[] = [],
+): string[] {
+  return Array.from(
+    new Set(
+      [...splitSlug(slug), ...extras.map((item) => item.trim())].filter(
+        Boolean,
+      ),
+    ),
+  );
 }
 
 export function parseSvgMarkup(svgMarkup: string): ParsedSvgIcon {

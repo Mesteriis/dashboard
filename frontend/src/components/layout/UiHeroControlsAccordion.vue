@@ -2,11 +2,7 @@
   <div class="hero-controls-content">
     <div class="hero-controls-accordion" :class="{ open: isOpen }">
       <Transition name="hero-controls-drawer-transition">
-        <div
-          v-if="isOpen"
-          :id="drawerId"
-          class="hero-controls-drawer"
-        >
+        <div v-if="isOpen" :id="drawerId" class="hero-controls-drawer">
           <slot name="drawer" />
         </div>
       </Transition>

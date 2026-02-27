@@ -158,7 +158,7 @@ import {
   watch,
   type Component,
 } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter, type RouteLocationRaw } from "vue-router";
 import { ChevronDown, FolderTree, Lock } from "lucide-vue-next";
 import UiIconButton from "@/ui/actions/UiIconButton.vue";
 import UiHeroControlsAccordion from "@/components/layout/UiHeroControlsAccordion.vue";
@@ -214,29 +214,41 @@ const demoTabs: BlankTabDefinition[] = [
 const tabsRef = ref<HTMLElement | null>(null);
 const shouldPlayIntro = ref(!hasPlayedBlankTabsIntro);
 
-type SystemActionId = "kiosk" | "profile" | "lock" | "exit";
+const router = useRouter();
 
-const systemActions: Array<{
-  id: SystemActionId;
+type SystemActionId = "kiosk" | "profile" | "lock" | "exit" | "navigate";
+
+interface SystemAction {
+  id: SystemActionId | string;
   label: string;
-  icon: string;
+  icon?: Component | string;
+  route?: RouteLocationRaw;
+  action?: () => void | Promise<void>;
   danger?: boolean;
-}> = [
+  divider?: boolean;
+}
+
+const systemActions = computed<SystemAction[]>(() => [
   { id: "kiosk", label: "Режим киоска", icon: "⌗" },
   { id: "profile", label: "Профиль", icon: "◉" },
   { id: "lock", label: "Блокировка", icon: "⛨" },
+  { id: "divider-1", label: "", divider: true },
+  { id: "navigate", label: "Домой", route: "/" },
   { id: "exit", label: "Выход", icon: "⏻", danger: true },
-];
+]);
 
 const heroControlsStorageKey = computed(() => {
   const rawPath = String(route.path || "/").trim();
-  const normalizedPath = rawPath.length > 1 && rawPath.endsWith("/")
-    ? rawPath.slice(0, -1)
-    : rawPath;
+  const normalizedPath =
+    rawPath.length > 1 && rawPath.endsWith("/")
+      ? rawPath.slice(0, -1)
+      : rawPath;
   return `oko:hero-controls-open:${normalizedPath || "/"}`;
 });
 const showLogoTile = computed(() => isSidebarHidden.value);
-const resolvedHeroControlsOpen = computed(() => Boolean(props.heroControlsOpen));
+const resolvedHeroControlsOpen = computed(() =>
+  Boolean(props.heroControlsOpen),
+);
 const tabIdsSignature = computed(() => demoTabs.map((tab) => tab.id).join("|"));
 const activeTabId = computed<BlankTabId>({
   get: () => {
@@ -327,7 +339,9 @@ function resolveTabMetrics(buttons: HTMLElement[]): TabMetrics | null {
   const expandedGap = 10;
   const collapsedPadding = Math.max(0, (collapsedWidth - iconWidth) / 2);
 
-  const logoTile = host.querySelector<HTMLElement>(":scope > .hero-logo-square");
+  const logoTile = host.querySelector<HTMLElement>(
+    ":scope > .hero-logo-square",
+  );
   const logoWidth = logoTile ? logoTile.getBoundingClientRect().width : 0;
   const overlapCompensation = Math.max(0, buttons.length - 1);
   const availableWidth = Math.max(
@@ -415,7 +429,8 @@ function applyTabFrame(
     descriptor.label.style.opacity = `${(0.98 * tabProgress).toFixed(4)}`;
     descriptor.label.style.marginLeft = `${(4 * tabProgress).toFixed(3)}px`;
     descriptor.label.style.transform = `translateX(${(
-      -10 * (1 - tabProgress)
+      -10 *
+      (1 - tabProgress)
     ).toFixed(3)}px)`;
   }
 }
@@ -424,10 +439,12 @@ function easeInOutQuart(progress: number): number {
   if (progress < 0.5) {
     return 8 * progress ** 4;
   }
-  return 1 - ((-2 * progress + 2) ** 4) / 2;
+  return 1 - (-2 * progress + 2) ** 4 / 2;
 }
 
-function animateTabsLayout({ instant = false }: { instant?: boolean } = {}): void {
+function animateTabsLayout({
+  instant = false,
+}: { instant?: boolean } = {}): void {
   const buttons = getTabButtons();
   if (!buttons.length) return;
 
@@ -463,7 +480,10 @@ function animateTabsLayout({ instant = false }: { instant?: boolean } = {}): voi
   }
 
   stopTabsAnimation();
-  const durationMs = Math.max(560, Math.min(1800, metrics.slideDuration * 1.15));
+  const durationMs = Math.max(
+    560,
+    Math.min(1800, metrics.slideDuration * 1.15),
+  );
   const startedAt = globalThis.performance.now();
 
   const step = (timestamp: number) => {
@@ -519,25 +539,41 @@ async function exitApp(): Promise<void> {
   }
 }
 
-function handleSystemAction(actionId: string): void {
-  const id = actionId as SystemActionId;
+function handleSystemAction(action: SystemAction): void {
+  // Обработка divider — игнорируем
+  if (action.divider) return;
+
+  // Если есть custom action — выполняем его
+  if (action.action) {
+    void Promise.resolve(action.action());
+    return;
+  }
+
+  // Если есть route — навигируем
+  if (action.route) {
+    void router.push(action.route);
+    return;
+  }
+
+  // Встроенные действия
+  const id = action.id as SystemActionId;
 
   if (id === "kiosk") {
     void toggleKioskMode();
     return;
   }
 
-  if (id === "profile") {
+  if (id === "settings" || id === "profile") {
     openSettingsPanel();
     return;
   }
 
-  if (id === "lock") {
+  if (id === "lock" || id === "pleiad_lock") {
     void openPleiadOverlay("route");
     return;
   }
 
-  if (id === "exit") {
+  if (id === "logout" || id === "exit") {
     void exitApp();
   }
 }
@@ -566,13 +602,10 @@ onMounted(() => {
   }, 700);
 });
 
-watch(
-  [activeTabId, tabIdsSignature, showLogoTile],
-  async () => {
-    await nextTick();
-    animateTabsLayout({ instant: false });
-  },
-);
+watch([activeTabId, tabIdsSignature, showLogoTile], async () => {
+  await nextTick();
+  animateTabsLayout({ instant: false });
+});
 
 onBeforeUnmount(() => {
   stopTabsAnimation();

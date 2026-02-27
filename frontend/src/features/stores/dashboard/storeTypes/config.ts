@@ -3,7 +3,11 @@ import type {
   DashboardSubgroup as BaseDashboardSubgroup,
   DashboardGroup as BaseDashboardGroup,
 } from "@/features/stores/dashboard/types";
-import type { HealthLevel, ItemOpenMode, ItemType } from "@/features/stores/dashboard/storeTypes/primitives";
+import type {
+  HealthLevel,
+  ItemOpenMode,
+  ItemType,
+} from "@/features/stores/dashboard/storeTypes/primitives";
 
 export interface DashboardTheme {
   accent?: string;

@@ -46,7 +46,10 @@
         </button>
       </section>
 
-      <section v-if="createEntityEditor.form.kind === 'dashboard'" class="editor-grid">
+      <section
+        v-if="createEntityEditor.form.kind === 'dashboard'"
+        class="editor-grid"
+      >
         <label class="editor-field">
           <span>Название вкладки</span>
           <input
@@ -84,7 +87,10 @@
         </label>
       </section>
 
-      <section v-else-if="createEntityEditor.form.kind === 'group'" class="editor-grid">
+      <section
+        v-else-if="createEntityEditor.form.kind === 'group'"
+        class="editor-grid"
+      >
         <label class="editor-field">
           <span>Название группы</span>
           <input
@@ -134,12 +140,17 @@
         </label>
       </section>
 
-      <section v-else-if="createEntityEditor.form.kind === 'subgroup'" class="editor-grid">
+      <section
+        v-else-if="createEntityEditor.form.kind === 'subgroup'"
+        class="editor-grid"
+      >
         <label class="editor-field">
           <span>Родительская группа</span>
           <select
             :value="createEntityEditor.form.parentGroupId"
-            :disabled="createEntityEditor.submitting || !createEntityGroupOptions.length"
+            :disabled="
+              createEntityEditor.submitting || !createEntityGroupOptions.length
+            "
             @change="handleParentGroupChange"
           >
             <option
@@ -182,7 +193,10 @@
           <span>Dashboard</span>
           <select
             :value="createEntityEditor.form.parentDashboardId"
-            :disabled="createEntityEditor.submitting || !createEntityDashboardOptions.length"
+            :disabled="
+              createEntityEditor.submitting ||
+              !createEntityDashboardOptions.length
+            "
             @change="handleParentDashboardChange"
           >
             <option
@@ -199,7 +213,10 @@
           <span>Группа</span>
           <select
             :value="createEntityEditor.form.parentGroupId"
-            :disabled="createEntityEditor.submitting || !createEntityItemGroupOptions.length"
+            :disabled="
+              createEntityEditor.submitting ||
+              !createEntityItemGroupOptions.length
+            "
             @change="handleParentGroupChange"
           >
             <option
@@ -216,7 +233,10 @@
           <span>Подгруппа</span>
           <select
             v-model="createEntityEditor.form.parentSubgroupId"
-            :disabled="createEntityEditor.submitting || !createEntitySubgroupOptions.length"
+            :disabled="
+              createEntityEditor.submitting ||
+              !createEntitySubgroupOptions.length
+            "
           >
             <option
               v-for="option in createEntitySubgroupOptions"
@@ -242,7 +262,11 @@
         >
           Отмена
         </button>
-        <button class="ghost" type="submit" :disabled="createEntityEditor.submitting">
+        <button
+          class="ghost"
+          type="submit"
+          :disabled="createEntityEditor.submitting"
+        >
           {{ submitTitle }}
         </button>
       </div>

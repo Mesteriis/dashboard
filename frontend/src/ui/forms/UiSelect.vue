@@ -27,7 +27,9 @@
         :selected-labels="selectedLabels"
         :display-value="displayValue"
       >
-        <span v-if="displayValue" class="ui-select__value">{{ displayValue }}</span>
+        <span v-if="displayValue" class="ui-select__value">{{
+          displayValue
+        }}</span>
         <span v-else class="ui-select__placeholder">{{ placeholder }}</span>
         <span class="ui-select__caret" aria-hidden="true">▾</span>
       </slot>
@@ -68,7 +70,10 @@
           :key="option.value"
           type="button"
           class="ui-select__option"
-          :class="{ 'is-active': isSelected(option.value), 'is-disabled': option.disabled }"
+          :class="{
+            'is-active': isSelected(option.value),
+            'is-disabled': option.disabled,
+          }"
           role="option"
           :aria-selected="isSelected(option.value)"
           :disabled="option.disabled"
@@ -81,7 +86,9 @@
             :toggle="() => toggleOption(option)"
           >
             <span>{{ option.label }}</span>
-            <span v-if="multiple" class="ui-select__check">{{ isSelected(option.value) ? "✓" : "" }}</span>
+            <span v-if="multiple" class="ui-select__check">{{
+              isSelected(option.value) ? "✓" : ""
+            }}</span>
           </slot>
         </button>
 
@@ -94,7 +101,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
+import {
+  computed,
+  nextTick,
+  onBeforeUnmount,
+  onMounted,
+  ref,
+  watch,
+} from "vue";
 
 interface UiOption {
   label: string;
@@ -163,7 +177,9 @@ const displayValue = computed(() =>
   props.multiple ? selectedLabels.value.join(", ") : selectedLabel.value,
 );
 
-const allowEmptyOption = computed(() => !props.multiple && Boolean(props.placeholder));
+const allowEmptyOption = computed(
+  () => !props.multiple && Boolean(props.placeholder),
+);
 
 const filteredOptions = computed(() => {
   const normalized = query.value.trim().toLowerCase();

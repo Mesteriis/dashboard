@@ -1,4 +1,7 @@
-import type { DashboardConfig, DashboardItem } from "@/features/stores/dashboard/storeTypes";
+import type {
+  DashboardConfig,
+  DashboardItem,
+} from "@/features/stores/dashboard/storeTypes";
 
 interface AddDashboardOptions {
   title?: string;

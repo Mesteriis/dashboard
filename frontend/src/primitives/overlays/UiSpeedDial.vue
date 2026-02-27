@@ -19,7 +19,9 @@
         :title="item.label"
         @click="emitAction(item.id)"
       >
-        <span v-if="item.icon" class="ui-speed-dial__action-icon">{{ item.icon }}</span>
+        <span v-if="item.icon" class="ui-speed-dial__action-icon">{{
+          item.icon
+        }}</span>
         <span class="ui-speed-dial__action-label">{{ item.label }}</span>
       </button>
     </div>

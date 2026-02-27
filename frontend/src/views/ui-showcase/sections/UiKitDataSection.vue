@@ -64,7 +64,11 @@
       :value="selectedNode"
       :api="SHOWCASE_NODE_API['ui-node-tree']"
     >
-      <UiTree v-model="selectedNode" :nodes="treeNodes" :default-expanded="['root-1']" />
+      <UiTree
+        v-model="selectedNode"
+        :nodes="treeNodes"
+        :default-expanded="['root-1']"
+      />
     </UiShowcaseNode>
   </section>
 </template>
@@ -105,16 +109,64 @@ const tableActions = [
 ];
 
 const tableRows = [
-  { id: "1", name: "API Gateway", team: "Core", status: "online", latency: "42ms" },
-  { id: "2", name: "Billing", team: "Payments", status: "degraded", latency: "137ms" },
+  {
+    id: "1",
+    name: "API Gateway",
+    team: "Core",
+    status: "online",
+    latency: "42ms",
+  },
+  {
+    id: "2",
+    name: "Billing",
+    team: "Payments",
+    status: "degraded",
+    latency: "137ms",
+  },
   { id: "3", name: "Auth", team: "Core", status: "online", latency: "28ms" },
-  { id: "4", name: "Webhooks", team: "Integrations", status: "online", latency: "51ms" },
-  { id: "5", name: "Search", team: "Discovery", status: "offline", latency: "—" },
+  {
+    id: "4",
+    name: "Webhooks",
+    team: "Integrations",
+    status: "online",
+    latency: "51ms",
+  },
+  {
+    id: "5",
+    name: "Search",
+    team: "Discovery",
+    status: "offline",
+    latency: "—",
+  },
   { id: "6", name: "Storage", team: "Core", status: "online", latency: "33ms" },
-  { id: "7", name: "Analytics", team: "Insights", status: "degraded", latency: "203ms" },
-  { id: "8", name: "Scheduler", team: "Core", status: "online", latency: "45ms" },
-  { id: "9", name: "Notifications", team: "Comms", status: "online", latency: "39ms" },
-  { id: "10", name: "Catalog", team: "Commerce", status: "online", latency: "48ms" },
+  {
+    id: "7",
+    name: "Analytics",
+    team: "Insights",
+    status: "degraded",
+    latency: "203ms",
+  },
+  {
+    id: "8",
+    name: "Scheduler",
+    team: "Core",
+    status: "online",
+    latency: "45ms",
+  },
+  {
+    id: "9",
+    name: "Notifications",
+    team: "Comms",
+    status: "online",
+    latency: "39ms",
+  },
+  {
+    id: "10",
+    name: "Catalog",
+    team: "Commerce",
+    status: "online",
+    latency: "48ms",
+  },
 ];
 
 const paginationPage = ref(1);
@@ -125,9 +177,7 @@ const sourceItems = ref([
   { id: "svc-3", label: "Search" },
 ]);
 
-const targetItems = ref([
-  { id: "svc-4", label: "Auth" },
-]);
+const targetItems = ref([{ id: "svc-4", label: "Auth" }]);
 
 const treeNodes = [
   {
@@ -163,7 +213,10 @@ const pickListState = computed(() => ({
   targetCount: targetItems.value.length,
 }));
 
-function onTableAction(payload: { id: string; row: Record<string, unknown> }): void {
+function onTableAction(payload: {
+  id: string;
+  row: Record<string, unknown>;
+}): void {
   tableLog.value = `Action: ${payload.id} (${String(payload.row.id || "")})`;
 }
 

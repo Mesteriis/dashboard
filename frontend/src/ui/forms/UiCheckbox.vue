@@ -8,7 +8,9 @@
       @change="onChange"
     />
     <span class="ui-checkbox__box" aria-hidden="true" />
-    <span class="ui-checkbox__label"><slot>{{ label }}</slot></span>
+    <span class="ui-checkbox__label"
+      ><slot>{{ label }}</slot></span
+    >
   </label>
 </template>
 

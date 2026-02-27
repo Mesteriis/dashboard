@@ -10,7 +10,9 @@
       @change="onChange"
     />
     <span class="ui-radio__dot" aria-hidden="true" />
-    <span class="ui-radio__label"><slot>{{ label }}</slot></span>
+    <span class="ui-radio__label"
+      ><slot>{{ label }}</slot></span
+    >
   </label>
 </template>
 

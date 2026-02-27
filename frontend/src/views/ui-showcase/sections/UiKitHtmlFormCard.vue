@@ -10,7 +10,11 @@
     <header class="ui-html-card__head">
       <output>{{ submittedMessage }}</output>
     </header>
-    <form class="ui-html-form" @submit.prevent="handleSubmit" @reset.prevent="handleReset">
+    <form
+      class="ui-html-form"
+      @submit.prevent="handleSubmit"
+      @reset.prevent="handleReset"
+    >
       <fieldset>
         <legend>Form Controls</legend>
         <label>
@@ -19,11 +23,19 @@
         </label>
         <label>
           Search
-          <input v-model="form.search" type="search" placeholder="Search value" />
+          <input
+            v-model="form.search"
+            type="search"
+            placeholder="Search value"
+          />
         </label>
         <label>
           Email
-          <input v-model="form.email" type="email" placeholder="name@domain.com" />
+          <input
+            v-model="form.email"
+            type="email"
+            placeholder="name@domain.com"
+          />
         </label>
         <label>
           Password
@@ -35,7 +47,11 @@
         </label>
         <label>
           URL
-          <input v-model="form.url" type="url" placeholder="https://example.com" />
+          <input
+            v-model="form.url"
+            type="url"
+            placeholder="https://example.com"
+          />
         </label>
         <label>
           Tel
@@ -100,9 +116,17 @@
           </datalist>
         </label>
         <div class="ui-html-form__checks">
-          <label><input v-model="form.enabled" type="checkbox" /> Enabled</label>
-          <label><input v-model="form.mode" type="radio" value="safe" name="mode" /> Safe</label>
-          <label><input v-model="form.mode" type="radio" value="fast" name="mode" /> Fast</label>
+          <label
+            ><input v-model="form.enabled" type="checkbox" /> Enabled</label
+          >
+          <label
+            ><input v-model="form.mode" type="radio" value="safe" name="mode" />
+            Safe</label
+          >
+          <label
+            ><input v-model="form.mode" type="radio" value="fast" name="mode" />
+            Fast</label
+          >
         </div>
         <input type="hidden" :value="form.hidden" />
         <div class="ui-html-form__actions">

@@ -61,7 +61,10 @@ export function createDashboardCrudGroups(ctx: any) {
       const subgroupIds = allSubgroupIdsInConfig(cfg);
       const itemIds = allItemIdsInConfig(cfg);
 
-      const normalizedGroupBase = normalizeId(rawId || normalizedTitle, "group");
+      const normalizedGroupBase = normalizeId(
+        rawId || normalizedTitle,
+        "group",
+      );
       const groupId = rawId
         ? normalizedGroupBase
         : makeUniqueId(normalizedGroupBase, groupIds);
@@ -193,7 +196,9 @@ export function createDashboardCrudGroups(ctx: any) {
         }
       }
     } else {
-      const parentDashboardId = resolveDefaultDashboardId(form.parentDashboardId);
+      const parentDashboardId = resolveDefaultDashboardId(
+        form.parentDashboardId,
+      );
       const allowedGroupIds = resolveGroupIdsForDashboard(parentDashboardId);
       const rawParentGroupId = String(form.parentGroupId || "").trim();
       const parentGroupId = allowedGroupIds.includes(rawParentGroupId)

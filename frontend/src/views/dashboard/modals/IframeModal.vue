@@ -23,7 +23,9 @@
       class="iframe-view"
       :src="iframeModal.src"
       :allow="iframeModal.allow || undefined"
-      :sandbox="iframeModal.sandbox ? iframeModal.sandboxAttribute || '' : undefined"
+      :sandbox="
+        iframeModal.sandbox ? iframeModal.sandboxAttribute || '' : undefined
+      "
       :referrerpolicy="iframeModal.referrerPolicy || undefined"
     ></iframe>
   </BaseModal>

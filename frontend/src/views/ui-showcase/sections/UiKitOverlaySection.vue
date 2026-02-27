@@ -23,10 +23,26 @@
         :api="SHOWCASE_NODE_API['ui-node-speeddial']"
       >
         <div class="ui-kit-speed-grid">
-          <UiSpeedDial :items="speedItems" direction="up" @action="onSpeedAction" />
-          <UiSpeedDial :items="speedItems" direction="right" @action="onSpeedAction" />
-          <UiSpeedDial :items="speedItems" direction="left" @action="onSpeedAction" />
-          <UiSpeedDial :items="speedItems" direction="down" @action="onSpeedAction" />
+          <UiSpeedDial
+            :items="speedItems"
+            direction="up"
+            @action="onSpeedAction"
+          />
+          <UiSpeedDial
+            :items="speedItems"
+            direction="right"
+            @action="onSpeedAction"
+          />
+          <UiSpeedDial
+            :items="speedItems"
+            direction="left"
+            @action="onSpeedAction"
+          />
+          <UiSpeedDial
+            :items="speedItems"
+            direction="down"
+            @action="onSpeedAction"
+          />
         </div>
       </UiShowcaseNode>
 
@@ -48,7 +64,9 @@
     </div>
 
     <UiModal :open="modalOpen" title="Demo Modal" @close="modalOpen = false">
-      <p>Контент модалки передаётся как slot, поведение закрытия — через event.</p>
+      <p>
+        Контент модалки передаётся как slot, поведение закрытия — через event.
+      </p>
       <template #footer>
         <UiButton variant="ghost" @click="modalOpen = false">Cancel</UiButton>
         <UiButton @click="modalOpen = false">Apply</UiButton>

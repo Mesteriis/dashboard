@@ -32,7 +32,10 @@ export function createDashboardCommandPaletteSection(ctx: any) {
       ctx.commandPaletteActiveIndex.value = 0;
       return;
     }
-    ctx.commandPaletteActiveIndex.value = Math.min(Math.max(index, 0), lastIndex);
+    ctx.commandPaletteActiveIndex.value = Math.min(
+      Math.max(index, 0),
+      lastIndex,
+    );
   }
 
   function moveCommandPaletteSelection(step: number): void {

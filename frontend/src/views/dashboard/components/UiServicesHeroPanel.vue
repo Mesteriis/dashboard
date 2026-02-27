@@ -99,7 +99,10 @@
         </template>
 
         <template #footer>
-          <p v-if="editMode && saveError" class="editor-error hero-editor-error">
+          <p
+            v-if="editMode && saveError"
+            class="editor-error hero-editor-error"
+          >
             {{ saveError }}
           </p>
         </template>
@@ -204,7 +207,8 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter, type RouteLocationRaw } from "vue-router";
+import type { Component } from "vue";
 import {
   Circle,
   FolderTree,
@@ -257,24 +261,35 @@ const {
   toggleSidebarView,
 } = dashboard;
 
-type SystemActionId = "kiosk" | "profile" | "pleiad_lock" | "exit";
+const router = useRouter();
 
-const systemActions: Array<{
-  id: SystemActionId;
+type SystemActionId = "kiosk" | "profile" | "pleiad_lock" | "exit" | "navigate";
+
+interface SystemAction {
+  id: SystemActionId | string;
   label: string;
+  icon?: Component | string;
+  route?: RouteLocationRaw;
+  action?: () => void | Promise<void>;
   danger?: boolean;
-}> = [
+  divider?: boolean;
+}
+
+const systemActions = computed<SystemAction[]>(() => [
   { id: "kiosk", label: "Режим киоска" },
   { id: "profile", label: "Профиль" },
   { id: "pleiad_lock", label: "Блокировка -> Плияды" },
+  { id: "divider-1", label: "", divider: true },
+  { id: "navigate", label: "Домой", route: "/" },
   { id: "exit", label: "Выход", danger: true },
-];
+]);
 
 const heroControlsStorageKey = computed(() => {
   const rawPath = String(route.path || "/").trim();
-  const normalizedPath = rawPath.length > 1 && rawPath.endsWith("/")
-    ? rawPath.slice(0, -1)
-    : rawPath;
+  const normalizedPath =
+    rawPath.length > 1 && rawPath.endsWith("/")
+      ? rawPath.slice(0, -1)
+      : rawPath;
   return `oko:hero-controls-open:${normalizedPath || "/"}`;
 });
 
@@ -311,15 +326,31 @@ async function exitApp(): Promise<void> {
   }
 }
 
-function handleSystemAction(actionId: string): void {
-  const id = actionId as SystemActionId;
+function handleSystemAction(action: SystemAction): void {
+  // Обработка divider — игнорируем
+  if (action.divider) return;
+
+  // Если есть custom action — выполняем его
+  if (action.action) {
+    void Promise.resolve(action.action());
+    return;
+  }
+
+  // Если есть route — навигируем
+  if (action.route) {
+    void router.push(action.route);
+    return;
+  }
+
+  // Встроенные действия
+  const id = action.id as SystemActionId;
 
   if (id === "kiosk") {
     void toggleKioskMode();
     return;
   }
 
-  if (id === "profile") {
+  if (id === "settings" || id === "profile") {
     openSettingsPanel();
     return;
   }
@@ -329,7 +360,7 @@ function handleSystemAction(actionId: string): void {
     return;
   }
 
-  if (id === "exit") {
+  if (id === "logout" || id === "exit") {
     void exitApp();
   }
 }

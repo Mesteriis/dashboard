@@ -142,7 +142,9 @@ const parentGroupOptions = computed(() =>
 );
 
 const parentSubgroupOptions = computed(() => {
-  const group = groupById.value.get(String(itemEditor.form.parentGroupId || ""));
+  const group = groupById.value.get(
+    String(itemEditor.form.parentGroupId || ""),
+  );
   return (group?.subgroups || []).map((subgroup: any) => ({
     value: String(subgroup.id || ""),
     label: String(subgroup.title || subgroup.id || ""),

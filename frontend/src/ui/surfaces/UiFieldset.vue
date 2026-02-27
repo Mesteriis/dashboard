@@ -1,7 +1,12 @@
 <template>
   <fieldset class="ui-fieldset" :class="{ 'is-collapsible': collapsible }">
     <legend>
-      <button v-if="collapsible" type="button" class="ui-fieldset__toggle" @click="toggle">
+      <button
+        v-if="collapsible"
+        type="button"
+        class="ui-fieldset__toggle"
+        @click="toggle"
+      >
         <span>{{ legend }}</span>
         <span>{{ isOpen ? "▾" : "▸" }}</span>
       </button>
@@ -33,7 +38,9 @@ const emit = defineEmits<{
   "update:modelValue": [value: boolean];
 }>();
 
-const isOpen = computed(() => (props.collapsible ? Boolean(props.modelValue) : true));
+const isOpen = computed(() =>
+  props.collapsible ? Boolean(props.modelValue) : true,
+);
 
 function toggle(): void {
   if (!props.collapsible) return;

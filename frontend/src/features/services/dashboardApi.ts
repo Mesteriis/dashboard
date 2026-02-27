@@ -116,7 +116,11 @@ export async function restoreDashboardConfig(
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ format: "yaml", payload: yamlContent, source: "import" }),
+    body: JSON.stringify({
+      format: "yaml",
+      payload: yamlContent,
+      source: "import",
+    }),
   });
 
   return {

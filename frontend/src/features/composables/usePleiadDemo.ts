@@ -24,7 +24,7 @@ const PLEIAD_KINDS = Object.freeze([
   "warning",
   "memory",
   "info",
- ] as const);
+] as const);
 
 type PleiadKind = (typeof PLEIAD_KINDS)[number];
 type EventKind = Exclude<PleiadKind, "all">;
@@ -397,7 +397,10 @@ function pickRandomSubset<T>(list: readonly T[], count: number): T[] {
 }
 
 function pickWeighted<T extends { weight: number }>(entries: readonly T[]): T {
-  const total = entries.reduce((sum, entry) => sum + Number(entry.weight || 0), 0);
+  const total = entries.reduce(
+    (sum, entry) => sum + Number(entry.weight || 0),
+    0,
+  );
   if (total <= 0) return entries[0];
   let cursor = randomFloat(0, total);
   for (const entry of entries) {
@@ -417,7 +420,12 @@ function resolveFxModeFromDom(): LegacyFxMode {
   return normalizeFxMode(document.documentElement?.dataset?.fxMode || "full");
 }
 
-function buildSummary(kind: EventKind, from: string, to: string, topic: string): string {
+function buildSummary(
+  kind: EventKind,
+  from: string,
+  to: string,
+  topic: string,
+): string {
   const templates = KIND_SUMMARY_TEMPLATES[kind] || KIND_SUMMARY_TEMPLATES.info;
   const template = pickRandom(templates) || "{from} -> {to}: {topic}";
   return template
@@ -472,7 +480,7 @@ function resolveFxProfile(
   if (effectiveMode === "lite") {
     return {
       mode: effectiveMode,
-      rotationRadPerMs: 0.000010,
+      rotationRadPerMs: 0.00001,
       eventCadenceMultiplier: 1.45,
       glowAlpha: 0.42,
       linkWidthScale: 0.92,
@@ -510,10 +518,15 @@ function resolveEnabledAgentContext(
     : CENTER_AGENT_ID;
   const normalizedEnabled = Array.isArray(enabledAgentIds)
     ? enabledAgentIds
-      .map((agentId) => String(agentId || ""))
-      .filter((agentId, index, list) => AGENT_BY_ID.has(agentId) && list.indexOf(agentId) === index)
+        .map((agentId) => String(agentId || ""))
+        .filter(
+          (agentId, index, list) =>
+            AGENT_BY_ID.has(agentId) && list.indexOf(agentId) === index,
+        )
     : [];
-  const enabledPool = normalizedEnabled.length ? normalizedEnabled : [...AGENT_IDS];
+  const enabledPool = normalizedEnabled.length
+    ? normalizedEnabled
+    : [...AGENT_IDS];
   const normalizedCenter = enabledPool.includes(preferredCenter)
     ? preferredCenter
     : enabledPool[0] || preferredCenter;
@@ -531,12 +544,14 @@ function resolveAgentEndpoints(
   );
   if (enabledPool.length < 2) return null;
 
-  const normalizedOrbit = Array.isArray(orbitAgentIds) && orbitAgentIds.length
-    ? orbitAgentIds.filter(
-      (agentId) =>
-        enabledPool.includes(String(agentId || "")) && agentId !== normalizedCenter,
-    )
-    : enabledPool.filter((agentId) => agentId !== normalizedCenter);
+  const normalizedOrbit =
+    Array.isArray(orbitAgentIds) && orbitAgentIds.length
+      ? orbitAgentIds.filter(
+          (agentId) =>
+            enabledPool.includes(String(agentId || "")) &&
+            agentId !== normalizedCenter,
+        )
+      : enabledPool.filter((agentId) => agentId !== normalizedCenter);
   const fromPool =
     Math.random() < 0.3
       ? [normalizedCenter, ...normalizedOrbit]
@@ -546,7 +561,11 @@ function resolveAgentEndpoints(
   const toPool = enabledPool.filter((agentId) => agentId !== from);
   if (!toPool.length) return null;
   let to = pickRandom(toPool) || toPool[0];
-  if (from !== normalizedCenter && toPool.includes(normalizedCenter) && Math.random() < 0.26) {
+  if (
+    from !== normalizedCenter &&
+    toPool.includes(normalizedCenter) &&
+    Math.random() < 0.26
+  ) {
     to = normalizedCenter;
   }
   if (to === from) {
@@ -568,12 +587,18 @@ function resolveChainEndpoints(
   if (enabledPool.length < 2) return null;
 
   const sourceCandidate = String(from || normalizedCenter);
-  const source = enabledPool.includes(sourceCandidate) ? sourceCandidate : normalizedCenter;
+  const source = enabledPool.includes(sourceCandidate)
+    ? sourceCandidate
+    : normalizedCenter;
   const toPool = enabledPool.filter((agentId) => agentId !== source);
   if (!toPool.length) return null;
 
   let to = pickRandom(toPool) || toPool[0];
-  if (source !== normalizedCenter && toPool.includes(normalizedCenter) && Math.random() < 0.32) {
+  if (
+    source !== normalizedCenter &&
+    toPool.includes(normalizedCenter) &&
+    Math.random() < 0.32
+  ) {
     to = normalizedCenter;
   }
   if (to === source) {
@@ -594,7 +619,9 @@ export function usePleiadDemo(options: UsePleiadDemoOptions = {}) {
   const filterKind = ref<PleiadKind>("all");
   const pinnedAgentId = ref("");
   const primaryAgentId = ref(CENTER_AGENT_ID);
-  const orbitAgentIds = computed(() => resolveOrbitAgentIds(primaryAgentId.value));
+  const orbitAgentIds = computed(() =>
+    resolveOrbitAgentIds(primaryAgentId.value),
+  );
   const disabledAgentIds = ref<string[]>([]);
   const disabledAgentIdSet = computed(
     () => new Set<string>(disabledAgentIds.value),
@@ -604,7 +631,9 @@ export function usePleiadDemo(options: UsePleiadDemoOptions = {}) {
   );
   const enabledAgentIdSet = computed(() => {
     const disabled = disabledAgentIdSet.value;
-    return new Set<string>(AGENT_IDS.filter((agentId) => !disabled.has(agentId)));
+    return new Set<string>(
+      AGENT_IDS.filter((agentId) => !disabled.has(agentId)),
+    );
   });
   const primaryTransition = ref<PrimaryTransition | null>(null);
   const hoveredAgentId = ref("");
@@ -688,8 +717,12 @@ export function usePleiadDemo(options: UsePleiadDemoOptions = {}) {
   function pruneCommunicationForDisabled(
     disabledSet: ReadonlySet<string> = disabledAgentIdSet.value,
   ): void {
-    events.value = events.value.filter((event) => isEventAllowed(event, disabledSet));
-    activeLinks.value = activeLinks.value.filter((link) => isEventAllowed(link, disabledSet));
+    events.value = events.value.filter((event) =>
+      isEventAllowed(event, disabledSet),
+    );
+    activeLinks.value = activeLinks.value.filter((link) =>
+      isEventAllowed(link, disabledSet),
+    );
     pendingChainEvents = pendingChainEvents.filter((record) =>
       isEventAllowed(record?.event, disabledSet),
     );
@@ -703,7 +736,9 @@ export function usePleiadDemo(options: UsePleiadDemoOptions = {}) {
   }
 
   function reseedDisabledAgents(): void {
-    const available = AGENT_IDS.filter((agentId) => agentId !== primaryAgentId.value);
+    const available = AGENT_IDS.filter(
+      (agentId) => agentId !== primaryAgentId.value,
+    );
     if (!available.length) {
       disabledAgentIds.value = [];
       return;
@@ -734,7 +769,9 @@ export function usePleiadDemo(options: UsePleiadDemoOptions = {}) {
     return !disabledAgentIdSet.value.has(normalized);
   }
 
-  function matchesEventFilters(eventLike: EventLike | null | undefined): boolean {
+  function matchesEventFilters(
+    eventLike: EventLike | null | undefined,
+  ): boolean {
     if (!eventLike) return false;
     if (!isEventAllowed(eventLike)) return false;
     const eventKind = String(eventLike.kind || "");
@@ -760,7 +797,9 @@ export function usePleiadDemo(options: UsePleiadDemoOptions = {}) {
   );
 
   function pruneActiveLinks(nowMs: number): void {
-    const nextLinks = activeLinks.value.filter((link) => link.expiresAtMs > nowMs);
+    const nextLinks = activeLinks.value.filter(
+      (link) => link.expiresAtMs > nowMs,
+    );
     if (nextLinks.length === activeLinks.value.length) return;
     activeLinks.value = nextLinks;
   }
@@ -826,7 +865,10 @@ export function usePleiadDemo(options: UsePleiadDemoOptions = {}) {
       expiresAtMs: nowMs + ttlMs,
       manual: false,
     };
-    activeLinks.value = [link, ...activeLinks.value].slice(0, ACTIVE_LINK_LIMIT);
+    activeLinks.value = [link, ...activeLinks.value].slice(
+      0,
+      ACTIVE_LINK_LIMIT,
+    );
     return true;
   }
 
@@ -838,7 +880,9 @@ export function usePleiadDemo(options: UsePleiadDemoOptions = {}) {
     const nowMs = performance.now();
     const durationMs = Math.round(
       clamp(
-        Number(primaryTransition.value?.durationMs || PRIMARY_SWITCH_TRANSITION_MS),
+        Number(
+          primaryTransition.value?.durationMs || PRIMARY_SWITCH_TRANSITION_MS,
+        ),
         280,
         2600,
       ),
@@ -874,7 +918,10 @@ export function usePleiadDemo(options: UsePleiadDemoOptions = {}) {
       expiresAtMs: nowMs + ttlMs,
       manual: true,
     };
-    activeLinks.value = [link, ...activeLinks.value].slice(0, ACTIVE_LINK_LIMIT);
+    activeLinks.value = [link, ...activeLinks.value].slice(
+      0,
+      ACTIVE_LINK_LIMIT,
+    );
   }
 
   function createEvent({
@@ -887,7 +934,9 @@ export function usePleiadDemo(options: UsePleiadDemoOptions = {}) {
   }: CreateEventInput): PleiadEvent {
     const resolvedKind = kind || resolveEventKind();
     const resolvedTopic =
-      topic || pickRandom(KIND_TOPICS[resolvedKind] || KIND_TOPICS.info) || "sync cycle";
+      topic ||
+      pickRandom(KIND_TOPICS[resolvedKind] || KIND_TOPICS.info) ||
+      "sync cycle";
     const summary = buildSummary(resolvedKind, from, to, resolvedTopic);
     const status = resolveEventStatus(resolvedKind);
     const importance = resolveImportance(resolvedKind);
@@ -938,7 +987,8 @@ export function usePleiadDemo(options: UsePleiadDemoOptions = {}) {
         enabledAgentIds.value,
       );
       if (!endpoints) break;
-      const kind: EventKind = Math.random() < 0.64 ? inheritedKind : resolveEventKind();
+      const kind: EventKind =
+        Math.random() < 0.64 ? inheritedKind : resolveEventKind();
       if (!topic || Math.random() < 0.42) {
         topic = pickRandom(KIND_TOPICS[kind] || KIND_TOPICS.info) || topic;
       }
@@ -953,7 +1003,10 @@ export function usePleiadDemo(options: UsePleiadDemoOptions = {}) {
       });
 
       pendingChainEvents.push({
-        delayMs: randomInt(CHAIN_EVENT_MIN_INTERVAL_MS, CHAIN_EVENT_MAX_INTERVAL_MS),
+        delayMs: randomInt(
+          CHAIN_EVENT_MIN_INTERVAL_MS,
+          CHAIN_EVENT_MAX_INTERVAL_MS,
+        ),
         event: chainedEvent,
       });
 
@@ -995,7 +1048,10 @@ export function usePleiadDemo(options: UsePleiadDemoOptions = {}) {
       expiresAtMs: nowMs + HIGHLIGHT_LINK_TTL_MS,
       manual: true,
     };
-    activeLinks.value = [link, ...activeLinks.value].slice(0, ACTIVE_LINK_LIMIT);
+    activeLinks.value = [link, ...activeLinks.value].slice(
+      0,
+      ACTIVE_LINK_LIMIT,
+    );
   }
 
   function setFilterKind(kind: string): void {
@@ -1011,8 +1067,7 @@ export function usePleiadDemo(options: UsePleiadDemoOptions = {}) {
   function pinAgent(agentId: unknown): void {
     const normalized = normalizeAgentId(agentId);
     if (!normalized || !AGENT_BY_ID.has(normalized)) return;
-    pinnedAgentId.value =
-      pinnedAgentId.value === normalized ? "" : normalized;
+    pinnedAgentId.value = pinnedAgentId.value === normalized ? "" : normalized;
   }
 
   function clearPin(): void {
@@ -1033,13 +1088,17 @@ export function usePleiadDemo(options: UsePleiadDemoOptions = {}) {
     if (normalized === primaryAgentId.value) return true;
 
     if (disabledAgentIdSet.value.has(normalized)) {
-      disabledAgentIds.value = disabledAgentIds.value.filter((id) => id !== normalized);
+      disabledAgentIds.value = disabledAgentIds.value.filter(
+        (id) => id !== normalized,
+      );
     }
 
     const previousPrimary = primaryAgentId.value;
     const prefersMinimalMotion =
       prefersReducedMotion.value || fxProfile.value.mode === "off";
-    const requestedDuration = Number(options.durationMs ?? PRIMARY_SWITCH_TRANSITION_MS);
+    const requestedDuration = Number(
+      options.durationMs ?? PRIMARY_SWITCH_TRANSITION_MS,
+    );
     const durationMs = Math.round(
       clamp(
         prefersMinimalMotion ? requestedDuration * 0.55 : requestedDuration,
@@ -1158,10 +1217,10 @@ export function usePleiadDemo(options: UsePleiadDemoOptions = {}) {
     clearDisabledRotationTimer();
   }
 
-  function handleFxModeChange(
-    event: CustomEvent<{ mode?: string }>,
-  ): void {
-    const nextMode = normalizeFxMode(event?.detail?.mode || resolveFxModeFromDom());
+  function handleFxModeChange(event: CustomEvent<{ mode?: string }>): void {
+    const nextMode = normalizeFxMode(
+      event?.detail?.mode || resolveFxModeFromDom(),
+    );
     fxMode.value = nextMode;
   }
 

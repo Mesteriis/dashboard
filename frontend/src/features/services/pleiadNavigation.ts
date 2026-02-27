@@ -1,4 +1,7 @@
-import { EVENT_PLEIAD_PRIMARY_AGENT, emitOkoEvent } from "@/features/services/events";
+import {
+  EVENT_PLEIAD_PRIMARY_AGENT,
+  emitOkoEvent,
+} from "@/features/services/events";
 import { openPleiadOverlay } from "@/app/navigation/nav";
 
 export const PLEIAD_PRIMARY_AGENT_EVENT = EVENT_PLEIAD_PRIMARY_AGENT;

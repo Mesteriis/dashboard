@@ -49,7 +49,11 @@
   width: 100%;
   border: 1px solid var(--ui-kit-demo-nav-color-009);
   border-radius: var(--ui-radius);
-  background: linear-gradient(154deg, var(--ui-kit-demo-nav-color-010), var(--ui-kit-demo-nav-color-011));
+  background: linear-gradient(
+    154deg,
+    var(--ui-kit-demo-nav-color-010),
+    var(--ui-kit-demo-nav-color-011)
+  );
   color: var(--ui-kit-demo-nav-color-012);
   min-height: 38px;
   padding: 0 11px;
@@ -111,7 +115,11 @@
 
 .ui-kit-nav__group-btn.active {
   border-color: var(--ui-kit-demo-nav-color-024);
-  background: linear-gradient(145deg, var(--ui-kit-demo-nav-color-025), var(--ui-kit-demo-nav-color-026));
+  background: linear-gradient(
+    145deg,
+    var(--ui-kit-demo-nav-color-025),
+    var(--ui-kit-demo-nav-color-026)
+  );
   color: var(--ui-kit-demo-nav-color-027);
 }
 
@@ -140,7 +148,11 @@
   width: 100%;
   border: 1px solid var(--ui-kit-demo-nav-color-029);
   border-radius: var(--ui-radius);
-  background: linear-gradient(152deg, var(--ui-kit-demo-nav-color-030), var(--ui-kit-demo-nav-color-003));
+  background: linear-gradient(
+    152deg,
+    var(--ui-kit-demo-nav-color-030),
+    var(--ui-kit-demo-nav-color-003)
+  );
   color: var(--ui-kit-demo-nav-color-031);
   padding: 8px 10px;
   text-align: left;
@@ -156,7 +168,11 @@
 
 .ui-kit-nav__item:hover {
   border-color: var(--ui-kit-demo-nav-color-032);
-  background: linear-gradient(152deg, var(--ui-kit-demo-nav-color-033), var(--ui-kit-demo-nav-color-034));
+  background: linear-gradient(
+    152deg,
+    var(--ui-kit-demo-nav-color-033),
+    var(--ui-kit-demo-nav-color-034)
+  );
   transform: translateY(-1px);
 }
 
@@ -167,7 +183,11 @@
 
 .ui-kit-nav__item.active {
   border-color: var(--ui-kit-demo-nav-color-035);
-  background: linear-gradient(145deg, var(--ui-kit-demo-nav-color-036), var(--ui-kit-demo-nav-color-037));
+  background: linear-gradient(
+    145deg,
+    var(--ui-kit-demo-nav-color-036),
+    var(--ui-kit-demo-nav-color-037)
+  );
   color: var(--ui-kit-demo-nav-color-038);
   box-shadow: 0 10px 24px var(--ui-kit-demo-nav-color-039);
 }

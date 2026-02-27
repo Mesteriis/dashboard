@@ -42,5 +42,7 @@ const emit = defineEmits<{
   "update:modelValue": [value: string];
 }>();
 
-const activeTab = computed(() => props.tabs.find((tab) => tab.id === props.modelValue) || null);
+const activeTab = computed(
+  () => props.tabs.find((tab) => tab.id === props.modelValue) || null,
+);
 </script>

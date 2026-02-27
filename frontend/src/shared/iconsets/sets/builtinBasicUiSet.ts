@@ -1,4 +1,7 @@
-import { basicIcon, type BuiltinIconPickerSet } from "@/shared/iconsets/simpleIconsUtils";
+import {
+  basicIcon,
+  type BuiltinIconPickerSet,
+} from "@/shared/iconsets/simpleIconsUtils";
 
 const BASIC_UI_OPTIONS = [
   basicIcon({
@@ -28,7 +31,8 @@ const BASIC_UI_OPTIONS = [
   basicIcon({
     id: "star",
     label: "Star",
-    svgPath: "m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.8 6.4 20.2l1.1-6.2L3 9.6l6.2-.9L12 3Z",
+    svgPath:
+      "m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.8 6.4 20.2l1.1-6.2L3 9.6l6.2-.9L12 3Z",
     keywords: ["favorite"],
   }),
   basicIcon({
@@ -52,13 +56,15 @@ const BASIC_UI_OPTIONS = [
   basicIcon({
     id: "close",
     label: "Close",
-    svgPath: "m6.4 5 5.6 5.6L17.6 5 19 6.4 13.4 12 19 17.6 17.6 19 12 13.4 6.4 19 5 17.6 10.6 12 5 6.4 6.4 5Z",
+    svgPath:
+      "m6.4 5 5.6 5.6L17.6 5 19 6.4 13.4 12 19 17.6 17.6 19 12 13.4 6.4 19 5 17.6 10.6 12 5 6.4 6.4 5Z",
     keywords: ["cancel"],
   }),
   basicIcon({
     id: "search",
     label: "Search",
-    svgPath: "M10.5 3a7.5 7.5 0 1 1 4.8 13.3l4 4-1.4 1.4-4-4A7.5 7.5 0 0 1 10.5 3Zm0 2a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11Z",
+    svgPath:
+      "M10.5 3a7.5 7.5 0 1 1 4.8 13.3l4 4-1.4 1.4-4-4A7.5 7.5 0 0 1 10.5 3Zm0 2a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11Z",
     keywords: ["find", "filter"],
   }),
   basicIcon({
@@ -70,7 +76,8 @@ const BASIC_UI_OPTIONS = [
   basicIcon({
     id: "users",
     label: "Users",
-    svgPath: "M9 6a3 3 0 1 1 0 6 3 3 0 0 1 0-6Zm8 1a2.5 2.5 0 1 1 0 5V7ZM3 19a6 6 0 0 1 12 0H3Zm13.5 0a5 5 0 0 0-2-3.9A5.5 5.5 0 0 1 21 19h-4.5Z",
+    svgPath:
+      "M9 6a3 3 0 1 1 0 6 3 3 0 0 1 0-6Zm8 1a2.5 2.5 0 1 1 0 5V7ZM3 19a6 6 0 0 1 12 0H3Zm13.5 0a5 5 0 0 0-2-3.9A5.5 5.5 0 0 1 21 19h-4.5Z",
     keywords: ["team", "group"],
   }),
   basicIcon({
@@ -82,7 +89,8 @@ const BASIC_UI_OPTIONS = [
   basicIcon({
     id: "settings",
     label: "Settings",
-    svgPath: "M11 3h2l.6 2.1a7.4 7.4 0 0 1 1.8.8l2-1.1 1.4 1.4-1.1 2a7.5 7.5 0 0 1 .8 1.8L21 11v2l-2.1.6a7.5 7.5 0 0 1-.8 1.8l1.1 2-1.4 1.4-2-1.1a7.4 7.4 0 0 1-1.8.8L13 21h-2l-.6-2.1a7.4 7.4 0 0 1-1.8-.8l-2 1.1-1.4-1.4 1.1-2a7.5 7.5 0 0 1-.8-1.8L3 13v-2l2.1-.6a7.5 7.5 0 0 1 .8-1.8l-1.1-2 1.4-1.4 2 1.1a7.4 7.4 0 0 1 1.8-.8L11 3Zm1 6a3 3 0 1 0 0 6 3 3 0 0 0 0-6Z",
+    svgPath:
+      "M11 3h2l.6 2.1a7.4 7.4 0 0 1 1.8.8l2-1.1 1.4 1.4-1.1 2a7.5 7.5 0 0 1 .8 1.8L21 11v2l-2.1.6a7.5 7.5 0 0 1-.8 1.8l1.1 2-1.4 1.4-2-1.1a7.4 7.4 0 0 1-1.8.8L13 21h-2l-.6-2.1a7.4 7.4 0 0 1-1.8-.8l-2 1.1-1.4-1.4 1.1-2a7.5 7.5 0 0 1-.8-1.8L3 13v-2l2.1-.6a7.5 7.5 0 0 1 .8-1.8l-1.1-2 1.4-1.4 2 1.1a7.4 7.4 0 0 1 1.8-.8L11 3Zm1 6a3 3 0 1 0 0 6 3 3 0 0 0 0-6Z",
     keywords: ["gear", "preferences"],
   }),
   basicIcon({
@@ -118,13 +126,15 @@ const BASIC_UI_OPTIONS = [
   basicIcon({
     id: "chart-line",
     label: "Line Chart",
-    svgPath: "M4 19h16v2H2V3h2v16Zm2-3 4-5 3 2 5-6 1.5 1.2-6 7.3-3-2-3.5 4.4L6 16Z",
+    svgPath:
+      "M4 19h16v2H2V3h2v16Zm2-3 4-5 3 2 5-6 1.5 1.2-6 7.3-3-2-3.5 4.4L6 16Z",
     keywords: ["analytics", "trend"],
   }),
   basicIcon({
     id: "pie",
     label: "Pie Chart",
-    svgPath: "M11 3a9 9 0 1 0 10 10h-8a2 2 0 0 1-2-2V3Zm2 0v8h8A9 9 0 0 0 13 3Z",
+    svgPath:
+      "M11 3a9 9 0 1 0 10 10h-8a2 2 0 0 1-2-2V3Zm2 0v8h8A9 9 0 0 0 13 3Z",
     keywords: ["analytics"],
   }),
   basicIcon({
@@ -142,7 +152,8 @@ const BASIC_UI_OPTIONS = [
   basicIcon({
     id: "database",
     label: "Database",
-    svgPath: "M12 4c4.4 0 8 1.3 8 3v10c0 1.7-3.6 3-8 3s-8-1.3-8-3V7c0-1.7 3.6-3 8-3Zm0 2c-3.9 0-6 .9-6 1s2.1 1 6 1 6-.9 6-1-2.1-1-6-1Zm0 5c-2.8 0-5.1-.4-6.4-1v2c1.3.6 3.6 1 6.4 1 2.8 0 5.1-.4 6.4-1V10c-1.3.6-3.6 1-6.4 1Zm0 4c-2.8 0-5.1-.4-6.4-1v2c1.3.6 3.6 1 6.4 1 2.8 0 5.1-.4 6.4-1v-2c-1.3.6-3.6 1-6.4 1Z",
+    svgPath:
+      "M12 4c4.4 0 8 1.3 8 3v10c0 1.7-3.6 3-8 3s-8-1.3-8-3V7c0-1.7 3.6-3 8-3Zm0 2c-3.9 0-6 .9-6 1s2.1 1 6 1 6-.9 6-1-2.1-1-6-1Zm0 5c-2.8 0-5.1-.4-6.4-1v2c1.3.6 3.6 1 6.4 1 2.8 0 5.1-.4 6.4-1V10c-1.3.6-3.6 1-6.4 1Zm0 4c-2.8 0-5.1-.4-6.4-1v2c1.3.6 3.6 1 6.4 1 2.8 0 5.1-.4 6.4-1v-2c-1.3.6-3.6 1-6.4 1Z",
     keywords: ["storage", "sql"],
   }),
   basicIcon({
@@ -154,55 +165,64 @@ const BASIC_UI_OPTIONS = [
   basicIcon({
     id: "lock",
     label: "Lock",
-    svgPath: "M7 11V8a5 5 0 0 1 10 0v3h2v10H5V11h2Zm2 0h6V8a3 3 0 0 0-6 0v3Zm2 4h2v3h-2v-3Z",
+    svgPath:
+      "M7 11V8a5 5 0 0 1 10 0v3h2v10H5V11h2Zm2 0h6V8a3 3 0 0 0-6 0v3Zm2 4h2v3h-2v-3Z",
     keywords: ["security", "private"],
   }),
   basicIcon({
     id: "key",
     label: "Key",
-    svgPath: "M9 14a5 5 0 1 1 4.8-3.6H22v2h-2v2h-2v2h-2v2h-2v-3.2A5 5 0 0 1 9 14Zm0-2a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z",
+    svgPath:
+      "M9 14a5 5 0 1 1 4.8-3.6H22v2h-2v2h-2v2h-2v2h-2v-3.2A5 5 0 0 1 9 14Zm0-2a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z",
     keywords: ["security", "auth"],
   }),
   basicIcon({
     id: "wifi",
     label: "Wi-Fi",
-    svgPath: "M12 18a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3Zm-3-2.8a4.3 4.3 0 0 1 6 0l-1.4 1.4a2.3 2.3 0 0 0-3.2 0L9 15.2Zm-3-3a8.5 8.5 0 0 1 12 0l-1.4 1.4a6.5 6.5 0 0 0-9.2 0L6 12.2Zm-3-3a12.7 12.7 0 0 1 18 0l-1.4 1.4a10.7 10.7 0 0 0-15.2 0L3 9.2Z",
+    svgPath:
+      "M12 18a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3Zm-3-2.8a4.3 4.3 0 0 1 6 0l-1.4 1.4a2.3 2.3 0 0 0-3.2 0L9 15.2Zm-3-3a8.5 8.5 0 0 1 12 0l-1.4 1.4a6.5 6.5 0 0 0-9.2 0L6 12.2Zm-3-3a12.7 12.7 0 0 1 18 0l-1.4 1.4a10.7 10.7 0 0 0-15.2 0L3 9.2Z",
     keywords: ["network", "connection"],
   }),
   basicIcon({
     id: "terminal",
     label: "Terminal",
-    svgPath: "M3 5h18v14H3V5Zm3 4 3 3-3 3 1.4 1.4L12.8 12 7.4 6.6 6 8Zm7 7h5v-2h-5v2Z",
+    svgPath:
+      "M3 5h18v14H3V5Zm3 4 3 3-3 3 1.4 1.4L12.8 12 7.4 6.6 6 8Zm7 7h5v-2h-5v2Z",
     keywords: ["cli", "shell"],
   }),
   basicIcon({
     id: "code",
     label: "Code",
-    svgPath: "M8.6 7.4 4 12l4.6 4.6L10 15.2 6.8 12 10 8.8 8.6 7.4Zm6.8 0L14 8.8 17.2 12 14 15.2l1.4 1.4L20 12l-4.6-4.6ZM10.8 20h2.1l3.2-16h-2.1l-3.2 16Z",
+    svgPath:
+      "M8.6 7.4 4 12l4.6 4.6L10 15.2 6.8 12 10 8.8 8.6 7.4Zm6.8 0L14 8.8 17.2 12 14 15.2l1.4 1.4L20 12l-4.6-4.6ZM10.8 20h2.1l3.2-16h-2.1l-3.2 16Z",
     keywords: ["developer", "programming"],
   }),
   basicIcon({
     id: "plug",
     label: "Plug",
-    svgPath: "M9 3h2v5h2V3h2v5h2v4a5 5 0 0 1-4 4.9V21h-2v-4.1A5 5 0 0 1 7 12V8h2V3Z",
+    svgPath:
+      "M9 3h2v5h2V3h2v5h2v4a5 5 0 0 1-4 4.9V21h-2v-4.1A5 5 0 0 1 7 12V8h2V3Z",
     keywords: ["integration", "connector"],
   }),
   basicIcon({
     id: "link",
     label: "Link",
-    svgPath: "M9.6 14.4a4 4 0 0 1 0-5.7l2.1-2.1a4 4 0 1 1 5.7 5.7l-1 1-1.4-1.4 1-1a2 2 0 1 0-2.9-2.9L11 10.1a2 2 0 0 0 2.9 2.9l.7-.7 1.4 1.4-.7.7a4 4 0 0 1-5.7 0Zm4.8-4.8.7-.7a4 4 0 0 1 5.7 5.7l-2.1 2.1a4 4 0 1 1-5.7-5.7l1-1 1.4 1.4-1 1a2 2 0 1 0 2.9 2.9l2.1-2.1a2 2 0 1 0-2.9-2.9l-.7.7-1.4-1.4Z",
+    svgPath:
+      "M9.6 14.4a4 4 0 0 1 0-5.7l2.1-2.1a4 4 0 1 1 5.7 5.7l-1 1-1.4-1.4 1-1a2 2 0 1 0-2.9-2.9L11 10.1a2 2 0 0 0 2.9 2.9l.7-.7 1.4 1.4-.7.7a4 4 0 0 1-5.7 0Zm4.8-4.8.7-.7a4 4 0 0 1 5.7 5.7l-2.1 2.1a4 4 0 1 1-5.7-5.7l1-1 1.4 1.4-1 1a2 2 0 1 0 2.9 2.9l2.1-2.1a2 2 0 1 0-2.9-2.9l-.7.7-1.4-1.4Z",
     keywords: ["url", "connection"],
   }),
   basicIcon({
     id: "bug",
     label: "Bug",
-    svgPath: "M11 3h2v2h-2V3Zm-4 3h10v2h2v2h-2v2h2v2h-2v2a5 5 0 0 1-10 0v-2H5v-2h2v-2H5V8h2V6Zm2 4v6a3 3 0 0 0 6 0v-6H9Z",
+    svgPath:
+      "M11 3h2v2h-2V3Zm-4 3h10v2h2v2h-2v2h2v2h-2v2a5 5 0 0 1-10 0v-2H5v-2h2v-2H5V8h2V6Zm2 4v6a3 3 0 0 0 6 0v-6H9Z",
     keywords: ["issue", "debug"],
   }),
   basicIcon({
     id: "rocket",
     label: "Rocket",
-    svgPath: "M14 3c3 1 5 3.5 6 6l-3 3-3-3 3-3Zm-4 4 7 7-2.5 2.5-2-2L9 18H6v-3l3.5-3.5-2-2L10 7Zm-4 9h2v2H6v-2Z",
+    svgPath:
+      "M14 3c3 1 5 3.5 6 6l-3 3-3-3 3-3Zm-4 4 7 7-2.5 2.5-2-2L9 18H6v-3l3.5-3.5-2-2L10 7Zm-4 9h2v2H6v-2Z",
     keywords: ["launch", "deploy"],
   }),
   basicIcon({

@@ -36,7 +36,9 @@ export function createDashboardCrudItemEditorUtils() {
     if (explicitTlsVerify != null) return explicitTlsVerify;
     const legacyVerifyTls = parseBooleanFlag(healthcheck.verify_tls);
     if (legacyVerifyTls != null) return legacyVerifyTls;
-    const insecureSkipVerify = parseBooleanFlag(healthcheck.insecure_skip_verify);
+    const insecureSkipVerify = parseBooleanFlag(
+      healthcheck.insecure_skip_verify,
+    );
     if (insecureSkipVerify != null) return !insecureSkipVerify;
     return true;
   }

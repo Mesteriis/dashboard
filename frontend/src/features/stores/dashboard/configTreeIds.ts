@@ -12,7 +12,10 @@ export function normalizeId(value: unknown, fallback = "node"): string {
   return normalized || fallback;
 }
 
-export function makeUniqueId(base: unknown, existingIds: ReadonlySet<string>): string {
+export function makeUniqueId(
+  base: unknown,
+  existingIds: ReadonlySet<string>,
+): string {
   const normalizedBase = normalizeId(base, "node");
   let candidate = normalizedBase;
   let index = 2;
@@ -76,6 +79,8 @@ export function findSubgroup(
   );
 }
 
-export function isDirectGroupNode(group: { key?: unknown } | null | undefined): boolean {
+export function isDirectGroupNode(
+  group: { key?: unknown } | null | undefined,
+): boolean {
   return String(group?.key || "").startsWith("group:");
 }

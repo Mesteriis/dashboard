@@ -1,6 +1,8 @@
 <template>
   <div class="ui-input-group" :class="{ 'has-error': Boolean(error) }">
-    <label v-if="label" class="ui-input-group__label" :for="id">{{ label }}</label>
+    <label v-if="label" class="ui-input-group__label" :for="id">{{
+      label
+    }}</label>
     <div class="ui-input-group__field-wrap">
       <span v-if="$slots.prefix || prefix" class="ui-input-group__addon">
         <slot name="prefix">{{ prefix }}</slot>

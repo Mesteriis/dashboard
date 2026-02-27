@@ -71,7 +71,10 @@ export function createDashboardConfigMutationSection(ctx: any) {
     } catch (error: unknown) {
       ctx.config.value = snapshot;
       ctx.saveStatus.value = "error";
-      ctx.saveError.value = ctx.errorMessage(error, "Не удалось применить изменения");
+      ctx.saveError.value = ctx.errorMessage(
+        error,
+        "Не удалось применить изменения",
+      );
       return false;
     }
   }

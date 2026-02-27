@@ -41,7 +41,10 @@ import {
   normalizeAgentId,
   type AgentPlasmaPreset,
 } from "@/shared/constants/agentPlasmaPresets";
-import { useAgentActivity, type AgentState } from "@/features/composables/useAgentActivity";
+import {
+  useAgentActivity,
+  type AgentState,
+} from "@/features/composables/useAgentActivity";
 import { useFxMode, type FxMode } from "@/features/composables/useFxMode";
 
 type QualityLevel = "low" | "medium" | "high";
@@ -267,7 +270,9 @@ const preset = computed<AgentPlasmaPreset>(() => {
   return AGENT_PLASMA_PRESETS[normalized] || DEFAULT_AGENT_PRESET;
 });
 
-const qualityPreset = computed<QualityPreset>(() => QUALITY_PRESETS[props.quality]);
+const qualityPreset = computed<QualityPreset>(
+  () => QUALITY_PRESETS[props.quality],
+);
 
 const requestedFxMode = computed<RenderMode>(() => {
   const propMode = String(props.fxMode || "")
@@ -280,7 +285,8 @@ const requestedFxMode = computed<RenderMode>(() => {
 });
 
 const canRunLoop = computed(
-  () => props.animated && !prefersReducedMotion.value && !isDocumentHidden.value,
+  () =>
+    props.animated && !prefersReducedMotion.value && !isDocumentHidden.value,
 );
 
 const containerStyle = computed<Record<string, string>>(() => {
@@ -431,7 +437,12 @@ function clearCanvas2d(): void {
 
 function clearPlasmaCanvas(): void {
   if (!plasmaGl || !plasmaCanvasRef.value) return;
-  plasmaGl.viewport(0, 0, plasmaCanvasRef.value.width, plasmaCanvasRef.value.height);
+  plasmaGl.viewport(
+    0,
+    0,
+    plasmaCanvasRef.value.width,
+    plasmaCanvasRef.value.height,
+  );
   plasmaGl.clearColor(0, 0, 0, 0);
   plasmaGl.clear(plasmaGl.COLOR_BUFFER_BIT);
 }
@@ -477,7 +488,10 @@ function ensureParticlesContext(): CanvasRenderingContext2D | null {
   ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
   particlesCtx = ctx;
 
-  if (!particles.length || particles.length !== qualityPreset.value.particleCount) {
+  if (
+    !particles.length ||
+    particles.length !== qualityPreset.value.particleCount
+  ) {
     buildParticles();
   }
 
@@ -545,8 +559,16 @@ function ensurePlasmaContext(): boolean {
     return false;
   }
 
-  const vertexShader = compileShader(gl, gl.VERTEX_SHADER, VERTEX_SHADER_SOURCE);
-  const fragmentShader = compileShader(gl, gl.FRAGMENT_SHADER, FRAGMENT_SHADER_SOURCE);
+  const vertexShader = compileShader(
+    gl,
+    gl.VERTEX_SHADER,
+    VERTEX_SHADER_SOURCE,
+  );
+  const fragmentShader = compileShader(
+    gl,
+    gl.FRAGMENT_SHADER,
+    FRAGMENT_SHADER_SOURCE,
+  );
   if (!vertexShader || !fragmentShader) {
     if (vertexShader) gl.deleteShader(vertexShader);
     if (fragmentShader) gl.deleteShader(fragmentShader);
@@ -614,12 +636,22 @@ function ensurePlasmaContext(): boolean {
   return true;
 }
 
-function renderPlasma(nowMs: number, power: number, stateIndex: number): boolean {
+function renderPlasma(
+  nowMs: number,
+  power: number,
+  stateIndex: number,
+): boolean {
   const canvas = plasmaCanvasRef.value;
   if (!canvas) return false;
 
   const ready = ensurePlasmaContext();
-  if (!ready || !plasmaGl || !plasmaProgram || !plasmaBuffer || !plasmaUniforms) {
+  if (
+    !ready ||
+    !plasmaGl ||
+    !plasmaProgram ||
+    !plasmaBuffer ||
+    !plasmaUniforms
+  ) {
     return false;
   }
 
@@ -630,7 +662,14 @@ function renderPlasma(nowMs: number, power: number, stateIndex: number): boolean
   plasmaGl.useProgram(plasmaProgram);
   plasmaGl.bindBuffer(plasmaGl.ARRAY_BUFFER, plasmaBuffer);
   plasmaGl.enableVertexAttribArray(plasmaAttribPosition);
-  plasmaGl.vertexAttribPointer(plasmaAttribPosition, 2, plasmaGl.FLOAT, false, 0, 0);
+  plasmaGl.vertexAttribPointer(
+    plasmaAttribPosition,
+    2,
+    plasmaGl.FLOAT,
+    false,
+    0,
+    0,
+  );
 
   const rgb = parseRgb(preset.value.color);
   const r = rgb[0] / 255;
@@ -643,7 +682,10 @@ function renderPlasma(nowMs: number, power: number, stateIndex: number): boolean
   plasmaGl.uniform1f(plasmaUniforms.power, clamp(power, 0, 1.6));
   plasmaGl.uniform1f(plasmaUniforms.state, stateIndex);
   plasmaGl.uniform1f(plasmaUniforms.seed, Number(preset.value.seed || 1));
-  plasmaGl.uniform1f(plasmaUniforms.octaves, Number(qualityPreset.value.octaves || 4));
+  plasmaGl.uniform1f(
+    plasmaUniforms.octaves,
+    Number(qualityPreset.value.octaves || 4),
+  );
 
   plasmaGl.drawArrays(plasmaGl.TRIANGLE_STRIP, 0, 4);
   return true;
@@ -687,7 +729,10 @@ function renderParticles(
       : state === "alert"
         ? 0.24
         : clamp(0.08 + power * 0.12, 0.08, 0.2);
-  const cometStride = Math.max(2, Math.round(1 / Math.max(0.001, cometDensity)));
+  const cometStride = Math.max(
+    2,
+    Math.round(1 / Math.max(0.001, cometDensity)),
+  );
 
   particles.forEach((particle, index) => {
     const angularSpeed =
@@ -702,7 +747,11 @@ function renderParticles(
     const x = cx + Math.cos(particle.angle + radialWave * 0.01) * radialShift;
     const y = cy + Math.sin(particle.angle + radialWave * 0.01) * radialShift;
 
-    const particleAlpha = clamp(particle.alpha * (0.24 + power * 0.66), 0.08, 0.95);
+    const particleAlpha = clamp(
+      particle.alpha * (0.24 + power * 0.66),
+      0.08,
+      0.95,
+    );
     const radius = particle.size * (0.7 + power * 0.62);
 
     const gradient = ctx.createRadialGradient(x, y, 0, x, y, radius * 3.2);
@@ -806,7 +855,12 @@ function syncCanvasSize(): void {
   }
 
   if (plasmaGl && plasmaCanvasRef.value) {
-    plasmaGl.viewport(0, 0, plasmaCanvasRef.value.width, plasmaCanvasRef.value.height);
+    plasmaGl.viewport(
+      0,
+      0,
+      plasmaCanvasRef.value.width,
+      plasmaCanvasRef.value.height,
+    );
   }
 
   if (changed) {
@@ -827,7 +881,11 @@ function step(nowMs: number): void {
   lastTickMs = nowMs;
   const dtSeconds = clamp(deltaMs / 1000, 0.001, 0.08);
 
-  const snapshotActivity = clamp(Number(fxSnapshot.value.activity || 0), 0, 1.6);
+  const snapshotActivity = clamp(
+    Number(fxSnapshot.value.activity || 0),
+    0,
+    1.6,
+  );
   activitySmoothed = lerp(activitySmoothed, snapshotActivity, 0.14);
   hoverSmoothed = lerp(hoverSmoothed, hoverTarget.value, 0.2);
 
@@ -978,8 +1036,16 @@ onBeforeUnmount(() => {
   overflow: hidden;
   isolation: isolate;
   background:
-    radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.12), transparent 48%),
-    radial-gradient(circle at 70% 80%, rgba(80, 120, 180, 0.24), transparent 56%),
+    radial-gradient(
+      circle at 30% 20%,
+      rgba(255, 255, 255, 0.12),
+      transparent 48%
+    ),
+    radial-gradient(
+      circle at 70% 80%,
+      rgba(80, 120, 180, 0.24),
+      transparent 56%
+    ),
     linear-gradient(170deg, rgba(6, 15, 26, 0.95), rgba(6, 13, 20, 0.92));
   border: 1px solid color-mix(in oklab, var(--border), white 12%);
   box-shadow:
@@ -1028,7 +1094,11 @@ onBeforeUnmount(() => {
   z-index: 4;
   pointer-events: none;
   background:
-    radial-gradient(circle at 50% 50%, transparent 52%, rgba(1, 7, 14, 0.28) 100%),
+    radial-gradient(
+      circle at 50% 50%,
+      transparent 52%,
+      rgba(1, 7, 14, 0.28) 100%
+    ),
     linear-gradient(180deg, rgba(255, 255, 255, 0.1), transparent 35%);
 }
 

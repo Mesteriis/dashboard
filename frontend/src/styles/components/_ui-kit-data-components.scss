@@ -4,7 +4,11 @@
   padding: 4px;
   border: 1px solid var(--ui-kit-data-components-color-001);
   border-radius: var(--ui-radius);
-  background: linear-gradient(150deg, var(--ui-kit-data-components-color-002), var(--ui-kit-data-components-color-003));
+  background: linear-gradient(
+    150deg,
+    var(--ui-kit-data-components-color-002),
+    var(--ui-kit-data-components-color-003)
+  );
 }
 
 .ui-select-button__item,
@@ -20,7 +24,11 @@
 .ui-modal__close,
 .ui-fieldset__toggle {
   border: 1px solid var(--ui-kit-data-components-color-004);
-  background: linear-gradient(155deg, var(--ui-kit-data-components-color-005), var(--ui-kit-data-components-color-006));
+  background: linear-gradient(
+    155deg,
+    var(--ui-kit-data-components-color-005),
+    var(--ui-kit-data-components-color-006)
+  );
   color: var(--ui-kit-data-components-color-007);
   border-radius: var(--ui-radius);
   cursor: pointer;
@@ -44,7 +52,11 @@
 .ui-modal__close:hover,
 .ui-fieldset__toggle:hover {
   border-color: var(--ui-kit-data-components-color-008);
-  background: linear-gradient(155deg, var(--ui-kit-data-components-color-009), var(--ui-kit-data-components-color-010));
+  background: linear-gradient(
+    155deg,
+    var(--ui-kit-data-components-color-009),
+    var(--ui-kit-data-components-color-010)
+  );
 }
 
 .ui-select-button__item:focus-visible,
@@ -69,7 +81,11 @@
 
 .ui-select-button__item.is-active {
   border-color: var(--ui-kit-data-components-color-012);
-  background: linear-gradient(145deg, var(--ui-kit-data-components-color-013), var(--ui-kit-data-components-color-014));
+  background: linear-gradient(
+    145deg,
+    var(--ui-kit-data-components-color-013),
+    var(--ui-kit-data-components-color-014)
+  );
   color: var(--ui-kit-data-components-color-015);
 }
 
@@ -167,7 +183,11 @@
 
 .ui-pagination button.is-active {
   border-color: var(--ui-kit-data-components-color-012);
-  background: linear-gradient(145deg, var(--ui-kit-data-components-color-013), var(--ui-kit-data-components-color-014));
+  background: linear-gradient(
+    145deg,
+    var(--ui-kit-data-components-color-013),
+    var(--ui-kit-data-components-color-014)
+  );
 }
 
 .ui-pagination button:disabled,
@@ -256,7 +276,11 @@
 .ui-tree__node.is-selected {
   border: 1px solid var(--ui-kit-data-components-color-033);
   border-radius: 999px;
-  background: linear-gradient(140deg, var(--ui-kit-data-components-color-034), var(--ui-kit-data-components-color-035));
+  background: linear-gradient(
+    140deg,
+    var(--ui-kit-data-components-color-034),
+    var(--ui-kit-data-components-color-035)
+  );
   box-shadow:
     inset 0 0 0 1px var(--ui-kit-data-components-color-036),
     0 10px 22px var(--ui-kit-data-components-color-037);
@@ -264,7 +288,11 @@
 }
 
 .ui-tree__node.is-selected:hover {
-  background: linear-gradient(140deg, var(--ui-kit-data-components-color-039), var(--ui-kit-data-components-color-040));
+  background: linear-gradient(
+    140deg,
+    var(--ui-kit-data-components-color-039),
+    var(--ui-kit-data-components-color-040)
+  );
 }
 
 .ui-tree__toggle {

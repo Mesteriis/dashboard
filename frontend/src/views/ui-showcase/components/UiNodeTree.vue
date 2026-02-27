@@ -1,11 +1,7 @@
 <template>
   <section class="sidebar-tree" aria-label="UI kit navigation tree">
     <ul v-if="groups.length" class="tree-root">
-      <li
-        v-for="group in groups"
-        :key="group.id"
-        class="tree-group-item"
-      >
+      <li v-for="group in groups" :key="group.id" class="tree-group-item">
         <div class="tree-node-row">
           <UiSidebarListItem
             variant="group"

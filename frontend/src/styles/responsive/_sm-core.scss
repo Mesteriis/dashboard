@@ -5,7 +5,8 @@
     --shell-inset-top: 10px;
     --shell-inset-bottom: 14px;
     --shell-inset-inline: 10px;
-    padding: calc(var(--shell-inset-top) + var(--desktop-drag-strip)) var(--shell-inset-inline) var(--shell-inset-bottom);
+    padding: calc(var(--shell-inset-top) + var(--desktop-drag-strip))
+      var(--shell-inset-inline) var(--shell-inset-bottom);
   }
 
   .tab-list {
@@ -109,5 +110,4 @@
   .settings-modal-grid {
     grid-template-columns: 1fr;
   }
-
 }

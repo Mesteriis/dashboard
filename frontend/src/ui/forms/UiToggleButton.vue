@@ -9,7 +9,9 @@
     @click="toggle"
   >
     <span class="ui-toggle-btn__dot" />
-    <span class="ui-toggle-btn__label">{{ modelValue ? onLabel : offLabel }}</span>
+    <span class="ui-toggle-btn__label">{{
+      modelValue ? onLabel : offLabel
+    }}</span>
   </button>
 </template>
 

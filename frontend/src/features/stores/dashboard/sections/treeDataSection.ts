@@ -1,7 +1,13 @@
-import type { DashboardGroup, DashboardItem, TreeGroupNode } from "@/features/stores/dashboard/storeTypes";
+import type {
+  DashboardGroup,
+  DashboardItem,
+  TreeGroupNode,
+} from "@/features/stores/dashboard/storeTypes";
 
 export function createDashboardTreeDataSection(ctx: any) {
-  function resolveBlockGroups(groupIds: readonly string[] = []): TreeGroupNode[] {
+  function resolveBlockGroups(
+    groupIds: readonly string[] = [],
+  ): TreeGroupNode[] {
     const resolved: TreeGroupNode[] = [];
 
     for (const id of groupIds) {
@@ -38,7 +44,9 @@ export function createDashboardTreeDataSection(ctx: any) {
   }
 
   function syncTreeGroupsState(): void {
-    const activeKeys = new Set(ctx.treeGroups.value.map((group: any) => group.key));
+    const activeKeys = new Set(
+      ctx.treeGroups.value.map((group: any) => group.key),
+    );
 
     for (const key of Object.keys(ctx.expandedGroups)) {
       if (!activeKeys.has(key)) {
@@ -52,7 +60,10 @@ export function createDashboardTreeDataSection(ctx: any) {
       }
     }
 
-    if (ctx.selectedNode.groupKey && !activeKeys.has(ctx.selectedNode.groupKey)) {
+    if (
+      ctx.selectedNode.groupKey &&
+      !activeKeys.has(ctx.selectedNode.groupKey)
+    ) {
       clearSelectedNode();
     }
   }
@@ -91,7 +102,9 @@ export function createDashboardTreeDataSection(ctx: any) {
     return String(siteTag).slice(5).trim();
   }
 
-  function normalizedItemTags(item: DashboardItem | null | undefined): string[] {
+  function normalizedItemTags(
+    item: DashboardItem | null | undefined,
+  ): string[] {
     return (item?.tags || [])
       .map((tag) => String(tag || "").trim())
       .filter(Boolean);
@@ -111,7 +124,9 @@ export function createDashboardTreeDataSection(ctx: any) {
   }
 
   function itemSite(item: any, groupKey = ""): string {
-    const resolvedGroup = resolveGroupByNodeKey(item?.__originGroupKey || groupKey);
+    const resolvedGroup = resolveGroupByNodeKey(
+      item?.__originGroupKey || groupKey,
+    );
     return resolveItemSite(item, resolvedGroup);
   }
 
@@ -124,7 +139,9 @@ export function createDashboardTreeDataSection(ctx: any) {
           .map((subgroup: any) => ({
             ...subgroup,
             items: (subgroup.items || []).filter(
-              (item: any) => resolveItemSite(item, group).toLowerCase() === ctx.siteFilter.value,
+              (item: any) =>
+                resolveItemSite(item, group).toLowerCase() ===
+                ctx.siteFilter.value,
             ),
           }))
           .filter((subgroup: any) => subgroup.items.length > 0);

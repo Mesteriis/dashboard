@@ -1,4 +1,7 @@
-import { EVENT_OPEN_AGENT_AURA_DEMO, emitOkoEvent } from "@/features/services/events";
+import {
+  EVENT_OPEN_AGENT_AURA_DEMO,
+  emitOkoEvent,
+} from "@/features/services/events";
 
 export const AGENT_AURA_DEMO_OPEN_EVENT = EVENT_OPEN_AGENT_AURA_DEMO;
 

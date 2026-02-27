@@ -22,7 +22,9 @@ export function createDashboardFxSection(ctx: any) {
     root.style.setProperty("--motion-budget", scalar);
   }
 
-  function tuneParticlesConfig(config: ParticlesConfig): ParticlesConfig | null {
+  function tuneParticlesConfig(
+    config: ParticlesConfig,
+  ): ParticlesConfig | null {
     const mode = fxMode();
     if (mode === "off") return null;
 

@@ -142,14 +142,20 @@ const formattedValue = computed(() => {
   if (rawValue === undefined) return "n/a";
   if (rawValue === null) return "null";
   if (typeof rawValue === "string") return `"${rawValue}"`;
-  if (typeof rawValue === "number" || typeof rawValue === "boolean" || typeof rawValue === "bigint") {
+  if (
+    typeof rawValue === "number" ||
+    typeof rawValue === "boolean" ||
+    typeof rawValue === "bigint"
+  ) {
     return String(rawValue);
   }
 
   try {
     const serialized = JSON.stringify(rawValue);
     if (!serialized) return "n/a";
-    return serialized.length > 180 ? `${serialized.slice(0, 177)}...` : serialized;
+    return serialized.length > 180
+      ? `${serialized.slice(0, 177)}...`
+      : serialized;
   } catch {
     return "[unserializable]";
   }

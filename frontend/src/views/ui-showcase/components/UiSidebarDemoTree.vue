@@ -52,7 +52,9 @@
                     @click="setActiveNode('proxmox')"
                   >
                     <span class="health-dot ok"></span>
-                    <span class="ui-kit-proxmox-mark" aria-hidden="true">✕</span>
+                    <span class="ui-kit-proxmox-mark" aria-hidden="true"
+                      >✕</span
+                    >
                     <span class="tree-text">proxmox</span>
                   </UiSidebarListItem>
                 </div>
@@ -84,7 +86,12 @@ import { computed } from "vue";
 import { Boxes, LayoutGrid } from "lucide-vue-next";
 import UiSidebarListItem from "@/components/navigation/UiSidebarListItem.vue";
 
-type NodeTreeNodeId = "group" | "subgroup" | "new-service" | "proxmox" | "test2";
+type NodeTreeNodeId =
+  | "group"
+  | "subgroup"
+  | "new-service"
+  | "proxmox"
+  | "test2";
 
 const props = withDefaults(
   defineProps<{
@@ -99,7 +106,9 @@ const emit = defineEmits<{
   "update:modelValue": [NodeTreeNodeId];
 }>();
 
-const activeNode = computed<NodeTreeNodeId>(() => props.modelValue || "proxmox");
+const activeNode = computed<NodeTreeNodeId>(
+  () => props.modelValue || "proxmox",
+);
 
 function setActiveNode(nodeId: NodeTreeNodeId): void {
   emit("update:modelValue", nodeId);

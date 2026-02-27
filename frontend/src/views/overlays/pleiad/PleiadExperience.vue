@@ -1,5 +1,8 @@
 <template>
-  <section class="pleiad-root" :class="{ 'pleiad-root--screensaver': isScreensaver }">
+  <section
+    class="pleiad-root"
+    :class="{ 'pleiad-root--screensaver': isScreensaver }"
+  >
     <section class="pleiad-layout">
       <section class="pleiad-canvas-panel">
         <PleiadCanvas
@@ -71,7 +74,11 @@
 
     <div v-if="pinnedAgent" class="pleiad-pin-banner">
       <p class="pleiad-pin-label">Pin: {{ pinnedAgent.name }}</p>
-      <button class="ghost pleiad-clear-pin" type="button" @click="demo.clearPin">
+      <button
+        class="ghost pleiad-clear-pin"
+        type="button"
+        @click="demo.clearPin"
+      >
         Clear pin
       </button>
     </div>
@@ -93,7 +100,11 @@
         <div class="pleiad-feed-head-top">
           <h3>Event Feed</h3>
           <div class="pleiad-feed-head-actions">
-            <p>{{ demo.filteredEvents.value.length }}/{{ demo.events.value.length }}</p>
+            <p>
+              {{ demo.filteredEvents.value.length }}/{{
+                demo.events.value.length
+              }}
+            </p>
             <button
               class="pleiad-feed-close"
               type="button"
@@ -105,7 +116,11 @@
           </div>
         </div>
 
-        <div class="pleiad-filter-group pleiad-feed-filters" role="group" aria-label="Event kind filters">
+        <div
+          class="pleiad-filter-group pleiad-feed-filters"
+          role="group"
+          aria-label="Event kind filters"
+        >
           <button
             v-for="option in kindOptions"
             :key="option.id"
@@ -286,7 +301,7 @@ const kindOptions = [
   { id: "warning", title: "Warning", icon: TriangleAlert },
   { id: "memory", title: "Memory", icon: Brain },
   { id: "info", title: "Info", icon: Info },
- ] as const satisfies ReadonlyArray<{
+] as const satisfies ReadonlyArray<{
   id: PleiadKind;
   title: string;
   icon: unknown;
@@ -342,7 +357,13 @@ const avatarLayerEntries = computed<AvatarLayerNode[]>(() => {
     const isPinned = demo.pinnedAgentId.value === agentId;
     const isHighlighted = highlightedSet.has(agentId);
     const isDimmed = hasPin && !isPinned && !isHighlighted;
-    const scaleBoost = isHovered ? 1.08 : isPinned ? 1.05 : isHighlighted ? 1.03 : 1;
+    const scaleBoost = isHovered
+      ? 1.08
+      : isPinned
+        ? 1.05
+        : isHighlighted
+          ? 1.03
+          : 1;
     const size = clamp(
       Number(node.radius || 0) * 2.55 * scaleBoost,
       node.isCenter ? 156 : 104,
@@ -358,7 +379,13 @@ const avatarLayerEntries = computed<AvatarLayerNode[]>(() => {
       particleCount: Math.round(
         clamp((node.isCenter ? 900 : 560) * (isDisabled ? 1.24 : 1), 340, 1280),
       ),
-      pointSize: node.isCenter ? (isDisabled ? 1.02 : 0.94) : isDisabled ? 0.92 : 0.84,
+      pointSize: node.isCenter
+        ? isDisabled
+          ? 1.02
+          : 0.94
+        : isDisabled
+          ? 0.92
+          : 0.84,
       swirlSpeed: isDisabled ? 1.3 : 0.9,
       streamCount: isDisabled ? 4 : 3,
       transformMode: isDisabled ? "vortex" : "avatar",
@@ -465,9 +492,7 @@ function handlePrimaryAgentEvent(event: Event): void {
     event instanceof CustomEvent
       ? (event.detail as PrimaryAgentEventDetail | undefined)
       : undefined;
-  const agentId = String(
-    detail?.agentId || detail?.id || "",
-  )
+  const agentId = String(detail?.agentId || detail?.id || "")
     .trim()
     .toUpperCase();
   if (!agentId) return;
@@ -522,7 +547,10 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
-  window.removeEventListener(PLEIAD_PRIMARY_AGENT_EVENT, handlePrimaryAgentEvent);
+  window.removeEventListener(
+    PLEIAD_PRIMARY_AGENT_EVENT,
+    handlePrimaryAgentEvent,
+  );
   if (typeof detachExternalApi === "function") {
     detachExternalApi();
   }

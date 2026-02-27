@@ -1,6 +1,10 @@
 import type { Component } from "vue";
 import { BRAND_ICON_BY_KEY } from "@/features/stores/dashboard/icons/brandIcons";
-import { FALLBACK_ICONS, ICON_BY_KEY, ICON_RULES } from "@/features/stores/dashboard/icons/keywordIcons";
+import {
+  FALLBACK_ICONS,
+  ICON_BY_KEY,
+  ICON_RULES,
+} from "@/features/stores/dashboard/icons/keywordIcons";
 
 interface IconLikeEntity {
   icon?: unknown;

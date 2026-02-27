@@ -134,7 +134,10 @@ async function handleRestore(): Promise<void> {
     yamlInput.value = "";
     validationResult.value = null;
   } catch (err) {
-    error.value = resolveErrorMessage(err, "Ошибка восстановления конфигурации");
+    error.value = resolveErrorMessage(
+      err,
+      "Ошибка восстановления конфигурации",
+    );
     emit("error", error.value);
   }
 }

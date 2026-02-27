@@ -1,4 +1,8 @@
-import type { DashboardHealthPayload, DashboardHealthState, HealthLevel } from "@/features/stores/dashboard/storeTypes";
+import type {
+  DashboardHealthPayload,
+  DashboardHealthState,
+  HealthLevel,
+} from "@/features/stores/dashboard/storeTypes";
 
 export function createDashboardHealthSection(ctx: any) {
   function stopHealthPolling(): void {
@@ -90,7 +94,8 @@ export function createDashboardHealthSection(ctx: any) {
 
     if (level === "recovering") {
       const successRateValue =
-        typeof state.success_rate === "number" && Number.isFinite(state.success_rate)
+        typeof state.success_rate === "number" &&
+        Number.isFinite(state.success_rate)
           ? Math.max(0, Math.min(1, state.success_rate))
           : null;
       const successPercent =
@@ -159,7 +164,8 @@ export function createDashboardHealthSection(ctx: any) {
   }
 
   function applyHealthStatusChanged(payload: unknown): void {
-    if (!payload || typeof payload !== "object" || Array.isArray(payload)) return;
+    if (!payload || typeof payload !== "object" || Array.isArray(payload))
+      return;
 
     const source = payload as Record<string, unknown>;
     const itemId = String(source.item_id || "").trim();
@@ -174,20 +180,25 @@ export function createDashboardHealthSection(ctx: any) {
         ? rawStatus
         : "unknown";
 
-    const latencyValue = source.avg_latency_ms == null ? null : Number(source.avg_latency_ms);
+    const latencyValue =
+      source.avg_latency_ms == null ? null : Number(source.avg_latency_ms);
     const latencyMs =
       typeof latencyValue === "number" && Number.isFinite(latencyValue)
         ? Math.max(0, Math.round(latencyValue))
         : null;
-    const successRateValue = source.success_rate == null ? null : Number(source.success_rate);
+    const successRateValue =
+      source.success_rate == null ? null : Number(source.success_rate);
     const successRate =
       typeof successRateValue === "number" && Number.isFinite(successRateValue)
         ? Math.max(0, Math.min(1, successRateValue))
         : null;
     const consecutiveFailuresValue =
-      source.consecutive_failures == null ? null : Number(source.consecutive_failures);
+      source.consecutive_failures == null
+        ? null
+        : Number(source.consecutive_failures);
     const consecutiveFailures =
-      typeof consecutiveFailuresValue === "number" && Number.isFinite(consecutiveFailuresValue)
+      typeof consecutiveFailuresValue === "number" &&
+      Number.isFinite(consecutiveFailuresValue)
         ? Math.max(0, Math.trunc(consecutiveFailuresValue))
         : null;
 
@@ -203,7 +214,8 @@ export function createDashboardHealthSection(ctx: any) {
       consecutiveFailures === 0 &&
       successRate != null &&
       (previous?.status === "down" ||
-        (previousSuccessRate != null && successRate > previousSuccessRate + 0.001));
+        (previousSuccessRate != null &&
+          successRate > previousSuccessRate + 0.001));
 
     ctx.healthStates[itemId] = {
       ...(ctx.healthStates[itemId] || {}),
@@ -236,7 +248,9 @@ export function createDashboardHealthSection(ctx: any) {
       applyHealthPayload(snapshotPayload, ctx.visibleTreeItemIds.value);
       return;
     }
-    if (!["health.status.changed", "health.status.updated"].includes(eventType)) {
+    if (
+      !["health.status.changed", "health.status.updated"].includes(eventType)
+    ) {
       return;
     }
     applyHealthStatusChanged(envelope.payload);

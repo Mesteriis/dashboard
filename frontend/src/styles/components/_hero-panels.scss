@@ -317,7 +317,11 @@
       var(--hero-panels-color-036),
       transparent 36%
     ),
-    radial-gradient(circle at 8% 12%, var(--hero-panels-color-037), transparent 28%);
+    radial-gradient(
+      circle at 8% 12%,
+      var(--hero-panels-color-037),
+      transparent 28%
+    );
 }
 
 .hero-glass-tabs-bg img {

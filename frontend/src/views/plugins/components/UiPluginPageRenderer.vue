@@ -11,7 +11,11 @@
           {{ manifest.description }}
         </p>
         <p class="plugin-page-version">
-          {{ manifest.version ? `Version ${manifest.version}` : "Version not specified" }}
+          {{
+            manifest.version
+              ? `Version ${manifest.version}`
+              : "Version not specified"
+          }}
         </p>
       </div>
     </header>
@@ -44,10 +48,7 @@
           <h3>{{ section.title }}</h3>
         </header>
 
-        <div
-          v-if="section.kind === 'cards'"
-          class="plugin-manifest-cards"
-        >
+        <div v-if="section.kind === 'cards'" class="plugin-manifest-cards">
           <article
             v-for="card in section.cards"
             :key="card.title"
@@ -58,10 +59,7 @@
           </article>
         </div>
 
-        <div
-          v-else-if="section.kind === 'links'"
-          class="plugin-manifest-links"
-        >
+        <div v-else-if="section.kind === 'links'" class="plugin-manifest-links">
           <a
             v-for="item in section.items"
             :key="`${item.label}:${item.url}`"
@@ -82,7 +80,9 @@
           <iframe
             :src="section.src"
             :style="{ height: `${section.height || 360}px` }"
-            :sandbox="section.sandbox || 'allow-same-origin allow-scripts allow-forms'"
+            :sandbox="
+              section.sandbox || 'allow-same-origin allow-scripts allow-forms'
+            "
             loading="lazy"
             title="Plugin iframe section"
           ></iframe>

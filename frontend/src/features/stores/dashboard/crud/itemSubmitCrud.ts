@@ -124,20 +124,24 @@ export function createDashboardCrudItemSubmit(ctx: any) {
     const authProfile = String(form.authProfile || "").trim();
     if (
       authProfile &&
-      !authProfileOptions.value.some((profile: any) => profile.id === authProfile)
+      !authProfileOptions.value.some(
+        (profile: any) => profile.id === authProfile,
+      )
     ) {
       throw new Error(`Auth profile '${authProfile}' не найден`);
     }
 
-    const iframeAllowValues = ctx.normalizeStringList(form.iframeAllow).filter(
-      (value: string) => !value.startsWith("allow-"),
-    );
-    const sandboxTokens = ctx.normalizeStringList(form.iframeSandboxExtraTokens).filter(
-      (value: string) =>
-        value.startsWith("allow-") &&
-        value !== "allow-scripts" &&
-        value !== "allow-same-origin",
-    );
+    const iframeAllowValues = ctx
+      .normalizeStringList(form.iframeAllow)
+      .filter((value: string) => !value.startsWith("allow-"));
+    const sandboxTokens = ctx
+      .normalizeStringList(form.iframeSandboxExtraTokens)
+      .filter(
+        (value: string) =>
+          value.startsWith("allow-") &&
+          value !== "allow-scripts" &&
+          value !== "allow-same-origin",
+      );
     if (
       sandboxMode === "enabled_scripts" ||
       sandboxMode === "enabled_scripts_same_origin"

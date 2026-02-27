@@ -26,7 +26,11 @@
     <form class="editor-modal-form" @submit.prevent="submitItemEditor">
       <p v-if="itemEditor.error" class="widget-error">{{ itemEditor.error }}</p>
 
-      <div class="editor-modal-tabs" role="tablist" aria-label="Секции редактора">
+      <div
+        class="editor-modal-tabs"
+        role="tablist"
+        aria-label="Секции редактора"
+      >
         <button
           v-for="tab in tabs"
           :key="tab.id"
@@ -49,7 +53,10 @@
         <ItemEditorLinkSection />
       </div>
 
-      <div v-show="activeTab === 'iframe' && itemEditor.form.type === 'iframe'" role="tabpanel">
+      <div
+        v-show="activeTab === 'iframe' && itemEditor.form.type === 'iframe'"
+        role="tabpanel"
+      >
         <ItemEditorIframeSection />
       </div>
 

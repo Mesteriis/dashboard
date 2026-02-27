@@ -179,7 +179,7 @@
 
 <script setup lang="ts">
 import { computed, ref, useSlots, watch } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { Lock, PanelLeftClose, PanelRightOpen } from "lucide-vue-next";
 import UiHeroGlassTabsShell from "@/components/layout/UiHeroGlassTabsShell.vue";
 import UiHeroControlsAccordion from "@/components/layout/UiHeroControlsAccordion.vue";
@@ -260,6 +260,7 @@ defineSlots<{
 // ── Store & Route ─────────────────────────────────────────────────────────────
 
 const route = useRoute();
+const router = useRouter();
 const dashboard = useDashboardStore();
 const {
   openSettingsPanel,
@@ -270,18 +271,31 @@ const {
 
 // ── Системное меню ────────────────────────────────────────────────────────
 
-type SystemActionId = "settings" | "kiosk" | "pleiad_lock" | "logout";
+type SystemActionId =
+  | "settings"
+  | "kiosk"
+  | "pleiad_lock"
+  | "logout"
+  | "navigate";
 
-const systemActions: Array<{
-  id: SystemActionId;
+interface SystemAction {
+  id: SystemActionId | string;
   label: string;
+  icon?: string;
+  route?: string;
+  action?: () => void | Promise<void>;
   danger?: boolean;
-}> = [
+  divider?: boolean;
+}
+
+const systemActions = computed<SystemAction[]>(() => [
   { id: "settings", label: "Настройки" },
   { id: "kiosk", label: "Режим киоска" },
   { id: "pleiad_lock", label: "Заблокировать" },
+  { id: "divider-1", label: "", divider: true },
+  { id: "navigate", label: "Домой", route: "/" },
   { id: "logout", label: "Выход", danger: true },
-];
+]);
 
 async function toggleKioskMode(): Promise<void> {
   if (typeof document === "undefined") return;
@@ -296,8 +310,24 @@ async function toggleKioskMode(): Promise<void> {
   }
 }
 
-function handleSystemAction(actionId: string): void {
-  switch (actionId) {
+function handleSystemAction(action: SystemAction): void {
+  // Обработка divider — игнорируем
+  if (action.divider) return;
+
+  // Если есть custom action — выполняем его
+  if (action.action) {
+    void Promise.resolve(action.action());
+    return;
+  }
+
+  // Если есть route — навигируем
+  if (action.route) {
+    void router.push(action.route);
+    return;
+  }
+
+  // Встроенные действия
+  switch (action.id) {
     case "settings":
       openSettingsPanel();
       break;

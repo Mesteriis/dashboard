@@ -1,4 +1,11 @@
-import { onBeforeUnmount, onMounted, ref, unref, watch, type MaybeRef } from "vue";
+import {
+  onBeforeUnmount,
+  onMounted,
+  ref,
+  unref,
+  watch,
+  type MaybeRef,
+} from "vue";
 
 const DEFAULT_TIMEOUT_MS = 10 * 60 * 1000;
 const ACTIVITY_EVENTS = [
@@ -8,7 +15,7 @@ const ACTIVITY_EVENTS = [
   "scroll",
   "touchstart",
   "click",
- ] as const;
+] as const;
 
 interface UseIdleScreensaverOptions {
   timeoutMs?: number;
@@ -53,7 +60,10 @@ export function useIdleScreensaver(options: UseIdleScreensaverOptions = {}) {
 
   function markActivity(source = "activity"): void {
     if (!isRunning.value) return;
-    if (document.visibilityState === "hidden" && source !== "visibilitychange") {
+    if (
+      document.visibilityState === "hidden" &&
+      source !== "visibilitychange"
+    ) {
       return;
     }
 

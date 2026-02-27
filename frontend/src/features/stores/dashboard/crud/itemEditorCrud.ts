@@ -67,7 +67,9 @@ export function createDashboardCrudItemEditor(ctx: any) {
     itemId: string,
   ): void {
     const subgroup = findSubgroupInConfig(config.value, groupId, subgroupId);
-    const item = (subgroup?.items || []).find((entry: any) => entry.id === itemId);
+    const item = (subgroup?.items || []).find(
+      (entry: any) => entry.id === itemId,
+    );
     if (!subgroup || !item) {
       ctx.saveStatus.value = "error";
       ctx.saveError.value = `Элемент '${itemId}' не найден`;

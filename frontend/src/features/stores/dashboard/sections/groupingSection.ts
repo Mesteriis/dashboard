@@ -1,9 +1,16 @@
-import type { DashboardItem, DashboardSubgroup, ItemWithOrigin, TreeGroupNode } from "@/features/stores/dashboard/storeTypes";
+import type {
+  DashboardItem,
+  DashboardSubgroup,
+  ItemWithOrigin,
+  TreeGroupNode,
+} from "@/features/stores/dashboard/storeTypes";
 
 export function createDashboardGroupingSection(ctx: any) {
   function hasTreeSelection(): boolean {
     return Boolean(
-      ctx.selectedNode.groupKey || ctx.selectedNode.subgroupId || ctx.selectedNode.itemId,
+      ctx.selectedNode.groupKey ||
+        ctx.selectedNode.subgroupId ||
+        ctx.selectedNode.itemId,
     );
   }
 
@@ -37,12 +44,17 @@ export function createDashboardGroupingSection(ctx: any) {
     };
   }
 
-  function filterGroupsBySelectedNode(groups: TreeGroupNode[] = []): TreeGroupNode[] {
+  function filterGroupsBySelectedNode(
+    groups: TreeGroupNode[] = [],
+  ): TreeGroupNode[] {
     if (!hasTreeSelection()) return groups;
 
     return groups
       .map((group) => {
-        if (ctx.selectedNode.groupKey && group.key !== ctx.selectedNode.groupKey) {
+        if (
+          ctx.selectedNode.groupKey &&
+          group.key !== ctx.selectedNode.groupKey
+        ) {
           return null;
         }
 
@@ -74,7 +86,9 @@ export function createDashboardGroupingSection(ctx: any) {
       .filter((group): group is TreeGroupNode => Boolean(group));
   }
 
-  function groupByTagsInEachGroup(groups: TreeGroupNode[] = []): TreeGroupNode[] {
+  function groupByTagsInEachGroup(
+    groups: TreeGroupNode[] = [],
+  ): TreeGroupNode[] {
     const nextGroups: TreeGroupNode[] = [];
 
     for (const group of groups) {
@@ -91,15 +105,18 @@ export function createDashboardGroupingSection(ctx: any) {
         }
       }
 
-      const sortedTagEntries = Array.from(tagsMap.entries()).sort(([left], [right]) =>
-        left.localeCompare(right, "ru", { sensitivity: "base" }),
+      const sortedTagEntries = Array.from(tagsMap.entries()).sort(
+        ([left], [right]) =>
+          left.localeCompare(right, "ru", { sensitivity: "base" }),
       );
-      const tagSubgroups: DashboardSubgroup[] = sortedTagEntries.map(([tag, items]) => ({
-        id: `tag-${ctx.normalizeId(`${group.id}-${tag}`, "tag")}`,
-        title: `#${tag}`,
-        icon: "tag",
-        items,
-      }));
+      const tagSubgroups: DashboardSubgroup[] = sortedTagEntries.map(
+        ([tag, items]) => ({
+          id: `tag-${ctx.normalizeId(`${group.id}-${tag}`, "tag")}`,
+          title: `#${tag}`,
+          icon: "tag",
+          items,
+        }),
+      );
 
       if (!tagSubgroups.length) continue;
       nextGroups.push({
@@ -127,8 +144,9 @@ export function createDashboardGroupingSection(ctx: any) {
       }
     }
 
-    const sortedTagEntries = Array.from(tagsMap.entries()).sort(([left], [right]) =>
-      left.localeCompare(right, "ru", { sensitivity: "base" }),
+    const sortedTagEntries = Array.from(tagsMap.entries()).sort(
+      ([left], [right]) =>
+        left.localeCompare(right, "ru", { sensitivity: "base" }),
     );
 
     return sortedTagEntries.map(([tag, items]) => {
@@ -182,7 +200,9 @@ export function createDashboardGroupingSection(ctx: any) {
     ];
   }
 
-  function applyServiceGroupingMode(groups: TreeGroupNode[] = []): TreeGroupNode[] {
+  function applyServiceGroupingMode(
+    groups: TreeGroupNode[] = [],
+  ): TreeGroupNode[] {
     if (ctx.isSidebarHidden.value) {
       return toFlatTileGroups(groups);
     }
@@ -202,7 +222,9 @@ export function createDashboardGroupingSection(ctx: any) {
     return groups;
   }
 
-  function filteredBlockGroups(groupIds: readonly string[] = []): TreeGroupNode[] {
+  function filteredBlockGroups(
+    groupIds: readonly string[] = [],
+  ): TreeGroupNode[] {
     const groups = ctx.resolveBlockGroups(groupIds);
     const siteFiltered = ctx.filterGroupsBySite(groups);
     const selectionFiltered = ctx.isSidebarHidden.value
@@ -223,7 +245,9 @@ export function createDashboardGroupingSection(ctx: any) {
     return Number(group.__visibleCount || 0) > 1;
   }
 
-  function groupTotalItems(group: { subgroups?: Array<{ items?: unknown[] }> }): number {
+  function groupTotalItems(group: {
+    subgroups?: Array<{ items?: unknown[] }>;
+  }): number {
     return (group.subgroups || []).reduce(
       (acc: number, subgroup) => acc + (subgroup.items || []).length,
       0,

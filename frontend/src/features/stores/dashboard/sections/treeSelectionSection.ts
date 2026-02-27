@@ -56,7 +56,11 @@ export function createDashboardTreeSelectionSection(ctx: any) {
     ctx.selectedNode.itemId = "";
   }
 
-  function selectItemNode(groupKey: string, subgroupId: string, itemId: string): void {
+  function selectItemNode(
+    groupKey: string,
+    subgroupId: string,
+    itemId: string,
+  ): void {
     activatePageForGroupKey(groupKey);
     ctx.expandedGroups[groupKey] = true;
     ctx.selectedNode.groupKey = groupKey;

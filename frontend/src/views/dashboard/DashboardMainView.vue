@@ -4,7 +4,8 @@
     :class="{
       'page--embedded': hideHero,
       'indicator-open': Boolean(activeIndicatorWidget),
-      'page--split-scroll': Boolean(activePage) && !loadingConfig && !configError,
+      'page--split-scroll':
+        Boolean(activePage) && !loadingConfig && !configError,
     }"
   >
     <section v-if="loadingConfig" class="panel status-panel">
@@ -133,10 +134,7 @@ const creatingInitialDashboard = ref(false);
 const importingInitialDashboard = ref(false);
 const bootstrapModalError = ref("");
 const showBootstrapModal = computed(
-  () =>
-    !loadingConfig.value &&
-    !configError.value &&
-    !activePage.value,
+  () => !loadingConfig.value && !configError.value && !activePage.value,
 );
 
 const configErrorPopup = computed(() => {
@@ -161,8 +159,7 @@ const configErrorPopup = computed(() => {
 
   return {
     title: "Ошибка загрузки",
-    message:
-      rawError || "Не удалось загрузить dashboard-конфигурацию.",
+    message: rawError || "Не удалось загрузить dashboard-конфигурацию.",
     hint: "Исправьте проблему и повторите запрос.",
     details: "",
   };
@@ -194,9 +191,7 @@ function dismissConfigErrorPopup() {
 }
 
 function resolveErrorMessage(error: unknown, fallback: string): string {
-  return error instanceof Error && error.message
-    ? error.message
-    : fallback;
+  return error instanceof Error && error.message ? error.message : fallback;
 }
 
 async function createInitialDashboard() {
@@ -221,10 +216,7 @@ async function createInitialDashboard() {
   }
 }
 
-async function importInitialDashboard(payload: {
-  name: string;
-  yaml: string;
-}) {
+async function importInitialDashboard(payload: { name: string; yaml: string }) {
   void payload.name;
   if (creatingInitialDashboard.value || importingInitialDashboard.value) return;
   importingInitialDashboard.value = true;

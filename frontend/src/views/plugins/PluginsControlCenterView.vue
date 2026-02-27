@@ -21,7 +21,9 @@ import {
 const route = useRoute();
 
 function normalizeTab(rawTab: unknown): PluginsPanelTab {
-  const normalized = String(rawTab || "").trim().toLowerCase();
+  const normalized = String(rawTab || "")
+    .trim()
+    .toLowerCase();
   if (
     normalized === "installed" ||
     normalized === "settings" ||
@@ -32,7 +34,9 @@ function normalizeTab(rawTab: unknown): PluginsPanelTab {
   return "store";
 }
 
-const activeTab = computed<PluginsPanelTab>(() => normalizeTab(route.query.tab));
+const activeTab = computed<PluginsPanelTab>(() =>
+  normalizeTab(route.query.tab),
+);
 
 watch(
   () => route.query.tab,

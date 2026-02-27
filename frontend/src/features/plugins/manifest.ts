@@ -250,10 +250,7 @@ function normalizeManifest(
   }
 
   const id = asNonEmptyString(raw.id) || pluginId;
-  const title =
-    asNonEmptyString(raw.title) ||
-    asNonEmptyString(raw.name) ||
-    id;
+  const title = asNonEmptyString(raw.title) || asNonEmptyString(raw.name) || id;
 
   return {
     id,

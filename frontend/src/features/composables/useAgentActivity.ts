@@ -65,7 +65,10 @@ function normalizeAgentId(value: unknown): string {
 }
 
 function nowMs(): number {
-  if (typeof performance !== "undefined" && typeof performance.now === "function") {
+  if (
+    typeof performance !== "undefined" &&
+    typeof performance.now === "function"
+  ) {
     return performance.now();
   }
   return Date.now();
@@ -98,7 +101,10 @@ function hasEnergeticEntries(referenceNowMs = nowMs()): boolean {
   return false;
 }
 
-function resolveStateForEvent(event: AgentEvent): { state: AgentState; durationMs: number } {
+function resolveStateForEvent(event: AgentEvent): {
+  state: AgentState;
+  durationMs: number;
+} {
   if (event.status === "error") {
     return { state: "error", durationMs: STATE_DURATIONS.error };
   }
@@ -143,7 +149,11 @@ function tick(timestamp: number): void {
   const now = timestamp;
 
   for (const [agentId, entry] of activityByAgent.entries()) {
-    entry.activity = clamp(entry.activity - decayAmount, EVENT_ACTIVITY_MIN, EVENT_ACTIVITY_MAX);
+    entry.activity = clamp(
+      entry.activity - decayAmount,
+      EVENT_ACTIVITY_MIN,
+      EVENT_ACTIVITY_MAX,
+    );
 
     if (now >= entry.stateUntil) {
       entry.state = entry.activity > 0.05 ? "active" : "idle";
@@ -195,18 +205,27 @@ function unbindListeners(): void {
 function ingestEvent(event: AgentEvent): void {
   if (!event) return;
 
-  const participants = [normalizeAgentId(event.from), normalizeAgentId(event.to)].filter(Boolean);
+  const participants = [
+    normalizeAgentId(event.from),
+    normalizeAgentId(event.to),
+  ].filter(Boolean);
   if (!participants.length) return;
 
   const uniqueParticipants = [...new Set(participants)];
-  const importance = Number.isFinite(Number(event.importance)) ? Number(event.importance) : 0;
+  const importance = Number.isFinite(Number(event.importance))
+    ? Number(event.importance)
+    : 0;
   const delta = clamp(0.15 + importance * 0.35, 0, 0.6);
   const stateData = resolveStateForEvent(event);
   const eventNow = nowMs();
 
   for (const agentId of uniqueParticipants) {
     const entry = getOrCreateEntry(agentId);
-    entry.activity = clamp(entry.activity + delta, EVENT_ACTIVITY_MIN, EVENT_ACTIVITY_MAX);
+    entry.activity = clamp(
+      entry.activity + delta,
+      EVENT_ACTIVITY_MIN,
+      EVENT_ACTIVITY_MAX,
+    );
     entry.lastAt = eventNow;
     entry.state = stateData.state;
     entry.stateUntil = eventNow + stateData.durationMs;
@@ -233,7 +252,9 @@ function getSnapshot(agentId: string): AgentFxSnapshot {
   };
 }
 
-function getFx(agentIdInput: string | Ref<string>): ComputedRef<AgentFxSnapshot> {
+function getFx(
+  agentIdInput: string | Ref<string>,
+): ComputedRef<AgentFxSnapshot> {
   return computed<AgentFxSnapshot>(() => {
     const normalized = normalizeAgentId(toValue(agentIdInput));
     if (!normalized) {

@@ -8,14 +8,30 @@
         class="ui-picklist__item"
         :class="{ 'is-selected': sourceSelected.has(item.id) }"
       >
-        <input type="checkbox" :checked="sourceSelected.has(item.id)" @change="toggleSource(item.id)" />
+        <input
+          type="checkbox"
+          :checked="sourceSelected.has(item.id)"
+          @change="toggleSource(item.id)"
+        />
         <span>{{ item.label }}</span>
       </label>
     </section>
 
     <div class="ui-picklist__controls">
-      <button type="button" :disabled="!sourceSelected.size" @click="moveToTarget">&gt;</button>
-      <button type="button" :disabled="!targetSelected.size" @click="moveToSource">&lt;</button>
+      <button
+        type="button"
+        :disabled="!sourceSelected.size"
+        @click="moveToTarget"
+      >
+        &gt;
+      </button>
+      <button
+        type="button"
+        :disabled="!targetSelected.size"
+        @click="moveToSource"
+      >
+        &lt;
+      </button>
     </div>
 
     <section class="ui-picklist__list">
@@ -26,7 +42,11 @@
         class="ui-picklist__item"
         :class="{ 'is-selected': targetSelected.has(item.id) }"
       >
-        <input type="checkbox" :checked="targetSelected.has(item.id)" @change="toggleTarget(item.id)" />
+        <input
+          type="checkbox"
+          :checked="targetSelected.has(item.id)"
+          @change="toggleTarget(item.id)"
+        />
         <span>{{ item.label }}</span>
       </label>
     </section>
@@ -70,8 +90,12 @@ function toggleTarget(id: string): void {
 
 function moveToTarget(): void {
   if (!sourceSelected.value.size) return;
-  const moving = props.sourceItems.filter((item) => sourceSelected.value.has(item.id));
-  const source = props.sourceItems.filter((item) => !sourceSelected.value.has(item.id));
+  const moving = props.sourceItems.filter((item) =>
+    sourceSelected.value.has(item.id),
+  );
+  const source = props.sourceItems.filter(
+    (item) => !sourceSelected.value.has(item.id),
+  );
   const target = [...props.targetItems, ...moving];
   emit("update:sourceItems", source);
   emit("update:targetItems", target);
@@ -80,8 +104,12 @@ function moveToTarget(): void {
 
 function moveToSource(): void {
   if (!targetSelected.value.size) return;
-  const moving = props.targetItems.filter((item) => targetSelected.value.has(item.id));
-  const target = props.targetItems.filter((item) => !targetSelected.value.has(item.id));
+  const moving = props.targetItems.filter((item) =>
+    targetSelected.value.has(item.id),
+  );
+  const target = props.targetItems.filter(
+    (item) => !targetSelected.value.has(item.id),
+  );
   const source = [...props.sourceItems, ...moving];
   emit("update:sourceItems", source);
   emit("update:targetItems", target);

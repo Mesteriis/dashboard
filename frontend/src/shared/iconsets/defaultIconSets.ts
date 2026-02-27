@@ -1,6 +1,12 @@
-import { isInfraSlug, type BuiltinIconPickerSet } from "@/shared/iconsets/simpleIconsUtils";
+import {
+  isInfraSlug,
+  type BuiltinIconPickerSet,
+} from "@/shared/iconsets/simpleIconsUtils";
 
-export type { BuiltinIconPickerOption, BuiltinIconPickerSet } from "@/shared/iconsets/simpleIconsUtils";
+export type {
+  BuiltinIconPickerOption,
+  BuiltinIconPickerSet,
+} from "@/shared/iconsets/simpleIconsUtils";
 
 export interface BuiltinIconSetCatalogEntry {
   id: string;
@@ -44,10 +50,14 @@ type BuiltinSetModule = {
 
 const BUILTIN_SET_LOADERS: Record<string, () => Promise<BuiltinSetModule>> = {
   "builtin:basic-ui": () => import("@/shared/iconsets/sets/builtinBasicUiSet"),
-  "builtin:tabler-outline": () => import("@/shared/iconsets/sets/builtinTablerOutlineSet"),
-  "builtin:tabler-filled": () => import("@/shared/iconsets/sets/builtinTablerFilledSet"),
-  "builtin:simple-services": () => import("@/shared/iconsets/sets/builtinSimpleServicesSet"),
-  "builtin:simple-infra": () => import("@/shared/iconsets/sets/builtinSimpleInfraSet"),
+  "builtin:tabler-outline": () =>
+    import("@/shared/iconsets/sets/builtinTablerOutlineSet"),
+  "builtin:tabler-filled": () =>
+    import("@/shared/iconsets/sets/builtinTablerFilledSet"),
+  "builtin:simple-services": () =>
+    import("@/shared/iconsets/sets/builtinSimpleServicesSet"),
+  "builtin:simple-infra": () =>
+    import("@/shared/iconsets/sets/builtinSimpleInfraSet"),
 };
 
 const builtinSetCache = new Map<string, BuiltinIconPickerSet>();
@@ -55,7 +65,9 @@ const builtinSetCache = new Map<string, BuiltinIconPickerSet>();
 export function resolveBuiltinSetIdByPack(pack: string): string | null {
   const normalizedPack = String(pack || "").trim();
   if (!normalizedPack) return null;
-  const entry = BUILTIN_ICON_SET_CATALOG.find((candidate) => candidate.pack === normalizedPack);
+  const entry = BUILTIN_ICON_SET_CATALOG.find(
+    (candidate) => candidate.pack === normalizedPack,
+  );
   return entry?.id || null;
 }
 
@@ -74,12 +86,16 @@ export function guessBuiltinSetIdByIconId(iconId: string): string | null {
   }
   if (normalizedId.startsWith("simple:")) {
     const slug = normalizedId.slice("simple:".length);
-    return isInfraSlug(slug) ? "builtin:simple-infra" : "builtin:simple-services";
+    return isInfraSlug(slug)
+      ? "builtin:simple-infra"
+      : "builtin:simple-services";
   }
   return null;
 }
 
-export async function loadBuiltinIconSet(setId: string): Promise<BuiltinIconPickerSet | null> {
+export async function loadBuiltinIconSet(
+  setId: string,
+): Promise<BuiltinIconPickerSet | null> {
   const normalizedSetId = String(setId || "").trim();
   if (!normalizedSetId) return null;
 
@@ -96,11 +112,15 @@ export async function loadBuiltinIconSet(setId: string): Promise<BuiltinIconPick
   return iconSet;
 }
 
-export async function loadBuiltinIconSets(setIds: string[]): Promise<BuiltinIconPickerSet[]> {
+export async function loadBuiltinIconSets(
+  setIds: string[],
+): Promise<BuiltinIconPickerSet[]> {
   const requestedSetIds = Array.from(
     new Set(setIds.map((setId) => String(setId || "").trim()).filter(Boolean)),
   );
 
-  const loadedSets = await Promise.all(requestedSetIds.map((setId) => loadBuiltinIconSet(setId)));
+  const loadedSets = await Promise.all(
+    requestedSetIds.map((setId) => loadBuiltinIconSet(setId)),
+  );
   return loadedSets.filter((set): set is BuiltinIconPickerSet => Boolean(set));
 }

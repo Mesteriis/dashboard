@@ -1,6 +1,8 @@
 <template>
   <nav class="ui-pagination" aria-label="Pagination">
-    <button type="button" :disabled="page <= 1" @click="setPage(page - 1)">Назад</button>
+    <button type="button" :disabled="page <= 1" @click="setPage(page - 1)">
+      Назад
+    </button>
     <button
       v-for="value in pages"
       :key="value"
@@ -10,7 +12,11 @@
     >
       {{ value }}
     </button>
-    <button type="button" :disabled="page >= totalPages" @click="setPage(page + 1)">
+    <button
+      type="button"
+      :disabled="page >= totalPages"
+      @click="setPage(page + 1)"
+    >
       Вперёд
     </button>
   </nav>
@@ -36,7 +42,9 @@ const emit = defineEmits<{
   "update:page": [value: number];
 }>();
 
-const totalPages = computed(() => Math.max(1, Math.ceil(props.total / props.pageSize)));
+const totalPages = computed(() =>
+  Math.max(1, Math.ceil(props.total / props.pageSize)),
+);
 
 const pages = computed(() => {
   const safePage = Math.min(totalPages.value, Math.max(1, props.page));

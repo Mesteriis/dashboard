@@ -409,7 +409,10 @@ function preloadAgentAvatars(): void {
   }
 }
 
-function computeLayout(width: number, height: number): Map<string, CanvasLayoutNode> {
+function computeLayout(
+  width: number,
+  height: number,
+): Map<string, CanvasLayoutNode> {
   const nextMap = new Map<string, CanvasLayoutNode>();
   const agentById = new Map(
     props.agents.map((agent) => [String(agent?.id || ""), agent]),
@@ -417,11 +420,7 @@ function computeLayout(width: number, height: number): Map<string, CanvasLayoutN
   const minSize = Math.min(width, height);
   const zoom = clamp(Number(props.avatarZoom || 1), 0.65, 2.2);
   const centerAgent = agentById.get(props.centerAgentId);
-  const centerScale = clamp(
-    Number(centerAgent?.sizeScale || 1),
-    0.75,
-    1.45,
-  );
+  const centerScale = clamp(Number(centerAgent?.sizeScale || 1), 0.75, 1.45);
   const centerRadius = clamp(minSize * 0.08 * centerScale * zoom, 40, 128);
   const orbitNodeRadiusBase = clamp(minSize * 0.041 * zoom, 22, 56);
   const orbitRadii = props.orbitAgentIds.map((agentId) => {
@@ -499,12 +498,17 @@ function resolveAnimatedLayout(
   }
 
   const durationMs = Math.max(1, Number(roleSwapTransition.durationMs || 1));
-  const progress = clamp((nowMs - roleSwapTransition.startMs) / durationMs, 0, 1);
+  const progress = clamp(
+    (nowMs - roleSwapTransition.startMs) / durationMs,
+    0,
+    1,
+  );
   const eased = easeInOutCubic(progress);
   const animated = new Map<string, CanvasLayoutNode>();
 
   for (const [agentId, targetNode] of targetLayoutById.entries()) {
-    const fromNode = roleSwapTransition.fromLayoutById.get(agentId) || targetNode;
+    const fromNode =
+      roleSwapTransition.fromLayoutById.get(agentId) || targetNode;
     animated.set(agentId, {
       ...targetNode,
       x: lerp(fromNode.x, targetNode.x, eased),
@@ -535,7 +539,11 @@ function drawBackground(
   ctx.fillStyle = base;
   ctx.fillRect(0, 0, width, height);
 
-  const nebulaAlpha = clamp(Number(props.fxProfile?.nebulaAlpha || 0.12), 0, 0.35);
+  const nebulaAlpha = clamp(
+    Number(props.fxProfile?.nebulaAlpha || 0.12),
+    0,
+    0.35,
+  );
   const pulse = Math.sin(nowMs * 0.00008) * 0.5 + 0.5;
 
   const fogLeft = ctx.createRadialGradient(
@@ -655,11 +663,17 @@ function evaluateCurveCandidate({
   let minMargin = Number.POSITIVE_INFINITY;
 
   for (const blocker of blockers) {
-    const blockerRadius = resolveEffectiveNodeRadius(blocker) + clearancePadding;
+    const blockerRadius =
+      resolveEffectiveNodeRadius(blocker) + clearancePadding;
     let blockerMinMargin = Number.POSITIVE_INFINITY;
     for (let sampleIndex = 1; sampleIndex < sampleCount; sampleIndex += 1) {
       const t = sampleIndex / sampleCount;
-      const point = sampleQuadraticPoint(sourceNode, controlPoint, targetNode, t);
+      const point = sampleQuadraticPoint(
+        sourceNode,
+        controlPoint,
+        targetNode,
+        t,
+      );
       const distance = Math.hypot(point.x - blocker.x, point.y - blocker.y);
       const margin = distance - blockerRadius;
       if (margin < blockerMinMargin) {
@@ -703,7 +717,9 @@ function resolveCurvedControlPoint({
     distance * baseCurvatureScale + (seed % 27),
   );
 
-  const blockers = layoutNodes.filter((node) => node.id !== fromId && node.id !== toId);
+  const blockers = layoutNodes.filter(
+    (node) => node.id !== fromId && node.id !== toId,
+  );
   if (!blockers.length || baseCurvature <= 0.01) {
     const bendDirection = seed % 2 === 0 ? 1 : -1;
     return {
@@ -734,7 +750,8 @@ function resolveCurvedControlPoint({
     for (const factor of curvatureFactors) {
       if (
         candidateQueue.some(
-          (candidate) => candidate.direction === direction && candidate.factor === factor,
+          (candidate) =>
+            candidate.direction === direction && candidate.factor === factor,
         )
       ) {
         continue;
@@ -747,8 +764,10 @@ function resolveCurvedControlPoint({
   let firstCandidate: CurveCandidate | null = null;
 
   for (const candidate of candidateQueue) {
-    const cpX = midpointX + nx * baseCurvature * candidate.factor * candidate.direction;
-    const cpY = midpointY + ny * baseCurvature * candidate.factor * candidate.direction;
+    const cpX =
+      midpointX + nx * baseCurvature * candidate.factor * candidate.direction;
+    const cpY =
+      midpointY + ny * baseCurvature * candidate.factor * candidate.direction;
     const evaluated = evaluateCurveCandidate({
       sourceNode,
       targetNode,
@@ -802,7 +821,11 @@ function resolveCurvedControlPoint({
 
 function drawLinks(ctx: CanvasRenderingContext2D, nowMs: number): void {
   const glowAlpha = clamp(Number(props.fxProfile?.glowAlpha || 0), 0, 1);
-  const widthScale = clamp(Number(props.fxProfile?.linkWidthScale || 1), 0.4, 1.35);
+  const widthScale = clamp(
+    Number(props.fxProfile?.linkWidthScale || 1),
+    0.4,
+    1.35,
+  );
   const activeRouteKeys = new Set<string>();
 
   for (let index = props.activeLinks.length - 1; index >= 0; index -= 1) {
@@ -811,7 +834,10 @@ function drawLinks(ctx: CanvasRenderingContext2D, nowMs: number): void {
     const targetNode = layoutById.get(link.to);
     if (!sourceNode || !targetNode) continue;
 
-    const duration = Math.max(1, Number(link.expiresAtMs) - Number(link.createdAtMs));
+    const duration = Math.max(
+      1,
+      Number(link.expiresAtMs) - Number(link.createdAtMs),
+    );
     const remaining = Number(link.expiresAtMs) - nowMs;
     if (remaining <= 0) continue;
 
@@ -830,7 +856,9 @@ function drawLinks(ctx: CanvasRenderingContext2D, nowMs: number): void {
       (highlighted ? 1.35 : link.manual ? 1.2 : 1);
 
     const seed = hashString(`${link.from}:${link.to}`);
-    const routeKey = String(link.id || link.trace_id || `${link.from}:${link.to}`);
+    const routeKey = String(
+      link.id || link.trace_id || `${link.from}:${link.to}`,
+    );
     activeRouteKeys.add(routeKey);
     const controlPoint = resolveCurvedControlPoint({
       routeKey,
@@ -847,7 +875,12 @@ function drawLinks(ctx: CanvasRenderingContext2D, nowMs: number): void {
     ctx.save();
     ctx.beginPath();
     ctx.moveTo(sourceNode.x, sourceNode.y);
-    ctx.quadraticCurveTo(controlPoint.cpX, controlPoint.cpY, targetNode.x, targetNode.y);
+    ctx.quadraticCurveTo(
+      controlPoint.cpX,
+      controlPoint.cpY,
+      targetNode.x,
+      targetNode.y,
+    );
     ctx.lineWidth = width;
     ctx.strokeStyle = toRgba(color, strokeAlpha);
     if (glowAlpha > 0) {
@@ -922,25 +955,13 @@ function drawPrimaryTransition(
   ctx.setLineDash([]);
 
   ctx.beginPath();
-  ctx.arc(
-    fromNode.x,
-    fromNode.y,
-    fromNode.radius + 8 + eased * 14,
-    0,
-    TAU,
-  );
+  ctx.arc(fromNode.x, fromNode.y, fromNode.radius + 8 + eased * 14, 0, TAU);
   ctx.lineWidth = 1.2;
   ctx.strokeStyle = toRgba(color, (0.2 + fadeOut * 0.3) * glowAlpha);
   ctx.stroke();
 
   ctx.beginPath();
-  ctx.arc(
-    toNode.x,
-    toNode.y,
-    toNode.radius + 9 + eased * 18,
-    0,
-    TAU,
-  );
+  ctx.arc(toNode.x, toNode.y, toNode.radius + 9 + eased * 18, 0, TAU);
   ctx.lineWidth = 1.35 + (1 - eased) * 0.7;
   ctx.shadowBlur = (8 + fadeOut * 22) * glowAlpha;
   ctx.shadowColor = toRgba(color, 0.84 * glowAlpha);
@@ -967,7 +988,13 @@ function drawAgentNode(
   const communicationBoost = Number(activityBoostByAgentId.get(agent.id) || 0);
 
   const glowAlpha = clamp(Number(props.fxProfile?.glowAlpha || 0), 0, 1);
-  const interactionBoost = isHovered ? 1.18 : isPinned ? 1.08 : isHighlighted ? 1.04 : 1;
+  const interactionBoost = isHovered
+    ? 1.18
+    : isPinned
+      ? 1.08
+      : isHighlighted
+        ? 1.04
+        : 1;
   const ringBoost = interactionBoost * (1 + communicationBoost * 0.45);
   const radius = node.radius * (1 + communicationBoost);
   const ringRadius = radius + (isHovered || isPinned || isHighlighted ? 5 : 3);
@@ -1053,13 +1080,19 @@ function drawAgentNode(
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.font = `${Math.round(radius * 0.62)}px "Space Grotesk", "Segoe UI", sans-serif`;
-    ctx.fillText(String(agent.glyph || agent.id.slice(0, 2)), node.x, node.y + 0.5);
+    ctx.fillText(
+      String(agent.glyph || agent.id.slice(0, 2)),
+      node.x,
+      node.y + 0.5,
+    );
   }
 
   const labelY = node.y + radius + (node.isCenter ? 19 : 14);
   ctx.textBaseline = "alphabetic";
   ctx.font = `${node.isCenter ? 13 : 11.2}px "Space Grotesk", "Segoe UI", sans-serif`;
-  ctx.fillStyle = isDimmed ? "rgba(157, 179, 197, 0.42)" : "rgba(205, 220, 233, 0.9)";
+  ctx.fillStyle = isDimmed
+    ? "rgba(157, 179, 197, 0.42)"
+    : "rgba(205, 220, 233, 0.9)";
   ctx.fillText(agent.name, node.x, labelY);
   ctx.restore();
 }
@@ -1085,7 +1118,9 @@ function emitLayoutUpdate(nowMs: number): void {
 }
 
 function drawAgents(ctx: CanvasRenderingContext2D): void {
-  const centerAgent = props.agents.find((agent) => agent.id === props.centerAgentId);
+  const centerAgent = props.agents.find(
+    (agent) => agent.id === props.centerAgentId,
+  );
   if (centerAgent) {
     const node = layoutById.get(centerAgent.id);
     if (node) {
@@ -1150,7 +1185,9 @@ function syncCanvasSize(): void {
   drawScene();
 }
 
-function resolvePointerPoint(event: MouseEvent): { x: number; y: number } | null {
+function resolvePointerPoint(
+  event: MouseEvent,
+): { x: number; y: number } | null {
   const canvas = canvasRef.value;
   if (!canvas) return null;
   const rect = canvas.getBoundingClientRect();
@@ -1273,7 +1310,10 @@ watch(
 watch(
   () =>
     props.agents
-      .map((agent) => `${String(agent?.id || "")}:${String(agent?.avatarSrc || "")}`)
+      .map(
+        (agent) =>
+          `${String(agent?.id || "")}:${String(agent?.avatarSrc || "")}`,
+      )
       .join("|"),
   () => {
     preloadAgentAvatars();

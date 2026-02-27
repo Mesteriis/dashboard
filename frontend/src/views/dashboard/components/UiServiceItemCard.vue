@@ -102,7 +102,11 @@
 
       <p class="item-url">{{ serviceItem.url }}</p>
       <p
-        v-if="showHealthIndicators && serviceItem.check_url && serviceItem.check_url !== serviceItem.url"
+        v-if="
+          showHealthIndicators &&
+          serviceItem.check_url &&
+          serviceItem.check_url !== serviceItem.url
+        "
         class="item-check-url"
       >
         check: {{ serviceItem.check_url }}
@@ -283,8 +287,12 @@ function handleCardClick(): void {
 
 function openEditItem(): void {
   const rawItem = item.value as Record<string, unknown>;
-  const resolvedGroupKey = String(rawItem.__originGroupKey || groupKey.value || "");
-  const resolvedSubgroupId = String(rawItem.__originSubgroupId || subgroupId.value || "");
+  const resolvedGroupKey = String(
+    rawItem.__originGroupKey || groupKey.value || "",
+  );
+  const resolvedSubgroupId = String(
+    rawItem.__originSubgroupId || subgroupId.value || "",
+  );
   const resolvedGroupId = resolvedGroupKey.startsWith("group:")
     ? resolvedGroupKey.slice(6)
     : resolvedGroupKey;

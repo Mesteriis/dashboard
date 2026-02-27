@@ -1,4 +1,7 @@
-import type { DashboardItem, DashboardSubgroup } from "@/features/stores/dashboard/storeTypes/config";
+import type {
+  DashboardItem,
+  DashboardSubgroup,
+} from "@/features/stores/dashboard/storeTypes/config";
 
 export interface TreeGroupNode {
   key: string;

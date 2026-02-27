@@ -22,9 +22,7 @@ function resolveBase(command) {
 }
 
 export default defineConfig(({ command }) => ({
-  plugins: [
-    vue(),
-  ],
+  plugins: [vue()],
   resolve: {
     alias: {
       "@": fileURLToPath(new URL("./src", import.meta.url)),

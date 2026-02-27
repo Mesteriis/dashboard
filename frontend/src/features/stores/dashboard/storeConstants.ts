@@ -1,4 +1,7 @@
-import type { ParticlesConfig, SidebarViewMode } from "@/features/stores/dashboard/storeTypes";
+import type {
+  ParticlesConfig,
+  SidebarViewMode,
+} from "@/features/stores/dashboard/storeTypes";
 
 export const EMBLEM_SRC = "/static/img/emblem-mark.png";
 export const EVENTS_STREAM_PATH = "/api/v1/events/stream";
@@ -56,10 +59,7 @@ export const THEME_PALETTE_OPTIONS = Object.freeze([
   { value: "amethyst", label: "Аметист" },
 ] as const);
 
-export const SIDEBAR_VIEW_SEQUENCE: SidebarViewMode[] = [
-  "detailed",
-  "hidden",
-];
+export const SIDEBAR_VIEW_SEQUENCE: SidebarViewMode[] = ["detailed", "hidden"];
 export const COMMAND_PALETTE_LIMIT = 18;
 export const COMMAND_PALETTE_EMPTY_LIMIT = 10;
 export const UI_STATE_STORAGE_KEY = "oko:dashboard-ui-state:v1";

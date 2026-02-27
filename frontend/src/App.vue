@@ -9,13 +9,9 @@
 
     <RouterView />
 
-    <div
-      v-if="isPleiadOverlayVisible"
-      class="pleiad-overlay-backdrop"
-    >
+    <div v-if="isPleiadOverlayVisible" class="pleiad-overlay-backdrop">
       <PleiadExperience :mode="pleiadOverlayMode" @close="handleCloseOverlay" />
     </div>
-
 
     <section
       v-if="apiErrorNotice.message"
@@ -47,7 +43,10 @@ import { useIdleScreensaver } from "@/features/composables/useIdleScreensaver";
 import { closeOverlay, openPleiadOverlay } from "@/app/navigation/nav";
 import { isDesktopShell } from "@/features/services/desktopRuntime";
 import { EVENT_API_ERROR, onOkoEvent } from "@/features/services/events";
-import { connectOkoSseStream, type OkoSseStream } from "@/features/services/eventStream";
+import {
+  connectOkoSseStream,
+  type OkoSseStream,
+} from "@/features/services/eventStream";
 import { useDashboardStore } from "@/features/stores/dashboardStore";
 
 const route = useRoute();
@@ -75,7 +74,9 @@ const isImmersiveRoute = computed(() => isPleiadOverlayVisible.value);
 
 watch(
   () => route.path,
-  (path) => { setUiRouteScope(path); },
+  (path) => {
+    setUiRouteScope(path);
+  },
   { immediate: true },
 );
 

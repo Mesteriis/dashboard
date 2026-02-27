@@ -1,4 +1,7 @@
-import type { ThemeMode, ThemePalette } from "@/features/stores/dashboard/storeTypes";
+import type {
+  ThemeMode,
+  ThemePalette,
+} from "@/features/stores/dashboard/storeTypes";
 
 const THEME_MODE_STORAGE_KEY = "oko:theme-mode:v1";
 const THEME_PALETTE_STORAGE_KEY = "oko:theme-palette:v1";
@@ -27,15 +30,23 @@ function getLocalStorageSafe(): Storage | null {
 }
 
 function normalizeThemeMode(value: unknown): ThemeMode {
-  const normalized = String(value || "").trim().toLowerCase();
-  if (normalized === "dark" || normalized === "light" || normalized === "system") {
+  const normalized = String(value || "")
+    .trim()
+    .toLowerCase();
+  if (
+    normalized === "dark" ||
+    normalized === "light" ||
+    normalized === "system"
+  ) {
     return normalized;
   }
   return "system";
 }
 
 function normalizeThemePalette(value: unknown): ThemePalette {
-  const normalized = String(value || "").trim().toLowerCase();
+  const normalized = String(value || "")
+    .trim()
+    .toLowerCase();
   if (normalized === "amethyst" || normalized === "emerald") {
     return normalized;
   }
@@ -137,7 +148,9 @@ function bindSystemThemeListener(mode: ThemeMode): void {
 
 export function getThemeMode(): ThemeMode {
   if (typeof document !== "undefined") {
-    const fromDataset = String(document.documentElement.dataset.themeMode || "").trim();
+    const fromDataset = String(
+      document.documentElement.dataset.themeMode || "",
+    ).trim();
     if (fromDataset) {
       return normalizeThemeMode(fromDataset);
     }

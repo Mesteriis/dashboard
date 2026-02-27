@@ -8,14 +8,22 @@
 
       <div class="agent-aura-demo-actions">
         <FxModeToggle @change="handleModeChange" />
-        <button class="agent-aura-demo-pulse" type="button" @click="emitRandomEvent">
+        <button
+          class="agent-aura-demo-pulse"
+          type="button"
+          @click="emitRandomEvent"
+        >
           Emit Event
         </button>
       </div>
     </header>
 
     <div class="agent-aura-grid">
-      <article v-for="agent in demoAgents" :key="agent.id" class="agent-aura-card">
+      <article
+        v-for="agent in demoAgents"
+        :key="agent.id"
+        class="agent-aura-card"
+      >
         <AgentAvatarFx
           :agent-id="agent.id"
           :src="agent.src"
@@ -248,8 +256,14 @@ import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import AgentAvatarFx from "@/views/overlays/agents/AgentAvatarFx.vue";
 import AgentAvatarSphereParticlesThree from "@/views/overlays/agents/AgentAvatarSphereParticlesThree.vue";
 import FxModeToggle from "@/views/overlays/agents/FxModeToggle.vue";
-import { AGENTS, type AgentDefinition } from "@/shared/constants/agentPlasmaPresets";
-import { useAgentActivity, type AgentEvent } from "@/features/composables/useAgentActivity";
+import {
+  AGENTS,
+  type AgentDefinition,
+} from "@/shared/constants/agentPlasmaPresets";
+import {
+  useAgentActivity,
+  type AgentEvent,
+} from "@/features/composables/useAgentActivity";
 
 type ThreeTransformMode = "avatar" | "vortex";
 type ThreeProjectionMode = "ring2d" | "sphere";
@@ -321,12 +335,9 @@ function createRandomEvent(): AgentEvent {
   const targetPool = AGENTS.filter((agent) => agent.id !== from);
   const to = pickRandom(targetPool)?.id || "VELES";
 
-  const kind = pickRandom<AgentEvent["kind"]>([
-    "info",
-    "warning",
-    "action",
-    "memory",
-  ]) || "info";
+  const kind =
+    pickRandom<AgentEvent["kind"]>(["info", "warning", "action", "memory"]) ||
+    "info";
   const importance = Number(randomFloat(0.2, 1).toFixed(2));
 
   let status: AgentEvent["status"] = "ok";
@@ -362,14 +373,18 @@ function toggleThreeSettings(): void {
 }
 
 function setThreeTransformMode(mode: unknown): void {
-  const normalized = String(mode || "").toLowerCase() === "avatar" ? "avatar" : "vortex";
+  const normalized =
+    String(mode || "").toLowerCase() === "avatar" ? "avatar" : "vortex";
   threeTransformMode.value = normalized;
 }
 
 onMounted(() => {
-  demoEventTimerId = window.setInterval(() => {
-    emitRandomEvent();
-  }, randomInt(850, 1650));
+  demoEventTimerId = window.setInterval(
+    () => {
+      emitRandomEvent();
+    },
+    randomInt(850, 1650),
+  );
 });
 
 onBeforeUnmount(() => {
@@ -530,7 +545,11 @@ onBeforeUnmount(() => {
   min-height: 340px;
   border-radius: var(--ui-radius);
   background:
-    radial-gradient(circle at 50% 28%, rgba(96, 152, 220, 0.12), transparent 56%),
+    radial-gradient(
+      circle at 50% 28%,
+      rgba(96, 152, 220, 0.12),
+      transparent 56%
+    ),
     color-mix(in oklab, var(--surface-strong), black 14%);
 }
 

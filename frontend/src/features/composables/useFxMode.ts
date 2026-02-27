@@ -75,7 +75,9 @@ function fromLegacyFxMode(mode: LegacyFxMode): FxMode {
 
 function readLegacyModeFromDom(): LegacyFxMode {
   if (typeof document === "undefined") return "full";
-  return normalizeLegacyFxMode(document.documentElement?.dataset?.fxMode || "full");
+  return normalizeLegacyFxMode(
+    document.documentElement?.dataset?.fxMode || "full",
+  );
 }
 
 function readPersistedFxMode(): FxMode | "" {
@@ -98,14 +100,21 @@ function applyLegacyMode(mode: LegacyFxMode): void {
   root.style.setProperty("--glow-enabled", clampGlow(mode));
 }
 
-function dispatchLegacyModeChange(mode: LegacyFxMode, previousMode: LegacyFxMode): void {
+function dispatchLegacyModeChange(
+  mode: LegacyFxMode,
+  previousMode: LegacyFxMode,
+): void {
   emitOkoEvent(EVENT_FX_MODE_CHANGE, {
     mode,
     previousMode,
   });
 }
 
-function dispatchAgentFxModeChange(mode: FxMode, previousMode: FxMode, source: string): void {
+function dispatchAgentFxModeChange(
+  mode: FxMode,
+  previousMode: FxMode,
+  source: string,
+): void {
   emitOkoEvent(EVENT_AGENT_FX_MODE_CHANGE, {
     mode,
     previousMode,
@@ -135,7 +144,9 @@ function syncFromLegacyMode(mode: LegacyFxMode): void {
 function handleLegacyModeChange(event: Event): void {
   if (appliedLegacySync) return;
   const customEvent = event as CustomEvent<{ mode?: LegacyFxMode }>;
-  const incomingMode = normalizeLegacyFxMode(customEvent.detail?.mode || readLegacyModeFromDom());
+  const incomingMode = normalizeLegacyFxMode(
+    customEvent.detail?.mode || readLegacyModeFromDom(),
+  );
   syncFromLegacyMode(incomingMode);
 }
 
@@ -165,7 +176,10 @@ function handleStorageSync(event: StorageEvent): void {
 
 function bindGlobalListeners(): void {
   if (typeof window === "undefined") return;
-  removeLegacyFxListener = onOkoEvent(EVENT_FX_MODE_CHANGE, handleLegacyModeChange);
+  removeLegacyFxListener = onOkoEvent(
+    EVENT_FX_MODE_CHANGE,
+    handleLegacyModeChange,
+  );
   window.addEventListener("storage", handleStorageSync);
 
   mediaQueryList = window.matchMedia?.(REDUCED_MOTION_QUERY) || null;
@@ -242,7 +256,9 @@ function cycleFxMode(step = 1): void {
   const normalizedIndex = currentIndex >= 0 ? currentIndex : 0;
   const delta = Math.abs(direction) % FX_MODE_ORDER.length || 1;
   const nextIndex =
-    (normalizedIndex + (direction > 0 ? delta : -delta) + FX_MODE_ORDER.length * 2) %
+    (normalizedIndex +
+      (direction > 0 ? delta : -delta) +
+      FX_MODE_ORDER.length * 2) %
     FX_MODE_ORDER.length;
   setFxMode(FX_MODE_ORDER[nextIndex], { source: "cycle" });
 }

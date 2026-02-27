@@ -63,9 +63,7 @@ function asString(value: unknown): string {
 
 function normalizeTags(value: unknown): string[] {
   if (!Array.isArray(value)) return [];
-  return value
-    .map((entry) => asString(entry))
-    .filter(Boolean);
+  return value.map((entry) => asString(entry)).filter(Boolean);
 }
 
 function normalizeOpen(value: unknown): ServiceCardOpenV1 {
@@ -161,9 +159,7 @@ export function normalizePluginBlocks(
   return blocks;
 }
 
-export function normalizeServiceCardCore(
-  value: unknown,
-): ServiceCardCoreV1 {
+export function normalizeServiceCardCore(value: unknown): ServiceCardCoreV1 {
   const raw =
     value && typeof value === "object" && !Array.isArray(value)
       ? (value as Record<string, unknown>)

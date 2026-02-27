@@ -77,10 +77,15 @@ export function buildOkoRequestHeaders(
   };
 }
 
-function resolveErrorMessage(body: unknown, isJson: boolean, status: number): string {
-  const payload = isJson && typeof body === "object" && body !== null
-    ? (body as { detail?: unknown; message?: unknown; code?: unknown })
-    : null;
+function resolveErrorMessage(
+  body: unknown,
+  isJson: boolean,
+  status: number,
+): string {
+  const payload =
+    isJson && typeof body === "object" && body !== null
+      ? (body as { detail?: unknown; message?: unknown; code?: unknown })
+      : null;
 
   let message = `Request failed: ${status}`;
   if (status >= 500) {
@@ -88,7 +93,11 @@ function resolveErrorMessage(body: unknown, isJson: boolean, status: number): st
       "Не удалось связаться с backend. Проверьте, что сервер запущен и порт настроен корректно.";
   }
 
-  if (payload && typeof payload.message === "string" && payload.message.trim()) {
+  if (
+    payload &&
+    typeof payload.message === "string" &&
+    payload.message.trim()
+  ) {
     return payload.message;
   }
 

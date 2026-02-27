@@ -1,9 +1,5 @@
 <template>
-  <div
-    ref="rootRef"
-    class="ui-icon-picker"
-    :class="{ open, disabled }"
-  >
+  <div ref="rootRef" class="ui-icon-picker" :class="{ open, disabled }">
     <button
       ref="triggerRef"
       class="ui-icon-picker__trigger"
@@ -26,7 +22,10 @@
               aria-hidden="true"
               :style="glyphStyle(selectedOption)"
             >
-              <g v-if="selectedOption.svgBody" v-html="selectedOption.svgBody" />
+              <g
+                v-if="selectedOption.svgBody"
+                v-html="selectedOption.svgBody"
+              />
               <path v-else :d="selectedOption.svgPath" />
             </svg>
             <template v-else>
@@ -41,7 +40,11 @@
           </small>
         </span>
       </span>
-      <span class="ui-icon ui-icon-picker__trigger-caret" :class="{ open }" aria-hidden="true">
+      <span
+        class="ui-icon ui-icon-picker__trigger-caret"
+        :class="{ open }"
+        aria-hidden="true"
+      >
         <slot name="caret" :open="open">▾</slot>
       </span>
     </button>
@@ -106,10 +109,14 @@
               <div class="ui-icon-picker__sidebar-meta">
                 <p>
                   Built-in loaded:
-                  <strong>{{ loadedBuiltinSetsCount }} / {{ builtinSetsTotalCount }}</strong>
+                  <strong
+                    >{{ loadedBuiltinSetsCount }} /
+                    {{ builtinSetsTotalCount }}</strong
+                  >
                 </p>
                 <p v-if="loadingBuiltinSetIds.length > 0">
-                  Loading sets: <strong>{{ loadingBuiltinSetIds.length }}</strong>
+                  Loading sets:
+                  <strong>{{ loadingBuiltinSetIds.length }}</strong>
                 </p>
               </div>
             </aside>
@@ -148,7 +155,10 @@
                   :class="{ active: option.id === selectedId }"
                   @click="selectIcon(option.id)"
                 >
-                  <span class="ui-icon ui-icon-picker__glyph" aria-hidden="true">
+                  <span
+                    class="ui-icon ui-icon-picker__glyph"
+                    aria-hidden="true"
+                  >
                     <slot name="icon" :option="option">
                       <svg
                         v-if="hasSvgGlyph(option)"
@@ -305,18 +315,30 @@ const activeSetNode = ref<SetFilterNodeId>("all");
 const loadedBuiltinSetMap = ref<Record<string, BuiltinIconPickerSet>>({});
 const loadingBuiltinSetIds = ref<string[]>([]);
 
-const treeDefaultExpanded = ["group:builtin", "group:custom", "group:downloaded"];
+const treeDefaultExpanded = [
+  "group:builtin",
+  "group:custom",
+  "group:downloaded",
+];
 
 const selectedId = computed(() => String(props.modelValue || "").trim());
-const listMaxHeight = computed(() => Math.max(320, Number(props.panelMaxHeight) || 560));
+const listMaxHeight = computed(() =>
+  Math.max(320, Number(props.panelMaxHeight) || 560),
+);
 const isGlobalSearchMode = computed(() => searchQuery.value.trim().length > 0);
 
 const excludedSetIds = computed(
-  () => new Set((props.excludeSetIds || []).map((setId) => String(setId || "").trim())),
+  () =>
+    new Set(
+      (props.excludeSetIds || []).map((setId) => String(setId || "").trim()),
+    ),
 );
 
 const excludedIconIds = computed(
-  () => new Set((props.excludeIconIds || []).map((iconId) => String(iconId || "").trim())),
+  () =>
+    new Set(
+      (props.excludeIconIds || []).map((iconId) => String(iconId || "").trim()),
+    ),
 );
 
 const starterOptions = computed(() => [
@@ -327,7 +349,10 @@ const starterOptions = computed(() => [
 const builtinSetMetas = computed<SetMeta[]>(() => {
   const metas: SetMeta[] = [];
 
-  if (!excludedSetIds.value.has(LOCAL_OPTIONS_SET_ID) && starterOptions.value.length > 0) {
+  if (
+    !excludedSetIds.value.has(LOCAL_OPTIONS_SET_ID) &&
+    starterOptions.value.length > 0
+  ) {
     metas.push({
       id: LOCAL_OPTIONS_SET_ID,
       label: "Starter",
@@ -388,9 +413,16 @@ const sourceSets = computed<
     options: IconPickerOption[];
   }>
 >(() => {
-  const result: Array<{ id: string; source: IconPickerSource; options: IconPickerOption[] }> = [];
+  const result: Array<{
+    id: string;
+    source: IconPickerSource;
+    options: IconPickerOption[];
+  }> = [];
 
-  if (!excludedSetIds.value.has(LOCAL_OPTIONS_SET_ID) && starterOptions.value.length > 0) {
+  if (
+    !excludedSetIds.value.has(LOCAL_OPTIONS_SET_ID) &&
+    starterOptions.value.length > 0
+  ) {
     result.push({
       id: LOCAL_OPTIONS_SET_ID,
       source: "builtin",
@@ -412,7 +444,9 @@ const sourceSets = computed<
   }
 
   for (const setMeta of customSetMetas.value) {
-    const sourceSet = props.iconSets.find((set) => String(set.id || "").trim() === setMeta.id);
+    const sourceSet = props.iconSets.find(
+      (set) => String(set.id || "").trim() === setMeta.id,
+    );
     if (!sourceSet) continue;
     result.push({
       id: setMeta.id,
@@ -446,7 +480,8 @@ const normalizedOptions = computed<NormalizedIconOption[]>(() => {
       if (!id || excludedIconIds.value.has(id) || seenIds.has(id)) continue;
 
       const label = String(rawOption?.label || id).trim() || id;
-      const pack = String(rawOption?.pack || sourceSet.id || "custom").trim() || "custom";
+      const pack =
+        String(rawOption?.pack || sourceSet.id || "custom").trim() || "custom";
       const keywords = (rawOption?.keywords || [])
         .map((keyword) => String(keyword || "").trim())
         .filter(Boolean);
@@ -540,7 +575,10 @@ const setTreeNodes = computed<TreeNode[]>(() => {
   return nodes;
 });
 
-function matchesSetNodeFilter(option: NormalizedIconOption, nodeId: SetFilterNodeId): boolean {
+function matchesSetNodeFilter(
+  option: NormalizedIconOption,
+  nodeId: SetFilterNodeId,
+): boolean {
   if (nodeId === "all") return true;
   if (nodeId === "group:builtin") return option.source === "builtin";
   if (nodeId === "group:custom") return option.source === "icon-set";
@@ -560,7 +598,13 @@ const filteredOptions = computed(() => {
       return true;
     }
 
-    const haystack = [option.id, option.label, option.pack, option.setId, ...option.keywords]
+    const haystack = [
+      option.id,
+      option.label,
+      option.pack,
+      option.setId,
+      ...option.keywords,
+    ]
       .join(" ")
       .toLowerCase();
 
@@ -569,30 +613,38 @@ const filteredOptions = computed(() => {
 });
 
 const selectedOption = computed(
-  () => normalizedOptions.value.find((option) => option.id === selectedId.value) || null,
+  () =>
+    normalizedOptions.value.find((option) => option.id === selectedId.value) ||
+    null,
 );
 
 const downloadedIconCount = computed(
-  () => normalizedOptions.value.filter((option) => option.source === "downloaded").length,
+  () =>
+    normalizedOptions.value.filter((option) => option.source === "downloaded")
+      .length,
 );
 
 const builtinSetsTotalCount = computed(() => BUILTIN_ICON_SET_CATALOG.length);
 
 const loadedBuiltinSetsCount = computed(
   () =>
-    BUILTIN_ICON_SET_CATALOG.filter((entry) => Boolean(loadedBuiltinSetMap.value[entry.id])).length,
+    BUILTIN_ICON_SET_CATALOG.filter((entry) =>
+      Boolean(loadedBuiltinSetMap.value[entry.id]),
+    ).length,
 );
 
 function fallbackPreview(option: { preview?: string; label: string }): string {
   const preview = String(option.preview || "").trim();
   if (preview) return preview;
 
-  return option.label
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((chunk) => chunk[0]?.toUpperCase() || "")
-    .join("") || "IC";
+  return (
+    option.label
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((chunk) => chunk[0]?.toUpperCase() || "")
+      .join("") || "IC"
+  );
 }
 
 function hasSvgGlyph(
@@ -621,7 +673,9 @@ function markBuiltinSetLoading(setId: string): void {
 }
 
 function unmarkBuiltinSetLoading(setId: string): void {
-  loadingBuiltinSetIds.value = loadingBuiltinSetIds.value.filter((entry) => entry !== setId);
+  loadingBuiltinSetIds.value = loadingBuiltinSetIds.value.filter(
+    (entry) => entry !== setId,
+  );
 }
 
 function isBuiltinSetLoaded(setId: string): boolean {
@@ -647,7 +701,10 @@ function resolveInitialSetNode(): SetFilterNodeId {
     return bySelectedIcon;
   }
 
-  if (!excludedSetIds.value.has(LOCAL_OPTIONS_SET_ID) && starterOptions.value.length > 0) {
+  if (
+    !excludedSetIds.value.has(LOCAL_OPTIONS_SET_ID) &&
+    starterOptions.value.length > 0
+  ) {
     return LOCAL_OPTIONS_SET_ID;
   }
 
@@ -681,7 +738,8 @@ async function ensureAllBuiltinSetsLoaded(): Promise<void> {
   );
 
   const pendingSetIds = targetSetIds.filter(
-    (setId) => !isBuiltinSetLoaded(setId) && !loadingBuiltinSetIds.value.includes(setId),
+    (setId) =>
+      !isBuiltinSetLoaded(setId) && !loadingBuiltinSetIds.value.includes(setId),
   );
 
   if (!pendingSetIds.length) return;
@@ -712,7 +770,10 @@ async function ensureBuiltinSetsForCurrentContext(): Promise<void> {
 
   const activeNode = activeSetNode.value;
 
-  if (activeNode.startsWith("builtin:") && activeNode !== LOCAL_OPTIONS_SET_ID) {
+  if (
+    activeNode.startsWith("builtin:") &&
+    activeNode !== LOCAL_OPTIONS_SET_ID
+  ) {
     await ensureBuiltinSetLoaded(activeNode);
     return;
   }
@@ -902,7 +963,11 @@ onBeforeUnmount(() => {
   height: min(860px, calc(100vh - 32px));
   border-radius: calc(var(--ui-radius) + 6px);
   border: 1px solid rgba(105, 164, 193, 0.28);
-  background: linear-gradient(150deg, rgba(9, 25, 39, 0.96), rgba(7, 19, 31, 0.94));
+  background: linear-gradient(
+    150deg,
+    rgba(9, 25, 39, 0.96),
+    rgba(7, 19, 31, 0.94)
+  );
   box-shadow: 0 26px 54px rgba(2, 9, 15, 0.58);
   padding: 16px;
   display: grid;
@@ -1065,7 +1130,11 @@ onBeforeUnmount(() => {
 .ui-icon-picker__list {
   border: none;
   border-radius: var(--ui-radius);
-  background: linear-gradient(150deg, rgba(11, 28, 43, 0.68), rgba(8, 20, 33, 0.58));
+  background: linear-gradient(
+    150deg,
+    rgba(11, 28, 43, 0.68),
+    rgba(8, 20, 33, 0.58)
+  );
   padding: 10px;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(116px, 1fr));
@@ -1087,7 +1156,10 @@ onBeforeUnmount(() => {
   gap: 4px;
   text-align: center;
   cursor: pointer;
-  transition: border-color 150ms ease, background 150ms ease, transform 150ms ease;
+  transition:
+    border-color 150ms ease,
+    background 150ms ease,
+    transform 150ms ease;
 }
 
 .ui-icon-picker__item:hover {

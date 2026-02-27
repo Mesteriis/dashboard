@@ -35,7 +35,9 @@ export function isApiRequestError(error: unknown): error is ApiRequestError {
   );
 }
 
-export function createApiRequestError(init: ApiRequestErrorInit): ApiRequestError {
+export function createApiRequestError(
+  init: ApiRequestErrorInit,
+): ApiRequestError {
   const error = new Error(String(init.message || "API request failed"));
   const typedError = error as ApiRequestError;
   typedError.name = "ApiRequestError";

@@ -1,5 +1,9 @@
 <template>
-  <div class="ui-select-button" role="group" :aria-label="label || 'select-button'">
+  <div
+    class="ui-select-button"
+    role="group"
+    :aria-label="label || 'select-button'"
+  >
     <button
       v-for="option in options"
       :key="option.value"

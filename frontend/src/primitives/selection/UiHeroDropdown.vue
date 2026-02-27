@@ -13,7 +13,11 @@
         <span class="hero-dropdown-label">{{ label }}</span>
       </slot>
       <span class="hero-dropdown-value">{{ selectedLabel }}</span>
-      <span class="ui-icon hero-dropdown-caret" :class="{ open }" aria-hidden="true">
+      <span
+        class="ui-icon hero-dropdown-caret"
+        :class="{ open }"
+        aria-hidden="true"
+      >
         <slot name="caret" :open="open">▾</slot>
       </span>
     </button>
@@ -56,7 +60,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
+import {
+  computed,
+  nextTick,
+  onBeforeUnmount,
+  onMounted,
+  ref,
+  watch,
+} from "vue";
 
 interface HeroDropdownOption {
   value: string;
@@ -146,7 +157,10 @@ function updateMenuPlacement(): void {
 
   menuDirection.value = preferUp ? "up" : "down";
   const availableSpace = preferUp ? spaceAbove : spaceBelow;
-  menuMaxHeight.value = Math.max(140, Math.min(360, Math.floor(availableSpace)));
+  menuMaxHeight.value = Math.max(
+    140,
+    Math.min(360, Math.floor(availableSpace)),
+  );
 }
 
 function handleViewportChange(): void {

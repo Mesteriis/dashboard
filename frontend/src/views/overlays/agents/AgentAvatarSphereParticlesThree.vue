@@ -161,7 +161,8 @@ let renderer: THREE.WebGLRenderer | null = null;
 let scene: THREE.Scene | null = null;
 let camera: THREE.PerspectiveCamera | null = null;
 let sphereGroup: THREE.Group | null = null;
-let points: THREE.Points<THREE.BufferGeometry, THREE.PointsMaterial> | null = null;
+let points: THREE.Points<THREE.BufferGeometry, THREE.PointsMaterial> | null =
+  null;
 let geometry: THREE.BufferGeometry | null = null;
 let material: THREE.PointsMaterial | null = null;
 let pointSpriteTexture: THREE.CanvasTexture | null = null;
@@ -171,7 +172,10 @@ let avatarSpriteMaterial: THREE.SpriteMaterial | null = null;
 let positionsBuffer: Float32Array | null = null;
 let colorsBuffer: Float32Array | null = null;
 let particleMeta: ParticleMetaEntry[] = [];
-let flowLines: THREE.LineSegments<THREE.BufferGeometry, THREE.LineBasicMaterial> | null = null;
+let flowLines: THREE.LineSegments<
+  THREE.BufferGeometry,
+  THREE.LineBasicMaterial
+> | null = null;
 let flowLineGeometry: THREE.BufferGeometry | null = null;
 let flowLineMaterial: THREE.LineBasicMaterial | null = null;
 let flowLinePositionsBuffer: Float32Array | null = null;
@@ -225,7 +229,7 @@ function hashString(value: unknown): number {
 }
 
 function createSeededRandom(seedValue: unknown): () => number {
-  let seed = (Number(seedValue) >>> 0) || 1;
+  let seed = Number(seedValue) >>> 0 || 1;
   return () => {
     seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
     return seed / 4294967296;
@@ -342,7 +346,9 @@ function loadImage(url: string): Promise<HTMLImageElement> {
   });
 }
 
-async function loadImageWithFallback(rawSrc: unknown): Promise<HTMLImageElement> {
+async function loadImageWithFallback(
+  rawSrc: unknown,
+): Promise<HTMLImageElement> {
   const candidates = resolveImageFallbackCandidates(rawSrc);
   if (!candidates.length) {
     throw new Error("Image src is empty");
@@ -624,9 +630,15 @@ function rebuildParticlesFromImage({
   destroyPoints();
 
   const baseCount = clamp(Number(props.particleCount || 6200), 900, 14000);
-  const sizeScale = clamp(Math.pow(Math.max(120, Number(props.size || 280)) / 280, 1.18), 0.28, 1);
+  const sizeScale = clamp(
+    Math.pow(Math.max(120, Number(props.size || 280)) / 280, 1.18),
+    0.28,
+    1,
+  );
   const motionScale = prefersReducedMotion.value ? 0.42 : 1;
-  const count = Math.round(clamp(baseCount * sizeScale * motionScale, 620, 14000));
+  const count = Math.round(
+    clamp(baseCount * sizeScale * motionScale, 620, 14000),
+  );
   streamDefs = buildStreamDefs(
     `${sourceKey}|${count}|${Math.round(Number(props.size || 280))}|${projectionMode}`,
     props.streamCount,
@@ -678,12 +690,20 @@ function rebuildParticlesFromImage({
         const distanceFromRing = Math.abs(radial - 0.38);
         ringMaskWeight = clamp(1 - distanceFromRing / 0.15, 0, 1);
       }
-      ringMaskWeight = clamp(Math.pow(ringMaskWeight, 1 / clamp(maskStrength, 0.3, 3)), 0, 1);
+      ringMaskWeight = clamp(
+        Math.pow(ringMaskWeight, 1 / clamp(maskStrength, 0.3, 3)),
+        0,
+        1,
+      );
 
       const weight = isRing2dProjection
         ? clamp(ringMaskWeight * 1.05 + avatarWeight * 0.24, 0, 1)
         : clamp(avatarWeight * 0.86 + ringMaskWeight * 0.34, 0, 1);
-      const keepChance = clamp(Math.pow(weight, isRing2dProjection ? 0.58 : 0.72) + 0.02, 0, 1);
+      const keepChance = clamp(
+        Math.pow(weight, isRing2dProjection ? 0.58 : 0.72) + 0.02,
+        0,
+        1,
+      );
       if (Math.random() > keepChance) {
         continue;
       }
@@ -758,10 +778,7 @@ function rebuildParticlesFromImage({
         const invLen =
           1 /
           Math.sqrt(
-            Math.max(
-              1e-6,
-              finalX * finalX + finalY * finalY + finalZ * finalZ,
-            ),
+            Math.max(1e-6, finalX * finalX + finalY * finalY + finalZ * finalZ),
           );
         finalX *= invLen;
         finalY *= invLen;
@@ -789,8 +806,11 @@ function rebuildParticlesFromImage({
 
     let exitX = -finalX * randomFloat(0.46, 0.88) + randomFloat(-0.24, 0.24);
     let exitY = -finalY * randomFloat(0.2, 0.56) + randomFloat(-0.42, 0.42);
-    let exitZ = -Math.abs(finalZ) * randomFloat(0.84, 1.14) - randomFloat(0.12, 0.44);
-    const exitInvLen = 1 / Math.sqrt(Math.max(1e-6, exitX * exitX + exitY * exitY + exitZ * exitZ));
+    let exitZ =
+      -Math.abs(finalZ) * randomFloat(0.84, 1.14) - randomFloat(0.12, 0.44);
+    const exitInvLen =
+      1 /
+      Math.sqrt(Math.max(1e-6, exitX * exitX + exitY * exitY + exitZ * exitZ));
     exitX *= exitInvLen;
     exitY *= exitInvLen;
     exitZ *= exitInvLen;
@@ -799,8 +819,15 @@ function rebuildParticlesFromImage({
     let streamId = 0;
     if (streamDefs.length > 1) {
       let bestDistance = Infinity;
-      for (let streamIndex = 0; streamIndex < streamDefs.length; streamIndex += 1) {
-        const distance = shortestAngleDistance(baseAngle, streamDefs[streamIndex].angle);
+      for (
+        let streamIndex = 0;
+        streamIndex < streamDefs.length;
+        streamIndex += 1
+      ) {
+        const distance = shortestAngleDistance(
+          baseAngle,
+          streamDefs[streamIndex].angle,
+        );
         if (distance < bestDistance) {
           bestDistance = distance;
           streamId = streamIndex;
@@ -812,7 +839,10 @@ function rebuildParticlesFromImage({
       }
     }
     const streamRef = streamDefs[streamId] || streamDefs[0];
-    const streamClusterCount = Math.max(2, Number(streamRef?.clusterCount || 3));
+    const streamClusterCount = Math.max(
+      2,
+      Number(streamRef?.clusterCount || 3),
+    );
 
     particleMeta[index] = {
       baseX: finalX,
@@ -849,7 +879,10 @@ function rebuildParticlesFromImage({
     };
   }
 
-  geometry.setAttribute("position", new THREE.BufferAttribute(positionsBuffer, 3));
+  geometry.setAttribute(
+    "position",
+    new THREE.BufferAttribute(positionsBuffer, 3),
+  );
   geometry.setAttribute("color", new THREE.BufferAttribute(colorsBuffer, 3));
   geometry.computeBoundingSphere();
 
@@ -934,7 +967,10 @@ function rebuildParticlesFromImage({
     };
   }
 
-  const flowLinePositionAttr = new THREE.BufferAttribute(flowLinePositionsBuffer, 3);
+  const flowLinePositionAttr = new THREE.BufferAttribute(
+    flowLinePositionsBuffer,
+    3,
+  );
   flowLinePositionAttr.setUsage(THREE.DynamicDrawUsage);
   flowLineGeometry.setAttribute("position", flowLinePositionAttr);
   const flowLineColorAttr = new THREE.BufferAttribute(flowLineColorsBuffer, 3);
@@ -1004,7 +1040,8 @@ function tick(timestamp: number): void {
     const ringTiltBaseZ =
       clamp(Number(props.ringYawDeg || 0), -180, 180) * (Math.PI / 180);
     const ringRadiusScale = clamp(Number(props.ringRadius || 1), 0.32, 2.8);
-    const ringBandScale = clamp(Number(props.ringBand || 0.12), 0.02, 0.5) / 0.12;
+    const ringBandScale =
+      clamp(Number(props.ringBand || 0.12), 0.02, 0.5) / 0.12;
 
     for (let index = 0; index < particleMeta.length; index += 1) {
       const meta = particleMeta[index];
@@ -1017,8 +1054,8 @@ function tick(timestamp: number): void {
       const baseX = meta.baseX;
       const baseY = meta.baseY;
       const baseZ = meta.baseZ;
-      const stream =
-        streamDefs[meta.streamId] || streamDefs[0] || {
+      const stream = streamDefs[meta.streamId] ||
+        streamDefs[0] || {
           angle: 0,
           dir: 1,
           tilt: 0,
@@ -1048,28 +1085,41 @@ function tick(timestamp: number): void {
       if (flowLevel < 0.14) {
         // Assemble mode: Saturn-like ring lanes that shift between clumps and a thin line.
         meta.avatarAngle +=
-          dt * (0.24 + speed * 0.2) * meta.avatarSpeed * (0.74 + meta.flow * 0.44);
+          dt *
+          (0.24 + speed * 0.2) *
+          meta.avatarSpeed *
+          (0.74 + meta.flow * 0.44);
         if (meta.avatarAngle > TAU) {
           meta.avatarAngle -= TAU;
         }
         const streamSpin =
-          nowS * (0.14 + speed * 0.2) * stream.dir * (0.84 + stream.twist * 0.34);
-        const pulse = 0.5 + 0.5 * Math.sin(nowS * (0.22 + stream.twist * 0.07) + stream.phase);
+          nowS *
+          (0.14 + speed * 0.2) *
+          stream.dir *
+          (0.84 + stream.twist * 0.34);
+        const pulse =
+          0.5 +
+          0.5 * Math.sin(nowS * (0.22 + stream.twist * 0.07) + stream.phase);
         const lineSpread = smoothstep01(pulse);
         const clusterSpread = 1 - lineSpread;
 
         const lineAngle = streamSpin + meta.avatarAngle + stream.angle * 0.2;
-        const clusterStride = TAU / Math.max(2, Number(stream.clusterCount || 3));
-        const clusterCenter = streamSpin + stream.angle + clusterStride * (meta.clusterSlot || 0);
+        const clusterStride =
+          TAU / Math.max(2, Number(stream.clusterCount || 3));
+        const clusterCenter =
+          streamSpin + stream.angle + clusterStride * (meta.clusterSlot || 0);
         const clusterDrift =
-          Math.sin(nowS * (0.42 + meta.avatarTiltDrift * 0.8) + meta.phase) * 0.36;
+          Math.sin(nowS * (0.42 + meta.avatarTiltDrift * 0.8) + meta.phase) *
+          0.36;
         const clusterAngle =
           clusterCenter +
           clusterDrift +
           Math.sin(nowS * (0.92 + meta.avatarSpeed * 0.34) + meta.phase) *
             (meta.clusterJitter || 0.1);
         const clusterMix = smoothstep01(
-          clusterSpread * (meta.clusterStickiness || 1) * (0.72 + particleMaskBias * 0.56),
+          clusterSpread *
+            (meta.clusterStickiness || 1) *
+            (0.72 + particleMaskBias * 0.56),
         );
         const laneAngle = lerp(lineAngle, clusterAngle, clusterMix);
 
@@ -1083,23 +1133,31 @@ function tick(timestamp: number): void {
           ringBandScale;
         const ringRadius =
           (stream.ringRadius || 1.04) * ringRadiusScale +
-          Math.sin(nowS * (0.76 + meta.avatarSpeed * 0.16) + meta.phase) * radialSpread;
+          Math.sin(nowS * (0.76 + meta.avatarSpeed * 0.16) + meta.phase) *
+            radialSpread;
         const ringThickness =
-          Math.sin(nowS * (0.58 + meta.avatarTiltDrift) + meta.phase * 1.2) * verticalSpread;
+          Math.sin(nowS * (0.58 + meta.avatarTiltDrift) + meta.phase * 1.2) *
+          verticalSpread;
 
         // Build a circle in XY, then tilt it to get Saturn-like ring perspective.
         const circleX = Math.cos(laneAngle) * ringRadius * (stream.xScale || 1);
-        const circleY = Math.sin(laneAngle) * ringRadius * (stream.yScale || 1) + ringThickness;
+        const circleY =
+          Math.sin(laneAngle) * ringRadius * (stream.yScale || 1) +
+          ringThickness;
         const circleZ = 0;
 
         const tiltX =
           ringTiltBaseX +
           ((stream.ringTiltX || 0.74) - 0.74) +
-          Math.sin(nowS * (0.17 + meta.avatarTiltDrift * 0.36) + stream.phase) * 0.08;
+          Math.sin(nowS * (0.17 + meta.avatarTiltDrift * 0.36) + stream.phase) *
+            0.08;
         const tiltZ =
           ringTiltBaseZ +
           (stream.ringTiltZ || 0) * 0.4 +
-          Math.sin(nowS * (0.14 + meta.avatarTiltDrift * 0.24) + stream.phase * 0.6) * 0.07;
+          Math.sin(
+            nowS * (0.14 + meta.avatarTiltDrift * 0.24) + stream.phase * 0.6,
+          ) *
+            0.07;
 
         const cosX = Math.cos(tiltX);
         const sinX = Math.sin(tiltX);
@@ -1125,23 +1183,32 @@ function tick(timestamp: number): void {
       } else {
         // Cloud mode: dense rotating plume that sits in front of the avatar.
         const cloudTime = nowS * (0.44 + speed * 0.54) + meta.phase;
-        const clusterStride = TAU / Math.max(2, Number(stream.clusterCount || 3));
+        const clusterStride =
+          TAU / Math.max(2, Number(stream.clusterCount || 3));
         const clusterAnchor =
           stream.angle +
           ringAngleOffset +
           clusterStride * (meta.clusterSlot || 0) +
-          Math.sin(cloudTime * (0.2 + meta.avatarTiltDrift * 0.22) + stream.phase) * 0.22;
+          Math.sin(
+            cloudTime * (0.2 + meta.avatarTiltDrift * 0.22) + stream.phase,
+          ) *
+            0.22;
         const spinAngle =
           clusterAnchor +
           stream.dir *
             (cloudTime * (0.82 + stream.twist * 0.28) + meta.lanePhase * 0.32);
 
         const cloudPulse =
-          0.5 + 0.5 * Math.sin(nowS * (0.58 + meta.cycleRate * 0.74) + meta.phase);
+          0.5 +
+          0.5 * Math.sin(nowS * (0.58 + meta.cycleRate * 0.74) + meta.phase);
         const clumpPulse =
           0.5 +
           0.5 *
-            Math.sin(nowS * (0.4 + meta.avatarSpeed * 0.26) + stream.phase + meta.lanePhase);
+            Math.sin(
+              nowS * (0.4 + meta.avatarSpeed * 0.26) +
+                stream.phase +
+                meta.lanePhase,
+            );
         const maskBias = 0.44 + particleMaskBias * 0.62;
         const radiusBase =
           (0.14 + maskBias * 0.36 + meta.flow * 0.12) *
@@ -1149,9 +1216,15 @@ function tick(timestamp: number): void {
         const radiusPulse = lerp(0.72, 1.18, cloudPulse);
         const clumpRadius = lerp(0.86, 1.16, clumpPulse);
         const laneNoise =
-          Math.sin(cloudTime * (1.22 + meta.spin * 0.16) + meta.lanePhase) * 0.075 +
-          Math.cos(cloudTime * (0.9 + meta.flow * 0.2) + meta.avatarAngle) * 0.055;
-        const cloudRadius = clamp(radiusBase * radiusPulse * clumpRadius + laneNoise, 0.06, 0.78);
+          Math.sin(cloudTime * (1.22 + meta.spin * 0.16) + meta.lanePhase) *
+            0.075 +
+          Math.cos(cloudTime * (0.9 + meta.flow * 0.2) + meta.avatarAngle) *
+            0.055;
+        const cloudRadius = clamp(
+          radiusBase * radiusPulse * clumpRadius + laneNoise,
+          0.06,
+          0.78,
+        );
 
         const depthSwirl =
           Math.sin(spinAngle * 0.8 + cloudTime * 0.9) * 0.17 +
@@ -1163,10 +1236,13 @@ function tick(timestamp: number): void {
           cloudRadius *
           (stream.yScale || 1) *
           0.88;
-        flowZ = depthSwirl * (0.56 + maskBias * 0.26) + (stream.zBias || 0) * 0.08;
+        flowZ =
+          depthSwirl * (0.56 + maskBias * 0.26) + (stream.zBias || 0) * 0.08;
 
         const inhale =
-          0.5 + 0.5 * Math.sin(nowS * (0.48 + meta.avatarTiltDrift * 0.58) + meta.phase);
+          0.5 +
+          0.5 *
+            Math.sin(nowS * (0.48 + meta.avatarTiltDrift * 0.58) + meta.phase);
         const inhaleScale = lerp(0.7, 1.14, inhale);
         flowX *= inhaleScale;
         flowY *= inhaleScale;
@@ -1194,7 +1270,8 @@ function tick(timestamp: number): void {
         (0.0008 + avatarOrbitLevel * 0.0012 + flowLevel * 0.0028);
       if (normalizeToSphere) {
         const invLen = 1 / Math.sqrt(Math.max(1e-6, x * x + y * y + z * z));
-        const finalRadius = lerp(shellRadius, targetRadius, motionMix) + radiusPulse;
+        const finalRadius =
+          lerp(shellRadius, targetRadius, motionMix) + radiusPulse;
         x *= invLen * finalRadius;
         y *= invLen * finalRadius;
         z *= invLen * finalRadius;
@@ -1275,7 +1352,8 @@ function tick(timestamp: number): void {
 
         const pulse =
           0.66 +
-          0.58 * Math.sin(nowS * (1.24 + lineMeta.pulse * 0.74) + lineMeta.phase);
+          0.58 *
+            Math.sin(nowS * (1.24 + lineMeta.pulse * 0.74) + lineMeta.phase);
         const trailLength =
           lineMeta.trail *
           (0.18 + speed * 0.86) *
@@ -1330,7 +1408,9 @@ function tick(timestamp: number): void {
       sphereGroup.rotation.y += dt * rotationSpeed * speed;
       sphereGroup.rotation.x =
         Math.sin(timestamp * 0.00024) *
-        (isRing2dProjection ? 0.003 + flowLevel * 0.012 : 0.012 + flowLevel * 0.038);
+        (isRing2dProjection
+          ? 0.003 + flowLevel * 0.012
+          : 0.012 + flowLevel * 0.038);
       sphereGroup.rotation.z = isRing2dProjection
         ? Math.sin(timestamp * 0.00019) * (0.002 + flowLevel * 0.008)
         : 0;
@@ -1446,7 +1526,8 @@ function attachVisibilityHandling(): void {
     (entries) => {
       const entry = entries?.[0];
       if (!entry) return;
-      isInViewport.value = entry.isIntersecting && entry.intersectionRatio > 0.02;
+      isInViewport.value =
+        entry.isIntersecting && entry.intersectionRatio > 0.02;
     },
     { threshold: [0, 0.02, 0.12] },
   );
@@ -1562,8 +1643,16 @@ onBeforeUnmount(() => {
   border-radius: 999px;
   overflow: hidden;
   background:
-    radial-gradient(circle at 45% 32%, rgba(196, 220, 255, 0.14), transparent 44%),
-    radial-gradient(circle at 62% 72%, rgba(92, 162, 255, 0.2), transparent 52%),
+    radial-gradient(
+      circle at 45% 32%,
+      rgba(196, 220, 255, 0.14),
+      transparent 44%
+    ),
+    radial-gradient(
+      circle at 62% 72%,
+      rgba(92, 162, 255, 0.2),
+      transparent 52%
+    ),
     linear-gradient(180deg, rgba(7, 15, 24, 0.95), rgba(5, 11, 18, 0.92));
   border: 1px solid color-mix(in oklab, var(--border), white 10%);
   box-shadow:

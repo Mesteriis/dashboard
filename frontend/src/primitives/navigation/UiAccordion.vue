@@ -6,7 +6,11 @@
       class="ui-accordion__item"
       :class="{ 'is-open': isOpen(item.id) }"
     >
-      <button type="button" class="ui-accordion__header" @click="toggle(item.id)">
+      <button
+        type="button"
+        class="ui-accordion__header"
+        @click="toggle(item.id)"
+      >
         <span>{{ item.title }}</span>
         <span>{{ isOpen(item.id) ? "−" : "+" }}</span>
       </button>

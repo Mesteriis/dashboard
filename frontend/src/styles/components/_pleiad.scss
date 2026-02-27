@@ -31,8 +31,18 @@
       var(--pleiad-color-003),
       transparent 38%
     ),
-    radial-gradient(circle at 82% 84%, var(--pleiad-color-004), transparent 42%),
-    linear-gradient(168deg, var(--pleiad-color-005) 0%, var(--pleiad-color-006) 40%, var(--pleiad-color-007) 74%, var(--pleiad-color-008) 100%);
+    radial-gradient(
+      circle at 82% 84%,
+      var(--pleiad-color-004),
+      transparent 42%
+    ),
+    linear-gradient(
+      168deg,
+      var(--pleiad-color-005) 0%,
+      var(--pleiad-color-006) 40%,
+      var(--pleiad-color-007) 74%,
+      var(--pleiad-color-008) 100%
+    );
 }
 
 .pleiad-root.pleiad-root--screensaver {

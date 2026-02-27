@@ -92,8 +92,9 @@ export function useSidebarParticles(options: UseSidebarParticlesOptions): {
 
     resetParticlesContainer(containerId);
     await window.particlesJS(containerId, tunedConfig);
-    (container as HTMLElement & { dataset: DOMStringMap }).dataset.particlesReady =
-      "1";
+    (
+      container as HTMLElement & { dataset: DOMStringMap }
+    ).dataset.particlesReady = "1";
   }
 
   onMounted(() => {
@@ -127,4 +128,3 @@ export function useSidebarParticles(options: UseSidebarParticlesOptions): {
     resetSidebarParticles: () => resetParticlesContainer(containerId),
   };
 }
-

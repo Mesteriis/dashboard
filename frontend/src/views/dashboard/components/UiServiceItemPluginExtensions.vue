@@ -11,7 +11,9 @@
     <div class="item-plugin-elements">
       <template v-for="element in block.elements" :key="element.id">
         <p v-if="element.kind === 'text'" class="item-plugin-text">
-          <span v-if="element.label" class="item-plugin-label">{{ element.label }}</span>
+          <span v-if="element.label" class="item-plugin-label">{{
+            element.label
+          }}</span>
           <span class="item-plugin-value">{{ element.value }}</span>
         </p>
 
@@ -29,7 +31,9 @@
             <button
               class="ghost"
               type="button"
-              @click.stop="emit('open-link', element.url, element.open || 'new_tab')"
+              @click.stop="
+                emit('open-link', element.url, element.open || 'new_tab')
+              "
             >
               Открыть
             </button>

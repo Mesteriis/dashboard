@@ -20,15 +20,16 @@
         <h5>Heading H5</h5>
         <h6>Heading H6</h6>
         <p>
-          Paragraph with <strong>strong</strong>, <em>em</em>, <small>small</small>,
-          <mark>mark</mark>, <u>underline</u>, <s>strikethrough</s>, <del>del</del> and
-          <ins>ins</ins>.
+          Paragraph with <strong>strong</strong>, <em>em</em>,
+          <small>small</small>, <mark>mark</mark>, <u>underline</u>,
+          <s>strikethrough</s>, <del>del</del> and <ins>ins</ins>.
         </p>
         <p>
           <abbr title="Application Programming Interface">API</abbr> works with
-          <dfn>domain terms</dfn>, <q cite="https://developer.mozilla.org/">inline quote</q>,
-          <kbd>Ctrl</kbd> + <kbd>K</kbd>, <code>inline code</code>, <var>n</var>,
-          <samp>OK</samp>, H<sub>2</sub>O, x<sup>2</sup>.
+          <dfn>domain terms</dfn>,
+          <q cite="https://developer.mozilla.org/">inline quote</q>,
+          <kbd>Ctrl</kbd> + <kbd>K</kbd>, <code>inline code</code>,
+          <var>n</var>, <samp>OK</samp>, H<sub>2</sub>O, x<sup>2</sup>.
         </p>
         <blockquote cite="https://example.com">
           Build composable primitives first, then compose products from them.
@@ -36,7 +37,9 @@
         </blockquote>
         <details>
           <summary>Details and summary</summary>
-          <p>Disclosure widgets are fully styled inside the same UI namespace.</p>
+          <p>
+            Disclosure widgets are fully styled inside the same UI namespace.
+          </p>
         </details>
         <hr />
       </UiShowcaseNode>
@@ -74,7 +77,9 @@
         </dl>
         <pre><code>&lt;section class="panel"&gt;ui content&lt;/section&gt;</code></pre>
         <table>
-          <caption>Native HTML Table</caption>
+          <caption>
+            Native HTML Table
+          </caption>
           <thead>
             <tr>
               <th scope="col">Service</th>
@@ -139,7 +144,9 @@
           srcdoc="<article><h4>Iframe content</h4><p>Scoped embed with own DOM.</p></article>"
         ></iframe>
         <progress :value="68" max="100">68%</progress>
-        <meter min="0" max="100" low="40" high="75" optimum="90" :value="84">84</meter>
+        <meter min="0" max="100" low="40" high="75" optimum="90" :value="84">
+          84
+        </meter>
       </UiShowcaseNode>
       <UiKitHtmlFormCard v-show="isNodeVisible('ui-node-html-form-tags')" />
     </div>

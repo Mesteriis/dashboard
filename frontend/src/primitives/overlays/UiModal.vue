@@ -4,7 +4,9 @@
       <section class="ui-modal" role="dialog" aria-modal="true" @click.stop>
         <header class="ui-modal__head">
           <h3>{{ title }}</h3>
-          <button type="button" class="ui-modal__close" @click="emit('close')">×</button>
+          <button type="button" class="ui-modal__close" @click="emit('close')">
+            ×
+          </button>
         </header>
         <div class="ui-modal__body">
           <slot />

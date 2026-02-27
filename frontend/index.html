@@ -19,7 +19,11 @@
           const normalized = String(value || "")
             .trim()
             .toLowerCase();
-          if (normalized === "dark" || normalized === "light" || normalized === "system") {
+          if (
+            normalized === "dark" ||
+            normalized === "light" ||
+            normalized === "system"
+          ) {
             return normalized;
           }
           return "system";
@@ -33,16 +37,21 @@
         }
 
         const prefersDark = window.matchMedia?.(prefersDarkQuery).matches;
-        const appliedTheme = mode === "system" ? (prefersDark ? "dark" : "light") : mode;
+        const appliedTheme =
+          mode === "system" ? (prefersDark ? "dark" : "light") : mode;
         root.dataset.themeMode = mode;
         root.dataset.theme = appliedTheme;
         root.style.setProperty("--theme-color-scheme", appliedTheme);
 
-        const colorSchemeMeta = document.querySelector('meta[name="color-scheme"]');
+        const colorSchemeMeta = document.querySelector(
+          'meta[name="color-scheme"]',
+        );
         if (colorSchemeMeta) {
           colorSchemeMeta.setAttribute("content", appliedTheme);
         }
-        const themeColorMeta = document.querySelector('meta[name="theme-color"]');
+        const themeColorMeta = document.querySelector(
+          'meta[name="theme-color"]',
+        );
         if (themeColorMeta) {
           themeColorMeta.setAttribute(
             "content",

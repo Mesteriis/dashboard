@@ -84,10 +84,15 @@ export function createDashboardUiStyleSection(ctx: any) {
   }
 
   function toggleSidebarView(): void {
-    if (ctx.sidebarView.value !== "detailed" && ctx.sidebarView.value !== "hidden") {
+    if (
+      ctx.sidebarView.value !== "detailed" &&
+      ctx.sidebarView.value !== "hidden"
+    ) {
       ctx.sidebarView.value = "detailed";
     }
-    const currentIndex = ctx.SIDEBAR_VIEW_SEQUENCE.indexOf(ctx.sidebarView.value);
+    const currentIndex = ctx.SIDEBAR_VIEW_SEQUENCE.indexOf(
+      ctx.sidebarView.value,
+    );
     const safeIndex = currentIndex >= 0 ? currentIndex : 0;
     const nextIndex = (safeIndex + 1) % ctx.SIDEBAR_VIEW_SEQUENCE.length;
     ctx.sidebarView.value = ctx.SIDEBAR_VIEW_SEQUENCE[nextIndex];

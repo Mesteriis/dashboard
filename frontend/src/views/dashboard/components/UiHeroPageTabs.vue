@@ -189,7 +189,9 @@ function resolveTabMetrics(buttons: HTMLElement[]): TabMetrics | null {
   const expandedGap = 10;
   const collapsedPadding = Math.max(0, (collapsedWidth - iconWidth) / 2);
 
-  const logoTile = host.querySelector<HTMLElement>(":scope > .hero-logo-square");
+  const logoTile = host.querySelector<HTMLElement>(
+    ":scope > .hero-logo-square",
+  );
   const logoWidth = logoTile ? logoTile.getBoundingClientRect().width : 0;
   const overlapCompensation = Math.max(0, buttons.length - 1);
   const availableWidth = Math.max(
@@ -277,7 +279,8 @@ function applyTabFrame(
     descriptor.label.style.opacity = `${(0.98 * tabProgress).toFixed(4)}`;
     descriptor.label.style.marginLeft = `${(4 * tabProgress).toFixed(3)}px`;
     descriptor.label.style.transform = `translateX(${(
-      -10 * (1 - tabProgress)
+      -10 *
+      (1 - tabProgress)
     ).toFixed(3)}px)`;
   }
 }
@@ -286,10 +289,12 @@ function easeInOutQuart(progress: number): number {
   if (progress < 0.5) {
     return 8 * progress ** 4;
   }
-  return 1 - ((-2 * progress + 2) ** 4) / 2;
+  return 1 - (-2 * progress + 2) ** 4 / 2;
 }
 
-function animateTabsLayout({ instant = false }: { instant?: boolean } = {}): void {
+function animateTabsLayout({
+  instant = false,
+}: { instant?: boolean } = {}): void {
   if (homeOnly.value) return;
 
   const buttons = getTabButtons();
@@ -332,7 +337,10 @@ function animateTabsLayout({ instant = false }: { instant?: boolean } = {}): voi
   }
 
   stopTabsAnimation();
-  const durationMs = Math.max(560, Math.min(1800, metrics.slideDuration * 1.15));
+  const durationMs = Math.max(
+    560,
+    Math.min(1800, metrics.slideDuration * 1.15),
+  );
   const startedAt = globalThis.performance.now();
 
   const step = (timestamp: number) => {

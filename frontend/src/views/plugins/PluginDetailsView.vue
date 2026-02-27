@@ -29,7 +29,11 @@
     </template>
 
     <template v-slot:[SLOT_APP_HEADER_TABS]>
-      <nav class="hero-page-tabs" role="tablist" aria-label="Plugin details tabs">
+      <nav
+        class="hero-page-tabs"
+        role="tablist"
+        aria-label="Plugin details tabs"
+      >
         <button
           id="plugin-details-tab"
           class="hero-page-tab-btn active"
@@ -54,18 +58,15 @@
         aria-labelledby="plugin-details-tab"
         class="plugin-details-canvas"
       >
-        <section
-          v-if="loading"
-          class="plugin-page-status panel"
-        >
+        <section v-if="loading" class="plugin-page-status panel">
           <h2>Loading plugin</h2>
-          <p>Fetching manifest for <code>{{ pluginId }}</code>...</p>
+          <p>
+            Fetching manifest for <code>{{ pluginId }}</code
+            >...
+          </p>
         </section>
 
-        <section
-          v-else-if="errorState"
-          class="plugin-page-status panel"
-        >
+        <section v-else-if="errorState" class="plugin-page-status panel">
           <h2>{{ errorState.title }}</h2>
           <p>{{ errorState.message }}</p>
           <p v-if="errorState.detail" class="plugin-page-error-detail">

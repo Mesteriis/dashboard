@@ -1,4 +1,7 @@
 {
   "extends": "./tsconfig.json",
-  "include": ["src/features/services/**/*.ts", "src/features/services/**/*.d.ts"]
+  "include": [
+    "src/features/services/**/*.ts",
+    "src/features/services/**/*.d.ts"
+  ]
 }

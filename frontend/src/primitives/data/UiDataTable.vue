@@ -31,7 +31,12 @@
         </template>
       </div>
 
-      <button v-if="showExport" type="button" class="ui-table__export" @click="exportCsv">
+      <button
+        v-if="showExport"
+        type="button"
+        class="ui-table__export"
+        @click="exportCsv"
+      >
         Export CSV
       </button>
     </header>
@@ -48,7 +53,7 @@
             >
               <span>{{ column.label }}</span>
               <small v-if="sort.key === column.key">
-                {{ sort.direction === 'asc' ? '▲' : '▼' }}
+                {{ sort.direction === "asc" ? "▲" : "▼" }}
               </small>
             </th>
             <th v-if="actions.length">Actions</th>
@@ -57,7 +62,10 @@
 
         <tbody>
           <tr v-for="row in pagedRows" :key="resolveRowKey(row)">
-            <td v-for="column in columns" :key="`${resolveRowKey(row)}-${column.key}`">
+            <td
+              v-for="column in columns"
+              :key="`${resolveRowKey(row)}-${column.key}`"
+            >
               {{ formatCell(row, column.key) }}
             </td>
             <td v-if="actions.length" class="ui-table__actions">
@@ -73,7 +81,10 @@
           </tr>
 
           <tr v-if="!pagedRows.length">
-            <td :colspan="columns.length + (actions.length ? 1 : 0)" class="ui-table__empty">
+            <td
+              :colspan="columns.length + (actions.length ? 1 : 0)"
+              class="ui-table__empty"
+            >
               Нет данных
             </td>
           </tr>
@@ -82,9 +93,15 @@
     </div>
 
     <footer v-if="showPagination" class="ui-table__pagination">
-      <button type="button" :disabled="page <= 1" @click="page = page - 1">Назад</button>
+      <button type="button" :disabled="page <= 1" @click="page = page - 1">
+        Назад
+      </button>
       <span>Страница {{ page }} / {{ totalPages }}</span>
-      <button type="button" :disabled="page >= totalPages" @click="page = page + 1">
+      <button
+        type="button"
+        :disabled="page >= totalPages"
+        @click="page = page + 1"
+      >
         Вперёд
       </button>
     </footer>
@@ -143,7 +160,9 @@ const sort = reactive<{ key: string; direction: "asc" | "desc" }>({
 const filters = reactive<Record<string, string>>({});
 
 const actions = computed(() => props.actions || []);
-const filterColumns = computed(() => props.columns.filter((column) => column.filterable));
+const filterColumns = computed(() =>
+  props.columns.filter((column) => column.filterable),
+);
 
 const preparedRows = computed(() => {
   const normalizedSearch = search.value.trim().toLowerCase();
@@ -179,7 +198,9 @@ const preparedRows = computed(() => {
   return filtered;
 });
 
-const totalPages = computed(() => Math.max(1, Math.ceil(preparedRows.value.length / props.pageSize)));
+const totalPages = computed(() =>
+  Math.max(1, Math.ceil(preparedRows.value.length / props.pageSize)),
+);
 
 const pagedRows = computed(() => {
   if (!props.showPagination) return preparedRows.value;
@@ -233,7 +254,9 @@ function columnFilterValues(key: string): string[] {
     if (raw == null || raw === "") continue;
     values.add(String(raw));
   }
-  return Array.from(values).sort((left, right) => left.localeCompare(right, "ru"));
+  return Array.from(values).sort((left, right) =>
+    left.localeCompare(right, "ru"),
+  );
 }
 
 function toggleSort(column: TableColumn): void {
@@ -249,7 +272,11 @@ function toggleSort(column: TableColumn): void {
 function exportCsv(): void {
   const header = props.columns.map((column) => column.label).join(",");
   const body = preparedRows.value
-    .map((row) => props.columns.map((column) => escapeCsv(formatCell(row, column.key))).join(","))
+    .map((row) =>
+      props.columns
+        .map((column) => escapeCsv(formatCell(row, column.key)))
+        .join(","),
+    )
     .join("\n");
   const csv = `${header}\n${body}`;
   emit("export", csv);

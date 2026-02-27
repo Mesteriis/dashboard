@@ -63,7 +63,8 @@ const visibleNodes = computed<VisibleNode[]>(() => {
 
   function visit(nodes: TreeNode[], depth: number): void {
     for (const node of nodes) {
-      const hasChildren = Array.isArray(node.children) && node.children.length > 0;
+      const hasChildren =
+        Array.isArray(node.children) && node.children.length > 0;
       result.push({
         id: node.id,
         label: node.label,

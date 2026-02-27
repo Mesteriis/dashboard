@@ -311,7 +311,11 @@
 .widget-card {
   border: 1px solid var(--items-card-health-widgets-entry-color-051);
   border-radius: var(--ui-radius);
-  background: linear-gradient(160deg, var(--items-card-health-widgets-entry-color-052), var(--surface));
+  background: linear-gradient(
+    160deg,
+    var(--items-card-health-widgets-entry-color-052),
+    var(--surface)
+  );
   padding: 12px;
   display: grid;
   gap: 10px;

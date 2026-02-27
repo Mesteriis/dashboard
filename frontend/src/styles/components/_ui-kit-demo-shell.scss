@@ -1,7 +1,11 @@
 .ui-toolbar {
   border: 1px solid var(--ui-kit-demo-shell-color-001);
   border-radius: var(--ui-radius);
-  background: linear-gradient(158deg, var(--ui-kit-demo-shell-color-002), var(--ui-kit-demo-shell-color-003));
+  background: linear-gradient(
+    158deg,
+    var(--ui-kit-demo-shell-color-002),
+    var(--ui-kit-demo-shell-color-003)
+  );
   padding: 10px 12px;
   display: grid;
   grid-template-columns: auto 1fr auto;
@@ -28,7 +32,11 @@
   width: min(620px, 100%);
   border: 1px solid var(--ui-kit-demo-shell-color-005);
   border-radius: var(--ui-radius);
-  background: linear-gradient(160deg, var(--ui-kit-demo-shell-color-006), var(--ui-kit-demo-shell-color-007));
+  background: linear-gradient(
+    160deg,
+    var(--ui-kit-demo-shell-color-006),
+    var(--ui-kit-demo-shell-color-007)
+  );
   box-shadow: 0 24px 54px var(--ui-kit-demo-shell-color-008);
   display: grid;
   gap: 10px;
