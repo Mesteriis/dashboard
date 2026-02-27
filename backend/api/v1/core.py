@@ -33,7 +33,7 @@ from core.security import (
     require_state,
     require_widgets_registry,
 )
-from depens.v1.core_deps import ConfigServiceDep, ContainerDep
+from depends.v1.core_deps import ConfigServiceDep, ContainerDep
 from fastapi import APIRouter, HTTPException, Query, Request, Response
 from fastapi.responses import RedirectResponse, StreamingResponse
 

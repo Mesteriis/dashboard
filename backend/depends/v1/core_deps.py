@@ -7,7 +7,7 @@ from core.bus import BrokerActionRPC
 from core.config import ConfigService
 from core.gateway import ActionGateway
 from core.storage.repositories import ActionRepository
-from depens.v1.deps import get_container
+from depends.v1.deps import get_container
 from fastapi import Depends
 
 ContainerDep = Annotated[AppContainer, Depends(get_container)]

@@ -14,7 +14,7 @@ from core.security import (
     require_actions_registry,
     require_actions_validate,
 )
-from depens.v1.core_deps import ActionRepositoryDep, ActionRpcClientDep, GatewayDep
+from depends.v1.core_deps import ActionRepositoryDep, ActionRpcClientDep, GatewayDep
 from fastapi import APIRouter, Query
 
 actions_router = APIRouter(tags=["actions"])
