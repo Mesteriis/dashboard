@@ -7,6 +7,7 @@
     sidebar-bottom-accordion-label="Индикаторы"
     :sidebar-bottom-visible="isSidebarDetailed"
     canvas-aria-label="Dashboard content"
+    @logout="handleLogout"
   >
     <template v-slot:[SLOT_APP_SIDEBAR_TOP]>
       <UiSidebarHeaderTabsFacade />
@@ -122,4 +123,10 @@ useSidebarParticles({
   baseConfig: SIDEBAR_PARTICLES_CONFIG,
   isSidebarHidden,
 });
+
+function handleLogout(): void {
+  // TODO: Implement logout logic
+  // eslint-disable-next-line no-console
+  console.log("Logout requested");
+}
 </script>
