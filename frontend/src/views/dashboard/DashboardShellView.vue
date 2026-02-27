@@ -41,16 +41,8 @@
       <UiServicesHeroPanelFacade segment="panel.footer" />
     </template>
 
-    <template v-slot:[SLOT_PAGE_CANVAS_INDICATORS]>
-      <UiDashboardIndicatorsFacade v-if="isSidebarDetailed" />
-    </template>
-
     <template v-slot:[SLOT_PAGE_CANVAS_MAIN]>
       <UiDashboardMainViewFacade />
-    </template>
-
-    <template v-slot:[SLOT_PAGE_CANVAS_PLUGINS]>
-      <UiDashboardPluginsFacade v-if="hasPluginExtensions" />
     </template>
 
     <template v-slot:[SLOT_APP_MODALS]>
@@ -68,7 +60,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, defineAsyncComponent } from "vue";
+import { defineAsyncComponent } from "vue";
 import UiDashboardMainViewFacade from "@/views/dashboard/facades/UiDashboardMainViewFacade.vue";
 import UiServicesHeroPanelFacade from "@/views/dashboard/facades/UiServicesHeroPanelFacade.vue";
 import UiSidebarHeaderTabsFacade from "@/views/dashboard/facades/UiSidebarHeaderTabsFacade.vue";
@@ -101,12 +93,6 @@ const DashboardSettingsModal = defineAsyncComponent(
 const CommandPaletteModal = defineAsyncComponent(
   () => import("@/views/dashboard/modals/CommandPaletteModal.vue"),
 );
-const UiDashboardIndicatorsFacade = defineAsyncComponent(
-  () => import("@/views/dashboard/facades/UiDashboardIndicatorsFacade.vue"),
-);
-const UiDashboardPluginsFacade = defineAsyncComponent(
-  () => import("@/views/dashboard/facades/UiDashboardPluginsFacade.vue"),
-);
 
 const SLOT_APP_SIDEBAR_TOP = "app.sidebar.top";
 const SLOT_APP_SIDEBAR_MIDDLE = "app.sidebar.middle";
@@ -116,9 +102,7 @@ const SLOT_APP_HEADER_PANEL_DRAWER = "app.header.panel.drawer";
 const SLOT_APP_HEADER_PANEL_ACTIONS = "app.header.panel.actions";
 const SLOT_APP_HEADER_PANEL_MENU = "app.header.panel.menu";
 const SLOT_APP_HEADER_PANEL_FOOTER = "app.header.panel.footer";
-const SLOT_PAGE_CANVAS_INDICATORS = "page.canvas.indicators";
 const SLOT_PAGE_CANVAS_MAIN = "page.canvas.main";
-const SLOT_PAGE_CANVAS_PLUGINS = "page.canvas.plugins";
 const SLOT_APP_MODALS = "app.modals";
 const SLOT_APP_COMMAND_PALETTE = "app.command_palette";
 const dashboard = useUiStore();
@@ -133,11 +117,6 @@ const {
   itemEditor,
   settingsPanel,
 } = dashboard;
-
-const hasPluginExtensions = computed(() => {
-  // TODO: Check if any plugins have extensions to render
-  return false;
-});
 
 useSidebarParticles({
   containerId: SIDEBAR_PARTICLES_ID,
