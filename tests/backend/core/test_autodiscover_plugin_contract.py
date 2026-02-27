@@ -6,7 +6,6 @@ from pathlib import Path
 
 import pytest
 
-
 pytestmark = pytest.mark.skip(
     reason="features.autodiscover module not yet implemented",
 )
