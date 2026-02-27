@@ -148,6 +148,29 @@
         :aria-label="contentLabel"
         :style="layoutCanvasStyle"
       >
+        <!-- Слот для индикаторов (показывается только если используется) -->
+        <section
+          v-if="$slots.indicators"
+          :id="layoutCanvasIndicatorsId"
+          class="blank-canvas-indicators"
+        >
+          <slot name="indicators" />
+        </section>
+
+        <!-- Основной контент -->
+        <div class="blank-canvas-main">
+          <slot name="canvas-main" />
+        </div>
+
+        <!-- Слот для плагинов (показывается только если используется) -->
+        <section
+          v-if="$slots.plugins"
+          :id="layoutCanvasPluginsId"
+          class="blank-canvas-plugins"
+        >
+          <slot name="plugins" />
+        </section>
+
         <div class="blank-canvas-bg" aria-hidden="true" />
       </section>
     </div>
@@ -180,6 +203,8 @@ const layoutMainId = `${instanceId}-main`;
 const layoutHeaderId = `${instanceId}-header`;
 const layoutHeaderTabsId = `${instanceId}-header-tabs`;
 const layoutCanvasId = `${instanceId}-canvas`;
+const layoutCanvasIndicatorsId = `${instanceId}-canvas-indicators`;
+const layoutCanvasPluginsId = `${instanceId}-canvas-plugins`;
 
 // ── Props & Emits ─────────────────────────────────────────────────────────────
 
@@ -227,6 +252,9 @@ const emit = defineEmits<{
 defineSlots<{
   "sidebar-mid": [];
   drawer: [];
+  indicators: [];
+  "canvas-main": [];
+  plugins: [];
 }>();
 
 // ── Store & Route ─────────────────────────────────────────────────────────────
@@ -568,8 +596,37 @@ if (import.meta.env.DEV) {
   z-index: 0;
 }
 
+/* ── Слоты для индикаторов и плагинов ───────────────────────────────── */
+
+.blank-canvas-indicators {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-bottom: 8px;
+}
+
+.blank-canvas-main {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  align-content: start;
+  gap: 10px;
+}
+
+.blank-canvas-plugins {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  gap: 10px;
+  padding-top: 10px;
+  margin-top: auto;
+}
+
 .blank-canvas-top,
-.blank-canvas-main,
 .blank-canvas-bottom {
   min-width: 0;
   min-height: 0;
