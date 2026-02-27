@@ -9,6 +9,11 @@ __pycache__/
 .coverage
 .coverage.*
 
+# Environment variables (keep secrets out of git)
+.env
+.env.local
+.env.*.local
+
 # Node build artifacts
 node_modules/
 dist/

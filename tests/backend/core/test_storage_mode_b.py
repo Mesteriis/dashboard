@@ -71,9 +71,7 @@ async def _column_names(session_factory: async_sessionmaker[AsyncSession], table
     async with bind.begin() as connection:
         return set(
             await connection.run_sync(
-                lambda sync_connection: {
-                    column["name"] for column in inspect(sync_connection).get_columns(table_name)
-                }
+                lambda sync_connection: {column["name"] for column in inspect(sync_connection).get_columns(table_name)}
             )
         )
 
@@ -83,9 +81,7 @@ async def _index_names(session_factory: async_sessionmaker[AsyncSession], table_
     async with bind.begin() as connection:
         return set(
             await connection.run_sync(
-                lambda sync_connection: {
-                    index["name"] for index in inspect(sync_connection).get_indexes(table_name)
-                }
+                lambda sync_connection: {index["name"] for index in inspect(sync_connection).get_indexes(table_name)}
             )
         )
 
@@ -164,13 +160,7 @@ def _config(
 ) -> PluginStorageConfig:
     resolved_indexes = indexes
     if resolved_indexes is None:
-        resolved_indexes = sorted(
-            {
-                column_name
-                for index in ddl.tables[0].indexes
-                for column_name in index.columns
-            }
-        )
+        resolved_indexes = sorted({column_name for index in ddl.tables[0].indexes for column_name in index.columns})
 
     return PluginStorageConfig(
         mode="core_physical_tables",

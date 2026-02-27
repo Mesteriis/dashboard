@@ -444,9 +444,7 @@ class StorageRpcConsumer:
 
     async def _handle_request(self, request: StorageRpcRequest) -> StorageRpcResponse:
         if not self._is_allowed(plugin_id=request.plugin_id, op=request.op):
-            error = StorageQueryNotAllowed(
-                f"Operation '{request.op}' is not allowed for plugin '{request.plugin_id}'"
-            )
+            error = StorageQueryNotAllowed(f"Operation '{request.op}' is not allowed for plugin '{request.plugin_id}'")
             return StorageRpcResponse(id=request.id, ok=False, error=_error_payload(error))
         return await self._inproc.call(request)
 
@@ -459,7 +457,6 @@ class StorageRpcConsumer:
         return op in allowed
 
 
-
 def _require_text(value: Any | None, field: str) -> str:
     if value is None:
         raise StorageQueryNotAllowed(f"Storage request field '{field}' is required")
@@ -467,7 +464,6 @@ def _require_text(value: Any | None, field: str) -> str:
     if text:
         return text
     raise StorageQueryNotAllowed(f"Storage request field '{field}' is required")
-
 
 
 def _require_mapping(value: Mapping[str, Any] | None, field: str) -> Mapping[str, Any]:
@@ -480,7 +476,6 @@ def _require_value(value: Any | None, field: str) -> Any:
     if value is None:
         raise StorageQueryNotAllowed(f"Storage request field '{field}' is required")
     return value
-
 
 
 def _ensure_ok(response: StorageRpcResponse) -> Mapping[str, Any]:

@@ -77,9 +77,7 @@ class ServiceHealthStateRow(Base):
     consecutive_failures: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=utc_now)
 
-    __table_args__ = (
-        Index("ix_service_health_state_status", "current_status"),
-    )
+    __table_args__ = (Index("ix_service_health_state_status", "current_status"),)
 
 
 __all__ = [

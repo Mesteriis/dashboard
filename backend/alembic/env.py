@@ -4,8 +4,8 @@ import asyncio
 import os
 from logging.config import fileConfig
 
-from apps.health.model import sqlalchemy as _health_models  # noqa: F401
 from alembic import context
+from apps.health.model import sqlalchemy as _health_models  # noqa: F401
 from core.storage import models as _storage_models  # noqa: F401
 from db.base import Base
 from sqlalchemy import engine_from_config, pool

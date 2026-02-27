@@ -121,9 +121,7 @@ class UniversalStorage:
         serialized = _canonical_json(value)
         value_bytes = _as_bytes(serialized)
         if value_bytes > limits.max_kv_bytes:
-            raise StorageLimitExceeded(
-                f"KV value exceeds max_kv_bytes ({value_bytes}>{limits.max_kv_bytes})"
-            )
+            raise StorageLimitExceeded(f"KV value exceeds max_kv_bytes ({value_bytes}>{limits.max_kv_bytes})")
 
         now = _utc_now()
         async with self._session_factory() as session, session.begin():
@@ -228,9 +226,7 @@ class UniversalStorage:
         serialized = _canonical_json(payload)
         row_bytes = _as_bytes(serialized)
         if row_bytes > limits.max_row_bytes:
-            raise StorageLimitExceeded(
-                f"Row exceeds max_row_bytes ({row_bytes}>{limits.max_row_bytes})"
-            )
+            raise StorageLimitExceeded(f"Row exceeds max_row_bytes ({row_bytes}>{limits.max_row_bytes})")
 
         now = _utc_now()
         async with self._session_factory() as session, session.begin():
@@ -346,9 +342,7 @@ class UniversalStorage:
         allowed_fields = {table_spec.primary_key, *table_spec.indexes}
         for field, value in predicates.items():
             if field not in allowed_fields:
-                raise StorageQueryNotAllowed(
-                    f"Field '{field}' is not queryable for table '{table}'"
-                )
+                raise StorageQueryNotAllowed(f"Field '{field}' is not queryable for table '{table}'")
             if not _is_scalar(value):
                 raise StorageQueryNotAllowed("table_query supports equality AND on scalar values only")
 
@@ -363,14 +357,16 @@ class UniversalStorage:
                     continue
 
                 pks = set(
-                    (await session.scalars(
-                        select(PluginIndexRow.pk).where(
-                            PluginIndexRow.plugin_id == plugin_id,
-                            PluginIndexRow.table_name == table,
-                            PluginIndexRow.index_name == field,
-                            PluginIndexRow.index_value == _encode_index_value(value),
+                    (
+                        await session.scalars(
+                            select(PluginIndexRow.pk).where(
+                                PluginIndexRow.plugin_id == plugin_id,
+                                PluginIndexRow.table_name == table,
+                                PluginIndexRow.index_name == field,
+                                PluginIndexRow.index_value == _encode_index_value(value),
+                            )
                         )
-                    )).all()
+                    ).all()
                 )
                 candidate_sets.append(pks)
 
@@ -381,16 +377,18 @@ class UniversalStorage:
             if not candidate_pks:
                 return []
 
-            rows = (await session.scalars(
-                select(PluginRow)
-                .where(
-                    PluginRow.plugin_id == plugin_id,
-                    PluginRow.table_name == table,
-                    PluginRow.pk.in_(candidate_pks),
+            rows = (
+                await session.scalars(
+                    select(PluginRow)
+                    .where(
+                        PluginRow.plugin_id == plugin_id,
+                        PluginRow.table_name == table,
+                        PluginRow.pk.in_(candidate_pks),
+                    )
+                    .order_by(PluginRow.pk)
+                    .limit(clamped_limit)
                 )
-                .order_by(PluginRow.pk)
-                .limit(clamped_limit)
-            )).all()
+            ).all()
 
             results: list[dict[str, Any]] = []
             for row in rows:

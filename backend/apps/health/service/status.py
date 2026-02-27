@@ -26,8 +26,10 @@ def evaluate_health(
     window = samples[: max(1, window_size)]
     sample_count = len(window)
 
+    # Check if all samples failed due to ICMP being unavailable
     if all(
-        (not sample.success) and str(sample.error_message or "").strip() in _ICMP_UNAVAILABLE_ERRORS for sample in window
+        (not sample.success) and str(sample.error_message or "").strip() in _ICMP_UNAVAILABLE_ERRORS
+        for sample in window
     ):
         return EvaluatedHealthState(
             status="unknown",

@@ -201,9 +201,7 @@ class HealthRepository:
                     "ok": status in {"online", "degraded"},
                     "status": status,
                     "level": status,
-                    "latency_ms": int(round(state_row.avg_latency))
-                    if state_row.avg_latency is not None
-                    else None,
+                    "latency_ms": round(state_row.avg_latency) if state_row.avg_latency is not None else None,
                     "success_rate": float(state_row.success_rate),
                     "consecutive_failures": int(state_row.consecutive_failures),
                     "error": "check failed" if status == "down" else None,

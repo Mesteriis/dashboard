@@ -23,7 +23,15 @@ from apps.health.worker.scheduler import HealthScheduler
 from core.bus.client import BusClient
 from core.contracts.bus import BusMessageV1
 from core.events import BrokerEventPublisher, EventBus, EventPublishConsumer
-from core.storage.models import ActionRow, AppStateRow, AuditLogRow, ConfigRevisionRow, PluginIndexRow, PluginKvRow, PluginRow
+from core.storage.models import (
+    ActionRow,
+    AppStateRow,
+    AuditLogRow,
+    ConfigRevisionRow,
+    PluginIndexRow,
+    PluginKvRow,
+    PluginRow,
+)
 from core.storage.repositories import ConfigRepository
 from db.base import Base
 from db.session import build_async_engine

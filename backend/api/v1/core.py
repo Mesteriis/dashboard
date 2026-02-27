@@ -169,11 +169,7 @@ async def _fetch_origin_favicon(
             break
         except httpx.ConnectError as exc:
             last_error = exc
-            if (
-                verify
-                and tls_insecure_fallback
-                and _is_tls_verify_failure(exc)
-            ):
+            if verify and tls_insecure_fallback and _is_tls_verify_failure(exc):
                 continue
             raise HTTPException(status_code=502, detail="Failed to connect to favicon upstream") from exc
         except httpx.TimeoutException as exc:

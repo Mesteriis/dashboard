@@ -2,16 +2,16 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from collections.abc import Sequence
 from datetime import UTC, datetime, timedelta
-from typing import Sequence
 from uuid import UUID
 
 from apps.health.model.contracts import HealthCheckRequestedV1, MonitoredService
 from apps.health.service.config_sync import extract_service_specs_from_config
 from apps.health.service.repository import HealthRepository
-from core.storage.repositories import ConfigRepository
 from core.bus.client import BusClient
 from core.contracts.bus import BusMessageV1
+from core.storage.repositories import ConfigRepository
 
 LOGGER = logging.getLogger(__name__)
 

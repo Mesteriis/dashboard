@@ -198,9 +198,11 @@ async def test_migrate_a_to_b_via_action_gateway_and_audit(tmp_path: Path) -> No
         assert storage_router.get_table_mode(plugin_id="autodiscover", table="scan_runs") == "core_physical_tables"
 
         async with session_factory() as session:
-            audit_rows = (await session.execute(
-                select(AuditLogRow).where(AuditLogRow.action_id == str(action.id))
-            )).scalars().all()
+            audit_rows = (
+                (await session.execute(select(AuditLogRow).where(AuditLogRow.action_id == str(action.id))))
+                .scalars()
+                .all()
+            )
         assert len(audit_rows) >= 2
     finally:
         await _dispose(session_factory)

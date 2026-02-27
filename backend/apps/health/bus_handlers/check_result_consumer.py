@@ -60,7 +60,12 @@ class HealthCheckResultConsumer:
             previous_status = previous.current_status if previous is not None else None
             changed = previous is None or previous.current_status != evaluated.status
 
-            last_change_ts = datetime.now(UTC) if changed else (previous.last_change_ts if previous is not None else result.checked_at)
+            if changed:
+                last_change_ts = datetime.now(UTC)
+            elif previous is not None:
+                last_change_ts = previous.last_change_ts
+            else:
+                last_change_ts = result.checked_at
             state = await self._repository.upsert_state(
                 service_id=result.service_id,
                 status=evaluated.status,

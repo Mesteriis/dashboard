@@ -103,6 +103,7 @@ class AppSettings(BaseSettings):
         object.__setattr__(self, "favicon_cache_ttl_days", max(1, self.favicon_cache_ttl_days))
         return self
 
+
 def load_app_settings(base_dir: Path | None = None) -> AppSettings:
     if base_dir is None:
         return AppSettings()

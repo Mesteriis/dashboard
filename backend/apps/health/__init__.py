@@ -7,9 +7,9 @@ from .service.repository import HealthRepository
 from .worker.scheduler import HealthScheduler
 
 __all__ = [
-    "HealthChecker",
     "HealthCheckRequestConsumer",
     "HealthCheckResultConsumer",
+    "HealthChecker",
     "HealthRepository",
     "HealthScheduler",
 ]

@@ -4,7 +4,7 @@ from .session import build_async_engine, build_async_session_factory
 
 __all__ = [
     "Base",
-    "ensure_runtime_schema_compatibility",
     "build_async_engine",
     "build_async_session_factory",
+    "ensure_runtime_schema_compatibility",
 ]

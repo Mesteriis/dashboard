@@ -132,9 +132,7 @@ class SafeDdlEngine:
     ) -> None:
         self._engine = engine
         self._plugin_configs = {
-            plugin_id: config
-            for plugin_id, config in plugin_configs.items()
-            if config.mode == "core_physical_tables"
+            plugin_id: config for plugin_id, config in plugin_configs.items() if config.mode == "core_physical_tables"
         }
         self._lock = asyncio.Lock()
 
@@ -205,8 +203,7 @@ class SafeDdlEngine:
     ) -> None:
         metadata = MetaData()
         columns = [
-            self._build_column(column, primary_key=column.name == ddl_table.primary_key)
-            for column in ddl_table.columns
+            self._build_column(column, primary_key=column.name == ddl_table.primary_key) for column in ddl_table.columns
         ]
         table = Table(physical_table, metadata, *columns)
         metadata.create_all(bind=connection, tables=[table])
@@ -302,17 +299,14 @@ class PhysicalStorage:
         self._engine = engine
 
         self._plugin_configs = {
-            plugin_id: config
-            for plugin_id, config in plugin_configs.items()
-            if config.mode == "core_physical_tables"
+            plugin_id: config for plugin_id, config in plugin_configs.items() if config.mode == "core_physical_tables"
         }
         self._table_specs: dict[str, dict[str, StorageTableSpec]] = {
             plugin_id: {table.name: table for table in config.tables}
             for plugin_id, config in self._plugin_configs.items()
         }
         self._ddl_tables: dict[str, dict[str, StorageDDLTableSpec]] = {
-            plugin_id: self._ddl_table_map(config.ddl)
-            for plugin_id, config in self._plugin_configs.items()
+            plugin_id: self._ddl_table_map(config.ddl) for plugin_id, config in self._plugin_configs.items()
         }
 
         self._ddl_engine = SafeDdlEngine(engine=self._engine, plugin_configs=self._plugin_configs)
@@ -355,9 +349,7 @@ class PhysicalStorage:
         serialized = _canonical_json(value)
         value_bytes = _as_bytes(serialized)
         if value_bytes > limits.max_kv_bytes:
-            raise StorageLimitExceeded(
-                f"KV value exceeds max_kv_bytes ({value_bytes}>{limits.max_kv_bytes})"
-            )
+            raise StorageLimitExceeded(f"KV value exceeds max_kv_bytes ({value_bytes}>{limits.max_kv_bytes})")
 
         now = _utc_now()
         async with self._session_factory() as session, session.begin():
@@ -408,9 +400,15 @@ class PhysicalStorage:
         pk_value = self._serialize_column_value(ddl_table.columns_map[table_spec.primary_key], pk, for_query=True)
 
         async with self._session_factory() as session:
-            row = (await session.execute(
-                select(table_obj).where(table_obj.c[table_spec.primary_key] == pk_value).limit(1)
-            )).mappings().first()
+            row = (
+                (
+                    await session.execute(
+                        select(table_obj).where(table_obj.c[table_spec.primary_key] == pk_value).limit(1)
+                    )
+                )
+                .mappings()
+                .first()
+            )
             if row is None:
                 return None
             return self._decode_row(ddl_table=ddl_table, row=dict(row))
@@ -453,17 +451,15 @@ class PhysicalStorage:
 
         row_bytes = _as_bytes(_canonical_json(self._decode_row(ddl_table=ddl_table, row=dict(payload))))
         if row_bytes > limits.max_row_bytes:
-            raise StorageLimitExceeded(
-                f"Row exceeds max_row_bytes ({row_bytes}>{limits.max_row_bytes})"
-            )
+            raise StorageLimitExceeded(f"Row exceeds max_row_bytes ({row_bytes}>{limits.max_row_bytes})")
 
         pk_field = table_spec.primary_key
         pk_value = payload[pk_field]
 
         async with self._session_factory() as session, session.begin():
-            exists = (await session.execute(
-                select(table_obj.c[pk_field]).where(table_obj.c[pk_field] == pk_value).limit(1)
-            )).scalar_one_or_none()
+            exists = (
+                await session.execute(select(table_obj.c[pk_field]).where(table_obj.c[pk_field] == pk_value).limit(1))
+            ).scalar_one_or_none()
 
             if exists is None:
                 rows_count = int((await session.execute(select(func.count()).select_from(table_obj))).scalar_one() or 0)
@@ -473,11 +469,7 @@ class PhysicalStorage:
                     )
                 await session.execute(insert(table_obj).values(**payload))
             else:
-                await session.execute(
-                    update(table_obj)
-                    .where(table_obj.c[pk_field] == pk_value)
-                    .values(**payload)
-                )
+                await session.execute(update(table_obj).where(table_obj.c[pk_field] == pk_value).values(**payload))
 
         return self._decode_row(ddl_table=ddl_table, row=dict(payload))
 
@@ -489,9 +481,9 @@ class PhysicalStorage:
         pk_value = self._serialize_column_value(ddl_table.columns_map[table_spec.primary_key], pk, for_query=True)
 
         async with self._session_factory() as session, session.begin():
-            deleted = (await session.execute(
-                delete(table_obj).where(table_obj.c[table_spec.primary_key] == pk_value)
-            )).rowcount
+            deleted = (
+                await session.execute(delete(table_obj).where(table_obj.c[table_spec.primary_key] == pk_value))
+            ).rowcount
             return bool(deleted)
 
     async def table_query(
@@ -514,9 +506,7 @@ class PhysicalStorage:
         conditions = []
         for field, value in predicates.items():
             if field not in allowed_fields:
-                raise StorageQueryNotAllowed(
-                    f"Field '{field}' is not queryable for table '{table}'"
-                )
+                raise StorageQueryNotAllowed(f"Field '{field}' is not queryable for table '{table}'")
             if not _is_scalar(value):
                 raise StorageQueryNotAllowed("table_query supports equality AND on scalar values only")
             column_spec = ddl_table.columns_map.get(field)
@@ -613,9 +603,7 @@ class PhysicalStorage:
         with self._migrate_lock:
             self._migrated_plugins.add(plugin_id)
             self._table_cache = {
-                cache_key: table
-                for cache_key, table in self._table_cache.items()
-                if cache_key[0] != plugin_id
+                cache_key: table for cache_key, table in self._table_cache.items() if cache_key[0] != plugin_id
             }
 
     def _materialize_table(self, *, plugin_id: str, ddl_table: _PhysicalTableSpec) -> Table:
@@ -657,9 +645,7 @@ class PhysicalStorage:
         for field_name, value in payload.items():
             column_spec = ddl_table.columns_map.get(field_name)
             if column_spec is None:
-                raise StorageQueryNotAllowed(
-                    f"Field '{field_name}' is not declared in DDL table '{ddl_table.name}'"
-                )
+                raise StorageQueryNotAllowed(f"Field '{field_name}' is not declared in DDL table '{ddl_table.name}'")
             normalized[field_name] = self._serialize_column_value(column_spec, value, for_query=False)
 
         if require_all_required:
@@ -667,9 +653,7 @@ class PhysicalStorage:
                 if column.name in normalized:
                     continue
                 if not column.nullable:
-                    raise StorageQueryNotAllowed(
-                        f"Field '{column.name}' is required by DDL table '{ddl_table.name}'"
-                    )
+                    raise StorageQueryNotAllowed(f"Field '{column.name}' is required by DDL table '{ddl_table.name}'")
 
         return normalized
 
@@ -694,9 +678,7 @@ class PhysicalStorage:
                 try:
                     parsed = datetime.fromisoformat(normalized)
                 except ValueError as exc:
-                    raise StorageQueryNotAllowed(
-                        f"Field '{column.name}' expects datetime (ISO-8601 string)"
-                    ) from exc
+                    raise StorageQueryNotAllowed(f"Field '{column.name}' expects datetime (ISO-8601 string)") from exc
                 if parsed.tzinfo is None:
                     return parsed.replace(tzinfo=UTC)
                 return parsed.astimezone(UTC)

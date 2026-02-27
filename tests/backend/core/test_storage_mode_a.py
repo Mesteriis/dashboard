@@ -67,11 +67,14 @@ async def test_indexes_are_rebuilt_on_upsert(tmp_path: Path) -> None:
             row={"id": "node-1", "ip": "10.0.0.9", "kind": "router"},
         )
 
-        assert await storage.table_query(
-            plugin_id="plugin.autodiscover",
-            table="devices",
-            where={"ip": "10.0.0.2"},
-        ) == []
+        assert (
+            await storage.table_query(
+                plugin_id="plugin.autodiscover",
+                table="devices",
+                where={"ip": "10.0.0.2"},
+            )
+            == []
+        )
         assert await storage.table_query(
             plugin_id="plugin.autodiscover",
             table="devices",

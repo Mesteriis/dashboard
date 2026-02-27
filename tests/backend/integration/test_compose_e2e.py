@@ -456,10 +456,7 @@ async def test_compose_postgres_rabbitmq_rpc_and_sse_e2e(
             assert probe_id in events_payload
     except Exception as exc:
         backend_tail = _log_tail(backend.log_path)
-        raise AssertionError(
-            f"Integration flow failed: {exc}\n\n"
-            f"Backend log tail:\n{backend_tail}"
-        ) from exc
+        raise AssertionError(f"Integration flow failed: {exc}\n\nBackend log tail:\n{backend_tail}") from exc
     finally:
         if storage_consumer is not None:
             await storage_consumer.stop()

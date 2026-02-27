@@ -226,9 +226,7 @@ async def test_autodiscover_action_registry_and_dry_run(monkeypatch: pytest.Monk
         registry_response = await client.get("/api/v1/actions/registry", headers=headers)
         assert registry_response.status_code == httpx.codes.OK
         registry_items = registry_response.json()
-        autodiscover_entry = next(
-            item for item in registry_items if item.get("type") == "autodiscover.scan"
-        )
+        autodiscover_entry = next(item for item in registry_items if item.get("type") == "autodiscover.scan")
         assert autodiscover_entry["capability"] == "exec.autodiscover.scan"
         assert autodiscover_entry["dry_run_supported"] is True
 

@@ -170,9 +170,8 @@ def _resolve_tls_verify(*, health_cfg: dict[str, Any], check_type: str, target: 
         return _as_bool(health_cfg.get("verify_tls"), default=True)
     if "insecure_skip_verify" in health_cfg:
         return not _as_bool(health_cfg.get("insecure_skip_verify"), default=False)
-    if check_type == "http" and _is_private_network_url(target):
-        return False
-    return True
+    # Skip TLS verification only for private network HTTP targets
+    return check_type != "http" or not _is_private_network_url(target)
 
 
 def _is_private_network_url(url: str) -> bool:

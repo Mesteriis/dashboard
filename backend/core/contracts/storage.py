@@ -80,9 +80,7 @@ class StorageDDLTableSpec(BaseModel):
             column_names.add(column.name)
 
         if self.primary_key not in column_names:
-            raise ValueError(
-                f"DDL table '{self.name}' primary key '{self.primary_key}' is missing in columns"
-            )
+            raise ValueError(f"DDL table '{self.name}' primary key '{self.primary_key}' is missing in columns")
 
         for index in self.indexes:
             for field in index.columns:
@@ -135,14 +133,8 @@ class PluginStorageConfig(BaseModel):
                         f"Storage table '{table.name}' is not present in DDL tables for core_physical_tables mode"
                     )
                 if ddl_table.primary_key != table.primary_key:
-                    raise ValueError(
-                        f"Storage table '{table.name}' primary key mismatch between tables and ddl specs"
-                    )
-                ddl_index_columns = {
-                    column_name
-                    for index in ddl_table.indexes
-                    for column_name in index.columns
-                }
+                    raise ValueError(f"Storage table '{table.name}' primary key mismatch between tables and ddl specs")
+                ddl_index_columns = {column_name for index in ddl_table.indexes for column_name in index.columns}
                 for index_name in table.indexes:
                     if index_name not in ddl_index_columns:
                         raise ValueError(
