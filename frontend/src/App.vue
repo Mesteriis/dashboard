@@ -1,5 +1,20 @@
 <template>
   <div class="shell" :class="{ 'shell-desktop': desktopShell }">
+    <!-- Индикатор потери соединения с SSE -->
+    <div
+      v-if="!sseConnected"
+      class="sse-disconnect-indicator"
+      role="status"
+      aria-live="polite"
+      aria-label="Нет соединения с сервером"
+    >
+      <span class="sse-disconnect-indicator__icon" aria-hidden="true">⚠</span>
+      <span class="sse-disconnect-indicator__text"
+        >Нет соединения с сервером</span
+      >
+      <span class="sse-disconnect-indicator__spinner" aria-hidden="true"></span>
+    </div>
+
     <div
       v-if="desktopShell"
       class="desktop-window-drag-strip"
@@ -49,6 +64,16 @@ import {
 } from "@/features/services/eventStream";
 import { useDashboardStore } from "@/features/stores/dashboardStore";
 
+// ── Constants ────────────────────────────────────────────────────────────────
+
+const APP_CONSTANTS = {
+  SCREENSAVER_TIMEOUT_MS: 10 * 60 * 1000, // 10 minutes
+  ERROR_TOAST_DURATION_MS: 6400,
+  SSE_RECONNECT_DELAY_MS: 3000,
+} as const;
+
+// ── Store & Route ────────────────────────────────────────────────────────────
+
 const route = useRoute();
 const dashboard = useDashboardStore();
 const {
@@ -61,6 +86,8 @@ const {
 const desktopShell = isDesktopShell();
 const apiErrorNotice = ref<{ message: string }>({ message: "" });
 
+// ── Computed ────────────────────────────────────────────────────────────────
+
 const isPleiadOverlayVisible = computed(
   () => String(route.query.overlay || "") === "pleiad",
 );
@@ -72,6 +99,22 @@ const isDashboardRoute = computed(
 );
 const isImmersiveRoute = computed(() => isPleiadOverlayVisible.value);
 
+// ── Watchers ────────────────────────────────────────────────────────────────
+
+// Update document title based on route
+watch(
+  () => route.meta.title,
+  (title) => {
+    if (title) {
+      document.title = `${title} | Око`;
+    } else {
+      document.title = "Око";
+    }
+  },
+  { immediate: true },
+);
+
+// Update UI route scope
 watch(
   () => route.path,
   (path) => {
@@ -80,23 +123,33 @@ watch(
   { immediate: true },
 );
 
-// ── SSE ────────────────────────────────────────────────────────────────────
+// ── SSE Connection ───────────────────────────────────────────────────────────
 
+const sseConnected = ref(true);
 let sseStream: OkoSseStream | null = null;
 
 function connectSse(): void {
   sseStream?.close();
   sseStream = connectOkoSseStream({
     path: "/api/v1/events/stream",
-    onEvent: () => {},
+    onEvent: () => {
+      sseConnected.value = true;
+    },
     onError: () => {
-      // при обрыве переподключаемся через 3 с
-      window.setTimeout(connectSse, 3000);
+      sseConnected.value = false;
+      // Reconnect after delay (no limit - keep trying indefinitely)
+      window.setTimeout(connectSse, APP_CONSTANTS.SSE_RECONNECT_DELAY_MS);
+    },
+    onOpen: () => {
+      sseConnected.value = true;
+    },
+    onClose: () => {
+      sseConnected.value = false;
     },
   });
 }
 
-// ── API-error toast ────────────────────────────────────────────────────────
+// ── API-error toast ─────────────────────────────────────────────────────────
 
 let apiErrorNoticeTimerId: number | null = null;
 let removeApiErrorListener: () => void = () => {};
@@ -109,23 +162,23 @@ function clearApiErrorNotice(): void {
 }
 
 function handleApiError(event: CustomEvent<{ message?: string }>): void {
-  const message = String(event?.detail?.message || "").trim();
+  const message = event.detail?.message?.trim() || "";
   if (!message) return;
   apiErrorNotice.value.message = message;
   if (apiErrorNoticeTimerId) window.clearTimeout(apiErrorNoticeTimerId);
   apiErrorNoticeTimerId = window.setTimeout(() => {
     apiErrorNoticeTimerId = null;
     apiErrorNotice.value.message = "";
-  }, 6400);
+  }, APP_CONSTANTS.ERROR_TOAST_DURATION_MS);
 }
 
 // ── Screensaver ────────────────────────────────────────────────────────────
 
 useIdleScreensaver({
-  timeoutMs: 10 * 60 * 1000,
+  timeoutMs: APP_CONSTANTS.SCREENSAVER_TIMEOUT_MS,
   onIdle: () => {
+    // isImmersiveRoute already includes isPleiadOverlayVisible check
     if (isImmersiveRoute.value) return;
-    if (isPleiadOverlayVisible.value) return;
     void openPleiadOverlay("screensaver");
   },
   onActive: () => {
@@ -142,6 +195,15 @@ function handleCloseOverlay(): void {
 // ── Keyboard shortcuts ─────────────────────────────────────────────────────
 
 function handleGlobalShortcut(event: KeyboardEvent): void {
+  // Ignore events in editable elements
+  const target = event.target as HTMLElement;
+  const isEditable =
+    target.tagName === "INPUT" ||
+    target.tagName === "TEXTAREA" ||
+    target.isContentEditable;
+
+  if (isEditable) return;
+
   if (event.key === "Escape" && isPleiadOverlayVisible.value) {
     event.preventDefault();
     void closeOverlay();
@@ -189,6 +251,64 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+/* ── SSE Disconnect Indicator ───────────────────────────────────────────── */
+
+.sse-disconnect-indicator {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: rgba(255, 193, 7, 0.95);
+  color: rgba(10, 10, 10, 0.95);
+  font-size: 0.875rem;
+  font-weight: 500;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.sse-disconnect-indicator__icon {
+  font-size: 1rem;
+  animation: sse-icon-pulse 1.5s ease-in-out infinite;
+}
+
+.sse-disconnect-indicator__text {
+  flex: 1;
+  text-align: center;
+}
+
+.sse-disconnect-indicator__spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(10, 10, 10, 0.2);
+  border-top-color: rgba(10, 10, 10, 0.9);
+  border-radius: 50%;
+  animation: sse-spin 0.8s linear infinite;
+}
+
+@keyframes sse-icon-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(1.1);
+  }
+}
+
+@keyframes sse-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ── API Error Toast ─────────────────────────────────────────────────────── */
 .api-error-toast {
   position: fixed;
   right: 16px;
