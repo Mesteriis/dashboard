@@ -66,8 +66,13 @@ import UiSidebarHeaderTabsFacade from "@/views/dashboard/facades/UiSidebarHeader
 import UiSidebarIndicatorsAccordionFacade from "@/views/dashboard/facades/UiSidebarIndicatorsAccordionFacade.vue";
 import UiSidebarTreePanelFacade from "@/views/dashboard/facades/UiSidebarTreePanelFacade.vue";
 import UiBlankLayout from "@/components/layout/UiBlankLayout.vue";
-import { EMBLEM_SRC, SIDEBAR_PARTICLES_ID } from "@/features/stores/ui/storeConstants";
+import {
+  EMBLEM_SRC,
+  SIDEBAR_PARTICLES_CONFIG,
+  SIDEBAR_PARTICLES_ID,
+} from "@/features/stores/ui/storeConstants";
 import { useUiStore } from "@/features/stores/uiStore";
+import { useSidebarParticles } from "@/features/composables/useSidebarParticles";
 
 const IframeModal = defineAsyncComponent(
   () => import("@/views/dashboard/modals/IframeModal.vue"),
@@ -111,4 +116,10 @@ const {
   itemEditor,
   settingsPanel,
 } = dashboard;
+
+useSidebarParticles({
+  containerId: SIDEBAR_PARTICLES_ID,
+  baseConfig: SIDEBAR_PARTICLES_CONFIG,
+  isSidebarHidden,
+});
 </script>

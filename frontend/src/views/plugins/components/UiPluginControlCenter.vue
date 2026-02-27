@@ -329,7 +329,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onMounted, reactive, ref } from "vue";
+import { computed, nextTick, reactive, ref } from "vue";
 import {
   ArrowLeft,
   FileArchive,
@@ -341,8 +341,13 @@ import {
 } from "lucide-vue-next";
 import UiBaseModal from "@/ui/overlays/UiBaseModal.vue";
 import UiBlankLayout from "@/components/layout/UiBlankLayout.vue";
-import { SIDEBAR_PARTICLES_ID } from "@/features/stores/ui/storeConstants";
+import {
+  EMBLEM_SRC,
+  SIDEBAR_PARTICLES_CONFIG,
+  SIDEBAR_PARTICLES_ID,
+} from "@/features/stores/ui/storeConstants";
 import { useUiStore } from "@/features/stores/uiStore";
+import { useSidebarParticles } from "@/features/composables/useSidebarParticles";
 
 type PluginPanelTab = "installed" | "store" | "settings";
 
@@ -376,7 +381,13 @@ const SLOT_APP_HEADER_PANEL_ACTIONS = "app.header.panel.actions";
 const SLOT_PAGE_CANVAS_MAIN = "page.canvas.main";
 const SLOT_APP_MODALS = "app.modals";
 const dashboard = useUiStore();
-const { EMBLEM_SRC, config, initSidebarParticles, isSidebarHidden } = dashboard;
+const { config, isSidebarHidden } = dashboard;
+
+useSidebarParticles({
+  containerId: SIDEBAR_PARTICLES_ID,
+  baseConfig: SIDEBAR_PARTICLES_CONFIG,
+  isSidebarHidden,
+});
 const zipInputRef = ref<HTMLInputElement | null>(null);
 const githubInputRef = ref<HTMLInputElement | null>(null);
 const githubInstallModal = reactive<{
@@ -547,8 +558,4 @@ function submitGithubInstall(): void {
   if (!checkGithubLink()) return;
   closeGithubInstallModal();
 }
-
-onMounted(() => {
-  void initSidebarParticles();
-});
 </script>

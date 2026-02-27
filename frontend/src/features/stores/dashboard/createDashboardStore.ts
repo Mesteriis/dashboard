@@ -16,7 +16,7 @@ import {
   connectOkoSseStream,
   type OkoSseStream,
 } from "@/features/services/eventStream";
-import { EVENT_FX_MODE_CHANGE, onOkoEvent } from "@/features/services/events";
+import { EVENT_FX_MODE_CHANGE } from "@/features/services/events";
 import { ensureParticlesJs } from "@/features/services/particlesLoader";
 import { goPluginsPanel, goSettings } from "@/app/navigation/nav";
 import {
@@ -236,7 +236,6 @@ export function createDashboardStore(
   let visibilitySyncInFlight = false;
   let particlesReinitRaf = 0;
   let preserveTreeSelectionOnPageSwitch = false;
-  let removeFxModeListener: () => void = () => {};
 
   const selectedNode = reactive<SelectedNodeState>({
     groupKey: "",
@@ -1294,11 +1293,6 @@ export function createDashboardStore(
       "visibilitychange",
       sectionCtx.handleDocumentVisibilityChange,
     );
-    removeFxModeListener = onOkoEvent(
-      EVENT_FX_MODE_CHANGE,
-      sectionCtx.handleFxModeChange,
-    );
-    await sectionCtx.initSidebarParticles();
     await sectionCtx.loadConfig();
   });
 
@@ -1309,8 +1303,6 @@ export function createDashboardStore(
       "visibilitychange",
       sectionCtx.handleDocumentVisibilityChange,
     );
-    removeFxModeListener();
-    removeFxModeListener = () => {};
     if (particlesReinitRaf) {
       window.cancelAnimationFrame(particlesReinitRaf);
       particlesReinitRaf = 0;

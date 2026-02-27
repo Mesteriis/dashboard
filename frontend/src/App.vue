@@ -6,13 +6,6 @@
       data-tauri-drag-region
       aria-hidden="true"
     ></div>
-    <img
-      v-if="!isPleiadOverlayVisible"
-      class="center-emblem"
-      :src="EMBLEM_SRC"
-      alt=""
-      aria-hidden="true"
-    />
 
     <RouterView />
 
@@ -23,34 +16,6 @@
       <PleiadExperience :mode="pleiadOverlayMode" @close="handleCloseOverlay" />
     </div>
 
-    <div
-      v-if="agentAuraDemoVisible && !isImmersiveRoute"
-      class="agent-aura-overlay-backdrop"
-      @click.self="hideAgentAuraDemo"
-    >
-      <section
-        class="agent-aura-overlay-panel"
-        role="dialog"
-        aria-modal="true"
-        aria-label="Agent Aura FX demo"
-      >
-        <header class="agent-aura-overlay-head">
-          <div>
-            <p>Visual Playground</p>
-            <h3>Agent Aura FX</h3>
-          </div>
-          <button
-            class="agent-aura-overlay-close"
-            type="button"
-            aria-label="Close Agent Aura FX"
-            @click="hideAgentAuraDemo"
-          >
-            Close
-          </button>
-        </header>
-        <AgentAuraFxDemo />
-      </section>
-    </div>
 
     <section
       v-if="apiErrorNotice.message"
@@ -75,48 +40,27 @@
 </template>
 
 <script setup lang="ts">
-import {
-  computed,
-  defineAsyncComponent,
-  onBeforeUnmount,
-  onMounted,
-  ref,
-  watch,
-} from "vue";
+import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { RouterView, useRoute } from "vue-router";
 import PleiadExperience from "@/views/overlays/pleiad/PleiadExperience.vue";
 import { useIdleScreensaver } from "@/features/composables/useIdleScreensaver";
-import { closeOverlay, goDashboard, goPluginsPanel, goSettings, openPleiadOverlay } from "@/app/navigation/nav";
-import { AGENT_AURA_DEMO_OPEN_EVENT } from "@/features/services/agentAuraNavigation";
+import { closeOverlay, openPleiadOverlay } from "@/app/navigation/nav";
 import { isDesktopShell } from "@/features/services/desktopRuntime";
-import {
-  EVENT_API_ERROR,
-  EVENT_DESKTOP_ACTION,
-  onOkoEvent,
-} from "@/features/services/events";
+import { EVENT_API_ERROR, onOkoEvent } from "@/features/services/events";
+import { connectOkoSseStream, type OkoSseStream } from "@/features/services/eventStream";
 import { useDashboardStore } from "@/features/stores/dashboardStore";
-
-const AgentAuraFxDemo = defineAsyncComponent(
-  () => import("@/views/overlays/agents/AgentAuraFxDemo.vue"),
-);
 
 const route = useRoute();
 const dashboard = useDashboardStore();
 const {
-  EMBLEM_SRC,
   closeCommandPalette,
-  closeSettingsPanel,
   commandPaletteOpen,
-  openSettingsPanel,
-  settingsPanel,
   setUiRouteScope,
   toggleCommandPalette,
 } = dashboard;
+
 const desktopShell = isDesktopShell();
-const agentAuraDemoVisible = ref(false);
-const apiErrorNotice = ref<{ message: string }>({
-  message: "",
-});
+const apiErrorNotice = ref<{ message: string }>({ message: "" });
 
 const isPleiadOverlayVisible = computed(
   () => String(route.query.overlay || "") === "pleiad",
@@ -124,27 +68,57 @@ const isPleiadOverlayVisible = computed(
 const pleiadOverlayMode = computed<"route" | "screensaver">(() =>
   String(route.query.mode || "") === "screensaver" ? "screensaver" : "route",
 );
-const isPluginsRoute = computed(
-  () => route.path === "/plugins" || route.path.startsWith("/plugins/"),
+const isDashboardRoute = computed(
+  () => route.path === "/" || route.path === "/settings",
 );
-const isUiRoute = computed(() => route.path === "/ui");
-const isDashboardRoute = computed(() => route.path === "/" || route.path === "/settings");
-const isImmersiveRoute = computed(
-  () => isPleiadOverlayVisible.value || isPluginsRoute.value || isUiRoute.value,
-);
+const isImmersiveRoute = computed(() => isPleiadOverlayVisible.value);
 
 watch(
   () => route.path,
-  (path) => {
-    setUiRouteScope(path);
-  },
+  (path) => { setUiRouteScope(path); },
   { immediate: true },
 );
 
+// ── SSE ────────────────────────────────────────────────────────────────────
+
+let sseStream: OkoSseStream | null = null;
+
+function connectSse(): void {
+  sseStream?.close();
+  sseStream = connectOkoSseStream({
+    path: "/api/v1/events/stream",
+    onEvent: () => {},
+    onError: () => {
+      // при обрыве переподключаемся через 3 с
+      window.setTimeout(connectSse, 3000);
+    },
+  });
+}
+
+// ── API-error toast ────────────────────────────────────────────────────────
+
 let apiErrorNoticeTimerId: number | null = null;
-let removeDesktopActionListener: () => void = () => {};
-let removeAgentAuraOpenListener: () => void = () => {};
 let removeApiErrorListener: () => void = () => {};
+
+function clearApiErrorNotice(): void {
+  apiErrorNotice.value.message = "";
+  if (!apiErrorNoticeTimerId) return;
+  window.clearTimeout(apiErrorNoticeTimerId);
+  apiErrorNoticeTimerId = null;
+}
+
+function handleApiError(event: CustomEvent<{ message?: string }>): void {
+  const message = String(event?.detail?.message || "").trim();
+  if (!message) return;
+  apiErrorNotice.value.message = message;
+  if (apiErrorNoticeTimerId) window.clearTimeout(apiErrorNoticeTimerId);
+  apiErrorNoticeTimerId = window.setTimeout(() => {
+    apiErrorNoticeTimerId = null;
+    apiErrorNotice.value.message = "";
+  }, 6400);
+}
+
+// ── Screensaver ────────────────────────────────────────────────────────────
 
 useIdleScreensaver({
   timeoutMs: 10 * 60 * 1000,
@@ -164,75 +138,12 @@ function handleCloseOverlay(): void {
   void closeOverlay();
 }
 
-function showAgentAuraDemo(): void {
-  agentAuraDemoVisible.value = true;
-}
-
-function hideAgentAuraDemo(): void {
-  agentAuraDemoVisible.value = false;
-}
-
-function clearApiErrorNotice(): void {
-  apiErrorNotice.value.message = "";
-  if (!apiErrorNoticeTimerId) return;
-  window.clearTimeout(apiErrorNoticeTimerId);
-  apiErrorNoticeTimerId = null;
-}
-
-function handleApiError(event: CustomEvent<{ message?: string }>): void {
-  const message = String(event?.detail?.message || "").trim();
-  if (!message) return;
-  apiErrorNotice.value.message = message;
-
-  if (apiErrorNoticeTimerId) {
-    window.clearTimeout(apiErrorNoticeTimerId);
-  }
-  apiErrorNoticeTimerId = window.setTimeout(() => {
-    apiErrorNoticeTimerId = null;
-    apiErrorNotice.value.message = "";
-  }, 6400);
-}
+// ── Keyboard shortcuts ─────────────────────────────────────────────────────
 
 function handleGlobalShortcut(event: KeyboardEvent): void {
-  if (event.key === "Escape" && agentAuraDemoVisible.value) {
-    event.preventDefault();
-    hideAgentAuraDemo();
-    return;
-  }
-
   if (event.key === "Escape" && isPleiadOverlayVisible.value) {
     event.preventDefault();
     void closeOverlay();
-    return;
-  }
-
-  if (event.key === "Escape" && route.path === "/plugins") {
-    event.preventDefault();
-    void goDashboard();
-    return;
-  }
-
-  if (event.key === "Escape" && route.path.startsWith("/plugins/")) {
-    event.preventDefault();
-    void goPluginsPanel();
-    return;
-  }
-
-  if (event.key === "Escape" && route.path === "/ui") {
-    event.preventDefault();
-    void goDashboard();
-    return;
-  }
-
-  const isShortcut =
-    (event.metaKey || event.ctrlKey) &&
-    !event.altKey &&
-    !event.shiftKey &&
-    event.key.toLowerCase() === "k";
-  if (isShortcut) {
-    event.preventDefault();
-    if (!isDashboardRoute.value || isPleiadOverlayVisible.value) return;
-    toggleCommandPalette();
     return;
   }
 
@@ -242,67 +153,35 @@ function handleGlobalShortcut(event: KeyboardEvent): void {
     return;
   }
 
-  if (event.key === "Escape" && settingsPanel.open) {
+  const isSearchShortcut =
+    (event.metaKey || event.ctrlKey) &&
+    !event.altKey &&
+    !event.shiftKey &&
+    event.key.toLowerCase() === "k";
+
+  if (isSearchShortcut) {
     event.preventDefault();
-    closeSettingsPanel();
-    if (route.path === "/settings") {
-      void goDashboard();
-    }
-  }
-}
-
-function handleDesktopAction(event: CustomEvent<{ action?: string }>): void {
-  const action = String(event?.detail?.action || "");
-  if (!action) return;
-
-  if (action === "open-search") {
-    if (!isDashboardRoute.value) {
-      void goDashboard().then(() => {
-        toggleCommandPalette();
-      });
-      return;
-    }
+    if (!isDashboardRoute.value || isPleiadOverlayVisible.value) return;
     toggleCommandPalette();
-    return;
-  }
-
-  if (action === "open-settings") {
-    if (route.path === "/") {
-      openSettingsPanel();
-      return;
-    }
-    void goSettings();
   }
 }
 
-function handleAgentAuraOpenRequest(): void {
-  if (isImmersiveRoute.value) return;
-  showAgentAuraDemo();
-}
+// ── Lifecycle ──────────────────────────────────────────────────────────────
 
 onMounted(() => {
+  connectSse();
   window.addEventListener("keydown", handleGlobalShortcut);
-  removeDesktopActionListener = onOkoEvent(
-    EVENT_DESKTOP_ACTION,
-    handleDesktopAction,
-  );
-  removeAgentAuraOpenListener = onOkoEvent(
-    AGENT_AURA_DEMO_OPEN_EVENT,
-    handleAgentAuraOpenRequest,
-  );
   removeApiErrorListener = onOkoEvent(EVENT_API_ERROR, handleApiError);
 });
 
 onBeforeUnmount(() => {
+  sseStream?.close();
+  sseStream = null;
   if (apiErrorNoticeTimerId) {
     window.clearTimeout(apiErrorNoticeTimerId);
     apiErrorNoticeTimerId = null;
   }
   window.removeEventListener("keydown", handleGlobalShortcut);
-  removeDesktopActionListener();
-  removeDesktopActionListener = () => {};
-  removeAgentAuraOpenListener();
-  removeAgentAuraOpenListener = () => {};
   removeApiErrorListener();
   removeApiErrorListener = () => {};
 });

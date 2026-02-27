@@ -93,7 +93,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 import { ArrowLeft, Puzzle } from "lucide-vue-next";
 import UiPluginPageRendererFacade from "@/views/plugins/facades/UiPluginPageRendererFacade.vue";
@@ -105,8 +105,13 @@ import {
   loadPluginManifest,
   type PluginManifest,
 } from "@/features/plugins/manifest";
-import { EMBLEM_SRC, SIDEBAR_PARTICLES_ID } from "@/features/stores/ui/storeConstants";
+import {
+  EMBLEM_SRC,
+  SIDEBAR_PARTICLES_CONFIG,
+  SIDEBAR_PARTICLES_ID,
+} from "@/features/stores/ui/storeConstants";
 import { useUiStore } from "@/features/stores/uiStore";
+import { useSidebarParticles } from "@/features/composables/useSidebarParticles";
 
 interface ErrorState {
   title: string;
@@ -130,6 +135,12 @@ const pluginId = computed(() => {
   return String(params.pluginId || "").trim();
 });
 const isSidebarHidden = computed(() => uiStore.sidebarView.value === "hidden");
+
+useSidebarParticles({
+  containerId: SIDEBAR_PARTICLES_ID,
+  baseConfig: SIDEBAR_PARTICLES_CONFIG,
+  isSidebarHidden,
+});
 
 async function loadManifest(): Promise<void> {
   if (!pluginId.value) {
@@ -178,10 +189,6 @@ function handleBack(): void {
   void goPluginsPanel();
 }
 
-onMounted(() => {
-  void uiStore.initSidebarParticles();
-});
-
 watch(
   () => pluginId.value,
   () => {
@@ -194,7 +201,6 @@ watch(
   () => isSidebarHidden.value,
   (hidden) => {
     if (hidden) return;
-    void uiStore.initSidebarParticles();
   },
 );
 </script>

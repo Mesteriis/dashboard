@@ -109,7 +109,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, ref, watch } from "vue";
 import { Palette } from "lucide-vue-next";
 import {
   UI_KIT_SHOWCASE_GROUPS,
@@ -119,8 +119,12 @@ import UiBlankLayout from "@/components/layout/UiBlankLayout.vue";
 import UiNodeTree from "@/views/ui-showcase/components/UiNodeTree.vue";
 import { goDashboard } from "@/app/navigation/nav";
 import UiPrimitivesDemoView from "@/views/ui-showcase/UiPrimitivesDemoView.vue";
-import { EMBLEM_SRC, SIDEBAR_PARTICLES_ID } from "@/features/stores/ui/storeConstants";
-import { useUiStore } from "@/features/stores/uiStore";
+import {
+  EMBLEM_SRC,
+  SIDEBAR_PARTICLES_CONFIG,
+  SIDEBAR_PARTICLES_ID,
+} from "@/features/stores/ui/storeConstants";
+import { useSidebarParticles } from "@/features/composables/useSidebarParticles";
 
 const SLOT_APP_SIDEBAR_TOP = "app.sidebar.top";
 const SLOT_APP_SIDEBAR_MIDDLE = "app.sidebar.middle";
@@ -129,8 +133,10 @@ const SLOT_PAGE_CANVAS_MAIN = "page.canvas.main";
 
 type GroupFilterId = UiKitPrimitiveGroup["id"];
 
-const uiStore = useUiStore();
-const { initSidebarParticles } = uiStore;
+useSidebarParticles({
+  containerId: SIDEBAR_PARTICLES_ID,
+  baseConfig: SIDEBAR_PARTICLES_CONFIG,
+});
 
 const searchQuery = ref("");
 const activeGroup = ref<GroupFilterId>(
@@ -205,10 +211,6 @@ function handleClose(): void {
 const hasVisibleItems = computed(() =>
   visibleGroups.value.some((group) => group.items.length > 0),
 );
-
-onMounted(() => {
-  void initSidebarParticles();
-});
 
 watch(
   () => visibleGroups.value,

@@ -1,221 +1,189 @@
 <template>
-  <!-- Корневой контейнер layout: общий каркас страницы -->
+  <!-- Корневой каркас страницы -->
   <main
-    class="app-shell blank-page"
-    :class="{ 'sidebar-hidden': sidebarHidden }"
-    :data-layout-api-version="layoutApiVersion"
+      id="layout-shell"
+      class="app-shell blank-page"
+      :class="{
+        'sidebar-hidden': !hasSidebar || sidebarHidden,
+        'no-header': !hasHeader
+      }"
+      :data-layout-api-version="layoutApiVersion"
   >
-    <!-- Фоновый слой layout (декор/эффекты от родителя) -->
-    <slot name="app.shell.background" />
-
-    <!-- Левый сайдбар (скрывается при sidebarHidden) -->
-    <aside v-if="!sidebarHidden" class="sidebar blank-sidebar">
-      <!-- Контейнер для частиц/визуального эффекта в сайдбаре -->
+    <!-- Левый сайдбар -->
+    <aside
+        v-show="hasSidebar && !sidebarHidden"
+        id="layout-sidebar"
+        class="sidebar blank-sidebar"
+        :class="{ 'is-hidden': !hasSidebar || sidebarHidden }"
+    >
       <div
-        v-if="sidebarParticlesId"
-        :id="sidebarParticlesId"
-        class="sidebar-particles"
-        aria-hidden="true"
+          v-if="sidebarParticlesId"
+          :id="sidebarParticlesId"
+          class="sidebar-particles"
+          aria-hidden="true"
       ></div>
 
       <div class="sidebar-content">
-        <!-- Верх сайдбара: обычно логотип/бренд -->
-        <section class="blank-sidebar-logo">
-          <slot name="app.sidebar.top" />
-        </section>
-
-        <!-- Основная часть сайдбара: навигация/контент -->
-        <section class="blank-sidebar-main">
-          <slot name="app.sidebar.middle" />
-        </section>
-
-        <!-- Нижний блок сайдбара: сворачиваемая секция с доп. контентом -->
-        <section
-          v-if="hasSidebarBottomContent"
-          class="blank-sidebar-accordion"
-          :class="{ 'is-open': isSidebarBottomOpen }"
-        >
-          <!-- Панель аккордеона (контент снизу сайдбара) -->
-          <div
-            :id="sidebarBottomPanelId"
-            class="blank-sidebar-accordion__panel"
-            role="region"
-            :aria-label="sidebarBottomAccordionLabel"
-            :aria-hidden="!isSidebarBottomOpen"
-          >
-            <slot name="app.sidebar.bottom" />
+        <!-- Логотип / бренд -->
+        <section id="layout-sidebar-brand" class="blank-sidebar-logo" aria-label="Бренд">
+          <img v-if="emblemSrc" :src="emblemSrc" class="logo-emblem" alt="" aria-hidden="true"/>
+          <div class="logo-text">
+            <span class="logo-name">Око</span>
+            <span class="logo-slogan">Your Infrastructure in Sight</span>
           </div>
+          <UiIconButton
+              v-if="hasSidebar && !sidebarHidden"
+              button-class="logo-toggle-btn"
+              :title="sidebarViewToggleTitle"
+              :aria-label="sidebarViewToggleTitle"
+              @click="handleSidebarToggle"
+          >
+            <PanelLeftClose class="ui-icon"/>
+          </UiIconButton>
+        </section>
+        <!-- Основная навигация -->
+        <section id="sidebar-content-mid">
+          <slot name="sidebar-mid"/>
+        </section>
+        <section id="layout-sidebar-nav" class="blank-sidebar-main" aria-label="Навигация"/>
 
-          <!-- Кнопка открытия/закрытия нижней панели -->
+        <!-- Раскрывающаяся нижняя секция -->
+        <section
+            v-if="sidebarBottomVisible"
+            id="layout-sidebar-details"
+            class="blank-sidebar-accordion"
+            :class="{ 'is-open': isSidebarBottomOpen }"
+        >
+          <div
+              :id="sidebarBottomPanelId"
+              class="blank-sidebar-accordion__panel"
+              role="region"
+              :aria-label="sidebarBottomAccordionLabel"
+              :aria-hidden="!isSidebarBottomOpen"
+          />
+
           <button
-            type="button"
-            class="blank-sidebar-accordion__trigger"
-            :aria-expanded="isSidebarBottomOpen"
-            :aria-controls="sidebarBottomPanelId"
-            @click="toggleSidebarBottom"
+              type="button"
+              class="blank-sidebar-accordion__trigger"
+              :aria-expanded="isSidebarBottomOpen"
+              :aria-controls="sidebarBottomPanelId"
+              @click="toggleSidebarBottom"
           >
             <span>{{ sidebarBottomAccordionLabel }}</span>
-            <span
-              class="ui-icon blank-sidebar-accordion__trigger-icon"
-              aria-hidden="true"
-            >
-              <slot name="sidebar-bottom-toggle-icon" :open="isSidebarBottomOpen">
-                {{ isSidebarBottomOpen ? "▴" : "▾" }}
-              </slot>
+            <span class="ui-icon blank-sidebar-accordion__trigger-icon" aria-hidden="true">
+              {{ isSidebarBottomOpen ? "▴" : "▾" }}
             </span>
           </button>
         </section>
       </div>
     </aside>
 
-    <!-- Основная область страницы -->
-    <section class="blank-main">
-      <!-- Верхняя панель: табы/заголовок + панель действий -->
-      <section class="blank-main-header hero-layout">
-        <!-- Блок заголовка c табами и эмблемой -->
-        <UiHeroGlassTabsShell class="hero-title-panel" :emblem-src="emblemSrc">
-          <div class="blank-header-main">
-            <!-- Левая часть header (опционально) -->
-            <div v-if="hasHeaderLeft" class="blank-header-left">
-              <slot name="app.header.left" />
-            </div>
-            <!-- Основные header tabs -->
-            <div class="blank-header-tabs">
-              <slot name="app.header.tabs" />
-            </div>
-          </div>
+    <!-- Основная область -->
+    <div id="layout-main" class="blank-main">
+      <!-- ① Шапка: вкладки + панель управления -->
+      <header v-if="hasHeader" id="layout-header" class="blank-main-header hero-layout">
+        <UiIconButton
+            v-if="showSidebarToggle"
+            button-class="sidebar-toggle-btn"
+            :title="sidebarViewToggleTitle"
+            :aria-label="sidebarViewToggleTitle"
+            @click="handleSidebarToggle"
+        >
+          <PanelRightOpen class="ui-icon sidebar-toggle-icon"/>
+        </UiIconButton>
+
+        <UiHeroGlassTabsShell
+            id="layout-header-tabs"
+            class="hero-title-panel"
+            :emblem-src="emblemSrc"
+        >
+          <div class="blank-header-main"/>
         </UiHeroGlassTabsShell>
 
-        <!-- Правая панель управления (drawer/actions/footer) -->
-        <aside
-          class="panel hero-control-panel hero-control-panel--menu service-hero-controls"
-          :class="{ active: headerPanelActive }"
-        >
-          <UiHeroControlsAccordion
+        <UiHeroControlsAccordion
+            v-if="$slots.drawer"
             :drawer-id="headerPanelDrawerId"
             :storage-key="resolvedHeaderPanelStorageKey"
             :initial-open="headerPanelInitiallyOpen"
             @open-change="handleHeaderPanelOpenChange"
-          >
-            <!-- Триггер drawer: можно переопределить через slot -->
-            <template #drawer>
-              <slot name="app.header.panel.drawer">
-                <!-- Fallback-кнопка переключения режима сайдбара -->
-                <UiIconButton
-                  button-class="hero-icon-btn hero-accordion-action"
-                  :active="!isSidebarDetailed"
-                  :title="sidebarViewToggleTitle"
-                  :aria-label="sidebarViewToggleTitle"
-                  @click="handleSidebarToggle"
-                >
-                  <FolderTree class="ui-icon hero-action-icon" />
-                </UiIconButton>
-              </slot>
-            </template>
+        >
+          <template #drawer />
+        </UiHeroControlsAccordion>
 
-            <!-- Действия в header-панели -->
-            <template #actions>
-              <slot name="app.header.panel.actions" />
-              <slot name="app.header.actions" />
+        <UiDropdownMenu
+            class="hero-action-menu align-right"
+            aria-label="Системное меню"
+            :items="systemActions"
+            :show-caret="false"
+            trigger-class="hero-icon-btn hero-accordion-action hero-system-menu-trigger"
+            item-class="hero-system-menu-item"
+            @action="handleSystemAction"
+        >
+          <template #trigger>
+            <Lock class="ui-icon hero-action-icon"/>
+          </template>
+        </UiDropdownMenu>
+      </header>
 
-              <!-- Dropdown-меню действий (из panel.menu или actions.menu) -->
-              <div
-                v-if="hasHeaderPanelMenu"
-                class="ui-menu align-right hero-action-menu"
-              >
-                <slot v-if="hasHeaderPanelMenuSlot" name="app.header.panel.menu" />
-                <slot v-else name="app.header.actions.menu" />
-              </div>
-            </template>
-
-            <!-- Нижняя часть панели управления (опционально) -->
-            <template v-if="hasHeaderPanelFooterSlot" #footer>
-              <slot name="app.header.panel.footer" />
-            </template>
-          </UiHeroControlsAccordion>
-        </aside>
+      <!-- ② Основной контент -->
+      <section
+          id="layout-canvas"
+          class="blank-canvas"
+          :aria-label="contentLabel"
+          :style="layoutCanvasStyle"
+      >
+        <div class="blank-canvas-bg" aria-hidden="true"/>
       </section>
 
-      <!-- Основной canvas страницы: верх, тело, низ -->
-      <section class="blank-canvas" :aria-label="canvasAriaLabel">
-        <!-- Верхняя зона canvas -->
-        <section class="blank-canvas-top">
-          <slot name="page.canvas.top" />
-        </section>
-        <!-- Центральная зона canvas (основной контент) -->
-        <section class="blank-canvas-main">
-          <slot name="page.canvas.main" />
-        </section>
-        <!-- Нижняя зона canvas -->
-        <section class="blank-canvas-bottom">
-          <slot name="page.canvas.bottom" />
-        </section>
-      </section>
-    </section>
-
-    <!-- Глобальные UI-слоты приложения -->
-    <slot name="app.notifications" />
-    <slot name="app.modals" />
-    <slot name="app.command_palette" />
-
-    <!-- Расширения для карточек сущностей -->
-    <slot
-      name="entity.card.actions"
-      :context-object="entityContextObject"
-      :required-capabilities="entityRequiredCapabilities"
-    />
-    <slot name="entity.card.badges" />
-    <slot
-      name="entity.card.inline"
-      :context-object="entityContextObject"
-      :required-capabilities="entityRequiredCapabilities"
-    />
+    </div>
   </main>
 </template>
 
 <script setup lang="ts">
-import { computed, ref, useSlots, watch } from "vue";
-import { useRoute } from "vue-router";
-import { FolderTree } from "lucide-vue-next";
+import {computed, ref, useSlots, watch} from "vue";
+import {useRoute} from "vue-router";
+import {Lock, PanelLeftClose, PanelRightOpen} from "lucide-vue-next";
 import UiHeroGlassTabsShell from "@/components/layout/UiHeroGlassTabsShell.vue";
 import UiHeroControlsAccordion from "@/components/layout/UiHeroControlsAccordion.vue";
 import UiIconButton from "@/ui/actions/UiIconButton.vue";
-import { useDashboardStore } from "@/features/stores/dashboardStore";
+import UiDropdownMenu from "@/primitives/overlays/UiDropdownMenu.vue";
+import {openPleiadOverlay} from "@/app/navigation/nav";
+import {getRuntimeProfile} from "@/features/services/desktopRuntime";
+import {useDashboardStore} from "@/features/stores/dashboardStore";
+import {EMBLEM_SRC} from "@/features/stores/dashboard/storeConstants";
 
 let sidebarBottomPanelCounter = 0;
 
 const props = withDefaults(
-  defineProps<{
-    emblemSrc: string;
-    sidebarHidden?: boolean;
-    sidebarParticlesId?: string;
-    sidebarBottomAccordionLabel?: string;
-    sidebarBottomAccordionInitiallyOpen?: boolean;
-    sidebarBottomVisible?: boolean | null;
-    canvasAriaLabel?: string;
-    headerPanelActive?: boolean;
-    headerPanelDrawerId?: string;
-    headerPanelStorageKey?: string;
-    headerPanelInitiallyOpen?: boolean | null;
-    layoutApiVersion?: "v1";
-    entityContextObject?: Record<string, unknown> | null;
-    entityRequiredCapabilities?: string[];
-  }>(),
-  {
-    sidebarHidden: false,
-    sidebarParticlesId: "",
-    sidebarBottomAccordionLabel: "Sidebar details",
-    sidebarBottomAccordionInitiallyOpen: true,
-    sidebarBottomVisible: null,
-    canvasAriaLabel: "Blank page",
-    headerPanelActive: false,
-    headerPanelDrawerId: "blank-hero-controls-drawer",
-    headerPanelStorageKey: "",
-    headerPanelInitiallyOpen: null,
-    layoutApiVersion: "v1",
-    entityContextObject: null,
-    entityRequiredCapabilities: () => ["read.entity"],
-  },
+    defineProps<{
+      emblemSrc: string;
+      layoutMode?: "default" | "no-sidebar" | "content-only";
+      sidebarHidden?: boolean;
+      sidebarParticlesId?: string;
+      sidebarBottomAccordionLabel?: string;
+      sidebarBottomAccordionInitiallyOpen?: boolean;
+      sidebarBottomVisible?: boolean;
+      contentLabel?: string;
+      headerPanelActive?: boolean;
+      headerPanelDrawerId?: string;
+      headerPanelStorageKey?: string;
+      headerPanelInitiallyOpen?: boolean | null;
+      layoutApiVersion?: "v1";
+    }>(),
+    {
+      layoutMode: "default",
+      sidebarHidden: false,
+      sidebarParticlesId: "",
+      sidebarBottomAccordionLabel: "Sidebar details",
+      sidebarBottomAccordionInitiallyOpen: true,
+      sidebarBottomVisible: false,
+      contentLabel: "Основной контент",
+      headerPanelActive: false,
+      headerPanelDrawerId: "layout-header-controls-drawer",
+      headerPanelStorageKey: "",
+      headerPanelInitiallyOpen: null,
+      layoutApiVersion: "v1",
+    },
 );
 
 const emit = defineEmits<{
@@ -224,69 +192,91 @@ const emit = defineEmits<{
 
 const route = useRoute();
 const dashboard = useDashboardStore();
-const {
-  isSidebarDetailed,
-  sidebarView,
-  sidebarViewToggleTitle,
-  toggleSidebarView,
-} = dashboard;
-const slots = useSlots();
-const hasHeaderLeft = computed(() => Boolean(slots["app.header.left"]));
-const hasHeaderPanelMenuSlot = computed(() =>
-  Boolean(slots["app.header.panel.menu"]),
-);
-const hasHeaderActionsMenuSlot = computed(() =>
-  Boolean(slots["app.header.actions.menu"]),
-);
-const hasHeaderPanelMenu = computed(
-  () => hasHeaderPanelMenuSlot.value || hasHeaderActionsMenuSlot.value,
-);
-const hasHeaderPanelFooterSlot = computed(() =>
-  Boolean(slots["app.header.panel.footer"]),
-);
-const isSidebarBottomOpen = ref(
-  Boolean(props.sidebarBottomAccordionInitiallyOpen),
-);
+const {openSettingsPanel, sidebarView, sidebarViewToggleTitle, toggleSidebarView} = dashboard;
+
+// ── Системное меню ────────────────────────────────────────────────────────
+
+type SystemActionId = "settings" | "kiosk" | "pleiad_lock" | "exit";
+
+const systemActions: Array<{ id: SystemActionId; label: string; danger?: boolean }> = [
+  {id: "settings", label: "Настройки"},
+  {id: "kiosk", label: "Режим киоска"},
+  {id: "pleiad_lock", label: "Заблокировать"},
+  {id: "exit", label: "Выход", danger: true},
+];
+
+async function toggleKioskMode(): Promise<void> {
+  if (typeof document === "undefined") return;
+  try {
+    if (document.fullscreenElement) {
+      await document.exitFullscreen();
+    } else {
+      await document.documentElement.requestFullscreen();
+    }
+  } catch {
+    // ignore
+  }
+}
+
+async function exitApp(): Promise<void> {
+  try {
+    if (getRuntimeProfile().desktop) {
+      const {getCurrentWindow} = await import("@tauri-apps/api/window");
+      await getCurrentWindow().close();
+      return;
+    }
+  } catch {
+    // fall through
+  }
+  if (typeof window !== "undefined") window.close();
+}
+
+function handleSystemAction(actionId: string): void {
+  switch (actionId) {
+    case "settings":
+      openSettingsPanel();
+      break;
+    case "kiosk":
+      void toggleKioskMode();
+      break;
+    case "pleiad_lock":
+      void openPleiadOverlay("route");
+      break;
+    case "exit":
+      void exitApp();
+      break;
+  }
+}
+
+const isSidebarBottomOpen = ref(Boolean(props.sidebarBottomAccordionInitiallyOpen));
 const sidebarBottomPanelId = `blank-sidebar-bottom-panel-${++sidebarBottomPanelCounter}`;
-const hasSidebarBottomSlot = computed(() =>
-  Boolean(slots["app.sidebar.bottom"]),
-);
+
+const hasSidebar = computed(() => props.layoutMode !== "no-sidebar" && props.layoutMode !== "content-only");
+const hasHeader = computed(() => props.layoutMode !== "content-only");
+const showSidebarToggle = computed(() => hasSidebar.value && props.sidebarHidden);
+
 const resolvedHeaderPanelStorageKey = computed(() => {
   const customKey = String(props.headerPanelStorageKey || "").trim();
   if (customKey) return customKey;
   const rawPath = String(route.path || "/").trim();
   const normalizedPath =
-    rawPath.length > 1 && rawPath.endsWith("/")
-      ? rawPath.slice(0, -1)
-      : rawPath;
+      rawPath.length > 1 && rawPath.endsWith("/") ? rawPath.slice(0, -1) : rawPath;
   return `oko:hero-controls-open:${normalizedPath || "/"}`;
 });
 
-const hasSidebarBottomContent = computed(() => {
-  if (!hasSidebarBottomSlot.value) return false;
-  if (typeof props.sidebarBottomVisible === "boolean") {
-    return props.sidebarBottomVisible;
-  }
-  return true;
+const layoutCanvasStyle = computed(() => {
+  const src = props.emblemSrc || EMBLEM_SRC;
+  return {
+    "--blank-canvas-emblem-url": `url('${src}')`,
+  };
 });
 
-let hadSidebarBottomContent = false;
 watch(
-  () => hasSidebarBottomContent.value,
-  (hasContent) => {
-    if (!hasContent) {
-      isSidebarBottomOpen.value = false;
-      hadSidebarBottomContent = false;
-      return;
-    }
-    if (!hadSidebarBottomContent) {
-      isSidebarBottomOpen.value = Boolean(
-        props.sidebarBottomAccordionInitiallyOpen,
-      );
-      hadSidebarBottomContent = true;
-    }
-  },
-  { immediate: true },
+    () => props.sidebarBottomVisible,
+    (visible) => {
+      if (!visible) isSidebarBottomOpen.value = false;
+      else isSidebarBottomOpen.value = Boolean(props.sidebarBottomAccordionInitiallyOpen);
+    },
 );
 
 function toggleSidebarBottom(): void {
@@ -303,36 +293,155 @@ function handleSidebarToggle(): void {
 function handleHeaderPanelOpenChange(value: boolean): void {
   emit("header-panel-open-change", value);
 }
+
+// ── Validation ───────────────────────────────────────────────────────────────
+
+if (import.meta.env.DEV) {
+  const $slots = useSlots();
+  const hasSidebarSlot = Boolean($slots["sidebar-mid"]);
+  const hasHeaderSlot = Boolean($slots.default);
+
+  if (props.layoutMode === "default") {
+    if (!hasSidebarSlot && !hasHeaderSlot) {
+      throw new Error(
+        "[UiBlankLayout] layoutMode=\"default\" requires at least one slot: " +
+        "\"sidebar-mid\" or default slot for header content. " +
+        "Either provide content in these slots or use a different layoutMode.",
+      );
+    }
+  }
+
+  if (props.layoutMode === "no-sidebar") {
+    if (hasSidebarSlot) {
+      throw new Error(
+        "[UiBlankLayout] layoutMode=\"no-sidebar\" does not support \"sidebar-mid\" slot. " +
+        "Remove the slot or use layoutMode=\"default\".",
+      );
+    }
+  }
+
+  if (props.layoutMode === "content-only") {
+    if (hasSidebarSlot) {
+      throw new Error(
+        "[UiBlankLayout] layoutMode=\"content-only\" does not support \"sidebar-mid\" slot. " +
+        "Remove the slot or use a different layoutMode.",
+      );
+    }
+    if (hasHeaderSlot) {
+      throw new Error(
+        "[UiBlankLayout] layoutMode=\"content-only\" does not support default slot (header content). " +
+        "Remove the slot or use a different layoutMode.",
+      );
+    }
+  }
+}
+
+
 </script>
 
 <style scoped>
+/* ── Корневая сетка страницы ─────────────────────────────────────────── */
+
 .blank-page {
   grid-template-columns: 420px minmax(0, 1fr);
-}
-
-.blank-page,
-.blank-page :deep(*) {
-  animation: none !important;
-  transition: none !important;
+  height: calc(100vh - var(--desktop-drag-strip, 0px));
+  min-height: unset;
+  align-items: stretch;
 }
 
 .blank-page.sidebar-hidden {
   grid-template-columns: minmax(0, 1fr);
 }
 
+.blank-page.no-header {
+  grid-template-rows: minmax(0, 1fr);
+}
+
+.blank-page.no-header .blank-main {
+  grid-template-rows: minmax(0, 1fr);
+}
+
+.blank-page.no-header .blank-canvas {
+  height: 100%;
+}
+
+.blank-sidebar.is-hidden {
+  display: none;
+}
+
+/* ── Основная колонка ────────────────────────────────────────────────── */
+
 .blank-main {
   position: relative;
   isolation: isolate;
   min-height: 0;
+  height: 100%;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
   gap: 10px;
-  overflow: visible;
+  overflow: hidden;
 }
+
+/* ── Кнопка показа панели ───────────────────────────────────────────── */
+
+.sidebar-toggle-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: var(--ui-radius);
+  background: transparent;
+  border: 1px solid transparent;
+  color: rgba(200, 230, 255, 0.9);
+  cursor: pointer;
+  transition: all 170ms ease;
+}
+
+.sidebar-toggle-btn:hover {
+  background: rgba(30, 60, 90, 0.4);
+  border-color: rgba(120, 183, 218, 0.2);
+}
+
+.sidebar-toggle-btn:focus-visible {
+  outline: none;
+  border-color: rgba(166, 225, 255, 0.4);
+  box-shadow: 0 0 0 2px rgba(103, 177, 219, 0.2);
+}
+
+.sidebar-toggle-emblem {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  border-radius: 4px;
+}
+
+.sidebar-toggle-icon {
+  width: 16px;
+  height: 16px;
+}
+
+/* ── ① Шапка (#layout-header) ───────────────────────────────────────── */
 
 .blank-main-header {
   position: relative;
   z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.blank-main-header > :deep(.hero-title-panel) {
+  flex: 1;
+  height: 100%;
+}
+
+.blank-main-header .sidebar-toggle-btn {
+  flex-shrink: 0;
+}
+
+.blank-main-header .hero-action-menu {
+  flex-shrink: 0;
 }
 
 .blank-main-header :deep(.hero-glass-tabs-shell) {
@@ -353,10 +462,62 @@ function handleHeaderPanelOpenChange(value: boolean): void {
   display: contents;
 }
 
-.blank-header-left,
-.blank-header-tabs {
-  display: contents;
+/* ── ② Контент (#layout-canvas) ─────────────────────────────────────── */
+
+.blank-canvas {
+  --blank-canvas-pad: clamp(14px, 2vw, 24px);
+  position: relative;
+  z-index: 1;
+  height: 100%;
+  border: 1px solid rgba(89, 144, 166, 0.18);
+  border-radius: var(--ui-radius);
+  background-color: transparent;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  padding: var(--blank-canvas-pad);
+  overflow: hidden;
+  display: grid;
+  align-content: start;
+  gap: 10px;
 }
+
+.blank-canvas::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  padding: var(--blank-canvas-pad);
+  background-image: var(--blank-canvas-emblem-url);
+  background-repeat: no-repeat;
+  background-position: center 52%;
+  background-origin: content-box;
+  background-size: 50% auto;
+  opacity: 0.1;
+  mix-blend-mode: screen;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.blank-canvas > *:not(.blank-canvas-bg) {
+  position: relative;
+  z-index: 1;
+}
+
+.blank-canvas-bg {
+  position: absolute;
+  inset: calc(-1 * var(--blank-canvas-pad));
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.blank-canvas-top,
+.blank-canvas-main,
+.blank-canvas-bottom {
+  min-width: 0;
+  min-height: 0;
+}
+
+/* ── Сайдбар ─────────────────────────────────────────────────────────── */
 
 .blank-sidebar {
   min-height: 0;
@@ -372,6 +533,66 @@ function handleHeaderPanelOpenChange(value: boolean): void {
 .blank-sidebar-logo {
   flex: 0 0 auto;
   min-height: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 14px;
+}
+
+.logo-emblem {
+  width: 42px;
+  height: 42px;
+  object-fit: contain;
+  border-radius: var(--ui-radius);
+}
+
+.logo-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+
+.logo-name {
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: rgba(220, 240, 255, 0.95);
+}
+
+.logo-slogan {
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+  color: rgba(160, 200, 230, 0.7);
+  text-transform: uppercase;
+}
+
+.logo-toggle-btn {
+  margin-inline-start: auto;
+  padding: 6px;
+  border-radius: var(--ui-radius);
+  background: transparent;
+  border: 1px solid transparent;
+  color: rgba(160, 200, 230, 0.7);
+  cursor: pointer;
+  transition: all 170ms ease;
+}
+
+.logo-toggle-btn:hover {
+  background: rgba(30, 60, 90, 0.4);
+  border-color: rgba(120, 183, 218, 0.2);
+  color: rgba(200, 230, 255, 0.9);
+}
+
+.logo-toggle-btn:focus-visible {
+  outline: none;
+  border-color: rgba(166, 225, 255, 0.4);
+  box-shadow: 0 0 0 2px rgba(103, 177, 219, 0.2);
+}
+
+.logo-toggle-btn .ui-icon {
+  width: 18px;
+  height: 18px;
 }
 
 .blank-sidebar-main {
@@ -395,18 +616,13 @@ function handleHeaderPanelOpenChange(value: boolean): void {
   transform: translateY(10px);
   border-radius: var(--ui-radius);
   border: 1px solid transparent;
-  background: linear-gradient(
-    146deg,
-    rgba(15, 34, 51, 0.5),
-    rgba(10, 24, 40, 0.36)
-  );
+  background: linear-gradient(146deg, rgba(15, 34, 51, 0.5), rgba(10, 24, 40, 0.36));
   padding: 0 10px;
-  transition:
-    max-height 230ms ease,
-    opacity 170ms ease,
-    transform 230ms ease,
-    border-color 230ms ease,
-    padding 230ms ease;
+  transition: max-height 230ms ease,
+  opacity 170ms ease,
+  transform 230ms ease,
+  border-color 230ms ease,
+  padding 230ms ease;
 }
 
 .blank-sidebar-accordion.is-open .blank-sidebar-accordion__panel {
@@ -422,11 +638,7 @@ function handleHeaderPanelOpenChange(value: boolean): void {
   width: 100%;
   border: 1px solid rgba(110, 171, 208, 0.28);
   border-radius: var(--ui-radius);
-  background: linear-gradient(
-    146deg,
-    rgba(20, 45, 68, 0.56),
-    rgba(12, 30, 48, 0.45)
-  );
+  background: linear-gradient(146deg, rgba(20, 45, 68, 0.56), rgba(12, 30, 48, 0.45));
   color: rgba(220, 237, 250, 0.95);
   padding: 9px 10px;
   display: flex;
@@ -436,19 +648,14 @@ function handleHeaderPanelOpenChange(value: boolean): void {
   font-size: 0.82rem;
   letter-spacing: 0.03em;
   cursor: pointer;
-  transition:
-    border-color 170ms ease,
-    box-shadow 170ms ease,
-    background 170ms ease;
+  transition: border-color 170ms ease,
+  box-shadow 170ms ease,
+  background 170ms ease;
 }
 
 .blank-sidebar-accordion__trigger:hover {
   border-color: rgba(157, 216, 250, 0.52);
-  background: linear-gradient(
-    146deg,
-    rgba(30, 63, 93, 0.58),
-    rgba(17, 41, 65, 0.52)
-  );
+  background: linear-gradient(146deg, rgba(30, 63, 93, 0.58), rgba(17, 41, 65, 0.52));
 }
 
 .blank-sidebar-accordion__trigger:focus-visible {
@@ -464,26 +671,5 @@ function handleHeaderPanelOpenChange(value: boolean): void {
 
 .blank-sidebar-accordion.is-open .blank-sidebar-accordion__trigger-icon {
   transform: rotate(0deg);
-}
-
-.blank-canvas {
-  position: relative;
-  z-index: 1;
-  border: 1px solid rgba(89, 144, 166, 0.18);
-  border-radius: var(--ui-radius);
-  background: transparent;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
-  padding: clamp(14px, 2vw, 24px);
-  overflow: hidden;
-  display: grid;
-  align-content: start;
-  gap: 10px;
-}
-
-.blank-canvas-top,
-.blank-canvas-main,
-.blank-canvas-bottom {
-  min-width: 0;
-  min-height: 0;
 }
 </style>
