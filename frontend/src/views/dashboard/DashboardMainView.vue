@@ -60,6 +60,11 @@
   />
 
   <CreateEntityChooserModal />
+  <ItemEditorModal />
+  <CreateEntityModal />
+  <IframeModal />
+  <DashboardSettingsModal />
+  <CommandPaletteModal />
 
   <section
     v-if="showConfigErrorPopup"
@@ -121,6 +126,26 @@ const UiIndicatorTabPanelFacade = defineAsyncComponent(
 
 const CreateEntityChooserModal = defineAsyncComponent(
   () => import("@/views/dashboard/modals/CreateEntityChooserModal.vue"),
+);
+
+const ItemEditorModal = defineAsyncComponent(
+  () => import("@/views/dashboard/modals/ItemEditorModal.vue"),
+);
+
+const CreateEntityModal = defineAsyncComponent(
+  () => import("@/views/dashboard/modals/CreateEntityModal.vue"),
+);
+
+const IframeModal = defineAsyncComponent(
+  () => import("@/views/dashboard/modals/IframeModal.vue"),
+);
+
+const DashboardSettingsModal = defineAsyncComponent(
+  () => import("@/views/dashboard/modals/DashboardSettingsModal.vue"),
+);
+
+const CommandPaletteModal = defineAsyncComponent(
+  () => import("@/views/dashboard/modals/CommandPaletteModal.vue"),
 );
 
 const dashboard = useDashboardStore();
