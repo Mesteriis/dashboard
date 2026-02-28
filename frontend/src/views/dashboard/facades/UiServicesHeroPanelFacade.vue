@@ -11,7 +11,6 @@ withDefaults(
       | "full"
       | "tabs"
       | "panel.drawer"
-      | "panel.actions"
       | "panel.menu"
       | "panel.footer";
   }>(),

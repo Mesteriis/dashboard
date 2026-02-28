@@ -194,21 +194,22 @@ function resolveTabMetrics(buttons: HTMLElement[]): TabMetrics | null {
   );
   const logoWidth = logoTile ? logoTile.getBoundingClientRect().width : 0;
   const overlapCompensation = Math.max(0, buttons.length - 1);
+  
+  // Получаем ширину от родителя и ограничиваем её
+  const parentElement = host.parentElement;
+  const parentWidth = parentElement?.clientWidth || host.clientWidth;
+  const maxAvailableWidth = parentWidth || globalThis.innerWidth;
+  
   const availableWidth = Math.max(
     collapsedWidth * buttons.length,
-    host.clientWidth - logoWidth + overlapCompensation,
+    Math.min(host.clientWidth, maxAvailableWidth) - logoWidth + overlapCompensation,
   );
   const unconstrainedActiveWidth = Math.max(
     collapsedWidth,
     availableWidth - collapsedWidth * (buttons.length - 1),
   );
-  const activeWidth =
-    buttons.length <= 1
-      ? availableWidth
-      : Math.min(
-          unconstrainedActiveWidth,
-          Math.max(collapsedWidth, Math.min(availableWidth * 0.72, 620)),
-        );
+  // Активная вкладка занимает всё доступное пространство
+  const activeWidth = unconstrainedActiveWidth;
 
   return {
     collapsedWidth,
@@ -261,6 +262,7 @@ function applyTabFrame(
       width - paddingInline * 2 - metrics.iconWidth - gap - 6,
     );
 
+    // Используем точную ширину для всех кнопок
     descriptor.button.style.flexGrow = "0";
     descriptor.button.style.flexShrink = "0";
     descriptor.button.style.flexBasis = "auto";
@@ -285,11 +287,13 @@ function applyTabFrame(
   }
 }
 
-function easeInOutQuart(progress: number): number {
+function easeInOutCubic(progress: number): number {
+  // Более равномерная анимация без резких рывков
+  // Используем квадратичную функцию для более плавного начала и конца
   if (progress < 0.5) {
-    return 8 * progress ** 4;
+    return 2 * progress * progress;
   }
-  return 1 - (-2 * progress + 2) ** 4 / 2;
+  return 1 - Math.pow(-2 * progress + 2, 2) / 2;
 }
 
 function animateTabsLayout({
@@ -337,16 +341,14 @@ function animateTabsLayout({
   }
 
   stopTabsAnimation();
-  const durationMs = Math.max(
-    560,
-    Math.min(1800, metrics.slideDuration * 1.15),
-  );
+  // Уменьшенная длительность для более плавной анимации
+  const durationMs = 450;
   const startedAt = globalThis.performance.now();
 
   const step = (timestamp: number) => {
     const elapsed = timestamp - startedAt;
     const progress = Math.max(0, Math.min(1, elapsed / durationMs));
-    const eased = easeInOutQuart(progress);
+    const eased = easeInOutCubic(progress);
     applyTabFrame(descriptors, metrics, eased);
 
     if (progress < 1) {
@@ -378,8 +380,9 @@ onMounted(() => {
       tabsResizeObserver = new globalThis.ResizeObserver(() => {
         scheduleInstantTabsLayout();
       });
-      if (tabsRef.value) {
-        tabsResizeObserver.observe(tabsRef.value);
+      // Наблюдаем за родителем для правильной ширины
+      if (tabsRef.value?.parentElement) {
+        tabsResizeObserver.observe(tabsRef.value.parentElement);
       }
     } else {
       globalThis.addEventListener("resize", scheduleInstantTabsLayout);

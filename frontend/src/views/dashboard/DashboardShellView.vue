@@ -4,66 +4,38 @@
     :sidebar-hidden="isSidebarHidden"
     :sidebar-particles-id="SIDEBAR_PARTICLES_ID"
     :header-panel-active="editMode"
-    sidebar-bottom-accordion-label="Индикаторы"
-    :sidebar-bottom-visible="isSidebarDetailed"
     canvas-aria-label="Dashboard content"
     @logout="handleLogout"
   >
-    <template v-slot:[SLOT_APP_SIDEBAR_TOP]>
-      <UiSidebarHeaderTabsFacade />
-    </template>
-
-    <template v-slot:[SLOT_APP_SIDEBAR_MIDDLE]>
+    <template #sidebar-mid>
       <UiSidebarTreePanelFacade v-if="isSidebarDetailed" />
     </template>
 
-    <template v-slot:[SLOT_APP_SIDEBAR_BOTTOM]>
+    <template #sidebar-bottom-indicators>
       <UiSidebarIndicatorsAccordionFacade v-if="isSidebarDetailed" />
     </template>
 
-    <template v-slot:[SLOT_APP_HEADER_TABS]>
+    <template #header-tabs>
       <UiServicesHeroPanelFacade segment="tabs" />
     </template>
 
-    <template v-slot:[SLOT_APP_HEADER_PANEL_DRAWER]>
+    <template #drawer>
       <UiServicesHeroPanelFacade segment="panel.drawer" />
     </template>
 
-    <template v-slot:[SLOT_APP_HEADER_PANEL_ACTIONS]>
-      <UiServicesHeroPanelFacade segment="panel.actions" />
-    </template>
-
-    <template v-slot:[SLOT_APP_HEADER_PANEL_MENU]>
-      <UiServicesHeroPanelFacade segment="panel.menu" />
-    </template>
-
-    <template v-slot:[SLOT_APP_HEADER_PANEL_FOOTER]>
+    <template #drawer-footer>
       <UiServicesHeroPanelFacade segment="panel.footer" />
     </template>
 
-    <template v-slot:[SLOT_PAGE_CANVAS_MAIN]>
+    <template #canvas-main>
       <UiDashboardMainViewFacade />
-    </template>
-
-    <template v-slot:[SLOT_APP_MODALS]>
-      <IframeModal v-if="iframeModal.open" />
-      <ItemEditorModal v-if="itemEditor.open" />
-      <CreateEntityChooserModal v-if="createChooser.open" />
-      <CreateEntityModal v-if="createEntityEditor.open" />
-      <DashboardSettingsModal v-if="settingsPanel.open" />
-    </template>
-
-    <template v-slot:[SLOT_APP_COMMAND_PALETTE]>
-      <CommandPaletteModal v-if="commandPaletteOpen" />
     </template>
   </UiBlankLayout>
 </template>
 
 <script setup lang="ts">
-import { defineAsyncComponent } from "vue";
 import UiDashboardMainViewFacade from "@/views/dashboard/facades/UiDashboardMainViewFacade.vue";
 import UiServicesHeroPanelFacade from "@/views/dashboard/facades/UiServicesHeroPanelFacade.vue";
-import UiSidebarHeaderTabsFacade from "@/views/dashboard/facades/UiSidebarHeaderTabsFacade.vue";
 import UiSidebarIndicatorsAccordionFacade from "@/views/dashboard/facades/UiSidebarIndicatorsAccordionFacade.vue";
 import UiSidebarTreePanelFacade from "@/views/dashboard/facades/UiSidebarTreePanelFacade.vue";
 import UiBlankLayout from "@/components/layout/UiBlankLayout.vue";
@@ -75,48 +47,8 @@ import {
 import { useUiStore } from "@/features/stores/uiStore";
 import { useSidebarParticles } from "@/features/composables/useSidebarParticles";
 
-const IframeModal = defineAsyncComponent(
-  () => import("@/views/dashboard/modals/IframeModal.vue"),
-);
-const ItemEditorModal = defineAsyncComponent(
-  () => import("@/views/dashboard/modals/ItemEditorModal.vue"),
-);
-const CreateEntityChooserModal = defineAsyncComponent(
-  () => import("@/views/dashboard/modals/CreateEntityChooserModal.vue"),
-);
-const CreateEntityModal = defineAsyncComponent(
-  () => import("@/views/dashboard/modals/CreateEntityModal.vue"),
-);
-const DashboardSettingsModal = defineAsyncComponent(
-  () => import("@/views/dashboard/modals/DashboardSettingsModal.vue"),
-);
-const CommandPaletteModal = defineAsyncComponent(
-  () => import("@/views/dashboard/modals/CommandPaletteModal.vue"),
-);
-
-const SLOT_APP_SIDEBAR_TOP = "app.sidebar.top";
-const SLOT_APP_SIDEBAR_MIDDLE = "app.sidebar.middle";
-const SLOT_APP_SIDEBAR_BOTTOM = "app.sidebar.bottom";
-const SLOT_APP_HEADER_TABS = "app.header.tabs";
-const SLOT_APP_HEADER_PANEL_DRAWER = "app.header.panel.drawer";
-const SLOT_APP_HEADER_PANEL_ACTIONS = "app.header.panel.actions";
-const SLOT_APP_HEADER_PANEL_MENU = "app.header.panel.menu";
-const SLOT_APP_HEADER_PANEL_FOOTER = "app.header.panel.footer";
-const SLOT_PAGE_CANVAS_MAIN = "page.canvas.main";
-const SLOT_APP_MODALS = "app.modals";
-const SLOT_APP_COMMAND_PALETTE = "app.command_palette";
 const dashboard = useUiStore();
-const {
-  commandPaletteOpen,
-  createChooser,
-  createEntityEditor,
-  editMode,
-  iframeModal,
-  isSidebarDetailed,
-  isSidebarHidden,
-  itemEditor,
-  settingsPanel,
-} = dashboard;
+const { editMode, isSidebarDetailed, isSidebarHidden } = dashboard;
 
 useSidebarParticles({
   containerId: SIDEBAR_PARTICLES_ID,

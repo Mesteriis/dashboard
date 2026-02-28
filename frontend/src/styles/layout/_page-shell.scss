@@ -69,13 +69,20 @@
 }
 
 .hero-layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  display: flex;
   align-items: stretch;
   gap: 12px;
   position: sticky;
   top: 0;
   z-index: 8;
+}
+
+.hero-layout > .hero-title-panel {
+  flex-shrink: 0;
+}
+
+.hero-layout > .hero-controls-content {
+  flex-shrink: 0;
 }
 
 .hero-layout > * {

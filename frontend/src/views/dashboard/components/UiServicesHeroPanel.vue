@@ -15,25 +15,6 @@
       >
         <template #drawer>
           <UiIconButton
-            button-class="hero-icon-btn hero-accordion-action"
-            title="Панель настроек"
-            aria-label="Открыть панель настроек"
-            @click="openSettingsPanel"
-          >
-            <SlidersHorizontal class="ui-icon hero-action-icon" />
-          </UiIconButton>
-
-          <UiIconButton
-            button-class="hero-icon-btn hero-accordion-action"
-            :active="!isSidebarDetailed"
-            :title="sidebarViewToggleTitle"
-            :aria-label="sidebarViewToggleTitle"
-            @click="toggleSidebarView"
-          >
-            <FolderTree class="ui-icon hero-action-icon" />
-          </UiIconButton>
-
-          <UiIconButton
             button-class="hero-icon-btn hero-accordion-action editor-toggle"
             :active="editMode"
             :title="
@@ -52,37 +33,17 @@
           </UiIconButton>
 
           <UiIconButton
+            v-if="editMode"
             button-class="hero-icon-btn hero-accordion-action"
-            :disabled="!editMode"
             title="Добавить сущность"
             aria-label="Добавить сущность"
             @click="openCreateChooser()"
           >
             <Plus class="ui-icon hero-action-icon" />
           </UiIconButton>
-
-          <span
-            v-if="editMode"
-            class="hero-save-indicator hero-accordion-status"
-            :class="saveStatus"
-            role="status"
-            :title="saveStatusLabel"
-            :aria-label="saveStatusLabel"
-          >
-            <Circle class="ui-icon hero-save-icon" />
-          </span>
         </template>
 
         <template #actions>
-          <UiIconButton
-            button-class="hero-icon-btn hero-accordion-action hero-plugin-panel-btn"
-            title="Открыть панель плагинов"
-            aria-label="Открыть панель плагинов"
-            @click="openPluginPanel"
-          >
-            <Puzzle class="ui-icon hero-action-icon" />
-          </UiIconButton>
-
           <UiDropdownMenu
             class="hero-action-menu"
             aria-label="Системное меню"
@@ -114,25 +75,6 @@
 
   <template v-else-if="segment === 'panel.drawer'">
     <UiIconButton
-      button-class="hero-icon-btn hero-accordion-action"
-      title="Панель настроек"
-      aria-label="Открыть панель настроек"
-      @click="openSettingsPanel"
-    >
-      <SlidersHorizontal class="ui-icon hero-action-icon" />
-    </UiIconButton>
-
-    <UiIconButton
-      button-class="hero-icon-btn hero-accordion-action"
-      :active="!isSidebarDetailed"
-      :title="sidebarViewToggleTitle"
-      :aria-label="sidebarViewToggleTitle"
-      @click="toggleSidebarView"
-    >
-      <FolderTree class="ui-icon hero-action-icon" />
-    </UiIconButton>
-
-    <UiIconButton
       button-class="hero-icon-btn hero-accordion-action editor-toggle"
       :active="editMode"
       :title="
@@ -151,35 +93,13 @@
     </UiIconButton>
 
     <UiIconButton
+      v-if="editMode"
       button-class="hero-icon-btn hero-accordion-action"
-      :disabled="!editMode"
       title="Добавить сущность"
       aria-label="Добавить сущность"
       @click="openCreateChooser()"
     >
       <Plus class="ui-icon hero-action-icon" />
-    </UiIconButton>
-
-    <span
-      v-if="editMode"
-      class="hero-save-indicator hero-accordion-status"
-      :class="saveStatus"
-      role="status"
-      :title="saveStatusLabel"
-      :aria-label="saveStatusLabel"
-    >
-      <Circle class="ui-icon hero-save-icon" />
-    </span>
-  </template>
-
-  <template v-else-if="segment === 'panel.actions'">
-    <UiIconButton
-      button-class="hero-icon-btn hero-accordion-action hero-plugin-panel-btn"
-      title="Открыть панель плагинов"
-      aria-label="Открыть панель плагинов"
-      @click="openPluginPanel"
-    >
-      <Puzzle class="ui-icon hero-action-icon" />
     </UiIconButton>
   </template>
 
@@ -210,20 +130,16 @@ import { computed } from "vue";
 import { useRoute, useRouter, type RouteLocationRaw } from "vue-router";
 import type { Component } from "vue";
 import {
-  Circle,
-  FolderTree,
   Lock,
   Pencil,
   Plus,
-  Puzzle,
-  SlidersHorizontal,
 } from "lucide-vue-next";
 import UiHeroPageTabs from "@/views/dashboard/components/UiHeroPageTabs.vue";
 import UiHeroControlsAccordion from "@/components/layout/UiHeroControlsAccordion.vue";
 import UiDropdownMenu from "@/primitives/overlays/UiDropdownMenu.vue";
 import UiHeroPanel from "@/components/layout/UiHeroPanel.vue";
 import UiIconButton from "@/ui/actions/UiIconButton.vue";
-import { goPluginsPanel, openPleiadOverlay } from "@/app/navigation/nav";
+import { openPleiadOverlay } from "@/app/navigation/nav";
 import { getRuntimeProfile } from "@/features/services/desktopRuntime";
 import { useDashboardStore } from "@/features/stores/dashboardStore";
 
@@ -231,7 +147,6 @@ type UiServicesHeroPanelSegment =
   | "full"
   | "tabs"
   | "panel.drawer"
-  | "panel.actions"
   | "panel.menu"
   | "panel.footer";
 
@@ -250,20 +165,14 @@ const dashboard = useDashboardStore();
 
 const {
   editMode,
-  isSidebarDetailed,
   openCreateChooser,
-  openSettingsPanel,
   saveError,
-  saveStatus,
-  saveStatusLabel,
-  sidebarViewToggleTitle,
   toggleEditMode,
-  toggleSidebarView,
 } = dashboard;
 
 const router = useRouter();
 
-type SystemActionId = "kiosk" | "profile" | "pleiad_lock" | "exit" | "navigate";
+type SystemActionId = "kiosk" | "profile" | "pleiad_lock" | "exit" | "navigate" | "settings";
 
 interface SystemAction {
   id: SystemActionId | string;
@@ -273,9 +182,17 @@ interface SystemAction {
   action?: () => void | Promise<void>;
   danger?: boolean;
   divider?: boolean;
+  disabled?: boolean;
 }
 
 const systemActions = computed<SystemAction[]>(() => [
+  {
+    id: "settings",
+    label: "Настройки",
+    action: () => {
+      void router.push("/settings");
+    },
+  },
   { id: "kiosk", label: "Режим киоска" },
   { id: "profile", label: "Профиль" },
   { id: "pleiad_lock", label: "Блокировка -> Плияды" },
@@ -292,10 +209,6 @@ const heroControlsStorageKey = computed(() => {
       : rawPath;
   return `oko:hero-controls-open:${normalizedPath || "/"}`;
 });
-
-function openPluginPanel() {
-  void goPluginsPanel();
-}
 
 async function toggleKioskMode(): Promise<void> {
   if (typeof document === "undefined") return;
@@ -350,8 +263,8 @@ function handleSystemAction(action: SystemAction): void {
     return;
   }
 
-  if (id === "settings" || id === "profile") {
-    openSettingsPanel();
+  if (id === "profile") {
+    void router.push("/settings");
     return;
   }
 

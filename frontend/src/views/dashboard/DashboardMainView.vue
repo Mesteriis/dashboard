@@ -59,6 +59,8 @@
     @import-yaml="importInitialDashboard"
   />
 
+  <CreateEntityChooserModal />
+
   <section
     v-if="showConfigErrorPopup"
     class="system-popup-backdrop"
@@ -115,6 +117,10 @@ withDefaults(
 
 const UiIndicatorTabPanelFacade = defineAsyncComponent(
   () => import("@/views/dashboard/facades/UiIndicatorTabPanelFacade.vue"),
+);
+
+const CreateEntityChooserModal = defineAsyncComponent(
+  () => import("@/views/dashboard/modals/CreateEntityChooserModal.vue"),
 );
 
 const dashboard = useDashboardStore();

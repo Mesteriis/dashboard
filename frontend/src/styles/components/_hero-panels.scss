@@ -9,9 +9,19 @@
 }
 .hero-title-panel {
   overflow: hidden;
+  position: relative;
+  z-index: 10;
 }
 .hero-control-panel {
   overflow: hidden;
+  position: relative;
+  z-index: 5;
+}
+
+/* Вертикальный разделитель в хедере */
+.hero-header-divider {
+  margin: 0 1rem;
+  align-self: stretch;
 }
 .hero-title-content,
 .hero-controls-content {
@@ -36,6 +46,9 @@
   align-items: stretch;
   justify-content: flex-end;
   gap: 6px;
+  overflow: visible;
+  position: relative;
+  z-index: 5;
 }
 .hero-controls-drawer {
   block-size: 100%;
@@ -51,6 +64,8 @@
   border: 0;
   background: transparent;
   box-shadow: none;
+  position: relative;
+  z-index: 1;
 }
 .hero-display-controls {
   inline-size: clamp(390px, 54vw, 760px);
@@ -233,7 +248,7 @@
 .hero-controls-drawer-transition-enter-from,
 .hero-controls-drawer-transition-leave-to {
   opacity: 0;
-  transform: translateX(8px);
+  transform: translateX(-8px);
 }
 .hero-controls-trigger {
   border: 0;
@@ -292,6 +307,11 @@
   align-items: stretch;
   gap: 8px;
   min-height: 0;
+  flex: 0 0 auto;
+  width: auto;
+  max-width: 100%;
+  min-width: 0;
+  overflow: visible;
   border: 1px solid var(--hero-panels-color-033);
   border-radius: var(--ui-radius);
   background: linear-gradient(
@@ -299,8 +319,6 @@
     var(--hero-panels-color-034),
     var(--hero-panels-color-035)
   );
-  overflow: hidden;
-  padding: 8px;
   backdrop-filter: blur(10px) saturate(122%);
 }
 
@@ -341,9 +359,14 @@
   position: relative;
   z-index: 1;
   min-width: 0;
+  max-width: 100%;
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   flex: 1 1 auto;
+  width: 100%;
+  height: 100%;
+  padding: 8px;
+  overflow: visible;
 }
 
 .hero-glass-tabs-actions {
@@ -352,13 +375,25 @@
   display: inline-flex;
   align-items: stretch;
   gap: 8px;
+  flex-shrink: 0;
 }
 
 .hero-title-content {
   display: flex;
   align-items: stretch;
-  width: 100%;
+  width: auto;
+  max-width: 100%;
+  height: 100%;
   min-width: 0;
+  flex: 0 0 auto;
+  overflow: visible;
+}
+
+.hero-title-content > .hero-page-tabs {
+  width: auto;
+  max-width: 100%;
+  height: 100%;
+  overflow: visible;
 }
 
 .hero-page-tabs {
@@ -371,20 +406,27 @@
   --hero-tabs-ease: cubic-bezier(0.16, 1, 0.3, 1);
   margin: 0;
   display: flex;
+  flex-wrap: nowrap;
   align-items: stretch;
   justify-content: flex-start;
   gap: 0;
-  width: 100%;
-  flex: 1 1 auto;
+  width: auto;
+  max-width: 100%;
   min-width: 0;
   overflow: hidden;
   padding: 0;
+  box-sizing: border-box;
+}
+
+.hero-page-tabs * {
+  box-sizing: border-box;
 }
 
 .hero-page-tabs.hero-page-tabs--js-smooth {
-  inline-size: 100%;
+  inline-size: auto;
   min-inline-size: 0;
   align-self: stretch;
+  height: stretch;
 }
 
 .hero-logo-square {
@@ -408,6 +450,7 @@
   justify-content: center;
   box-shadow: inset 0 1px 0 var(--hero-panels-color-005);
   flex: 0 0 auto;
+  height: 100%;
 }
 
 .hero-logo-square img {
@@ -435,7 +478,7 @@
   height: 100%;
   min-width: 0;
   flex-grow: 0;
-  flex-shrink: 0;
+  flex-shrink: 1;
   flex-basis: var(--hero-page-tab-size);
   padding-inline: calc(
     (var(--hero-page-tab-size) - var(--hero-page-tab-icon-size)) / 2
@@ -448,9 +491,8 @@
   cursor: pointer;
   white-space: nowrap;
   transform-origin: left center;
-  will-change: flex-grow, flex-basis, padding, gap;
+  will-change: flex-basis, padding, gap;
   transition:
-    flex-grow var(--hero-tabs-slide-duration) var(--hero-tabs-ease),
     flex-basis var(--hero-tabs-slide-duration) var(--hero-tabs-ease),
     padding-inline var(--hero-tabs-slide-duration) var(--hero-tabs-ease),
     gap var(--hero-tabs-slide-duration) var(--hero-tabs-ease),
@@ -462,8 +504,6 @@
 
 .hero-page-tabs--js-smooth .hero-page-tab-btn,
 .hero-page-tabs--js-smooth .hero-page-tab-btn.active {
-  flex-grow: 0;
-  flex-shrink: 0;
   flex-basis: auto;
   transition:
     border-color var(--hero-tabs-fade-duration) ease,
@@ -527,7 +567,7 @@
   flex-shrink: 1;
   flex-basis: 0%;
   gap: 10px;
-  padding-inline: 32px;
+  padding-inline: 8px;
   padding-block: 0;
   border-color: var(--hero-panels-color-046);
   background: linear-gradient(
