@@ -1768,6 +1768,157 @@
   --sidebar-shell-color-019: #57788f;
 }
 
+/* =======================================================================
+   ТЕМА "АМЕТИСТ" (Amethyst)
+   ======================================================================= */
+:root[data-theme-palette=amethyst] {
+  /* foundation */
+  --foundation-color-007: #7c3aed;
+  --foundation-color-008: #a78bfa;
+  --foundation-color-009: rgba(167, 139, 250, 0.22);
+  --foundation-color-010: rgba(124, 58, 237, 0.14);
+  --foundation-color-011: rgba(139, 92, 246, 0.22);
+  --foundation-color-012: rgba(109, 40, 217, 0.2);
+  /* agent-aura */
+  --agent-aura-color-001: rgba(124, 58, 237, 0.15);
+  /* command-palette */
+  --command-palette-color-002: rgba(167, 139, 250, 0.32);
+  --command-palette-color-020: rgba(167, 139, 250, 0.46);
+  --command-palette-color-023: rgba(167, 139, 250, 0.34);
+  /* create-entity-flow-modal */
+  --create-entity-flow-modal-color-002: rgba(167, 139, 250, 0.34);
+  --create-entity-flow-modal-color-010: rgba(167, 139, 250, 0.72);
+  /* dashboard-settings-modal */
+  --dashboard-settings-modal-color-002: rgba(167, 139, 250, 0.3);
+  --dashboard-settings-modal-color-017: rgba(167, 139, 250, 0.5);
+  --dashboard-settings-modal-color-018: rgba(167, 139, 250, 0.62);
+  --dashboard-settings-modal-color-028: rgba(167, 139, 250, 0.58);
+  --dashboard-settings-modal-color-034: rgba(167, 139, 250, 0.5);
+  --dashboard-settings-modal-color-039: rgba(167, 139, 250, 0.3);
+  /* editor-modal */
+  --editor-modal-color-001: rgba(167, 139, 250, 0.34);
+  --editor-modal-color-013: rgba(167, 139, 250, 0.32);
+  --editor-modal-color-015: rgba(167, 139, 250, 0.58);
+  --editor-modal-color-024: rgba(167, 139, 250, 0.72);
+  /* editor-sections-and-motion-init */
+  --editor-sections-and-motion-init-color-009: rgba(167, 139, 250, 0.24);
+  /* groups */
+  --groups-color-007: rgba(167, 139, 250, 0.15);
+  --groups-color-008: rgba(167, 139, 250, 0.25);
+  --groups-color-009: rgba(167, 139, 250, 0.18);
+  /* health-widgets */
+  --health-widgets-color-013: rgba(167, 139, 250, 0.15);
+  --health-widgets-color-014: rgba(167, 139, 250, 0.25);
+  --health-widgets-color-015: rgba(167, 139, 250, 0.18);
+  /* hero-panels */
+  --hero-panels-color-036: rgba(167, 139, 250, 0.14);
+  --hero-panels-color-037: rgba(124, 58, 237, 0.12);
+  --hero-panels-color-038: rgba(167, 139, 250, 0.2);
+  --hero-panels-color-041: rgba(167, 139, 250, 0.3);
+  --hero-panels-color-049: rgba(124, 58, 237, 0.24);
+  --hero-panels-color-052: rgba(167, 139, 250, 0.18);
+  --hero-panels-color-054: rgba(124, 58, 237, 0.28);
+  /* indicator-tab */
+  --indicator-tab-color-007: rgba(167, 139, 250, 0.25);
+  --indicator-tab-color-008: rgba(167, 139, 250, 0.18);
+  --indicator-tab-color-009: rgba(167, 139, 250, 0.22);
+  /* items-card-core */
+  --items-card-core-color-013: rgba(167, 139, 250, 0.15);
+  --items-card-core-color-014: rgba(167, 139, 250, 0.25);
+  --items-card-core-color-015: rgba(167, 139, 250, 0.18);
+  /* items-card-health-widgets-entry */
+  --items-card-health-widgets-entry-color-013: rgba(167, 139, 250, 0.15);
+  --items-card-health-widgets-entry-color-014: rgba(167, 139, 250, 0.25);
+  --items-card-health-widgets-entry-color-015: rgba(167, 139, 250, 0.18);
+  /* modals-iframe-and-editor-backdrop */
+  --modals-iframe-and-editor-backdrop-color-001: rgba(124, 58, 237, 0.35);
+  /* pleiad */
+  --pleiad-color-001: rgba(167, 139, 250, 0.15);
+  --pleiad-color-002: rgba(124, 58, 237, 0.25);
+  --pleiad-color-003: rgba(167, 139, 250, 0.18);
+  /* plugins-panel */
+  --plugins-panel-color-007: rgba(167, 139, 250, 0.15);
+  --plugins-panel-color-008: rgba(167, 139, 250, 0.25);
+  --plugins-panel-color-009: rgba(167, 139, 250, 0.18);
+  /* sidebar-actions-and-accordion */
+  --sidebar-actions-and-accordion-color-007: rgba(167, 139, 250, 0.15);
+  --sidebar-actions-and-accordion-color-008: rgba(167, 139, 250, 0.25);
+  --sidebar-actions-and-accordion-color-009: rgba(167, 139, 250, 0.18);
+  /* sidebar-indicators */
+  --sidebar-indicators-color-007: rgba(167, 139, 250, 0.15);
+  --sidebar-indicators-color-008: rgba(167, 139, 250, 0.25);
+  --sidebar-indicators-color-009: rgba(167, 139, 250, 0.18);
+  /* sidebar-tree-core */
+  --sidebar-tree-core-color-007: rgba(167, 139, 250, 0.15);
+  --sidebar-tree-core-color-008: rgba(167, 139, 250, 0.25);
+  --sidebar-tree-core-color-009: rgba(167, 139, 250, 0.18);
+  /* sidebar-tree-interactions */
+  --sidebar-tree-interactions-color-007: rgba(167, 139, 250, 0.15);
+  --sidebar-tree-interactions-color-008: rgba(167, 139, 250, 0.25);
+  --sidebar-tree-interactions-color-009: rgba(167, 139, 250, 0.18);
+  /* sidebar-tree-structure */
+  --sidebar-tree-structure-color-007: rgba(167, 139, 250, 0.15);
+  --sidebar-tree-structure-color-008: rgba(167, 139, 250, 0.25);
+  --sidebar-tree-structure-color-009: rgba(167, 139, 250, 0.18);
+  /* tabs-and-editor-state */
+  --tabs-and-editor-state-color-007: rgba(167, 139, 250, 0.15);
+  --tabs-and-editor-state-color-008: rgba(167, 139, 250, 0.25);
+  --tabs-and-editor-state-color-009: rgba(167, 139, 250, 0.18);
+  /* tabs-and-icon-rail */
+  --tabs-and-icon-rail-color-007: rgba(167, 139, 250, 0.15);
+  --tabs-and-icon-rail-color-008: rgba(167, 139, 250, 0.25);
+  --tabs-and-icon-rail-color-009: rgba(167, 139, 250, 0.18);
+  /* ui-kit-data-components */
+  --ui-kit-data-components-color-007: rgba(167, 139, 250, 0.15);
+  --ui-kit-data-components-color-008: rgba(167, 139, 250, 0.25);
+  --ui-kit-data-components-color-009: rgba(167, 139, 250, 0.18);
+  /* ui-kit-demo */
+  --ui-kit-demo-color-007: rgba(167, 139, 250, 0.15);
+  --ui-kit-demo-color-008: rgba(167, 139, 250, 0.25);
+  --ui-kit-demo-color-009: rgba(167, 139, 250, 0.18);
+  /* ui-kit-demo-nav */
+  --ui-kit-demo-nav-color-007: rgba(167, 139, 250, 0.15);
+  --ui-kit-demo-nav-color-008: rgba(167, 139, 250, 0.25);
+  --ui-kit-demo-nav-color-009: rgba(167, 139, 250, 0.18);
+  /* ui-kit-demo-shell */
+  --ui-kit-demo-shell-color-007: rgba(167, 139, 250, 0.15);
+  --ui-kit-demo-shell-color-008: rgba(167, 139, 250, 0.25);
+  --ui-kit-demo-shell-color-009: rgba(167, 139, 250, 0.18);
+  /* ui-kit-html */
+  --ui-kit-html-color-007: rgba(167, 139, 250, 0.15);
+  --ui-kit-html-color-008: rgba(167, 139, 250, 0.25);
+  --ui-kit-html-color-009: rgba(167, 139, 250, 0.18);
+  /* ui-kit-layout-components */
+  --ui-kit-layout-components-color-007: rgba(167, 139, 250, 0.15);
+  --ui-kit-layout-components-color-008: rgba(167, 139, 250, 0.25);
+  --ui-kit-layout-components-color-009: rgba(167, 139, 250, 0.18);
+  --ui-kit-layout-components-color-010: rgba(124, 58, 237, 0.18);
+  --ui-kit-layout-components-color-011: rgba(167, 139, 250, 0.08);
+  --ui-kit-layout-components-color-012: rgba(167, 139, 250, 0.28);
+  /* ui-kit-primitives-core */
+  --ui-kit-primitives-core-color-007: rgba(167, 139, 250, 0.15);
+  --ui-kit-primitives-core-color-008: rgba(167, 139, 250, 0.25);
+  --ui-kit-primitives-core-color-009: rgba(167, 139, 250, 0.18);
+  /* ui-kit-primitives-fields */
+  --ui-kit-primitives-fields-color-007: rgba(167, 139, 250, 0.15);
+  --ui-kit-primitives-fields-color-008: rgba(167, 139, 250, 0.25);
+  --ui-kit-primitives-fields-color-009: rgba(167, 139, 250, 0.18);
+  /* ui-kit-primitives-select */
+  --ui-kit-primitives-select-color-007: rgba(167, 139, 250, 0.15);
+  --ui-kit-primitives-select-color-008: rgba(167, 139, 250, 0.25);
+  --ui-kit-primitives-select-color-009: rgba(167, 139, 250, 0.18);
+  /* widgets */
+  --widgets-color-007: rgba(167, 139, 250, 0.15);
+  --widgets-color-008: rgba(167, 139, 250, 0.25);
+  --widgets-color-009: rgba(167, 139, 250, 0.18);
+  /* layout/_page-shell.scss */
+  --page-shell-color-003: rgba(167, 139, 250, 0.28);
+  /* layout/_sidebar-shell.scss */
+  --sidebar-shell-color-001: rgba(167, 139, 250, 0.24);
+  --sidebar-shell-color-014: rgba(167, 139, 250, 0.64);
+  --sidebar-shell-color-015: rgba(139, 92, 246, 0.2);
+}
+
 @font-face {
   font-family: "Space Grotesk";
   font-style: normal;
