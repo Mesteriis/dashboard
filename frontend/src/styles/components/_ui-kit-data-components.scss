@@ -11,6 +11,11 @@
   );
 }
 
+.ui-select-button.is-disabled {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
 .ui-select-button__item,
 .ui-pagination button,
 .ui-table__actions button,

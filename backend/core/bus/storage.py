@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from collections.abc import Mapping
 from datetime import UTC, datetime
 from typing import Any
@@ -36,6 +37,8 @@ from core.storage.protocols import PluginStorage
 from .client import BusClient, BusRpcTimeoutError
 from .constants import QUEUE_STORAGE
 from .quota import PluginQuotaGuard
+
+logger = logging.getLogger(__name__)
 
 
 def _error_payload(error: StorageError) -> dict[str, Any]:
@@ -102,6 +105,13 @@ class BrokerStorageRPC:
                 timeout_sec=self._timeout_sec,
             )
         except BusRpcTimeoutError:
+            logger.warning(
+                "Storage RPC timeout op=%s plugin=%s timeout_sec=%.2f routing_key=%s",
+                request.op,
+                request.plugin_id,
+                self._timeout_sec,
+                message.type,
+            )
             timeout_error = StorageRpcTimeout(f"Storage RPC timeout waiting for '{request.op}'")
             return StorageRpcResponse(id=request.id, ok=False, error=_error_payload(timeout_error))
         return StorageRpcResponse(id=request.id, ok=reply.ok, error=reply.error, result=reply.result)

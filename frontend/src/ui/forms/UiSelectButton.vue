@@ -3,6 +3,7 @@
     class="ui-select-button"
     role="group"
     :aria-label="label || 'select-button'"
+    :class="{ 'is-disabled': disabled }"
   >
     <button
       v-for="option in options"
@@ -10,6 +11,7 @@
       type="button"
       class="ui-select-button__item"
       :class="{ 'is-active': modelValue === option.value }"
+      :disabled="disabled"
       @click="emit('update:modelValue', option.value)"
     >
       {{ option.label }}
@@ -27,6 +29,7 @@ defineProps<{
   modelValue: string;
   options: UiOption[];
   label?: string;
+  disabled?: boolean;
 }>();
 
 const emit = defineEmits<{

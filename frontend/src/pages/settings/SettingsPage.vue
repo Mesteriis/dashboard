@@ -4,7 +4,7 @@
     :sidebar-hidden="false"
     :sidebar-particles-id="SIDEBAR_PARTICLES_ID"
     :header-panel-active="false"
-    canvas-aria-label="Настройки"
+    content-label="Настройки"
   >
     <template #sidebar-mid>
       <SettingsNavigationView v-model:active-section="activeSection" />

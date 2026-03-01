@@ -1,0 +1,81 @@
+# Autodiscover Plugin UI Configuration
+# This file defines how the autodiscover plugin integrates into the dashboard UI
+
+# Page configuration
+has_page: true
+page_path: /autodiscover
+page_title: Network Discovery
+page_icon: radar
+
+# Navigation configuration
+show_in_menu: true
+menu_group: Tools
+menu_order: 10
+
+# Widget configuration
+provides_widgets: true
+widgets:
+  - id: network_scanner
+    title: Network Scanner
+    type: scanner
+    description: Scan your local network for devices and services
+    config:
+      default_cidrs:
+        - 192.168.1.0/24
+      default_ports:
+        - 80
+        - 443
+        - 22
+        - 8080
+      show_http_metadata: true
+      show_device_types: true
+
+# Static assets
+static_dir: static
+css_files:
+  - autodiscover.css
+js_files:
+  - autodiscover.js
+
+# API configuration
+api_prefix: autodiscover
+api_routes:
+  - path: /status
+    method: GET
+    description: Get scan status
+  - path: /hosts
+    method: GET
+    description: Get discovered hosts
+  - path: /scan
+    method: POST
+    description: Trigger network scan
+
+# Permissions
+required_permissions:
+  - actions.execute
+  - actions.history
+  - actions.registry
+
+# Dashboard integration
+dashboard_integration:
+  # Add to sidebar menu
+  sidebar:
+    enabled: true
+    parent: tools
+    icon: radar
+    badge: null
+  
+  # Home page widget
+  home_widget:
+    enabled: true
+    position: top
+    show_last_scan: true
+    show_quick_scan: true
+  
+  # Event subscriptions
+  events:
+    - feature.autodiscover.scan.started
+    - feature.autodiscover.scan.progress
+    - feature.autodiscover.host.found
+    - feature.autodiscover.scan.completed
+    - feature.autodiscover.scan.failed

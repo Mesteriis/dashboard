@@ -20,7 +20,21 @@ const DEFAULT_CAPABILITIES = [
   "write.config.rollback",
   "exec.system.echo",
   "exec.system.ping",
+  "read.plugins.list",
+  "read.plugins.manifest",
+  "read.plugins.services",
 ];
+
+export function resolveMergedCapabilities(): string[] {
+  if (typeof window === "undefined") return [...DEFAULT_CAPABILITIES];
+  const configured = Array.isArray(window.__OKO_CAPABILITIES__)
+    ? window.__OKO_CAPABILITIES__
+    : [];
+  const normalizedConfigured = configured
+    .map((entry) => String(entry || "").trim())
+    .filter(Boolean);
+  return Array.from(new Set<string>([...DEFAULT_CAPABILITIES, ...normalizedConfigured]));
+}
 
 export function resolveRequestUrl(path: string): string {
   const inputPath = String(path || "");
@@ -52,19 +66,7 @@ function resolveActor(): string {
 }
 
 function resolveCapabilities(): string {
-  if (typeof window === "undefined") return DEFAULT_CAPABILITIES.join(",");
-
-  const configured = Array.isArray(window.__OKO_CAPABILITIES__)
-    ? window.__OKO_CAPABILITIES__
-    : [];
-  const normalized = configured
-    .map((entry) => String(entry || "").trim())
-    .filter(Boolean);
-
-  if (!normalized.length) {
-    return DEFAULT_CAPABILITIES.join(",");
-  }
-  return normalized.join(",");
+  return resolveMergedCapabilities().join(",");
 }
 
 export function buildOkoRequestHeaders(

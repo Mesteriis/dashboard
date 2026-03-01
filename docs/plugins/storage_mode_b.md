@@ -11,7 +11,7 @@ Mode B создаёт физические таблицы в core DB для ка
 
 ## DDL source
 
-Файл спецификации: `contracts/storage/tables.yaml`.
+Файл спецификации: `backend/contracts/storage/tables.yaml`.
 
 Core загружает DDL per plugin и применяет `safe migrate-engine`.
 

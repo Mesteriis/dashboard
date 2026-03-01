@@ -1,0 +1,72 @@
+version: 1
+plugins:
+  autodiscover:
+    version: 1
+    tables:
+      - name: scan_runs
+        primary_key: scan_id
+        columns:
+          - name: scan_id
+            type: string
+            nullable: false
+          - name: status
+            type: string
+            nullable: false
+          - name: dry_run
+            type: boolean
+            nullable: false
+          - name: requested_at
+            type: datetime
+            nullable: false
+          - name: updated_at
+            type: datetime
+            nullable: false
+          - name: summary
+            type: json
+            nullable: true
+        indexes:
+          - name: ix_scan_runs_status
+            columns: [status]
+          - name: ix_scan_runs_dry_run
+            columns: [dry_run]
+      - name: scan_services
+        primary_key: service_key
+        columns:
+          - name: service_key
+            type: string
+            nullable: false
+          - name: scan_id
+            type: string
+            nullable: false
+          - name: host_ip
+            type: string
+            nullable: true
+          - name: hostname
+            type: string
+            nullable: true
+          - name: port
+            type: integer
+            nullable: false
+          - name: service
+            type: string
+            nullable: true
+          - name: title
+            type: string
+            nullable: true
+          - name: url
+            type: string
+            nullable: true
+          - name: status
+            type: string
+            nullable: true
+          - name: server
+            type: string
+            nullable: true
+          - name: updated_at
+            type: datetime
+            nullable: false
+        indexes:
+          - name: ix_scan_services_scan_id
+            columns: [scan_id]
+          - name: ix_scan_services_host_ip
+            columns: [host_ip]

@@ -12,6 +12,9 @@ from .deps import (
     require_config_revisions,
     require_config_rollback,
     require_events,
+    require_plugins_list,
+    require_plugins_manifest,
+    require_plugins_services,
     require_state,
     require_widgets_registry,
 )
@@ -28,6 +31,9 @@ __all__ = [
     "require_config_revisions",
     "require_config_rollback",
     "require_events",
+    "require_plugins_list",
+    "require_plugins_manifest",
+    "require_plugins_services",
     "require_state",
     "require_widgets_registry",
 ]

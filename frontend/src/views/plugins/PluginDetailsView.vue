@@ -1,34 +1,10 @@
 <template>
   <UiBlankLayout
     :emblem-src="EMBLEM_SRC"
-    :sidebar-hidden="isSidebarHidden"
-    :sidebar-particles-id="SIDEBAR_PARTICLES_ID"
-    canvas-aria-label="Plugin details"
+    layout-mode="no-sidebar"
+    content-label="Plugin details"
   >
-    <template v-slot:[SLOT_APP_SIDEBAR_TOP]>
-      <header class="brand">
-        <img :src="EMBLEM_SRC" alt="" aria-hidden="true" />
-        <div>
-          <p class="brand-title">Plugin Runtime</p>
-          <p class="brand-subtitle">{{ pluginId || "Unknown plugin" }}</p>
-        </div>
-      </header>
-    </template>
-
-    <template v-slot:[SLOT_APP_SIDEBAR_MIDDLE]>
-      <button
-        class="ghost plugin-sidebar-back"
-        type="button"
-        title="Back to Plugins"
-        aria-label="Back to Plugins"
-        @click="handleBack"
-      >
-        <ArrowLeft class="ui-icon" />
-        <span>Back to Plugins</span>
-      </button>
-    </template>
-
-    <template v-slot:[SLOT_APP_HEADER_TABS]>
+    <template #header-tabs>
       <nav
         class="hero-page-tabs"
         role="tablist"
@@ -45,13 +21,15 @@
         >
           <Puzzle class="ui-icon hero-page-tab-icon" />
           <span class="hero-page-tab-label">
-            {{ manifest?.title || pluginId || "Plugin details" }}
+            {{
+              manifestEnvelope?.manifest?.plugin_id || pluginId || "Plugin details"
+            }}
           </span>
         </button>
       </nav>
     </template>
 
-    <template v-slot:[SLOT_PAGE_CANVAS_MAIN]>
+    <template #canvas-main>
       <section
         id="plugin-details-panel"
         role="tabpanel"
@@ -82,10 +60,10 @@
           </div>
         </section>
 
-        <UiPluginPageRendererFacade
-          v-else-if="manifest"
+        <UiPluginPageRenderer
+          v-else-if="manifestEnvelope"
           :plugin-id="pluginId"
-          :manifest="manifest"
+          :manifest-envelope="manifestEnvelope"
           @back="handleBack"
         />
       </section>
@@ -96,23 +74,19 @@
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
 import { useRoute } from "vue-router";
-import { ArrowLeft, Puzzle } from "lucide-vue-next";
-import UiPluginPageRendererFacade from "@/views/plugins/facades/UiPluginPageRendererFacade.vue";
+import { Puzzle } from "lucide-vue-next";
+import UiPluginPageRenderer from "@/views/plugins/components/UiPluginPageRenderer.vue";
 import UiBlankLayout from "@/components/layout/UiBlankLayout.vue";
 import { goPluginsPanel } from "@/app/navigation/nav";
 import {
   PluginManifestNotFoundError,
   PluginManifestParseError,
   loadPluginManifest,
-  type PluginManifest,
+  type PluginManifestEnvelope,
 } from "@/features/plugins/manifest";
 import {
   EMBLEM_SRC,
-  SIDEBAR_PARTICLES_CONFIG,
-  SIDEBAR_PARTICLES_ID,
 } from "@/features/stores/ui/storeConstants";
-import { useUiStore } from "@/features/stores/uiStore";
-import { useSidebarParticles } from "@/features/composables/useSidebarParticles";
 
 interface ErrorState {
   title: string;
@@ -120,27 +94,14 @@ interface ErrorState {
   detail?: string;
 }
 
-const SLOT_APP_SIDEBAR_TOP = "app.sidebar.top";
-const SLOT_APP_SIDEBAR_MIDDLE = "app.sidebar.middle";
-const SLOT_APP_HEADER_TABS = "app.header.tabs";
-const SLOT_PAGE_CANVAS_MAIN = "page.canvas.main";
-
 const route = useRoute();
 const loading = ref(false);
-const manifest = ref<PluginManifest | null>(null);
+const manifestEnvelope = ref<PluginManifestEnvelope | null>(null);
 const errorState = ref<ErrorState | null>(null);
-const uiStore = useUiStore();
 
 const pluginId = computed(() => {
   const params = route.params as Record<string, string | undefined>;
   return String(params.pluginId || "").trim();
-});
-const isSidebarHidden = computed(() => uiStore.sidebarView.value === "hidden");
-
-useSidebarParticles({
-  containerId: SIDEBAR_PARTICLES_ID,
-  baseConfig: SIDEBAR_PARTICLES_CONFIG,
-  isSidebarHidden,
 });
 
 async function loadManifest(): Promise<void> {
@@ -149,28 +110,26 @@ async function loadManifest(): Promise<void> {
       title: "Invalid plugin id",
       message: "Route parameter pluginId is empty.",
     };
-    manifest.value = null;
+    manifestEnvelope.value = null;
     return;
   }
 
   loading.value = true;
-  manifest.value = null;
+  manifestEnvelope.value = null;
   errorState.value = null;
 
   try {
-    manifest.value = await loadPluginManifest(pluginId.value);
+    manifestEnvelope.value = await loadPluginManifest(pluginId.value);
   } catch (error: unknown) {
     if (error instanceof PluginManifestNotFoundError) {
       errorState.value = {
         title: "Plugin not found",
         message: `Manifest for '${pluginId.value}' was not found.`,
-        detail: error.candidates.slice(0, 2).join(" | "),
       };
     } else if (error instanceof PluginManifestParseError) {
       errorState.value = {
         title: "Manifest parse error",
         message: `Failed to parse manifest for '${pluginId.value}'.`,
-        detail: error.sourcePath,
       };
     } else {
       errorState.value = {
@@ -192,29 +151,17 @@ function handleBack(): void {
 
 watch(
   () => pluginId.value,
-  () => {
-    void loadManifest();
-  },
+  () => void loadManifest(),
   { immediate: true },
-);
-
-watch(
-  () => isSidebarHidden.value,
-  (hidden) => {
-    if (hidden) return;
-  },
 );
 </script>
 
 <style scoped>
 .plugin-details-canvas {
-  min-height: 100%;
-}
-
-.plugin-sidebar-back {
-  width: 100%;
-  justify-content: flex-start;
-  gap: 8px;
+  min-height: 0;
+  height: 100%;
+  overflow: auto;
+  scrollbar-gutter: stable;
 }
 
 .plugin-page-status {

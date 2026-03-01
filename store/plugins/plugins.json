@@ -1,0 +1,86 @@
+{
+  "oko_e2e_probe": {
+    "id": "oko_e2e_probe",
+    "name": "oko_e2e_probe",
+    "version": "0.1.3",
+    "description": "E2E probe plugin flat",
+    "author": "codex",
+    "source": "local",
+    "source_url": "/Users/avm/projects/Personal/dashboard/store/plugins/oko_e2e_probe",
+    "manifest": {
+      "name": "oko_e2e_probe",
+      "version": "0.1.3",
+      "description": "E2E probe plugin flat",
+      "author": "codex",
+      "homepage": null,
+      "license": null,
+      "tags": [
+        "e2e",
+        "probe",
+        "flat"
+      ],
+      "capabilities": [
+        "exec.oko_e2e_probe.ping"
+      ]
+    },
+    "created_at": "2026-03-01T13:02:53.755507",
+    "updated_at": "2026-03-01T15:32:22.035973",
+    "metadata": {
+      "local_path": "/Users/avm/projects/Personal/dashboard/store/plugins/oko_e2e_probe"
+    }
+  },
+  "autodiscover": {
+    "id": "autodiscover",
+    "name": "autodiscover",
+    "version": "2.0.0",
+    "description": "(",
+    "author": null,
+    "source": "local",
+    "source_url": "/Users/avm/projects/Personal/dashboard/store/plugins/autodiscover",
+    "manifest": {
+      "name": "autodiscover",
+      "version": "2.0.0",
+      "description": "(",
+      "author": null,
+      "homepage": null,
+      "license": null,
+      "tags": null,
+      "capabilities": null
+    },
+    "created_at": "2026-03-01T13:02:53.755967",
+    "updated_at": "2026-03-01T15:32:22.036069",
+    "metadata": {
+      "local_path": "/Users/avm/projects/Personal/dashboard/store/plugins/autodiscover"
+    }
+  },
+  "oko_e2e": {
+    "id": "oko_e2e",
+    "name": "oko_e2e_probe_1",
+    "version": "0.1.2",
+    "description": "E2E probe plugin flat",
+    "author": "codex",
+    "source": "local",
+    "source_url": "/Users/avm/projects/Personal/dashboard/store/plugins/oko_e2e",
+    "manifest": {
+      "name": "oko_e2e_probe_1",
+      "version": "0.1.2",
+      "description": "E2E probe plugin flat",
+      "author": "codex",
+      "homepage": null,
+      "license": null,
+      "tags": [
+        "e2e",
+        "probe",
+        "flat"
+      ],
+      "capabilities": [
+        "exec.oko_e2e_probe.ping"
+      ]
+    },
+    "created_at": "2026-03-01T13:02:53.756084",
+    "updated_at": "2026-03-01T15:32:22.036148",
+    "metadata": {
+      "local_path": "/Users/avm/projects/Personal/dashboard/store/plugins/oko_e2e"
+    }
+  }
+}

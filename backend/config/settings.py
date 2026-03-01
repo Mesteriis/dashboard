@@ -53,7 +53,7 @@ class AppSettings(BaseSettings):
     )
     event_stream_keepalive_sec: float = Field(default=15.0, validation_alias="OKO_EVENTS_KEEPALIVE_SEC")
     actions_execute_enabled: bool = Field(default=True, validation_alias="OKO_ACTIONS_EXECUTE_ENABLED")
-    storage_rpc_timeout_sec: float = Field(default=2.0, validation_alias="OKO_STORAGE_RPC_TIMEOUT_SEC")
+    storage_rpc_timeout_sec: float = Field(default=5.0, validation_alias="OKO_STORAGE_RPC_TIMEOUT_SEC")
     action_rpc_timeout_sec: float = Field(default=5.0, validation_alias="OKO_ACTION_RPC_TIMEOUT_SEC")
     health_window_size: int = Field(default=10, ge=1, le=500, validation_alias="OKO_HEALTH_WINDOW_SIZE")
     health_retention_days: int = Field(default=7, ge=1, le=365, validation_alias="OKO_HEALTH_RETENTION_DAYS")
@@ -79,6 +79,17 @@ class AppSettings(BaseSettings):
         validation_alias="OKO_FAVICON_TLS_INSECURE_FALLBACK",
     )
     favicon_cache_ttl_days: int = Field(default=7, ge=1, le=365, validation_alias="OKO_FAVICON_CACHE_TTL_DAYS")
+    store_url: str | None = Field(
+        default=None,
+        validation_alias="OKO_STORE_URL",
+        description="Plugin store service URL (e.g., http://store:8001/api/v1)",
+    )
+    plugin_watch_poll_sec: float = Field(
+        default=1.5,
+        ge=0.2,
+        le=60.0,
+        validation_alias="OKO_PLUGIN_WATCH_POLL_SEC",
+    )
 
     @model_validator(mode="after")
     def _apply_minimums(self) -> AppSettings:
@@ -101,6 +112,7 @@ class AppSettings(BaseSettings):
         object.__setattr__(self, "favicon_timeout_sec", max(0.5, self.favicon_timeout_sec))
         object.__setattr__(self, "favicon_max_bytes", max(1024, self.favicon_max_bytes))
         object.__setattr__(self, "favicon_cache_ttl_days", max(1, self.favicon_cache_ttl_days))
+        object.__setattr__(self, "plugin_watch_poll_sec", max(0.2, self.plugin_watch_poll_sec))
         return self
 
 

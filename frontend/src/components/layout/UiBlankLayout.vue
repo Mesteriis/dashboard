@@ -187,6 +187,7 @@ import {
   onBeforeUnmount,
   onMounted,
   ref,
+  type Component,
   useSlots,
 } from "vue";
 import { useRoute, useRouter } from "vue-router";
@@ -199,6 +200,10 @@ import UiDropdownMenu from "@/primitives/overlays/UiDropdownMenu.vue";
 import { openPleiadOverlay } from "@/app/navigation/nav";
 import { useDashboardStore } from "@/features/stores/dashboardStore";
 import { EMBLEM_SRC } from "@/features/stores/dashboard/storeConstants";
+import {
+  buildRouterTree,
+  type RouterTreeNode,
+} from "@/features/router/utils/buildRouterTree";
 import {
   connectOkoSseStream,
   type OkoSseStream,
@@ -323,21 +328,144 @@ type SystemActionId =
 interface SystemAction {
   id: SystemActionId | string;
   label: string;
-  icon?: string;
+  icon?: Component | string;
   route?: string;
+  children?: SystemAction[];
   action?: () => void | Promise<void>;
   danger?: boolean;
   divider?: boolean;
 }
 
-const systemActions = computed<SystemAction[]>(() => [
-  { id: "settings", label: "Настройки" },
-  { id: "kiosk", label: "Режим киоска" },
-  { id: "pleiad_lock", label: "Заблокировать" },
-  { id: "divider-1", label: "", divider: true },
-  { id: "navigate", label: "Домой", route: "/" },
-  { id: "logout", label: "Выход", danger: true },
-]);
+const navigationActions = computed<SystemAction[]>(() => {
+  const rawRoutes = [...(router.options.routes || [])];
+  const tree = buildRouterTree(rawRoutes);
+  const grouped = groupRoutesBySegment(tree);
+
+  return grouped
+    .filter((group) => group.children && group.children.length > 0)
+    .map((group) => ({
+      id: `nav-group-${group.id}`,
+      label: group.label,
+      children: group.children,
+    }));
+});
+
+const systemActions = computed<SystemAction[]>(() => {
+  const navItems = navigationActions.value;
+  const items: SystemAction[] = [];
+
+  if (navItems.length) {
+    items.push(
+      {
+        id: "navigation-root",
+        label: "Навигация",
+        children: navItems,
+      },
+      { id: "divider-nav", label: "", divider: true },
+    );
+  }
+
+  items.push(
+    { id: "settings", label: "Настройки" },
+    { id: "kiosk", label: "Режим киоска" },
+    { id: "pleiad_lock", label: "Заблокировать" },
+    { id: "divider-1", label: "", divider: true },
+    { id: "logout", label: "Выход", danger: true },
+  );
+
+  return items;
+});
+
+function groupRoutesBySegment(tree: RouterTreeNode[]): Array<{
+  id: string;
+  label: string;
+  children: SystemAction[];
+}> {
+  const groups = new Map<string, { id: string; label: string; children: SystemAction[] }>();
+
+  for (const node of tree) {
+    const segment = extractTopSegment(node.path);
+    const groupId = segment || "root";
+    const groupLabel = segment ? humanizeSegment(segment) : "Основное";
+
+    if (!groups.has(groupId)) {
+      groups.set(groupId, { id: groupId, label: groupLabel, children: [] });
+    }
+
+    const group = groups.get(groupId);
+    if (!group) continue;
+
+    const leaves = collectLeaves(node);
+    for (const leaf of leaves) {
+      if (!leaf.route) continue;
+      group.children.push({
+        id: `nav-${leaf.id}`,
+        label: leaf.label,
+        route: leaf.route,
+      });
+    }
+  }
+
+  return Array.from(groups.values())
+    .map((group) => ({
+      ...group,
+      children: dedupeByRoute(group.children),
+    }))
+    .sort((a, b) => a.label.localeCompare(b.label, "ru"));
+}
+
+function collectLeaves(node: RouterTreeNode, prefix = ""): Array<{ id: string; label: string; route?: string }> {
+  const nodeId = prefix ? `${prefix}-${node.name}` : node.name;
+  const routePath = node.path.startsWith("/") ? node.path : `/${node.path}`;
+  const hasChildren = Boolean(node.children && node.children.length > 0);
+  const ownItem = {
+    id: nodeId,
+    label: node.label || readableRouteLabel(node.name),
+    route: routePath,
+  };
+
+  if (!hasChildren) return [ownItem];
+
+  const nested = (node.children || []).flatMap((child) => collectLeaves(child, nodeId));
+  const includeParent = routePath !== "/";
+  return includeParent ? [ownItem, ...nested] : nested;
+}
+
+function dedupeByRoute(items: SystemAction[]): SystemAction[] {
+  const visited = new Set<string>();
+  const result: SystemAction[] = [];
+
+  for (const item of items) {
+    const key = String(item.route || item.id);
+    if (visited.has(key)) continue;
+    visited.add(key);
+    result.push(item);
+  }
+
+  return result;
+}
+
+function extractTopSegment(path: string): string {
+  const normalized = String(path || "/").trim();
+  if (!normalized || normalized === "/") return "";
+  return normalized
+    .replace(/^\//, "")
+    .split("/")
+    .find(Boolean) || "";
+}
+
+function humanizeSegment(segment: string): string {
+  if (segment === "ui") return "UI";
+  return segment
+    .replace(/[-_]+/g, " ")
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+function readableRouteLabel(value: string): string {
+  return value
+    .replace(/[-_]+/g, " ")
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+}
 
 async function toggleKioskMode(): Promise<void> {
   if (typeof document === "undefined") return;

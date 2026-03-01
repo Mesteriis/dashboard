@@ -14,6 +14,7 @@ declare global {
     __OKO_API_BASE__?: string;
     __OKO_ACTOR__?: string;
     __OKO_CAPABILITIES__?: string[];
+    __OKO_PLUGIN_BUNDLE_KILL_SWITCH__?: boolean;
     __OKO_DESKTOP_RUNTIME__?: {
       desktop: boolean;
       mode: "web" | "embedded" | "remote";

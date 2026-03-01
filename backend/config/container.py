@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import asyncio
+from contextlib import suppress
+import logging
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -17,11 +20,13 @@ from core.config import ConfigService
 from core.contracts.storage import PluginStorageConfig, StorageDDLTableSpec, StorageLimits, StorageTableSpec
 from core.events import BrokerEventPublisher, EventBus, EventPublishConsumer, EventPublisher
 from core.gateway import ActionGateway
+from core.plugins import PluginService as CorePluginService
 from core.plugins.migrations import (
     StorageMigrationLockManager,
     StorageMigrationRunner,
     register_storage_migration_action,
 )
+from core.plugins.store import PluginInstaller, StoreClient
 from core.storage import PhysicalStorage, StorageModeRouter, UniversalStorage, load_storage_ddl_specs
 from core.storage.models import (
     ActionRow,
@@ -38,6 +43,8 @@ from db.compat import ensure_runtime_schema_compatibility
 from db.session import build_async_engine
 from features.system import register_system_actions
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -67,6 +74,33 @@ class AppContainer:
     health_check_request_consumer: HealthCheckRequestConsumer
     health_check_result_consumer: HealthCheckResultConsumer
     health_scheduler: HealthScheduler
+    plugin_service: CorePluginService | None = None
+    plugin_store_client: StoreClient | None = None
+    plugin_installer: PluginInstaller | None = None
+    plugin_watch_task: asyncio.Task[None] | None = None
+
+    def _start_plugin_watcher(self) -> None:
+        if self.settings.runtime_role != "backend":
+            return
+        if not self.plugin_service:
+            return
+        if self.plugin_watch_task and not self.plugin_watch_task.done():
+            return
+        interval = self.settings.plugin_watch_poll_sec
+        self.plugin_watch_task = asyncio.create_task(
+            self.plugin_service.watch_loop(interval_sec=interval),
+            name="plugin-watch-loop",
+        )
+        logger.info("Plugin watcher started (poll=%.2fs)", interval)
+
+    async def _stop_plugin_watcher(self) -> None:
+        task = self.plugin_watch_task
+        self.plugin_watch_task = None
+        if not task:
+            return
+        task.cancel()
+        with suppress(asyncio.CancelledError):
+            await task
 
     async def startup(self) -> None:
         await self.bus_client.connect()
@@ -86,6 +120,8 @@ class AppContainer:
             await self.health_check_request_consumer.start()
             await self.health_check_result_consumer.start()
             await self.health_scheduler.start()
+            if self.plugin_service:
+                await self.plugin_service.startup()
             return
 
         if run_backend_local_consumers:
@@ -97,12 +133,21 @@ class AppContainer:
             await self.health_check_result_consumer.start()
             await self.health_scheduler.start()
             await self.config_service.startup_bootstrap()
+            if self.plugin_service:
+                await self.plugin_service.startup()
+            self._start_plugin_watcher()
             return
 
         await self.event_publish_consumer.start()
         await self.config_service.startup_bootstrap()
+        if self.plugin_service:
+            await self.plugin_service.startup()
+        self._start_plugin_watcher()
 
     async def shutdown(self) -> None:
+        await self._stop_plugin_watcher()
+        if self.plugin_service:
+            await self.plugin_service.shutdown()
         is_memory_bus = self.settings.broker_url.startswith("memory://")
         run_backend_local_consumers = self.settings.runtime_role == "backend" and (
             is_memory_bus or self.settings.enable_local_consumers
@@ -129,7 +174,7 @@ class AppContainer:
 
 
 def _storage_ddl_file(base_dir: Path) -> Path:
-    return base_dir.parent / "contracts" / "storage" / "tables.yaml"
+    return base_dir / "contracts" / "storage" / "tables.yaml"
 
 
 def _default_plugin_storage_configs(base_dir: Path) -> dict[str, PluginStorageConfig]:
@@ -319,6 +364,33 @@ def build_container(base_dir: Path | None = None) -> AppContainer:
         default_latency_threshold_ms=settings.health_default_latency_threshold_ms,
     )
 
+    # Initialize plugin service
+    plugin_dirs = (settings.base_dir / "plugins",)  # Production plugins
+    plugin_dirs[0].mkdir(parents=True, exist_ok=True)
+    plugin_service = CorePluginService.create(
+        plugin_dirs=tuple(d for d in plugin_dirs if d.exists()),
+        base_path="/plugins",
+        api_base_path="/api/v1/plugins",
+        plugin_setup_kwargs={
+            "action_gateway": gateway,
+            "event_bus": event_publisher,
+            "config_service": config_service,
+            "storage_rpc": storage_rpc_client,
+            "runtime_role": settings.runtime_role,
+        },
+    )
+
+    # Initialize plugin store client
+    store_url = settings.store_url
+    plugin_store_client = None
+    plugin_installer = None
+    if store_url:
+        plugin_store_client = StoreClient.create(store_url=store_url)
+        plugin_installer = PluginInstaller.create(
+            install_dir=settings.base_dir / "plugins",
+            store_url=store_url,
+        )
+
     return AppContainer(
         settings=settings,
         db_engine=db_engine,
@@ -345,6 +417,9 @@ def build_container(base_dir: Path | None = None) -> AppContainer:
         health_check_request_consumer=health_check_request_consumer,
         health_check_result_consumer=health_check_result_consumer,
         health_scheduler=health_scheduler,
+        plugin_service=plugin_service,
+        plugin_store_client=plugin_store_client,
+        plugin_installer=plugin_installer,
     )
 
 

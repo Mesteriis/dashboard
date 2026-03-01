@@ -25,3 +25,10 @@ templates/index.html
 
 # Local runtime data
 .data/
+_tmp/
+/plugins/
+backend/plugins/**/*.py
+backend/plugins/**/*.yaml
+backend/plugins/**/*.js
+backend/plugins/**/*.css
+backend/plugins/**/*.scss

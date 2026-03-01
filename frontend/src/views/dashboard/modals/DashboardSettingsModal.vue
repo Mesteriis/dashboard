@@ -6,342 +6,251 @@
     @backdrop="closeSettingsPanel"
   >
     <header class="settings-modal-header">
-      <div>
-        <h3>Настройки панели</h3>
-        <p>Единая точка управления интерфейсом и режимами отображения.</p>
+      <div class="settings-modal-header__content">
+        <h3 class="settings-modal-header__title">Настройки панели</h3>
+        <p class="settings-modal-header__subtitle">
+          Единая точка управления интерфейсом и режимами отображения.
+        </p>
       </div>
-      <button class="ghost" type="button" @click="closeSettingsPanel">
+      <UiButton variant="ghost" size="sm" @click="closeSettingsPanel">
         Закрыть
-      </button>
+      </UiButton>
     </header>
 
-    <div class="settings-modal-grid">
-      <section class="settings-modal-section">
-        <h4>Отображение</h4>
-        <div class="settings-state-group">
-          <p class="settings-state-label">Тема</p>
-          <div
-            class="settings-state-switcher"
-            role="radiogroup"
-            aria-label="Тема интерфейса"
-          >
-            <button
-              v-for="option in themeModeOptions"
-              :key="`theme:${option.value}`"
-              class="settings-state-btn"
-              :class="{ active: themeMode === option.value }"
-              type="button"
-              :aria-pressed="themeMode === option.value"
-              @click="setThemeMode(option.value)"
-            >
-              {{ option.label }}
-            </button>
-          </div>
-        </div>
+    <div class="settings-modal-content">
+      <!-- Левая колонка: Отображение -->
+      <div class="settings-modal-sidebar">
+        <UiCard title="Отображение">
+          <UiFieldset legend="Тема" collapsible>
+            <UiSelectButton
+              v-model="themeMode"
+              :options="themeModeOptions"
+              label="Тема интерфейса"
+            />
+          </UiFieldset>
 
-        <div class="settings-state-group">
-          <p class="settings-state-label">Палитра</p>
-          <div
-            class="settings-state-switcher"
-            role="radiogroup"
-            aria-label="Цветовая палитра"
-          >
-            <button
-              v-for="option in themePaletteOptions"
-              :key="`palette:${option.value}`"
-              class="settings-state-btn"
-              :class="{ active: themePalette === option.value }"
-              type="button"
-              :aria-pressed="themePalette === option.value"
-              @click="setThemePalette(option.value)"
-            >
-              {{ option.label }}
-            </button>
-          </div>
-        </div>
+          <UiFieldset legend="Палитра" collapsible>
+            <UiSelectButton
+              v-model="themePalette"
+              :options="themePaletteOptions"
+              label="Цветовая палитра"
+            />
+          </UiFieldset>
 
-        <div class="settings-state-group">
-          <p class="settings-state-label">Вид</p>
-          <div
-            class="settings-state-switcher"
-            role="radiogroup"
-            aria-label="Режим отображения сервисов"
-          >
-            <button
-              v-for="option in servicePresentationOptions"
-              :key="`view:${option.value}`"
-              class="settings-state-btn"
-              :class="{ active: serviceCardView === option.value }"
-              type="button"
-              :aria-pressed="serviceCardView === option.value"
-              @click="serviceCardView = option.value"
-            >
-              {{ option.label }}
-            </button>
-          </div>
-        </div>
+          <UiFieldset legend="Вид" collapsible>
+            <UiSelectButton
+              v-model="serviceCardView"
+              :options="servicePresentationOptions"
+              label="Режим отображения сервисов"
+            />
+          </UiFieldset>
 
-        <div class="settings-state-group">
-          <p class="settings-state-label">Группировка</p>
-          <div
-            class="settings-state-switcher"
-            role="radiogroup"
-            aria-label="Группировка сервисов"
-          >
-            <button
-              v-for="option in serviceGroupingOptions"
-              :key="`grouping:${option.value}`"
-              class="settings-state-btn"
-              :class="{ active: serviceGroupingMode === option.value }"
-              type="button"
-              :aria-pressed="serviceGroupingMode === option.value"
+          <UiFieldset legend="Группировка" collapsible>
+            <UiSelectButton
+              v-model="serviceGroupingMode"
+              :options="serviceGroupingOptions"
               :disabled="isSidebarHidden"
-              @click="setGroupingMode(option.value)"
-            >
-              {{ option.label }}
-            </button>
-          </div>
-          <p v-if="isSidebarHidden" class="settings-state-hint">
-            Группировка недоступна при скрытом меню.
-          </p>
-        </div>
+              label="Группировка сервисов"
+            />
+            <p v-if="isSidebarHidden" class="settings-hint">
+              Группировка недоступна при скрытом меню.
+            </p>
+          </UiFieldset>
 
-        <div class="settings-state-group">
-          <p class="settings-state-label">Site</p>
-          <div
-            class="settings-state-switcher wrap"
-            role="radiogroup"
-            aria-label="Фильтр по площадке"
-          >
-            <button
-              v-for="option in siteFilterOptions"
-              :key="`site:${option.value}`"
-              class="settings-state-btn"
-              :class="{ active: siteFilter === option.value }"
-              type="button"
-              :aria-pressed="siteFilter === option.value"
-              @click="setSiteFilter(option.value)"
-            >
-              {{ option.label }}
-            </button>
-          </div>
-        </div>
-      </section>
+          <UiFieldset legend="Site" collapsible>
+            <UiSelectButton
+              v-model="siteFilter"
+              :options="siteFilterOptions"
+              label="Фильтр по площадке"
+            />
+          </UiFieldset>
+        </UiCard>
+      </div>
 
-      <section class="settings-modal-section settings-modal-section-wide">
-        <h4>Режим запуска проекта</h4>
-        <div class="settings-state-group">
-          <p class="settings-state-label">Deployment</p>
-          <div
-            class="settings-state-switcher"
-            role="radiogroup"
-            aria-label="Режим запуска проекта"
-          >
-            <button
-              v-for="option in deploymentModeOptions"
-              :key="`deploy:${option.value}`"
-              class="settings-state-btn"
-              :class="{ active: deploymentModeDraft === option.value }"
-              type="button"
-              :disabled="option.value !== deploymentModeDraft"
-              :aria-pressed="deploymentModeDraft === option.value"
-            >
-              {{ option.label }}
-            </button>
+      <!-- Правая колонка: основной контент -->
+      <div class="settings-modal-main">
+        <!-- Режим запуска проекта -->
+        <UiCard title="Режим запуска проекта" subtitle="Deployment">
+          <div class="settings-form-group">
+            <UiLabel>Режим запуска</UiLabel>
+            <UiSelectButton
+              v-model="deploymentModeDraft"
+              :options="deploymentModeOptions"
+              label="Режим запуска проекта"
+            />
+            <p class="settings-hint">
+              Режим определяется средой запуска и доступен для чтения.
+            </p>
           </div>
-          <p class="settings-state-hint">
-            Режим определяется средой запуска и доступен для чтения.
-          </p>
-        </div>
 
-        <template v-if="deploymentModeDraft === 'app'">
-          <div class="settings-state-group">
-            <p class="settings-state-label">Режим клиента</p>
-            <div
-              class="settings-state-switcher"
-              role="radiogroup"
-              aria-label="Режим клиента приложения"
-            >
-              <button
-                v-for="option in appClientModeOptions"
-                :key="`app-client:${option.value}`"
-                class="settings-state-btn"
-                :class="{ active: appClientModeDraft === option.value }"
-                type="button"
+          <template v-if="deploymentModeDraft === 'app'">
+            <div class="settings-form-group">
+              <UiLabel>Режим клиента</UiLabel>
+              <UiSelectButton
+                v-model="appClientModeDraft"
+                :options="appClientModeOptions"
                 :disabled="runtimeApplying"
-                :aria-pressed="appClientModeDraft === option.value"
-                @click="appClientModeDraft = option.value"
+                label="Режим клиента приложения"
+              />
+              <p class="settings-hint">{{ runtimeStatusHint }}</p>
+            </div>
+
+            <div class="settings-form-group">
+              <UiLabel for="remote-url">Remote URL</UiLabel>
+              <input
+                id="remote-url"
+                v-model.trim="remoteBaseUrlDraft"
+                class="ui-input"
+                type="text"
+                autocomplete="off"
+                spellcheck="false"
+                placeholder="http://127.0.0.1:8000"
+                :disabled="runtimeApplying || appClientModeDraft !== 'thin'"
+              />
+            </div>
+
+            <div class="settings-form-actions">
+              <UiButton
+                variant="primary"
+                :disabled="runtimeApplying || !runtimeChanged"
+                :loading="runtimeApplying"
+                @click="applyRuntimeMode"
               >
-                {{ option.label }}
+                <Play class="ui-icon" />
+                {{
+                  runtimeApplying ? "Применяем..." : "Применить режим клиента"
+                }}
+              </UiButton>
+            </div>
+
+            <p v-if="runtimeError" class="settings-hint settings-error">
+              {{ runtimeError }}
+            </p>
+          </template>
+        </UiCard>
+
+        <!-- Desktop Runtime -->
+        <UiCard
+          v-if="desktopRuntime.desktop"
+          title="Desktop Runtime"
+          subtitle="macOS Apple Silicon"
+        >
+          <div class="settings-form-group">
+            <UiLabel>Текущий backend</UiLabel>
+            <div class="settings-status-row">
+              <UiButton
+                variant="secondary"
+                :class="{ active: desktopRuntime.mode === 'embedded' }"
+                disabled
+              >
+                Embedded
+              </UiButton>
+              <UiButton
+                variant="secondary"
+                :class="{ active: desktopRuntime.mode === 'remote' }"
+                disabled
+              >
+                Remote
+              </UiButton>
+            </div>
+            <p class="settings-hint">
+              {{
+                desktopRuntime.embeddedRunning
+                  ? "Локальный backend запущен."
+                  : "Локальный backend остановлен."
+              }}
+            </p>
+          </div>
+        </UiCard>
+
+        <!-- Быстрые действия и Backup -->
+        <div class="settings-actions-grid">
+          <UiCard title="Быстрые действия">
+            <div class="settings-quick-actions">
+              <button
+                class="settings-action-btn"
+                type="button"
+                @click="toggleSidebarView"
+              >
+                <PanelLeft class="ui-icon" />
+                <span>{{
+                  isSidebarHidden ? "Показать меню" : "Скрыть меню"
+                }}</span>
+                <ChevronRight class="ui-icon settings-action-btn__caret" />
+              </button>
+
+              <button
+                class="settings-action-btn"
+                type="button"
+                @click="toggleEditMode"
+              >
+                <Pencil class="ui-icon" />
+                <span>{{
+                  editMode ? "Выключить edit mode" : "Включить edit mode"
+                }}</span>
+                <ChevronRight class="ui-icon settings-action-btn__caret" />
+              </button>
+
+              <button
+                class="settings-action-btn"
+                type="button"
+                @click="openSearchFromSettings"
+              >
+                <Search class="ui-icon" />
+                <span>Открыть поиск</span>
+                <kbd class="settings-kbd">Ctrl/Cmd+K</kbd>
+                <ChevronRight class="ui-icon settings-action-btn__caret" />
               </button>
             </div>
-            <p class="settings-state-hint">{{ runtimeStatusHint }}</p>
-          </div>
+          </UiCard>
 
-          <div class="settings-state-group">
-            <p class="settings-state-label">Remote URL</p>
-            <input
-              v-model.trim="remoteBaseUrlDraft"
-              class="settings-runtime-input"
-              type="text"
-              autocomplete="off"
-              spellcheck="false"
-              placeholder="http://127.0.0.1:8000"
-              :disabled="runtimeApplying || appClientModeDraft !== 'thin'"
-            />
-          </div>
+          <UiCard title="Backup конфигурации">
+            <div class="settings-backup-actions">
+              <UiButton
+                variant="primary"
+                :disabled="backupBusy"
+                :loading="backupBusy"
+                block
+                @click="downloadConfigBackup"
+              >
+                <template #icon>
+                  <Download class="ui-icon" />
+                </template>
+                {{ backupBusy ? "Готовим backup..." : "Скачать backup (.yaml)" }}
+              </UiButton>
 
-          <div class="settings-runtime-actions">
-            <button
-              class="settings-nav-action"
-              type="button"
-              :disabled="runtimeApplying || !runtimeChanged"
-              @click="applyRuntimeMode"
-            >
-              <span class="settings-nav-action-main">
-                <Play class="ui-icon settings-nav-action-icon" />
+              <label class="ui-button ui-button--primary ui-button--block">
+                <Upload class="ui-icon" />
                 <span>{{
-                  runtimeApplying ? "Применяем..." : "Применить режим клиента"
+                  restoreBusy
+                    ? "Импортируем backup..."
+                    : "Импортировать backup (.yaml)"
                 }}</span>
-              </span>
-              <ChevronRight class="ui-icon settings-nav-action-caret" />
-            </button>
-          </div>
-
-          <p
-            v-if="runtimeError"
-            class="settings-state-hint settings-state-error"
-          >
-            {{ runtimeError }}
-          </p>
-        </template>
-      </section>
-
-      <section
-        v-if="desktopRuntime.desktop"
-        class="settings-modal-section settings-modal-section-wide"
-      >
-        <h4>Desktop Runtime (macOS Apple Silicon)</h4>
-        <div class="settings-state-group">
-          <p class="settings-state-label">Текущий backend</p>
-          <div class="settings-state-switcher">
-            <button
-              class="settings-state-btn"
-              :class="{ active: desktopRuntime.mode === 'embedded' }"
-              type="button"
-              disabled
-            >
-              Embedded
-            </button>
-            <button
-              class="settings-state-btn"
-              :class="{ active: desktopRuntime.mode === 'remote' }"
-              type="button"
-              disabled
-            >
-              Remote
-            </button>
-          </div>
-          <p class="settings-state-hint">
-            {{
-              desktopRuntime.embeddedRunning
-                ? "Локальный backend запущен."
-                : "Локальный backend остановлен."
-            }}
-          </p>
+                <input
+                  type="file"
+                  accept=".yaml,.yml,text/yaml"
+                  :disabled="restoreBusy"
+                  @change="restoreConfigBackup"
+                />
+              </label>
+            </div>
+            <p v-if="backupError" class="settings-hint settings-error">
+              {{ backupError }}
+            </p>
+            <p v-else-if="backupSuccess" class="settings-hint">
+              {{ backupSuccess }}
+            </p>
+          </UiCard>
         </div>
-      </section>
 
-      <section class="settings-modal-section">
-        <h4>Быстрые действия</h4>
-        <div class="settings-modal-actions">
-          <button
-            class="settings-nav-action"
-            type="button"
-            @click="toggleSidebarView"
-          >
-            <span class="settings-nav-action-main">
-              <PanelLeft class="ui-icon settings-nav-action-icon" />
-              <span>{{
-                isSidebarHidden ? "Показать меню" : "Скрыть меню"
-              }}</span>
-            </span>
-            <ChevronRight class="ui-icon settings-nav-action-caret" />
-          </button>
-          <button
-            class="settings-nav-action"
-            type="button"
-            @click="toggleEditMode"
-          >
-            <span class="settings-nav-action-main">
-              <Pencil class="ui-icon settings-nav-action-icon" />
-              <span>{{
-                editMode ? "Выключить edit mode" : "Включить edit mode"
-              }}</span>
-            </span>
-            <ChevronRight class="ui-icon settings-nav-action-caret" />
-          </button>
-          <button
-            class="settings-nav-action"
-            type="button"
-            @click="openSearchFromSettings"
-          >
-            <span class="settings-nav-action-main">
-              <Search class="ui-icon settings-nav-action-icon" />
-              <span>Открыть поиск (Ctrl/Cmd+K)</span>
-            </span>
-            <ChevronRight class="ui-icon settings-nav-action-caret" />
-          </button>
-        </div>
-      </section>
-
-      <section class="settings-modal-section">
-        <h4>Backup конфигурации</h4>
-        <div class="settings-modal-actions">
-          <button
-            class="settings-nav-action"
-            type="button"
-            :disabled="backupBusy"
-            @click="downloadConfigBackup"
-          >
-            <span class="settings-nav-action-main">
-              <Download class="ui-icon settings-nav-action-icon" />
-              <span>{{
-                backupBusy ? "Готовим backup..." : "Скачать backup (.yaml)"
-              }}</span>
-            </span>
-            <ChevronRight class="ui-icon settings-nav-action-caret" />
-          </button>
-          <label class="settings-runtime-input settings-file-input">
-            <Upload class="ui-icon settings-nav-action-icon" />
-            <span>{{
-              restoreBusy
-                ? "Импортируем backup..."
-                : "Импортировать backup (.yaml)"
-            }}</span>
-            <input
-              type="file"
-              accept=".yaml,.yml,text/yaml"
-              :disabled="restoreBusy"
-              @change="restoreConfigBackup"
-            />
-          </label>
-        </div>
-        <p v-if="backupError" class="settings-state-hint settings-state-error">
-          {{ backupError }}
-        </p>
-        <p v-else-if="backupSuccess" class="settings-state-hint">
-          {{ backupSuccess }}
-        </p>
-      </section>
-
-      <section class="settings-modal-section settings-modal-section-wide">
-        <h4>Валидация конфигурации</h4>
-        <ConfigValidatorPanel
-          @config-restored="handleConfigRestored"
-          @error="handleValidatorError"
-        />
-      </section>
+        <!-- Валидация конфигурации -->
+        <UiCard title="Валидация конфигурации">
+          <ConfigValidatorPanel
+            @config-restored="handleConfigRestored"
+            @error="handleValidatorError"
+          />
+        </UiCard>
+      </div>
     </div>
   </BaseModal>
 </template>
@@ -358,6 +267,11 @@ import {
   Upload,
 } from "lucide-vue-next";
 import BaseModal from "@/ui/overlays/BaseModal.vue";
+import UiCard from "@/ui/surfaces/UiCard.vue";
+import UiFieldset from "@/ui/surfaces/UiFieldset.vue";
+import UiButton from "@/ui/actions/UiButton.vue";
+import UiSelectButton from "@/ui/forms/UiSelectButton.vue";
+import UiLabel from "@/ui/forms/UiLabel.vue";
 import ConfigValidatorPanel from "@/views/dashboard/modals/ConfigValidatorPanel.vue";
 import {
   fetchDashboardConfigBackup,
@@ -392,16 +306,12 @@ const {
   themeModeOptions,
   themePalette,
   themePaletteOptions,
-  setSiteFilter,
-  setThemePalette,
-  setThemeMode,
   toggleEditMode,
   toggleSidebarView,
   loadConfig,
 } = dashboard;
 
 type AppClientModeDraft = Exclude<AppClientMode, null>;
-type ServiceGroupingValue = "groups" | "tags_in_groups" | "tags" | "flat";
 type Option<T extends string> = {
   value: T;
   label: string;
@@ -480,11 +390,6 @@ function normalizeRuntimeDraft(): void {
     (desktopRuntime.value.mode === "embedded" ? "thick" : "thin");
   remoteBaseUrlDraft.value =
     desktopRuntime.value.remoteBaseUrl || "http://127.0.0.1:8000";
-}
-
-function setGroupingMode(value: ServiceGroupingValue): void {
-  if (isSidebarHidden.value) return;
-  serviceGroupingMode.value = value;
 }
 
 function openSearchFromSettings(): void {

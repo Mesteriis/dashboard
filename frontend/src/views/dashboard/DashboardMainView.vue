@@ -24,20 +24,20 @@
         v-if="activeIndicatorWidget"
         class="page-right-bottom page-motion-zone"
       >
-        <UiIndicatorTabPanelFacade />
+        <UiIndicatorTabPanel />
       </section>
 
       <section v-else-if="hideHero" class="page-right-bottom page-motion-zone">
-        <UiServicesGroupsPanelFacade />
+        <UiServicesGroupsPanel />
       </section>
 
       <section v-else class="page-right-shell">
         <section class="page-right-top">
-          <UiServicesHeroPanelFacade />
+          <UiServicesHeroPanel />
         </section>
 
         <section class="page-right-bottom page-motion-zone">
-          <UiServicesGroupsPanelFacade />
+          <UiServicesGroupsPanel />
         </section>
       </section>
     </template>
@@ -50,7 +50,7 @@
     </section>
   </main>
 
-  <UiBootstrapDashboardModalFacade
+  <UiBootstrapDashboardModal
     :open="showBootstrapModal"
     :creating="creatingInitialDashboard"
     :importing="importingInitialDashboard"
@@ -105,9 +105,10 @@
 
 <script setup lang="ts">
 import { computed, defineAsyncComponent, ref, watch } from "vue";
-import UiBootstrapDashboardModalFacade from "@/views/dashboard/facades/UiBootstrapDashboardModalFacade.vue";
-import UiServicesGroupsPanelFacade from "@/views/dashboard/facades/UiServicesGroupsPanelFacade.vue";
-import UiServicesHeroPanelFacade from "@/views/dashboard/facades/UiServicesHeroPanelFacade.vue";
+import UiBootstrapDashboardModal from "@/views/dashboard/components/UiBootstrapDashboardModal.vue";
+import UiIndicatorTabPanel from "@/views/dashboard/components/UiIndicatorTabPanel.vue";
+import UiServicesGroupsPanel from "@/views/dashboard/components/UiServicesGroupsPanel.vue";
+import UiServicesHeroPanel from "@/views/dashboard/components/UiServicesHeroPanel.vue";
 import { restoreDashboardConfig } from "@/features/services/dashboardApi";
 import { useDashboardStore } from "@/features/stores/dashboardStore";
 
@@ -118,10 +119,6 @@ withDefaults(
   {
     hideHero: false,
   },
-);
-
-const UiIndicatorTabPanelFacade = defineAsyncComponent(
-  () => import("@/views/dashboard/facades/UiIndicatorTabPanelFacade.vue"),
 );
 
 const CreateEntityChooserModal = defineAsyncComponent(

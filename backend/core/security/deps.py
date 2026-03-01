@@ -49,6 +49,9 @@ require_actions_registry = Depends(_require_capability("read.registry.actions"))
 require_actions_validate = Depends(_require_capability("exec.actions.validate"))
 require_actions_execute = Depends(_require_capability("exec.actions.execute"))
 require_actions_history = Depends(_require_capability("read.actions.history"))
+require_plugins_list = Depends(_require_capability("read.plugins.list"))
+require_plugins_manifest = Depends(_require_capability("read.plugins.manifest"))
+require_plugins_services = Depends(_require_capability("read.plugins.services"))
 
 
 __all__ = [
@@ -63,6 +66,9 @@ __all__ = [
     "require_config_revisions",
     "require_config_rollback",
     "require_events",
+    "require_plugins_list",
+    "require_plugins_manifest",
+    "require_plugins_services",
     "require_state",
     "require_widgets_registry",
 ]

@@ -113,6 +113,7 @@ class HealthScheduler:
 
                 if now >= self._next_heartbeat_at:
                     schedule_preview = self._format_schedule_preview(now=now, services=services)
+                    schedule_table = self._format_schedule_table(now=now, services=services)
                     LOGGER.info(
                         "Health scheduler heartbeat enabled=%d due_now=%d emitted=%d pruned=%d next=%s",
                         len(services),
@@ -121,6 +122,8 @@ class HealthScheduler:
                         retention_pruned,
                         schedule_preview,
                     )
+                    if services:
+                        LOGGER.info("Health scheduler schedule table:\n%s", schedule_table)
                     if due_now_item_ids:
                         LOGGER.info(
                             "Health scheduler due items: %s",
@@ -156,6 +159,42 @@ class HealthScheduler:
             entries.append((remaining, service.item_id))
         entries.sort(key=lambda item: (item[0], item[1]))
         return ", ".join(f"{item_id}:{seconds}s" for seconds, item_id in entries[:8])
+
+    def _format_schedule_table(
+        self,
+        *,
+        now: datetime,
+        services: Sequence[MonitoredService],
+        limit: int = 20,
+    ) -> str:
+        if not services:
+            return "-"
+
+        def _truncate(value: str, width: int) -> str:
+            token = value.strip()
+            if len(token) <= width:
+                return token
+            return f"{token[: max(0, width - 1)]}…"
+
+        entries: list[tuple[int, MonitoredService]] = []
+        for service in services:
+            due_at = self._next_due.get(service.id, now)
+            remaining = max(0, int((due_at - now).total_seconds()))
+            entries.append((remaining, service))
+        entries.sort(key=lambda item: (item[0], item[1].item_id))
+
+        lines = [
+            f"{'service':<32} | {'task':<20} | {'next_in':>7} | target",
+            f"{'-' * 32}-+-{'-' * 20}-+-{'-' * 7}-+-{'-' * 30}",
+        ]
+        for remaining, service in entries[: max(1, limit)]:
+            due_in = f"{remaining}s"
+            task = f"check:{service.check_type}"
+            target = _truncate(service.target, 30)
+            lines.append(
+                f"{_truncate(service.item_id, 32):<32} | {_truncate(task, 20):<20} | {due_in:>7} | {target}"
+            )
+        return "\n".join(lines)
 
 
 __all__ = ["HealthScheduler"]

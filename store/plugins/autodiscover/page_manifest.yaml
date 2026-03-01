@@ -1,0 +1,86 @@
+plugin_id: autodiscover
+version: "2.0.0"
+manifest_version: "1.0"
+plugin_api_version: "1.0"
+capabilities:
+  - read.plugins.services
+  - write.config.patch
+frontend:
+  renderer: universal
+  sandbox: true
+  customBundle:
+    enabled: false
+    entry: null
+    integrity: null
+    sandbox: true
+    killSwitchKey: oko:plugins:bundle:disabled
+page:
+  enabled: true
+  layout: content-only
+  components:
+    - id: autodiscover-services-table
+      type: data-table
+      title: Discovered Services
+      loadingText: Loading discovered services...
+      emptyText: No discovered services yet.
+      errorText: Failed to load discovered services.
+      columns:
+        - key: host_ip
+          label: Host IP
+        - key: hostname
+          label: Hostname
+        - key: port
+          label: Port
+        - key: service
+          label: Service
+        - key: title
+          label: HTTP Title
+        - key: url
+          label: URL
+      groupBy:
+        - field: host_ip
+          label: Host
+          emptyLabel: Unknown Host
+        - field: service
+          label: Service
+          emptyLabel: Unknown Service
+      dataSource:
+        type: http
+        method: GET
+        endpoint: /api/v1/plugins/autodiscover/services
+        capability: read.plugins.services
+        response_path: services
+      rowActions:
+        - id: add_to_dashboard
+          type: add-to-dashboard
+          label: Add to Dashboard
+          capability: write.config.patch
+          targetGroupId: autodiscover
+          targetGroupTitle: Autodiscover
+          subgroupField: host_ip
+          urlField: url
+          titleTemplate: "{service} {host_ip}:{port}"
+          tagsFromFields:
+            - host_ip
+            - hostname
+            - service
+            - port
+          openMode: new_tab
+schema:
+  services:
+    type: array
+    items:
+      type: object
+      properties:
+        host_ip:
+          type: [string, "null"]
+        hostname:
+          type: [string, "null"]
+        port:
+          type: integer
+        service:
+          type: [string, "null"]
+        title:
+          type: [string, "null"]
+        url:
+          type: [string, "null"]

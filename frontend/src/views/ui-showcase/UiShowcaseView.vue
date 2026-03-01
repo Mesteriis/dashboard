@@ -3,9 +3,9 @@
     :emblem-src="EMBLEM_SRC"
     :sidebar-hidden="false"
     :sidebar-particles-id="SIDEBAR_PARTICLES_ID"
-    canvas-aria-label="UI Kit demo"
+    content-label="UI Kit demo"
   >
-    <template v-slot:[SLOT_APP_SIDEBAR_TOP]>
+    <template #sidebar-mid>
       <header class="brand">
         <img :src="EMBLEM_SRC" alt="" aria-hidden="true" />
         <div>
@@ -13,9 +13,6 @@
           <p class="brand-subtitle">UI Kit primitives showcase</p>
         </div>
       </header>
-    </template>
-
-    <template v-slot:[SLOT_APP_SIDEBAR_MIDDLE]>
       <aside
         class="ui-kit-nav ui-kit-showcase-sidebar"
         aria-label="UI kit navigation"
@@ -72,7 +69,7 @@
       </aside>
     </template>
 
-    <template v-slot:[SLOT_APP_HEADER_TABS]>
+    <template #header-tabs>
       <nav class="hero-page-tabs" role="tablist" aria-label="UI Kit">
         <button
           id="uikit-showcase-tab"
@@ -89,7 +86,7 @@
       </nav>
     </template>
 
-    <template v-slot:[SLOT_PAGE_CANVAS_MAIN]>
+    <template #canvas-main>
       <section
         id="uikit-showcase-panel"
         class="ui-kit-showcase-panel"
@@ -125,11 +122,6 @@ import {
   SIDEBAR_PARTICLES_ID,
 } from "@/features/stores/ui/storeConstants";
 import { useSidebarParticles } from "@/features/composables/useSidebarParticles";
-
-const SLOT_APP_SIDEBAR_TOP = "app.sidebar.top";
-const SLOT_APP_SIDEBAR_MIDDLE = "app.sidebar.middle";
-const SLOT_APP_HEADER_TABS = "app.header.tabs";
-const SLOT_PAGE_CANVAS_MAIN = "page.canvas.main";
 
 type GroupFilterId = UiKitPrimitiveGroup["id"];
 

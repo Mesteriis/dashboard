@@ -9,17 +9,13 @@ from pathlib import Path
 from urllib.parse import urlparse, urlunparse
 
 from config.container import build_container
+from core.logging_setup import configure_logging
 
 LOGGER = logging.getLogger("oko.worker")
 
 
 def _configure_logging() -> None:
-    level_name = os.getenv("OKO_LOG_LEVEL", "INFO").upper()
-    level = getattr(logging, level_name, logging.INFO)
-    logging.basicConfig(
-        level=level,
-        format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
-    )
+    configure_logging()
 
 
 def _redact_url(raw: str) -> str:

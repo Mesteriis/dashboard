@@ -159,6 +159,13 @@
   transform: translateY(-1px);
 }
 
+.plugins-install-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  filter: grayscale(0.25);
+}
+
 .plugins-panel-back {
   width: 100%;
   justify-content: center;
@@ -313,6 +320,10 @@
   margin: 0;
   font-size: 0.78rem;
   color: var(--plugins-panel-color-038);
+}
+
+.plugins-store-error {
+  color: #ff8e97;
 }
 
 .plugins-main-tile-actions {

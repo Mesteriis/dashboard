@@ -1,7 +1,6 @@
 <template>
-  <UiPluginControlCenterCore
+  <UiPluginControlCenter
     :tab="activeTab"
-    @close="handleClose"
     @set-tab="handleSetTab"
     @open-plugin="handleOpenPlugin"
   />
@@ -10,9 +9,8 @@
 <script setup lang="ts">
 import { computed, watch } from "vue";
 import { useRoute } from "vue-router";
-import UiPluginControlCenterCore from "@/views/plugins/facades/UiPluginControlCenterCore.vue";
+import UiPluginControlCenter from "@/views/plugins/components/UiPluginControlCenter.vue";
 import {
-  goDashboard,
   goPlugin,
   replaceQuery,
   type PluginsPanelTab,
@@ -47,10 +45,6 @@ watch(
   },
   { immediate: true },
 );
-
-function handleClose(): void {
-  void goDashboard();
-}
 
 function handleSetTab(tab: PluginsPanelTab): void {
   if (tab === activeTab.value) return;

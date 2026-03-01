@@ -5394,94 +5394,140 @@ body {
 }
 
 .settings-modal {
-  width: min(75vw, 1180px);
-  max-height: 75vh;
+  width: min(90vw, 1280px);
+  max-height: 85vh;
   border: 1px solid var(--dashboard-settings-modal-color-002);
   border-radius: var(--ui-radius);
   background: linear-gradient(165deg, var(--dashboard-settings-modal-color-003), var(--dashboard-settings-modal-color-004));
   box-shadow: var(--shadow), inset 0 0 0 1px var(--dashboard-settings-modal-color-005);
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-rows: auto 1fr;
   gap: 0;
   overflow: hidden;
 }
 
 .settings-modal-header {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
-  gap: 10px;
-  padding: 14px;
+  gap: 16px;
+  padding: 16px 20px;
   border-bottom: 1px solid var(--dashboard-settings-modal-color-006);
 }
 
-.settings-modal-header h3 {
-  margin: 0;
-  font-size: 0.95rem;
+.settings-modal-header__content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
-.settings-modal-header p {
-  margin: 4px 0 0;
+.settings-modal-header__title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--dashboard-settings-modal-color-011);
+}
+
+.settings-modal-header__subtitle {
+  margin: 0;
   color: var(--dashboard-settings-modal-color-007);
-  font-size: 0.75rem;
+  font-size: 0.8rem;
 }
 
-.settings-modal-grid {
-  padding: 14px;
+.settings-modal-content {
   display: grid;
-  gap: 12px;
+  grid-template-columns: 280px 1fr;
+  gap: 16px;
+  padding: 20px;
   overflow: auto;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  max-height: calc(85vh - 70px);
 }
 
-.settings-modal-section {
+.settings-modal-sidebar {
+  position: sticky;
+  top: 0;
+  align-self: start;
+}
+
+.settings-modal-main {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+/* Стили для UiCard внутри настроек */
+.settings-modal-sidebar .ui-card,
+.settings-modal-main .ui-card {
   border: 1px solid var(--dashboard-settings-modal-color-008);
-  border-radius: var(--ui-radius);
   background: linear-gradient(155deg, var(--dashboard-settings-modal-color-009), var(--dashboard-settings-modal-color-010));
-  padding: 12px;
-  display: grid;
-  gap: 10px;
 }
 
-.settings-modal-section-wide {
-  grid-column: 1/-1;
+.settings-modal-sidebar .ui-card__head,
+.settings-modal-main .ui-card__head {
+  border-bottom: 1px solid var(--dashboard-settings-modal-color-006);
+  padding-bottom: 12px;
+  margin-bottom: 12px;
 }
 
-.settings-modal-section h4 {
+.settings-modal-sidebar .ui-card h3,
+.settings-modal-main .ui-card h3 {
   margin: 0;
-  font-size: 0.82rem;
+  font-size: 0.88rem;
+  font-weight: 600;
   letter-spacing: 0.02em;
   color: var(--dashboard-settings-modal-color-011);
 }
 
-.settings-state-group {
-  display: grid;
-  gap: 7px;
+.settings-modal-sidebar .ui-card p,
+.settings-modal-main .ui-card p {
+  margin: 2px 0 0;
+  font-size: 0.75rem;
+  color: var(--dashboard-settings-modal-color-007);
 }
 
-.settings-state-label {
-  margin: 0;
-  font-size: 0.74rem;
+/* UiFieldset стили */
+.ui-fieldset {
+  border: none;
+  margin: 0 0 12px 0;
+  padding: 0;
+}
+.ui-fieldset:last-child {
+  margin-bottom: 0;
+}
+
+.ui-fieldset__toggle {
+  border: none;
+  background: none;
+  padding: 0 0 8px 0;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--dashboard-settings-modal-color-012);
-}
-
-.settings-state-switcher {
+  cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 7px;
-  flex-wrap: nowrap;
-  overflow-x: auto;
-  scrollbar-width: thin;
+  justify-content: space-between;
+  width: 100%;
+}
+.ui-fieldset__toggle:hover {
+  color: var(--dashboard-settings-modal-color-017);
 }
 
-.settings-state-switcher.wrap {
+.ui-fieldset__content {
+  padding-top: 4px;
+}
+
+/* UiSelectButton стили */
+.ui-select-button {
+  display: flex;
   flex-wrap: wrap;
-  overflow-x: visible;
+  gap: 6px;
 }
 
-.settings-state-btn {
+.ui-select-button__item {
   border: 1px solid var(--dashboard-settings-modal-color-013);
   border-radius: var(--ui-radius);
   background: linear-gradient(148deg, var(--dashboard-settings-modal-color-014), var(--dashboard-settings-modal-color-015));
@@ -5489,40 +5535,36 @@ body {
   font: inherit;
   font-size: 0.79rem;
   font-weight: 600;
-  padding: 7px 11px;
+  padding: 6px 10px;
   cursor: pointer;
-  white-space: nowrap;
   transition: border-color 150ms ease, background 150ms ease, transform 150ms ease, box-shadow 150ms ease;
 }
-
-.settings-state-btn:hover {
+.ui-select-button__item:hover:not(:disabled) {
   border-color: var(--dashboard-settings-modal-color-017);
   transform: translateY(-1px);
 }
-
-.settings-state-btn.active {
+.ui-select-button__item.is-active {
   border-color: var(--dashboard-settings-modal-color-018);
   background: linear-gradient(144deg, var(--dashboard-settings-modal-color-019), var(--dashboard-settings-modal-color-020));
   box-shadow: 0 8px 18px var(--dashboard-settings-modal-color-021), inset 0 1px 0 var(--dashboard-settings-modal-color-022);
 }
-
-.settings-state-btn:disabled {
+.ui-select-button__item:disabled {
   opacity: 0.5;
   cursor: default;
   transform: none;
 }
 
-.settings-state-hint {
-  margin: 0;
-  font-size: 0.72rem;
-  color: var(--dashboard-settings-modal-color-023);
+/* Формы и input */
+.settings-form-group {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.settings-form-group:last-child {
+  margin-bottom: 0;
 }
 
-.settings-state-error {
-  color: var(--dashboard-settings-modal-color-024);
-}
-
-.settings-runtime-input {
+.ui-input {
   width: 100%;
   border: 1px solid var(--dashboard-settings-modal-color-025);
   border-radius: var(--ui-radius);
@@ -5534,43 +5576,54 @@ body {
   outline: none;
   transition: border-color 150ms ease, box-shadow 150ms ease;
 }
-
-.settings-runtime-input:focus-visible {
+.ui-input:focus-visible {
   border-color: var(--dashboard-settings-modal-color-028);
   box-shadow: 0 0 0 2px var(--dashboard-settings-modal-color-029);
 }
-
-.settings-runtime-input:disabled {
+.ui-input:disabled {
   opacity: 0.58;
   cursor: default;
 }
 
-.settings-runtime-actions {
-  display: grid;
-  grid-template-columns: minmax(220px, 340px);
+.settings-form-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
 }
 
-.settings-file-input {
-  display: inline-flex;
-  align-items: center;
+/* Hint стили */
+.settings-hint {
+  margin: 6px 0 0;
+  font-size: 0.72rem;
+  color: var(--dashboard-settings-modal-color-023);
+}
+
+.settings-error {
+  color: var(--dashboard-settings-modal-color-024);
+}
+
+/* Status row для Desktop Runtime */
+.settings-status-row {
+  display: flex;
   gap: 8px;
-  cursor: pointer;
+  flex-wrap: wrap;
 }
 
-.settings-file-input input {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  opacity: 0;
-  pointer-events: none;
+/* Actions grid для быстрых действий и backup */
+.settings-actions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
 }
 
-.settings-modal-actions {
+/* Quick actions */
+.settings-quick-actions,
+.settings-backup-actions {
   display: grid;
   gap: 8px;
 }
 
-.settings-nav-action {
+.settings-action-btn {
   width: 100%;
   border: 1px solid var(--dashboard-settings-modal-color-025);
   border-radius: var(--ui-radius);
@@ -5582,46 +5635,86 @@ body {
   padding: 11px 12px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+  gap: 10px;
   cursor: pointer;
   transition: border-color 160ms ease, background 160ms ease, transform 160ms ease, box-shadow 160ms ease;
 }
-
-.settings-nav-action-main {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
+.settings-action-btn:hover {
+  border-color: var(--dashboard-settings-modal-color-034);
+  background: linear-gradient(152deg, var(--dashboard-settings-modal-color-035), var(--dashboard-settings-modal-color-036));
+  transform: translateY(-1px);
+  box-shadow: 0 12px 22px var(--dashboard-settings-modal-color-037), inset 0 1px 0 var(--dashboard-settings-modal-color-038);
+}
+.settings-action-btn:focus-visible {
+  outline: none;
+  border-color: var(--dashboard-settings-modal-color-028);
+  box-shadow: 0 0 0 2px var(--dashboard-settings-modal-color-039);
 }
 
-.settings-nav-action-icon {
-  width: 14px;
-  height: 14px;
-  color: var(--dashboard-settings-modal-color-032);
-  flex: 0 0 auto;
-}
-
-.settings-nav-action-caret {
+.settings-action-btn__caret {
+  margin-left: auto;
   width: 13px;
   height: 13px;
   color: var(--dashboard-settings-modal-color-033);
   flex: 0 0 auto;
 }
 
-.settings-nav-action:hover {
-  border-color: var(--dashboard-settings-modal-color-034);
-  background: linear-gradient(152deg, var(--dashboard-settings-modal-color-035), var(--dashboard-settings-modal-color-036));
-  transform: translateY(-1px);
-  box-shadow: 0 12px 22px var(--dashboard-settings-modal-color-037), inset 0 1px 0 var(--dashboard-settings-modal-color-038);
+.settings-kbd {
+  font-size: 0.68rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--dashboard-settings-modal-color-026);
+  color: var(--dashboard-settings-modal-color-032);
+  font-family: var(--font-mono, monospace);
+  margin-left: 4px;
 }
 
-.settings-nav-action:focus-visible {
-  outline: none;
-  border-color: var(--dashboard-settings-modal-color-028);
-  box-shadow: 0 0 0 2px var(--dashboard-settings-modal-color-039);
+/* UiButton overrides */
+.ui-btn .ui-icon {
+  width: 14px;
+  height: 14px;
+  margin-right: 6px;
 }
 
+.ui-button--block {
+  width: 100%;
+  justify-content: center;
+}
+
+/* Label стили */
+.ui-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--dashboard-settings-modal-color-012);
+  margin-bottom: 6px;
+  display: block;
+}
+
+/* Адаптивность */
+@media (max-width: 900px) {
+  .settings-modal-content {
+    grid-template-columns: 1fr;
+  }
+  .settings-modal-sidebar {
+    position: static;
+  }
+  .settings-modal {
+    width: min(95vw, 100%);
+    max-height: 90vh;
+  }
+}
+@media (max-width: 600px) {
+  .settings-modal-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .settings-actions-grid {
+    grid-template-columns: 1fr;
+  }
+}
 .editor-modal {
   width: min(96vw, 920px);
   max-height: min(92vh, 980px);
@@ -6505,6 +6598,13 @@ body {
   transform: translateY(-1px);
 }
 
+.plugins-install-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  filter: grayscale(0.25);
+}
+
 .plugins-panel-back {
   width: 100%;
   justify-content: center;
@@ -6645,6 +6745,10 @@ body {
   margin: 0;
   font-size: 0.78rem;
   color: var(--plugins-panel-color-038);
+}
+
+.plugins-store-error {
+  color: #ff8e97;
 }
 
 .plugins-main-tile-actions {
@@ -7530,6 +7634,11 @@ body {
   border: 1px solid var(--ui-kit-data-components-color-001);
   border-radius: var(--ui-radius);
   background: linear-gradient(150deg, var(--ui-kit-data-components-color-002), var(--ui-kit-data-components-color-003));
+}
+
+.ui-select-button.is-disabled {
+  opacity: 0.6;
+  pointer-events: none;
 }
 
 .ui-select-button__item,

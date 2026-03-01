@@ -4,11 +4,9 @@
     :sidebar-hidden="isSidebarHidden"
     :sidebar-particles-id="BLANK_SIDEBAR_PARTICLES_ID"
     :header-panel-initially-open="heroControlsOpen"
-    sidebar-bottom-accordion-label="Демо-аккордеон"
-    :sidebar-bottom-accordion-initially-open="false"
     @header-panel-open-change="handleHeaderPanelOpenChange"
   >
-    <template v-slot:[SLOT_APP_SIDEBAR_TOP]>
+    <template #sidebar-mid>
       <header class="brand">
         <img :src="EMBLEM_SRC" alt="" aria-hidden="true" />
         <div>
@@ -16,9 +14,6 @@
           <p class="brand-subtitle">Your Infrastructure in Sight</p>
         </div>
       </header>
-    </template>
-
-    <template v-slot:[SLOT_APP_SIDEBAR_MIDDLE]>
       <section class="blank-sidebar-demo-main">
         <p class="blank-sidebar-demo-eyebrow">Основной слот</p>
         <h2>Вертикальная зона #2</h2>
@@ -41,12 +36,12 @@
       </section>
     </template>
 
-    <template v-slot:[SLOT_APP_SIDEBAR_BOTTOM]>
+    <template #sidebar-bottom-indicators>
       <section class="blank-sidebar-demo-accordion">
         <h3>Контент нижнего аккордеона</h3>
         <p>
           Этот блок появляется только когда передан слот
-          <code>app.sidebar.bottom</code>.
+          <code>sidebar-bottom-indicators</code>.
         </p>
         <ul>
           <li>Пункт 01: вспомогательные быстрые действия</li>
@@ -56,19 +51,19 @@
       </section>
     </template>
 
-    <template v-slot:[SLOT_APP_HEADER_TABS]>
+    <template #header-tabs>
       <UiHeroBlankPanel v-model="activeBlankTab" segment="tabs" />
     </template>
 
-    <template v-slot:[SLOT_APP_HEADER_PANEL_DRAWER]>
+    <template #drawer>
       <UiHeroBlankPanel v-model="activeBlankTab" segment="panel.drawer" />
     </template>
 
-    <template v-slot:[SLOT_APP_HEADER_PANEL_MENU]>
+    <template #drawer-actions>
       <UiHeroBlankPanel v-model="activeBlankTab" segment="panel.menu" />
     </template>
 
-    <template v-slot:[SLOT_PAGE_CANVAS_MAIN]>
+    <template #canvas-main>
       <article
         id="blank-panel-overview"
         class="blank-demo blank-demo--overview"
@@ -144,13 +139,6 @@ import {
 import type { ParticlesConfig } from "@/features/stores/ui/storeTypes";
 
 const BLANK_SIDEBAR_PARTICLES_ID = "blank-sidebar-particles";
-const SLOT_APP_SIDEBAR_TOP = "app.sidebar.top";
-const SLOT_APP_SIDEBAR_MIDDLE = "app.sidebar.middle";
-const SLOT_APP_SIDEBAR_BOTTOM = "app.sidebar.bottom";
-const SLOT_APP_HEADER_TABS = "app.header.tabs";
-const SLOT_APP_HEADER_PANEL_DRAWER = "app.header.panel.drawer";
-const SLOT_APP_HEADER_PANEL_MENU = "app.header.panel.menu";
-const SLOT_PAGE_CANVAS_MAIN = "page.canvas.main";
 let removeFxModeListener: () => void = () => {};
 const uiStore = useUiStore();
 const restoredBlankLayoutState = loadBlankLayoutState();
