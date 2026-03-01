@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-03-01T15:20:22.580548+00:00",
-  "duration_ms": 412316,
+  "generated_at": "2026-03-01T20:59:11.145543+00:00",
+  "duration_ms": 497671,
   "scanned_hosts": 254,
   "scanned_ports": 254000,
   "chunk_tasks_total": 2540,
@@ -96,9 +96,24 @@
       "dashboard_items": []
     },
     {
-      "ip": "192.168.1.8",
+      "ip": "192.168.1.5",
       "hostname": null,
-      "mac_address": "BC:24:11:3B:6F:DD",
+      "mac_address": "BC:24:11:69:1D:DD",
+      "mac_vendor": "Proxmox Server Solutions GmbH",
+      "device_type": "Linux/Unix Host",
+      "open_ports": [
+        {
+          "port": 22,
+          "service": "ssh"
+        }
+      ],
+      "http_services": [],
+      "dashboard_items": []
+    },
+    {
+      "ip": "192.168.1.6",
+      "hostname": null,
+      "mac_address": "BC:24:11:E6:37:9C",
       "mac_vendor": "Proxmox Server Solutions GmbH",
       "device_type": "Linux/Unix Host",
       "open_ports": [
@@ -117,6 +132,10 @@
       "mac_vendor": "Locally Administered",
       "device_type": "NAS/File Server",
       "open_ports": [
+        {
+          "port": 22,
+          "service": "ssh"
+        },
         {
           "port": 80,
           "service": "http"
@@ -155,10 +174,6 @@
       "mac_vendor": "Proxmox Server Solutions GmbH",
       "device_type": "Web Device",
       "open_ports": [
-        {
-          "port": 22,
-          "service": "ssh"
-        },
         {
           "port": 80,
           "service": "http"
@@ -234,36 +249,6 @@
       "dashboard_items": []
     },
     {
-      "ip": "192.168.1.27",
-      "hostname": null,
-      "mac_address": "BC:24:11:0A:93:B7",
-      "mac_vendor": "Proxmox Server Solutions GmbH",
-      "device_type": "Linux/Unix Host",
-      "open_ports": [
-        {
-          "port": 22,
-          "service": "ssh"
-        }
-      ],
-      "http_services": [],
-      "dashboard_items": []
-    },
-    {
-      "ip": "192.168.1.28",
-      "hostname": null,
-      "mac_address": "BC:24:11:0C:73:49",
-      "mac_vendor": "Proxmox Server Solutions GmbH",
-      "device_type": "Linux/Unix Host",
-      "open_ports": [
-        {
-          "port": 22,
-          "service": "ssh"
-        }
-      ],
-      "http_services": [],
-      "dashboard_items": []
-    },
-    {
       "ip": "192.168.1.29",
       "hostname": "caddy",
       "mac_address": "BC:24:11:E3:7D:CE",
@@ -287,6 +272,21 @@
           "error": null
         }
       ],
+      "dashboard_items": []
+    },
+    {
+      "ip": "192.168.1.30",
+      "hostname": null,
+      "mac_address": "BC:24:11:9A:7F:52",
+      "mac_vendor": "Proxmox Server Solutions GmbH",
+      "device_type": "Linux/Unix Host",
+      "open_ports": [
+        {
+          "port": 22,
+          "service": "ssh"
+        }
+      ],
+      "http_services": [],
       "dashboard_items": []
     },
     {
@@ -326,6 +326,10 @@
       "mac_vendor": "Proxmox Server Solutions GmbH",
       "device_type": "Web Device",
       "open_ports": [
+        {
+          "port": 22,
+          "service": "ssh"
+        },
         {
           "port": 80,
           "service": "http"
@@ -431,6 +435,21 @@
       "dashboard_items": []
     },
     {
+      "ip": "192.168.1.159",
+      "hostname": null,
+      "mac_address": "BC:24:11:BC:BB:60",
+      "mac_vendor": "Proxmox Server Solutions GmbH",
+      "device_type": "Linux/Unix Host",
+      "open_ports": [
+        {
+          "port": 22,
+          "service": "ssh"
+        }
+      ],
+      "http_services": [],
+      "dashboard_items": []
+    },
+    {
       "ip": "192.168.1.168",
       "hostname": "homarr",
       "mac_address": "BC:24:11:9C:41:AE",
@@ -528,6 +547,51 @@
       "ip": "192.168.1.181",
       "hostname": null,
       "mac_address": "BC:24:11:60:B8:48",
+      "mac_vendor": "Proxmox Server Solutions GmbH",
+      "device_type": "Linux/Unix Host",
+      "open_ports": [
+        {
+          "port": 22,
+          "service": "ssh"
+        }
+      ],
+      "http_services": [],
+      "dashboard_items": []
+    },
+    {
+      "ip": "192.168.1.185",
+      "hostname": null,
+      "mac_address": "BC:24:11:51:86:5E",
+      "mac_vendor": "Proxmox Server Solutions GmbH",
+      "device_type": "Linux/Unix Host",
+      "open_ports": [
+        {
+          "port": 22,
+          "service": "ssh"
+        }
+      ],
+      "http_services": [],
+      "dashboard_items": []
+    },
+    {
+      "ip": "192.168.1.186",
+      "hostname": null,
+      "mac_address": "BC:24:11:01:1C:8B",
+      "mac_vendor": "Proxmox Server Solutions GmbH",
+      "device_type": "Linux/Unix Host",
+      "open_ports": [
+        {
+          "port": 22,
+          "service": "ssh"
+        }
+      ],
+      "http_services": [],
+      "dashboard_items": []
+    },
+    {
+      "ip": "192.168.1.187",
+      "hostname": null,
+      "mac_address": "BC:24:11:5A:C8:DC",
       "mac_vendor": "Proxmox Server Solutions GmbH",
       "device_type": "Linux/Unix Host",
       "open_ports": [

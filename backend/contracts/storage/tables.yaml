@@ -44,6 +44,15 @@ plugins:
           - name: hostname
             type: string
             nullable: true
+          - name: host_mac
+            type: string
+            nullable: true
+          - name: mac_vendor
+            type: string
+            nullable: true
+          - name: device_type
+            type: string
+            nullable: true
           - name: port
             type: integer
             nullable: false
@@ -54,6 +63,9 @@ plugins:
             type: string
             nullable: true
           - name: url
+            type: string
+            nullable: true
+          - name: scheme
             type: string
             nullable: true
           - name: status

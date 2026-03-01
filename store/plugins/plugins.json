@@ -24,7 +24,7 @@
       ]
     },
     "created_at": "2026-03-01T13:02:53.755507",
-    "updated_at": "2026-03-01T15:32:22.035973",
+    "updated_at": "2026-03-01T21:50:34.359499",
     "metadata": {
       "local_path": "/Users/avm/projects/Personal/dashboard/store/plugins/oko_e2e_probe"
     }
@@ -48,7 +48,7 @@
       "capabilities": null
     },
     "created_at": "2026-03-01T13:02:53.755967",
-    "updated_at": "2026-03-01T15:32:22.036069",
+    "updated_at": "2026-03-01T21:50:34.359838",
     "metadata": {
       "local_path": "/Users/avm/projects/Personal/dashboard/store/plugins/autodiscover"
     }
@@ -78,7 +78,7 @@
       ]
     },
     "created_at": "2026-03-01T13:02:53.756084",
-    "updated_at": "2026-03-01T15:32:22.036148",
+    "updated_at": "2026-03-01T21:50:34.360106",
     "metadata": {
       "local_path": "/Users/avm/projects/Personal/dashboard/store/plugins/oko_e2e"
     }

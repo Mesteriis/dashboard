@@ -24,6 +24,12 @@ def extract_services_from_scan_payload(payload: dict[str, Any] | None) -> list[d
         ip = str(host.get("ip", "")).strip() or None
         hostname_raw = host.get("hostname")
         hostname = str(hostname_raw).strip() if isinstance(hostname_raw, str) else None
+        host_mac_raw = host.get("host_mac") or host.get("mac_address")
+        host_mac = str(host_mac_raw).strip() if isinstance(host_mac_raw, str) else None
+        mac_vendor_raw = host.get("mac_vendor") or host.get("vendor")
+        mac_vendor = str(mac_vendor_raw).strip() if isinstance(mac_vendor_raw, str) else None
+        device_type_raw = host.get("device_type")
+        device_type = str(device_type_raw).strip() if isinstance(device_type_raw, str) else None
         http_by_port: dict[int, dict[str, Any]] = {}
         http_services = host.get("http_services")
         if isinstance(http_services, list):
@@ -48,11 +54,15 @@ def extract_services_from_scan_payload(payload: dict[str, Any] | None) -> list[d
                 {
                     "host_ip": ip,
                     "hostname": hostname,
+                    "host_mac": host_mac,
+                    "mac_vendor": mac_vendor,
+                    "device_type": device_type,
                     "port": port,
                     "service": entry.get("service"),
                     "title": http_meta.get("title"),
                     "description": http_meta.get("description"),
                     "url": http_meta.get("url"),
+                    "scheme": http_meta.get("scheme"),
                     "status": http_meta.get("status"),
                     "server": http_meta.get("server"),
                 }

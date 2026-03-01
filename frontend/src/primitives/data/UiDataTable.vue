@@ -41,7 +41,7 @@
       </button>
     </header>
 
-    <div class="ui-table__wrap">
+    <div class="ui-table__wrap" :style="tableWrapStyle">
       <table>
         <thead>
           <tr>
@@ -61,7 +61,15 @@
         </thead>
 
         <tbody>
-          <tr v-for="row in pagedRows" :key="resolveRowKey(row)">
+          <tr
+            v-for="row in pagedRows"
+            :key="resolveRowKey(row)"
+            :class="{ 'ui-table__row-clickable': rowClickable }"
+            :tabindex="rowClickable ? 0 : undefined"
+            @click="onRowClick(row)"
+            @keydown.enter.prevent="onRowKeyActivate(row)"
+            @keydown.space.prevent="onRowKeyActivate(row)"
+          >
             <td
               v-for="column in columns"
               :key="`${resolveRowKey(row)}-${column.key}`"
@@ -73,7 +81,7 @@
                 v-for="action in actions"
                 :key="`${resolveRowKey(row)}-${action.id}`"
                 type="button"
-                @click="emit('action', { id: action.id, row })"
+                @click.stop="emit('action', { id: action.id, row })"
               >
                 {{ action.label }}
               </button>
@@ -134,6 +142,8 @@ const props = withDefaults(
     showExport?: boolean;
     showPagination?: boolean;
     pageSize?: number;
+    rowClickable?: boolean;
+    maxHeight?: string | null;
   }>(),
   {
     actions: () => [],
@@ -143,12 +153,15 @@ const props = withDefaults(
     showExport: true,
     showPagination: true,
     pageSize: 8,
+    rowClickable: false,
+    maxHeight: null,
   },
 );
 
 const emit = defineEmits<{
   action: [payload: { id: string; row: Record<string, unknown> }];
   export: [payload: string];
+  rowClick: [payload: Record<string, unknown>];
 }>();
 
 const search = ref("");
@@ -160,9 +173,14 @@ const sort = reactive<{ key: string; direction: "asc" | "desc" }>({
 const filters = reactive<Record<string, string>>({});
 
 const actions = computed(() => props.actions || []);
+const rowClickable = computed(() => Boolean(props.rowClickable));
 const filterColumns = computed(() =>
   props.columns.filter((column) => column.filterable),
 );
+const tableWrapStyle = computed<Record<string, string> | undefined>(() => {
+  if (!props.maxHeight) return undefined;
+  return { maxHeight: props.maxHeight };
+});
 
 const preparedRows = computed(() => {
   const normalizedSearch = search.value.trim().toLowerCase();
@@ -178,7 +196,13 @@ const preparedRows = computed(() => {
 
     for (const [key, value] of Object.entries(filters)) {
       if (!value) continue;
-      if (String(row[key] ?? "") !== value) return false;
+      const raw = row[key];
+      if (Array.isArray(raw)) {
+        const normalized = raw.map((entry) => String(entry));
+        if (!normalized.includes(value)) return false;
+        continue;
+      }
+      if (String(raw ?? "") !== value) return false;
     }
 
     return true;
@@ -251,12 +275,30 @@ function columnFilterValues(key: string): string[] {
   const values = new Set<string>();
   for (const row of props.rows) {
     const raw = row[key];
+    if (Array.isArray(raw)) {
+      for (const item of raw) {
+        const token = String(item ?? "");
+        if (!token) continue;
+        values.add(token);
+      }
+      continue;
+    }
     if (raw == null || raw === "") continue;
     values.add(String(raw));
   }
   return Array.from(values).sort((left, right) =>
     left.localeCompare(right, "ru"),
   );
+}
+
+function onRowClick(row: Record<string, unknown>): void {
+  if (!rowClickable.value) return;
+  emit("rowClick", row);
+}
+
+function onRowKeyActivate(row: Record<string, unknown>): void {
+  if (!rowClickable.value) return;
+  emit("rowClick", row);
 }
 
 function toggleSort(column: TableColumn): void {

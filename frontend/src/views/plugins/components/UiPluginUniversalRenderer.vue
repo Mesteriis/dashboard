@@ -17,6 +17,7 @@
         <header class="plugin-table-toolbar">
           <nav class="plugin-table-tabs" role="tablist" aria-label="Data view mode">
             <button
+              v-if="!isCardsOnlyComponent(component)"
               class="plugin-table-tab"
               :class="{ active: resolveComponentView(component.id) === 'table' }"
               type="button"
@@ -69,7 +70,7 @@
             </label>
 
             <label
-              v-if="component.groupBy.length"
+              v-if="component.groupBy.length && !isCardsOnlyComponent(component)"
               class="plugin-table-filter plugin-table-filter-checkbox"
             >
               <input
@@ -109,7 +110,10 @@
         </section>
 
         <div
-          v-else-if="resolveComponentView(component.id) === 'table'"
+          v-else-if="
+            !isCardsOnlyComponent(component) &&
+            resolveComponentView(component.id) === 'table'
+          "
           class="plugin-table-wrap"
         >
           <table>
@@ -180,7 +184,7 @@
                     class="plugin-table-actions-cell"
                   >
                     <div
-                      v-for="action in component.rowActions"
+                      v-for="action in resolveSupportedRowActions(component.id, entry.row)"
                       :key="action.id"
                       class="plugin-table-action"
                     >
@@ -232,10 +236,29 @@
         </div>
 
         <section
-          v-else-if="resolveComponentView(component.id) === 'cards'"
+          v-else-if="
+            isCardsOnlyComponent(component) ||
+            resolveComponentView(component.id) === 'cards'
+          "
           class="plugin-cards-grid"
         >
+          <UiDataTable
+            v-if="isCardsOnlyComponent(component)"
+            :rows="resolveHostInventoryRows(component)"
+            :columns="AUTODISCOVER_HOST_TABLE_COLUMNS"
+            row-key="key"
+            :show-search="true"
+            :show-filters="true"
+            :show-export="false"
+            :show-pagination="true"
+            :page-size="20"
+            :row-clickable="true"
+            max-height="min(70vh, 760px)"
+            @row-click="openHostDetailsFromInventoryRow(component, $event)"
+          />
+
           <article
+            v-else
             v-for="hostCard in resolveHostCards(component)"
             :key="hostCard.key"
             class="plugin-data-card panel"
@@ -322,7 +345,7 @@
     <BaseModal
       :open="hostDetailsModal.open"
       backdrop-class="plugin-modal-backdrop"
-      modal-class="plugin-modal"
+      modal-class="plugin-modal plugin-host-details-modal"
       @backdrop="closeHostDetailsModal"
     >
       <header class="plugin-modal-head">
@@ -335,31 +358,73 @@
         {{ hostDetailsModal.hostname || "Hostname: unknown" }} •
         {{ hostDetailsModal.services.length }} services
       </p>
-      <div class="plugin-modal-body">
-        <table class="plugin-host-services-table">
-          <thead>
-            <tr>
-              <th>Service</th>
-              <th>Port</th>
-              <th>Title</th>
-              <th>URL</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr
-              v-for="entry in hostDetailsModal.services"
-              :key="`${hostDetailsModal.componentId}:host-service:${entry.rowIndex}`"
-            >
-              <td>{{ asCell(entry.row.service) || "unknown" }}</td>
-              <td>{{ asCell(entry.row.port) }}</td>
-              <td>{{ asCell(entry.row.title) }}</td>
-              <td>{{ asCell(entry.row.url) }}</td>
-              <td>
+      <div class="plugin-modal-body plugin-host-details-body">
+        <article class="panel plugin-host-summary-card">
+          <div class="plugin-host-summary-main">
+            <p class="plugin-host-summary-label">Host</p>
+            <h4 class="plugin-host-summary-title">
+              {{ hostDetailsModal.hostLabel }}
+            </h4>
+            <p class="plugin-host-summary-subtitle">
+              {{ hostDetailsModal.hostname || "Hostname: unknown" }}
+            </p>
+          </div>
+          <div class="plugin-host-summary-aside">
+            <span class="plugin-host-summary-pill">
+              {{ hostDetailsModal.services.length }} services
+            </span>
+            <span class="plugin-host-summary-pill plugin-host-summary-pill-muted">
+              autodiscover
+            </span>
+          </div>
+        </article>
+
+        <section
+          v-if="hostDetailsModal.services.length"
+          class="plugin-host-services-grid"
+        >
+          <article
+            v-for="entry in hostDetailsModal.services"
+            :key="`${hostDetailsModal.componentId}:host-service:${entry.rowIndex}`"
+            class="panel plugin-host-service-card"
+          >
+            <header class="plugin-host-service-head">
+              <div class="plugin-host-service-title-wrap">
+                <h4 class="plugin-host-service-title">
+                  {{ asCell(entry.row.service) || "Unknown service" }}
+                </h4>
+                <p
+                  class="plugin-host-service-subtitle"
+                  :class="{
+                    'plugin-host-service-subtitle-muted': !asCell(entry.row.title),
+                  }"
+                >
+                  {{ asCell(entry.row.title) || "No title metadata" }}
+                </p>
+              </div>
+              <span class="plugin-host-service-port">
+                {{ resolveServicePortLabel(entry.row.port) }}
+              </span>
+            </header>
+
+            <div class="plugin-host-service-body">
+              <p class="plugin-host-service-field-label">URL</p>
+              <p class="plugin-host-service-url">
+                {{ asCell(entry.row.url) || "Not available" }}
+              </p>
+            </div>
+
+            <footer class="plugin-host-service-actions">
+              <div class="plugin-host-service-action-list">
                 <div
-                  v-for="action in resolveComponentRowActions(hostDetailsModal.componentId)"
+                  v-for="
+                    action in resolveSupportedRowActions(
+                      hostDetailsModal.componentId,
+                      entry.row,
+                    )
+                  "
                   :key="action.id"
-                  class="plugin-table-action"
+                  class="plugin-table-action plugin-host-service-action"
                 >
                   <button
                     class="ghost plugin-table-action-btn"
@@ -390,11 +455,44 @@
                       )
                     }}
                   </button>
+                  <small
+                    v-if="
+                      resolveRowActionError(
+                        hostDetailsModal.componentId,
+                        entry.rowIndex,
+                        action.id,
+                      )
+                    "
+                    class="plugin-table-action-error"
+                  >
+                    {{
+                      resolveRowActionError(
+                        hostDetailsModal.componentId,
+                        entry.rowIndex,
+                        action.id,
+                      )
+                    }}
+                  </small>
                 </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+                <small
+                  v-if="
+                    !resolveSupportedRowActions(
+                      hostDetailsModal.componentId,
+                      entry.row,
+                    ).length
+                  "
+                  class="plugin-table-action-error"
+                >
+                  No supported link protocol for dashboard item.
+                </small>
+              </div>
+            </footer>
+          </article>
+        </section>
+
+        <section v-else class="plugin-state">
+          No services available for this host.
+        </section>
       </div>
     </BaseModal>
 
@@ -584,6 +682,19 @@ interface HostCardDisplay {
   services: TableIndexedRow[];
 }
 
+interface HostInventoryRow extends HostCardDisplay {
+  macAddress: string;
+  vendor: string;
+  deviceType: string;
+  portsLabel: string;
+}
+
+interface HostFilterOption {
+  value: string;
+  label: string;
+  count: number;
+}
+
 interface AddToDashboardFormState {
   open: boolean;
   loading: boolean;
@@ -621,6 +732,20 @@ const props = defineProps<{
 }>();
 
 const SERVICE_FILTER_ALL = "__all__";
+const HOST_FILTER_ALL = "__all__";
+const LINKABLE_URL_SCHEMES = new Set([
+  "http",
+  "https",
+  "ssh",
+  "ftp",
+  "sftp",
+  "ftps",
+  "rdp",
+  "vnc",
+  "telnet",
+  "smb",
+  "nfs",
+]);
 const stateByComponentId = reactive<Record<string, DataState>>({});
 const rowsByComponentId = reactive<Record<string, Array<Record<string, unknown>>>>(
   {},
@@ -630,6 +755,9 @@ const collapsedGroupStateByKey = reactive<Record<string, boolean>>({});
 const componentViewById = reactive<Record<string, ComponentViewMode>>({});
 const serviceFilterById = reactive<Record<string, string>>({});
 const groupingEnabledById = reactive<Record<string, boolean>>({});
+const hostPortFilterById = reactive<Record<string, string>>({});
+const hostVendorFilterById = reactive<Record<string, string>>({});
+const hostIpMacSearchById = reactive<Record<string, string>>({});
 const hostDetailsModal = reactive<HostDetailsModalState>({
   open: false,
   componentId: "",
@@ -687,12 +815,25 @@ function asCell(value: unknown): string {
   }
 }
 
+function resolveServicePortLabel(value: unknown): string {
+  const normalized = asString(value);
+  if (!normalized) return "Port —";
+  return `Port ${normalized}`;
+}
+
 function resolveComponentView(componentId: string): ComponentViewMode {
   return componentViewById[componentId] || "table";
 }
 
 function setComponentView(componentId: string, mode: ComponentViewMode): void {
   componentViewById[componentId] = mode;
+}
+
+function isCardsOnlyComponent(component: PluginDataTableComponentV1): boolean {
+  return (
+    props.manifest.plugin_id === "autodiscover" &&
+    component.id === "autodiscover-services-table"
+  );
 }
 
 function resolveServiceField(component: PluginDataTableComponentV1): string | null {
@@ -841,6 +982,33 @@ function resolveHostLabel(row: Record<string, unknown>): string {
   return asString(row.host_ip || row.host || row.ip) || "Unknown host";
 }
 
+function compareHostLabels(left: string, right: string): number {
+  const parseIpv4 = (value: string): number[] | null => {
+    const parts = value.split(".");
+    if (parts.length !== 4) return null;
+    const parsed = parts.map((part) => Number(part));
+    if (
+      parsed.some(
+        (segment) => !Number.isInteger(segment) || segment < 0 || segment > 255,
+      )
+    ) {
+      return null;
+    }
+    return parsed;
+  };
+
+  const leftIpv4 = parseIpv4(left);
+  const rightIpv4 = parseIpv4(right);
+  if (leftIpv4 && rightIpv4) {
+    for (let index = 0; index < 4; index += 1) {
+      if (leftIpv4[index] === rightIpv4[index]) continue;
+      return leftIpv4[index] - rightIpv4[index];
+    }
+    return 0;
+  }
+  return left.localeCompare(right, undefined, { numeric: true, sensitivity: "base" });
+}
+
 function resolveHostCards(component: PluginDataTableComponentV1): HostCardDisplay[] {
   const grouped = new Map<string, HostCardDisplay>();
   for (const entry of resolveFilteredIndexedRows(component)) {
@@ -862,7 +1030,7 @@ function resolveHostCards(component: PluginDataTableComponentV1): HostCardDispla
     hostCard.services.push(entry);
   }
   return Array.from(grouped.values()).sort((left, right) =>
-    left.hostLabel.localeCompare(right.hostLabel),
+    compareHostLabels(left.hostLabel, right.hostLabel),
   );
 }
 
@@ -872,6 +1040,168 @@ function resolveHostServicesPreview(card: HostCardDisplay): string {
   );
   if (!unique.length) return "No services";
   return unique.slice(0, 4).join(", ");
+}
+
+function resolveHostInventoryValue(
+  card: HostCardDisplay,
+  candidates: string[],
+): string {
+  for (const entry of card.services) {
+    for (const field of candidates) {
+      const token = asString(entry.row[field]);
+      if (token) return token;
+    }
+  }
+  return "";
+}
+
+function resolveHostPortsLabel(services: TableIndexedRow[]): string {
+  const ports = Array.from(
+    new Set(
+      services
+        .map((entry) => asString(entry.row.port))
+        .filter(Boolean),
+    ),
+  );
+  ports.sort((left, right) => {
+    const leftNumber = Number(left);
+    const rightNumber = Number(right);
+    const leftIsNumber = Number.isFinite(leftNumber);
+    const rightIsNumber = Number.isFinite(rightNumber);
+    if (leftIsNumber && rightIsNumber) return leftNumber - rightNumber;
+    if (leftIsNumber) return -1;
+    if (rightIsNumber) return 1;
+    return left.localeCompare(right, undefined, { numeric: true, sensitivity: "base" });
+  });
+  return ports.length ? ports.join(", ") : "—";
+}
+
+function resolveHostInventoryRows(
+  component: PluginDataTableComponentV1,
+): HostInventoryRow[] {
+  return resolveHostCards(component).map((card) => {
+    const macAddress =
+      resolveHostInventoryValue(card, ["host_mac", "mac_address", "mac"]) || "—";
+    const vendor =
+      resolveHostInventoryValue(card, ["mac_vendor", "vendor", "manufacturer"]) ||
+      "—";
+    const deviceType =
+      resolveHostInventoryValue(card, ["device_type", "type", "host_type"]) || "—";
+    return {
+      ...card,
+      macAddress,
+      vendor,
+      deviceType,
+      portsLabel: resolveHostPortsLabel(card.services),
+    };
+  });
+}
+
+function resolveHostPortFilter(componentId: string): string {
+  return hostPortFilterById[componentId] || HOST_FILTER_ALL;
+}
+
+function setHostPortFilter(componentId: string, value: string): void {
+  hostPortFilterById[componentId] = value || HOST_FILTER_ALL;
+}
+
+function resolveHostVendorFilter(componentId: string): string {
+  return hostVendorFilterById[componentId] || HOST_FILTER_ALL;
+}
+
+function setHostVendorFilter(componentId: string, value: string): void {
+  hostVendorFilterById[componentId] = value || HOST_FILTER_ALL;
+}
+
+function resolveHostIpMacSearch(componentId: string): string {
+  return hostIpMacSearchById[componentId] || "";
+}
+
+function setHostIpMacSearch(componentId: string, value: string): void {
+  hostIpMacSearchById[componentId] = asString(value);
+}
+
+function resolveHostPortFilterOptions(
+  component: PluginDataTableComponentV1,
+): HostFilterOption[] {
+  const rows = resolveHostInventoryRows(component);
+  const counts = new Map<string, number>();
+  for (const row of rows) {
+    const uniquePorts = new Set(
+      row.services
+        .map((entry) => asString(entry.row.port))
+        .filter(Boolean),
+    );
+    for (const port of uniquePorts) {
+      counts.set(port, (counts.get(port) || 0) + 1);
+    }
+  }
+  const options: HostFilterOption[] = [
+    { value: HOST_FILTER_ALL, label: "All ports", count: rows.length },
+  ];
+  for (const [value, count] of counts.entries()) {
+    options.push({ value, label: value, count });
+  }
+  options.sort((left, right) => {
+    if (left.value === HOST_FILTER_ALL) return -1;
+    if (right.value === HOST_FILTER_ALL) return 1;
+    return Number(left.value) - Number(right.value);
+  });
+  return options;
+}
+
+function resolveHostVendorFilterOptions(
+  component: PluginDataTableComponentV1,
+): HostFilterOption[] {
+  const rows = resolveHostInventoryRows(component);
+  const counts = new Map<string, number>();
+  for (const row of rows) {
+    const token = row.vendor || "—";
+    counts.set(token, (counts.get(token) || 0) + 1);
+  }
+  const options: HostFilterOption[] = [
+    { value: HOST_FILTER_ALL, label: "All vendors", count: rows.length },
+  ];
+  for (const [value, count] of counts.entries()) {
+    options.push({ value, label: value, count });
+  }
+  options.sort((left, right) => {
+    if (left.value === HOST_FILTER_ALL) return -1;
+    if (right.value === HOST_FILTER_ALL) return 1;
+    return left.label.localeCompare(right.label, undefined, {
+      sensitivity: "base",
+      numeric: true,
+    });
+  });
+  return options;
+}
+
+function resolveFilteredHostInventoryRows(
+  component: PluginDataTableComponentV1,
+): HostInventoryRow[] {
+  const rows = resolveHostInventoryRows(component);
+  const selectedPort = resolveHostPortFilter(component.id);
+  const selectedVendor = resolveHostVendorFilter(component.id);
+  const searchToken = resolveHostIpMacSearch(component.id).toLowerCase();
+
+  return rows.filter((row) => {
+    if (selectedPort !== HOST_FILTER_ALL) {
+      const hasPort = row.services.some(
+        (entry) => asString(entry.row.port) === selectedPort,
+      );
+      if (!hasPort) return false;
+    }
+    if (selectedVendor !== HOST_FILTER_ALL) {
+      const vendor = row.vendor || "—";
+      if (vendor !== selectedVendor) return false;
+    }
+    if (searchToken) {
+      const ip = row.hostLabel.toLowerCase();
+      const mac = row.macAddress.toLowerCase();
+      if (!ip.includes(searchToken) && !mac.includes(searchToken)) return false;
+    }
+    return true;
+  });
 }
 
 function openHostDetailsModal(
@@ -1056,39 +1386,117 @@ function collectItemIds(config: Record<string, unknown>): Set<string> {
   return ids;
 }
 
+function resolveServiceSchemeFromMetadata(
+  row: Record<string, unknown>,
+  port: number | null,
+): string | null {
+  const explicitScheme = asString(row.scheme).toLowerCase();
+  if (explicitScheme && LINKABLE_URL_SCHEMES.has(explicitScheme)) {
+    return explicitScheme;
+  }
+
+  const service = asString(row.service).toLowerCase();
+  if (service.includes("https")) return "https";
+  if (service.includes("http")) return "http";
+  if (service.includes("sftp")) return "sftp";
+  if (service.includes("ftps")) return "ftps";
+  if (service.includes("ftp")) return "ftp";
+  if (service.includes("ssh")) return "ssh";
+  if (service.includes("rdp")) return "rdp";
+  if (service.includes("vnc")) return "vnc";
+  if (service.includes("telnet")) return "telnet";
+  if (service.includes("smb") || service.includes("cifs")) return "smb";
+  if (service.includes("nfs")) return "nfs";
+
+  if (port === null) return null;
+  const map = new Map<number, string>([
+    [80, "http"],
+    [443, "https"],
+    [8080, "http"],
+    [8443, "https"],
+    [9443, "https"],
+    [22, "ssh"],
+    [21, "ftp"],
+    [990, "ftps"],
+    [3389, "rdp"],
+    [5900, "vnc"],
+    [23, "telnet"],
+    [445, "smb"],
+    [2049, "nfs"],
+  ]);
+  return map.get(port) || null;
+}
+
+function isLinkableScheme(scheme: string): boolean {
+  return LINKABLE_URL_SCHEMES.has(scheme.toLowerCase());
+}
+
 function resolveServiceUrl(
   row: Record<string, unknown>,
   action: PluginRowActionAddToDashboardV1,
 ): string {
   const explicitUrl = asString(row[action.urlField]);
   if (/^[a-z][a-z0-9+.-]*:\/\//i.test(explicitUrl)) {
-    return explicitUrl;
-  }
-  if (explicitUrl && explicitUrl.startsWith("//")) {
-    return `http:${explicitUrl}`;
-  }
-  if (explicitUrl && /^[a-z0-9.-]+(?::\d+)?(?:\/.*)?$/i.test(explicitUrl)) {
-    return `http://${explicitUrl.replace(/^\/+/, "")}`;
+    const scheme = explicitUrl.split(":")[0]?.toLowerCase() || "";
+    return isLinkableScheme(scheme) ? explicitUrl : "";
   }
 
   const host = asString(row.host_ip || row.host || row.ip);
   const port = asNumber(row.port);
-  const service = asString(row.service).toLowerCase();
-  if (!host) return "";
+  const scheme = resolveServiceSchemeFromMetadata(row, port);
 
-  if (service.includes("ssh")) {
-    return `ssh://${host}${port ? `:${port}` : ""}`;
+  if (explicitUrl && explicitUrl.startsWith("//")) {
+    if (!scheme || !["http", "https", "ftp", "ftps"].includes(scheme)) return "";
+    return `${scheme}:${explicitUrl}`;
+  }
+  if (explicitUrl && /^[a-z0-9.-]+(?::\d+)?(?:\/.*)?$/i.test(explicitUrl)) {
+    if (!scheme) return "";
+    const sanitized = explicitUrl.replace(/^\/+/, "");
+    if (["http", "https", "ftp", "ftps"].includes(scheme)) {
+      return `${scheme}://${sanitized}`;
+    }
+    return `${scheme}://${sanitized}`;
   }
 
-  const httpsPorts = new Set([443, 2376, 5986, 7002, 7443, 8443, 9443]);
-  const scheme = service.includes("https") || (port ? httpsPorts.has(port) : false)
-    ? "https"
-    : "http";
+  if (!host || !scheme) return "";
 
-  if (!port || (scheme === "http" && port === 80) || (scheme === "https" && port === 443)) {
-    return `${scheme}://${host}/`;
+  if (scheme === "http") {
+    if (!port || port === 80) return `http://${host}/`;
+    return `http://${host}:${port}/`;
   }
-  return `${scheme}://${host}:${port}/`;
+  if (scheme === "https") {
+    if (!port || port === 443) return `https://${host}/`;
+    return `https://${host}:${port}/`;
+  }
+  if (scheme === "ftp") {
+    if (!port || port === 21) return `ftp://${host}/`;
+    return `ftp://${host}:${port}/`;
+  }
+  if (scheme === "ftps") {
+    if (!port || port === 990) return `ftps://${host}/`;
+    return `ftps://${host}:${port}/`;
+  }
+  if (port) return `${scheme}://${host}:${port}`;
+  return `${scheme}://${host}`;
+}
+
+function isRowActionSupported(
+  action: PluginRowActionAddToDashboardV1,
+  row: Record<string, unknown>,
+): boolean {
+  if (action.type !== "add-to-dashboard") {
+    return false;
+  }
+  return Boolean(resolveServiceUrl(row, action));
+}
+
+function resolveSupportedRowActions(
+  componentId: string,
+  row: Record<string, unknown>,
+): PluginRowActionAddToDashboardV1[] {
+  const actions = resolveComponentRowActions(componentId);
+  if (props.manifest.plugin_id !== "autodiscover") return actions;
+  return actions.filter((action) => isRowActionSupported(action, row));
 }
 
 function interpolateTemplate(
@@ -1509,6 +1917,9 @@ async function runRowAction(
     if (action.type !== "add-to-dashboard") {
       throw new Error(`Unsupported row action type: ${action.type}`);
     }
+    if (props.manifest.plugin_id === "autodiscover" && !isRowActionSupported(action, row)) {
+      throw new Error("Service does not expose a supported link protocol");
+    }
     await openAddToDashboardForm(componentId, rowIndex, actionId, action, row);
   } catch (error: unknown) {
     rowActionStateByKey[key] = {
@@ -1540,7 +1951,14 @@ async function loadTable(component: PluginDataTableComponentV1): Promise<void> {
       .filter((entry): entry is Record<string, unknown> => !!entry);
 
     if (!componentViewById[component.id]) {
-      componentViewById[component.id] = "table";
+      componentViewById[component.id] = isCardsOnlyComponent(component)
+        ? "cards"
+        : "table";
+    } else if (
+      isCardsOnlyComponent(component) &&
+      componentViewById[component.id] === "table"
+    ) {
+      componentViewById[component.id] = "cards";
     }
     if (serviceFilterById[component.id] === undefined) {
       serviceFilterById[component.id] = SERVICE_FILTER_ALL;
@@ -1554,6 +1972,31 @@ async function loadTable(component: PluginDataTableComponentV1): Promise<void> {
     );
     if (!selectedExists) {
       serviceFilterById[component.id] = SERVICE_FILTER_ALL;
+    }
+    if (isCardsOnlyComponent(component)) {
+      if (hostPortFilterById[component.id] === undefined) {
+        hostPortFilterById[component.id] = HOST_FILTER_ALL;
+      }
+      if (hostVendorFilterById[component.id] === undefined) {
+        hostVendorFilterById[component.id] = HOST_FILTER_ALL;
+      }
+      if (hostIpMacSearchById[component.id] === undefined) {
+        hostIpMacSearchById[component.id] = "";
+      }
+      const selectedPort = resolveHostPortFilter(component.id);
+      const selectedPortExists = resolveHostPortFilterOptions(component).some(
+        (option) => option.value === selectedPort,
+      );
+      if (!selectedPortExists) {
+        hostPortFilterById[component.id] = HOST_FILTER_ALL;
+      }
+      const selectedVendor = resolveHostVendorFilter(component.id);
+      const selectedVendorExists = resolveHostVendorFilterOptions(component).some(
+        (option) => option.value === selectedVendor,
+      );
+      if (!selectedVendorExists) {
+        hostVendorFilterById[component.id] = HOST_FILTER_ALL;
+      }
     }
 
     stateByComponentId[component.id] = { loading: false };
@@ -1782,6 +2225,113 @@ th {
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
 }
 
+.plugin-cards-grid-hosts {
+  display: grid;
+}
+
+.plugin-hosts-table-wrap {
+  padding: 10px;
+  overflow: hidden;
+  border: 1px solid rgba(84, 124, 156, 0.32);
+  background: linear-gradient(160deg, rgba(9, 24, 39, 0.9), rgba(5, 16, 27, 0.9));
+  display: grid;
+  gap: 8px;
+}
+
+.plugin-hosts-filters {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.plugin-hosts-filter {
+  display: grid;
+  gap: 5px;
+  color: rgba(182, 205, 230, 0.9);
+  font-size: 12px;
+}
+
+.plugin-hosts-filter-search {
+  min-width: 0;
+}
+
+.plugin-hosts-filter-search .plugin-add-input {
+  min-width: 0;
+}
+
+.plugin-hosts-table-scroll {
+  overflow: auto;
+  max-height: min(70vh, 760px);
+  scrollbar-gutter: stable both-edges;
+  border-radius: 10px;
+  border: 1px solid rgba(79, 116, 147, 0.26);
+  background: rgba(5, 15, 25, 0.64);
+}
+
+.plugin-hosts-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.plugin-hosts-table th,
+.plugin-hosts-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid rgba(91, 126, 158, 0.2);
+  text-align: left;
+  vertical-align: top;
+}
+
+.plugin-hosts-table th {
+  color: rgba(197, 218, 242, 0.9);
+  font-weight: 600;
+  font-size: 12px;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: rgba(6, 17, 30, 0.95);
+  backdrop-filter: blur(2px);
+}
+
+.plugin-hosts-row {
+  cursor: pointer;
+  transition: background 120ms ease;
+}
+
+.plugin-hosts-row:hover {
+  background: rgba(86, 130, 167, 0.12);
+}
+
+.plugin-hosts-ip {
+  color: rgba(218, 233, 250, 0.96);
+  font-weight: 600;
+}
+
+.plugin-hosts-mac,
+.plugin-hosts-hostname,
+.plugin-hosts-type,
+.plugin-hosts-vendor {
+  color: rgba(188, 209, 231, 0.92);
+}
+
+.plugin-hosts-ports {
+  color: rgba(211, 228, 246, 0.95);
+  overflow-wrap: anywhere;
+}
+
+.plugin-hosts-actions-col {
+  width: 150px;
+}
+
+.plugin-hosts-actions-cell {
+  white-space: nowrap;
+}
+
+.plugin-hosts-empty {
+  text-align: center;
+  color: rgba(176, 198, 223, 0.86);
+}
+
 .plugin-data-card {
   padding: 12px;
   display: grid;
@@ -1880,6 +2430,16 @@ th {
   padding: 14px;
 }
 
+.plugin-host-details-modal {
+  width: min(1120px, 100%);
+  padding: 14px;
+  border-color: rgba(104, 166, 214, 0.5);
+  background: linear-gradient(165deg, rgba(8, 24, 40, 0.98), rgba(4, 14, 25, 0.98));
+  box-shadow:
+    0 24px 54px rgba(2, 9, 16, 0.55),
+    inset 0 0 0 1px rgba(72, 126, 165, 0.24);
+}
+
 .plugin-modal-wide {
   width: min(1040px, 100%);
 }
@@ -1901,21 +2461,239 @@ th {
   font-size: 13px;
 }
 
+.plugin-host-details-modal .plugin-modal-kicker {
+  margin-top: 6px;
+  font-size: 12px;
+}
+
 .plugin-modal-body {
   margin-top: 10px;
 }
 
-.plugin-host-services-table {
-  width: 100%;
-  border-collapse: collapse;
+.plugin-host-details-body {
+  margin-top: 8px;
+  display: grid;
+  gap: 10px;
 }
 
-.plugin-host-services-table th,
-.plugin-host-services-table td {
-  padding: 8px;
-  border-bottom: 1px solid rgba(94, 128, 159, 0.2);
-  text-align: left;
-  vertical-align: top;
+.plugin-host-summary-card {
+  padding: 12px;
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid rgba(88, 139, 177, 0.34);
+  background: linear-gradient(154deg, rgba(12, 31, 49, 0.84), rgba(8, 24, 39, 0.84));
+}
+
+.plugin-host-summary-main {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.plugin-host-summary-label {
+  margin: 0;
+  font-size: 12px;
+  color: rgba(151, 180, 208, 0.88);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.plugin-host-summary-title {
+  margin: 0;
+  font-size: 18px;
+  color: rgba(229, 241, 255, 0.98);
+}
+
+.plugin-host-summary-subtitle {
+  margin: 0;
+  color: rgba(176, 199, 223, 0.88);
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+.plugin-host-summary-aside {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.plugin-host-summary-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(101, 158, 201, 0.52);
+  background: rgba(16, 56, 86, 0.42);
+  color: rgba(217, 234, 252, 0.96);
+  font-size: 12px;
+}
+
+.plugin-host-summary-pill-muted {
+  border-color: rgba(91, 127, 155, 0.34);
+  background: rgba(12, 33, 49, 0.62);
+  color: rgba(170, 196, 221, 0.9);
+}
+
+.plugin-host-services-grid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  align-items: start;
+}
+
+.plugin-host-service-card {
+  padding: 12px;
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  border: 1px solid rgba(88, 132, 169, 0.34);
+  background: linear-gradient(157deg, rgba(10, 27, 42, 0.9), rgba(6, 19, 31, 0.92));
+  transition:
+    border-color 150ms ease,
+    background 150ms ease;
+}
+
+.plugin-host-service-card:hover {
+  border-color: rgba(114, 176, 223, 0.54);
+  background: linear-gradient(157deg, rgba(12, 33, 51, 0.92), rgba(8, 22, 35, 0.94));
+}
+
+.plugin-host-service-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.plugin-host-service-title-wrap {
+  min-width: 0;
+  display: grid;
+  gap: 5px;
+}
+
+.plugin-host-service-title {
+  margin: 0;
+  font-size: 15px;
+  color: rgba(226, 240, 255, 0.97);
+}
+
+.plugin-host-service-subtitle {
+  margin: 0;
+  color: rgba(188, 210, 232, 0.9);
+  font-size: 12px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.plugin-host-service-subtitle-muted {
+  color: rgba(149, 174, 199, 0.84);
+}
+
+.plugin-host-service-port {
+  flex: 0 0 auto;
+  min-height: 22px;
+  padding: 0 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(83, 142, 184, 0.42);
+  background: rgba(12, 47, 75, 0.44);
+  color: rgba(202, 224, 244, 0.95);
+  font-size: 11px;
+  line-height: 22px;
+}
+
+.plugin-host-service-body {
+  display: grid;
+  gap: 5px;
+}
+
+.plugin-host-service-field-label {
+  margin: 0;
+  font-size: 11px;
+  color: rgba(152, 180, 206, 0.86);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.plugin-host-service-url {
+  margin: 0;
+  min-height: 32px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  border: 1px solid rgba(84, 120, 149, 0.32);
+  background: rgba(8, 23, 36, 0.8);
+  color: rgba(202, 223, 243, 0.94);
+  font-size: 12px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.plugin-host-service-actions {
+  margin-top: auto;
+}
+
+.plugin-host-service-action-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.plugin-host-service-action {
+  margin: 0;
+}
+
+.plugin-host-service-action + .plugin-host-service-action {
+  margin-top: 0;
+}
+
+.plugin-host-details-modal .plugin-table-action-btn {
+  min-height: 26px;
+  padding: 3px 9px;
+  font-size: 11px;
+}
+
+@media (max-width: 760px) {
+  .plugin-hosts-filters {
+    grid-template-columns: 1fr;
+  }
+
+  .plugin-host-services-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .plugin-host-summary-card {
+    display: grid;
+  }
+
+  .plugin-host-summary-aside {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 1200px) {
+  .plugin-host-services-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 980px) {
+  .plugin-hosts-filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .plugin-host-services-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 540px) {
+  .plugin-host-services-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .plugin-add-form {
