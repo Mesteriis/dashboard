@@ -319,6 +319,7 @@ async def stream_events(
 
     async def _stream() -> AsyncIterator[str]:
         try:
+            yield f"retry: {container.settings.event_stream_retry_ms}\n\n"
             active = await container.config_service.get_active_state()
             initial = EventEnvelope(
                 id=uuid4(),

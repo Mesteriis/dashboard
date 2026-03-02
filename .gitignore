@@ -32,3 +32,5 @@ backend/plugins/**/*.yaml
 backend/plugins/**/*.js
 backend/plugins/**/*.css
 backend/plugins/**/*.scss
+media/favicons/*.missing
+media/favicons/*.ico

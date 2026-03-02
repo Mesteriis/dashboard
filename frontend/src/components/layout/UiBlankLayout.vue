@@ -563,6 +563,15 @@ function handleHeaderPanelOpenChange(value: boolean): void {
   emit("header-panel-open-change", value);
 }
 
+function emitDevLayoutWarning(message: string): void {
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(
+    new CustomEvent("oko:layout-validation-warning", {
+      detail: { message },
+    }),
+  );
+}
+
 // ── Lifecycle ─────────────────────────────────────────────────────────────────
 
 onMounted(() => {
@@ -578,7 +587,7 @@ onBeforeUnmount(() => {
 
 if (import.meta.env.DEV) {
   const $slots = useSlots();
-  
+
   // Check for actual slot names used by consumers
   const hasSidebarSlot = Boolean(
     $slots["sidebar-links"] ||
@@ -596,7 +605,7 @@ if (import.meta.env.DEV) {
   // Warning instead of error in DEV
   if (props.layoutMode === "default") {
     if (!hasSidebarSlot && !hasHeaderSlot) {
-      console.warn(
+      emitDevLayoutWarning(
         '[UiBlankLayout] layoutMode="default" requires at least one slot: ' +
           '"sidebar-mid" or header content slots. ' +
           "Either provide content in these slots or use a different layoutMode.",
@@ -606,7 +615,7 @@ if (import.meta.env.DEV) {
 
   if (props.layoutMode === "no-sidebar") {
     if (hasSidebarSlot) {
-      console.warn(
+      emitDevLayoutWarning(
         '[UiBlankLayout] layoutMode="no-sidebar" does not support sidebar slots. ' +
           'Remove sidebar slots or use layoutMode="default".',
       );
@@ -615,13 +624,13 @@ if (import.meta.env.DEV) {
 
   if (props.layoutMode === "content-only") {
     if (hasSidebarSlot) {
-      console.warn(
+      emitDevLayoutWarning(
         '[UiBlankLayout] layoutMode="content-only" does not support sidebar slots. ' +
           "Remove sidebar slots or use a different layoutMode.",
       );
     }
     if (hasHeaderSlot) {
-      console.warn(
+      emitDevLayoutWarning(
         '[UiBlankLayout] layoutMode="content-only" does not support header slots. ' +
           "Remove header slots or use a different layoutMode.",
       );

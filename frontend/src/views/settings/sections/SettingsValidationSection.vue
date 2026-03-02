@@ -19,14 +19,13 @@ import ConfigValidatorPanel from "@/views/dashboard/modals/ConfigValidatorPanel.
 import { useDashboardStore } from "@/features/stores/dashboardStore";
 
 const dashboard = useDashboardStore();
-const { loadConfig } = dashboard;
+const { loadConfig, saveError } = dashboard;
 
 function handleConfigRestored(): void {
   void loadConfig();
 }
 
 function handleValidatorError(error: string): void {
-  // Обработка ошибки валидации
-  console.error("Validator error:", error);
+  saveError.value = error;
 }
 </script>

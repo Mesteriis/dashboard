@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from contextlib import suppress
 import inspect
+from contextlib import suppress
 from typing import Any
 
 from core.plugins.page_manifest import resolve_page_manifest, serialize_resolution
@@ -17,6 +17,7 @@ from depends.v1.core_deps import ContainerDep
 from fastapi import APIRouter, Body, HTTPException, Query
 
 plugins_router = APIRouter(prefix="/plugins", tags=["plugins"])
+DEFAULT_SETTINGS_PAYLOAD = Body(default_factory=dict)
 
 
 @plugins_router.get("")
@@ -41,13 +42,11 @@ async def list_plugins(
         try:
             target_state = PluginState(state)
             plugins = [p for p in plugins if p.state == target_state]
-        except ValueError:
+        except ValueError as exc:
             raise HTTPException(
                 status_code=400,
-                detail="Invalid state: {state}. Valid states: discovered, loading, active, error, disabled".format(
-                    state=state
-                ),
-            )
+                detail=f"Invalid state: {state}. Valid states: discovered, loading, active, error, disabled",
+            ) from exc
 
     return {
         "plugins": [p.to_dict() for p in plugins],
@@ -148,7 +147,7 @@ async def get_plugin_settings(
 async def update_plugin_settings(
     plugin_id: str,
     container: ContainerDep,
-    payload: dict[str, Any] = Body(default_factory=dict),
+    payload: dict[str, Any] = DEFAULT_SETTINGS_PAYLOAD,
     _capability: str = require_config_patch,
 ) -> dict[str, Any]:
     if not container.plugin_service:
@@ -247,9 +246,9 @@ async def load_plugin(
             "plugin": plugin.to_dict(),
         }
     except ValueError as exc:
-        raise HTTPException(status_code=404, detail=str(exc))
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"Failed to load plugin: {exc}")
+        raise HTTPException(status_code=500, detail=f"Failed to load plugin: {exc}") from exc
 
 
 @plugins_router.post("/{plugin_id}/unload")
@@ -285,7 +284,7 @@ async def reload_plugin(
             "plugin": plugin.to_dict(),
         }
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"Failed to reload plugin: {exc}")
+        raise HTTPException(status_code=500, detail=f"Failed to reload plugin: {exc}") from exc
 
 
 @plugins_router.post("/{plugin_id}/enable")
@@ -305,9 +304,9 @@ async def enable_plugin(
             "plugin": plugin.to_dict(),
         }
     except ValueError as exc:
-        raise HTTPException(status_code=404, detail=str(exc))
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"Failed to enable plugin: {exc}")
+        raise HTTPException(status_code=500, detail=f"Failed to enable plugin: {exc}") from exc
 
 
 @plugins_router.post("/{plugin_id}/disable")

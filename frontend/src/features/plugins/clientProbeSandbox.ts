@@ -41,7 +41,7 @@ window.addEventListener("message", async (event) => {
 });
 
 parent.postMessage({ channel: CHANNEL, type: "ready" }, "*");
-<\/script></body></html>`;
+</script></body></html>`;
 }
 
 export function runClientProbeScript(
@@ -126,4 +126,3 @@ export function runClientProbeScript(
     }, timeoutMs);
   });
 }
-

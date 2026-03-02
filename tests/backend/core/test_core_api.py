@@ -302,6 +302,7 @@ async def test_events_stream_once_returns_snapshot(monkeypatch: pytest.MonkeyPat
             payload = ""
             async for chunk in response.aiter_text():
                 payload += chunk
+            assert "retry: 2000" in payload
             assert "event: core.state.snapshot" in payload
             assert "active_revision" in payload
 

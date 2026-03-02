@@ -57,7 +57,7 @@ class HealthChecker:
                 latency_ms=latency_ms,
                 error_message=None if is_success else f"http_status_{response.status_code}",
             )
-        except TimeoutError:
+        except (httpx.TimeoutException, TimeoutError):
             return HealthCheckResultV1(
                 service_id=request.service_id,
                 item_id=request.item_id,

@@ -52,6 +52,7 @@ class AppSettings(BaseSettings):
         validation_alias="OKO_BROKER_PREFETCH_COUNT",
     )
     event_stream_keepalive_sec: float = Field(default=15.0, validation_alias="OKO_EVENTS_KEEPALIVE_SEC")
+    event_stream_retry_ms: int = Field(default=2000, ge=100, le=60_000, validation_alias="OKO_EVENTS_RETRY_MS")
     actions_execute_enabled: bool = Field(default=True, validation_alias="OKO_ACTIONS_EXECUTE_ENABLED")
     storage_rpc_timeout_sec: float = Field(default=5.0, validation_alias="OKO_STORAGE_RPC_TIMEOUT_SEC")
     action_rpc_timeout_sec: float = Field(default=5.0, validation_alias="OKO_ACTION_RPC_TIMEOUT_SEC")
@@ -94,6 +95,7 @@ class AppSettings(BaseSettings):
     @model_validator(mode="after")
     def _apply_minimums(self) -> AppSettings:
         object.__setattr__(self, "event_stream_keepalive_sec", max(2.0, self.event_stream_keepalive_sec))
+        object.__setattr__(self, "event_stream_retry_ms", max(100, self.event_stream_retry_ms))
         object.__setattr__(self, "storage_rpc_timeout_sec", max(0.05, self.storage_rpc_timeout_sec))
         object.__setattr__(self, "action_rpc_timeout_sec", max(0.05, self.action_rpc_timeout_sec))
         object.__setattr__(self, "health_scheduler_tick_sec", max(0.2, self.health_scheduler_tick_sec))
