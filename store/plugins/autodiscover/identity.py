@@ -14,6 +14,7 @@ from typing import Any
 from .constants import MAC_OUI_VENDORS
 
 _HOSTNAME_TOKEN_RE = re.compile(r"[A-Za-z][A-Za-z0-9._-]{1,62}")
+_PING_HEADER_RE = re.compile(r"^PING\s+(?P<name>[^\s(]+)\s+\((?P<ip>\d+\.\d+\.\d+\.\d+)\)")
 _HOSTNAME_TOKEN_BLACKLIST = {
     "apache",
     "cloudflare",
@@ -131,6 +132,11 @@ async def resolve_hostnames_with_services(
         for ip, hostname in tls_resolved:
             if hostname:
                 hostnames[ip] = hostname
+        unresolved_ips = [ip for ip in ips if ip not in hostnames]
+
+    if unresolved_ips:
+        ping_hostnames = await asyncio.to_thread(resolve_hostnames_from_ping, unresolved_ips)
+        hostnames.update(ping_hostnames)
         unresolved_ips = [ip for ip in ips if ip not in hostnames]
 
     if unresolved_ips:
@@ -260,6 +266,44 @@ def resolve_hostnames_from_arp(ips: list[str]) -> dict[str, str]:
     return hostnames
 
 
+def resolve_hostnames_from_ping(ips: list[str]) -> dict[str, str]:
+    if not ips:
+        return {}
+    hostnames: dict[str, str] = {}
+    commands = (
+        ("ping", "-c", "1", "-W", "1"),
+        ("ping", "-c", "1"),
+    )
+
+    for ip in ips:
+        for command in commands:
+            try:
+                completed = subprocess.run(  # nosec B603
+                    (*command, ip),
+                    capture_output=True,
+                    text=True,
+                    check=False,
+                    timeout=2.5,
+                )
+            except (FileNotFoundError, OSError, subprocess.SubprocessError):
+                break
+
+            output = completed.stdout or ""
+            if not output:
+                continue
+            first_line = output.splitlines()[0] if output.splitlines() else ""
+            match = _PING_HEADER_RE.search(first_line)
+            if not match:
+                continue
+            if match.group("ip") != ip:
+                continue
+            candidate = _normalize_hostname(match.group("name"), ip)
+            if candidate:
+                hostnames[ip] = candidate
+                break
+    return hostnames
+
+
 def hostname_from_http_metadata(ip: str, services: list[dict[str, Any]]) -> str | None:
     for service in services:
         if not isinstance(service, dict):
@@ -337,6 +381,7 @@ __all__ = [
     "mac_vendor",
     "normalize_mac",
     "resolve_hostnames_from_arp",
+    "resolve_hostnames_from_ping",
     "resolve_hostnames_with_services",
     "resolve_mac_addresses",
     "safe_reverse_dns",

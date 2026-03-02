@@ -3,7 +3,7 @@
 .pleiad-overlay-backdrop {
   position: fixed;
   inset: 0;
-  z-index: 58;
+  z-index: var(--z-layer-overlay);
   padding: 0;
   background: var(--pleiad-color-001);
   backdrop-filter: blur(6px) saturate(116%);

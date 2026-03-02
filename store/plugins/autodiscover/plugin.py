@@ -9,7 +9,12 @@ from time import perf_counter
 from typing import Any
 
 from .constants import IMPORTANT_EVENT_PORTS
-from .http_probe import _probe_http_port, extract_html_metadata, probe_http_services
+from .http_probe import (
+    _probe_http_port,
+    extract_html_metadata,
+    probe_docker_hostnames,
+    probe_http_services,
+)
 from .identity import (
     detect_device_type,
     hostname_from_tls_services,
@@ -38,6 +43,7 @@ from .network import (
     _detect_cidrs_from_ifconfig,
     _detect_cidrs_from_ip_addr,
     _detect_cidrs_from_udp_probe,
+    discover_active_hosts,
     enumerate_hosts,
     resolve_networks,
     scan_open_ports,
@@ -143,48 +149,50 @@ async def execute_scan(
     scanned_cidrs = [str(network) for network in networks]
     enumerated_hosts = enumerate_hosts(networks, max_hosts=request.max_hosts)
     merged_hosts = tuple(dict.fromkeys((*request.hosts, *tuple(enumerated_hosts))))
-    host_ips = list(merged_hosts[: request.max_hosts])
+    candidate_host_ips = list(merged_hosts[: request.max_hosts])
+    candidate_hosts_total = len(candidate_host_ips)
 
     chunk_size = 100
     chunk_buckets = {(int(port) - 1) // chunk_size for port in request.ports}
     chunks_per_host = len(chunk_buckets)
-    chunk_tasks_total = len(host_ips) * chunks_per_host
+    candidate_chunk_tasks_total = candidate_hosts_total * chunks_per_host
 
     logger.info(
-        "Autodiscover staged scan prepared hosts=%s chunks_per_host=%s total_chunk_tasks=%s port_range=%s-%s",
-        len(host_ips),
+        "Autodiscover staged scan prepared candidates=%s chunks_per_host=%s total_chunk_tasks=%s port_range=%s-%s",
+        candidate_hosts_total,
         chunks_per_host,
-        chunk_tasks_total,
+        candidate_chunk_tasks_total,
         request.ports[0] if request.ports else None,
         request.ports[-1] if request.ports else None,
     )
-    await _emit_progress(
-        progress_callback,
-        "scan_stage",
-        {
-            "stage": "host-discovery",
-            "status": "completed",
-            "hosts_total": len(host_ips),
-            "scanned_cidrs": scanned_cidrs,
-        },
-    )
-
-    if request.include_dashboard_items:
-        full_dashboard_map = dashboard_services_by_ip(request.config_snapshot)
-        if host_ips:
-            host_ip_set = set(host_ips)
-            dashboard_map = {ip: entries for ip, entries in full_dashboard_map.items() if ip in host_ip_set}
-        else:
-            dashboard_map = full_dashboard_map
-    else:
-        dashboard_map = {}
-
-    discovered_ips_for_dry_run = sorted(
-        set(host_ips) | set(dashboard_map.keys()),
-        key=_ip_sort_key,
-    )
 
     if dry_run:
+        await _emit_progress(
+            progress_callback,
+            "scan_stage",
+            {
+                "stage": "host-discovery",
+                "status": "completed",
+                "hosts_total": candidate_hosts_total,
+                "active_hosts": candidate_hosts_total,
+                "scanned_cidrs": scanned_cidrs,
+            },
+        )
+
+        if request.include_dashboard_items:
+            full_dashboard_map = dashboard_services_by_ip(request.config_snapshot)
+            if candidate_host_ips:
+                host_ip_set = set(candidate_host_ips)
+                dashboard_map = {ip: entries for ip, entries in full_dashboard_map.items() if ip in host_ip_set}
+            else:
+                dashboard_map = full_dashboard_map
+        else:
+            dashboard_map = {}
+
+        discovered_ips_for_dry_run = sorted(
+            set(candidate_host_ips) | set(dashboard_map.keys()),
+            key=_ip_sort_key,
+        )
         duration_ms = max(0, int((perf_counter() - started_at) * 1000))
         return {
             "plugin": PLUGIN_NAME,
@@ -193,21 +201,21 @@ async def execute_scan(
             "dry_run": True,
             "request": _build_request_payload(request),
             "summary": {
-                "targets_total": len(host_ips),
+                "targets_total": candidate_hosts_total,
                 "targets_scanned": 0,
                 "discovered_hosts": len(discovered_ips_for_dry_run),
                 "hosts_with_open_ports": 0,
-                "scanned_ports": len(host_ips) * len(request.ports),
-                "chunk_tasks_total": chunk_tasks_total,
+                "scanned_ports": candidate_hosts_total * len(request.ports),
+                "chunk_tasks_total": candidate_chunk_tasks_total,
                 "chunk_tasks_completed": 0,
                 "duration_ms": duration_ms,
             },
             "result": {
                 "generated_at": _utc_now().isoformat(),
                 "duration_ms": duration_ms,
-                "scanned_hosts": len(host_ips),
-                "scanned_ports": len(host_ips) * len(request.ports),
-                "chunk_tasks_total": chunk_tasks_total,
+                "scanned_hosts": candidate_hosts_total,
+                "scanned_ports": candidate_hosts_total * len(request.ports),
+                "chunk_tasks_total": candidate_chunk_tasks_total,
                 "chunk_tasks_completed": 0,
                 "scanned_cidrs": scanned_cidrs,
                 "hosts": [],
@@ -215,6 +223,47 @@ async def execute_scan(
             },
             "hosts": [],
         }
+
+    await _emit_progress(
+        progress_callback,
+        "scan_stage",
+        {
+            "stage": "host-discovery",
+            "status": "started",
+            "hosts_total": candidate_hosts_total,
+            "scanned_cidrs": scanned_cidrs,
+        },
+    )
+    host_ips = await discover_active_hosts(candidate_host_ips, request)
+    await _emit_progress(
+        progress_callback,
+        "scan_stage",
+        {
+            "stage": "host-discovery",
+            "status": "completed",
+            "hosts_total": candidate_hosts_total,
+            "active_hosts": len(host_ips),
+            "scanned_cidrs": scanned_cidrs,
+        },
+    )
+
+    chunk_tasks_total = len(host_ips) * chunks_per_host
+    logger.info(
+        "Autodiscover staged port scan prepared active_hosts=%s chunks_per_host=%s total_chunk_tasks=%s",
+        len(host_ips),
+        chunks_per_host,
+        chunk_tasks_total,
+    )
+
+    if request.include_dashboard_items:
+        full_dashboard_map = dashboard_services_by_ip(request.config_snapshot)
+        if host_ips:
+            host_ip_set = set(host_ips)
+            dashboard_map = {ip: entries for ip, entries in full_dashboard_map.items() if ip in host_ip_set}
+        else:
+            dashboard_map = {}
+    else:
+        dashboard_map = {}
 
     previous_result = load_last_result(request.result_file)
     previous_host_ips = {
@@ -396,7 +445,7 @@ async def execute_scan(
         http_services_map = {}
 
     discovered_ips = sorted(
-        set(open_ports_map.keys()) | set(dashboard_map.keys()),
+        set(host_ips) | set(open_ports_map.keys()) | set(dashboard_map.keys()),
         key=_ip_sort_key,
     )
 
@@ -404,6 +453,12 @@ async def execute_scan(
         hostnames = await resolve_hostnames_with_services(discovered_ips, http_services_map)
     else:
         hostnames = {}
+
+    # Supplement hostnames from Docker Engine API on tcp/2375 where DNS/mDNS is absent.
+    docker_hostnames = await probe_docker_hostnames(open_ports_map, request)
+    for ip, hostname in docker_hostnames.items():
+        if ip not in hostnames and hostname:
+            hostnames[ip] = hostname
 
     macs = await asyncio.to_thread(resolve_mac_addresses, discovered_ips) if request.resolve_macs else {}
 
@@ -456,7 +511,7 @@ async def execute_scan(
         "dry_run": False,
         "request": _build_request_payload(request),
         "summary": {
-            "targets_total": len(host_ips),
+            "targets_total": candidate_hosts_total,
             "targets_scanned": len(host_ips),
             "discovered_hosts": len(hosts),
             "hosts_with_open_ports": hosts_with_open_ports,

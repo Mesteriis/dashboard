@@ -27,7 +27,7 @@ interface UiOption {
 
 defineProps<{
   modelValue: string;
-  options: UiOption[];
+  options: readonly UiOption[];
   label?: string;
   disabled?: boolean;
 }>();

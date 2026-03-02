@@ -17,6 +17,9 @@ import {
   type OkoSseStream,
 } from "@/features/services/eventStream";
 import { EVENT_FX_MODE_CHANGE } from "@/features/services/events";
+import {
+  extractDashboardIndicatorsFromPlugins,
+} from "@/features/plugins/dashboardIndicators";
 import { ensureParticlesJs } from "@/features/services/particlesLoader";
 import { goPluginsPanel, goSettings } from "@/app/navigation/nav";
 import {
@@ -235,7 +238,12 @@ export function createDashboardStore(
 
   const widgetStates = reactive<Record<string, WidgetRuntimeState>>({});
   const actionBusy = reactive<Record<string, boolean>>({});
+  const widgetClientProbeCache = reactive<
+    Record<string, { expiresAt: number; payload: unknown; error: string }>
+  >({});
   const widgetIntervals = new Map<string, number>();
+  const pluginIndicatorWidgets = ref<DashboardWidget[]>([]);
+  const pluginAlwaysVisibleWidgetIds = ref<string[]>([]);
   let healthStream: OkoSseStream | null = null;
   let healthStreamReconnectTimer = 0;
   let saveStatusTimer = 0;
@@ -500,9 +508,23 @@ export function createDashboardStore(
     };
   }
 
-  const widgets = computed<DashboardWidgetResolved[]>(() =>
-    (config.value?.widgets || []).map((widget) => normalizeWidget(widget)),
-  );
+  const widgets = computed<DashboardWidgetResolved[]>(() => {
+    const mergedWidgets = [
+      ...(config.value?.widgets || []),
+      ...pluginIndicatorWidgets.value,
+    ];
+    const dedupedById = new Map<string, DashboardWidget>();
+
+    for (const widget of mergedWidgets) {
+      const widgetId = String(widget?.id || "").trim();
+      if (!widgetId || dedupedById.has(widgetId)) continue;
+      dedupedById.set(widgetId, widget);
+    }
+
+    return Array.from(dedupedById.values()).map((widget) =>
+      normalizeWidget(widget),
+    );
+  });
   const authProfileOptions = computed<AuthProfile[]>(
     () => config.value?.security?.auth_profiles || [],
   );
@@ -1006,6 +1028,7 @@ export function createDashboardStore(
       if (!isWidgetBlock(block)) continue;
       ids.push(...(block.widgets || []));
     }
+    ids.push(...pluginAlwaysVisibleWidgetIds.value);
 
     return Array.from(new Set(ids));
   });
@@ -1039,6 +1062,18 @@ export function createDashboardStore(
     selectedNode.groupKey = "";
     selectedNode.subgroupId = "";
     selectedNode.itemId = "";
+  }
+
+  async function loadPluginIndicators(): Promise<void> {
+    try {
+      const payload = await requestJson("/api/v1/plugins?state=active");
+      const parsed = extractDashboardIndicatorsFromPlugins(payload);
+      pluginIndicatorWidgets.value = parsed.widgets;
+      pluginAlwaysVisibleWidgetIds.value = parsed.alwaysVisibleWidgetIds;
+    } catch {
+      pluginIndicatorWidgets.value = [];
+      pluginAlwaysVisibleWidgetIds.value = [];
+    }
   }
 
   const sectionCtx: any = {
@@ -1097,6 +1132,7 @@ export function createDashboardStore(
     pages,
     pageByBlockGroupId,
     requestJson,
+    loadPluginIndicators,
     resolveGroupIconSemantic,
     resolveItemIconSemantic,
     resolvePageIconSemantic,
@@ -1123,6 +1159,7 @@ export function createDashboardStore(
     updateDashboardConfig,
     visibleTreeItemIds,
     widgetById,
+    widgetClientProbeCache,
     widgetIntervals,
     widgetStates,
     widgets,
@@ -1379,6 +1416,7 @@ export function createDashboardStore(
     treeFilter,
     treeGroups,
     widgetById,
+    widgetClientProbeCache,
     widgetIntervals,
     widgetStates,
     widgets,

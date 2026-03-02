@@ -15,6 +15,9 @@
   --layout-columns: 12;
   --glow-enabled: 1;
   --desktop-drag-strip: 0px;
+  --z-layer-header: 100;
+  --z-layer-dropdown: 180;
+  --z-layer-overlay: 1400;
   --theme-color-scheme: dark;
   color-scheme: var(--theme-color-scheme);
 }

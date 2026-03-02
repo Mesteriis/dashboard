@@ -68,11 +68,10 @@
 
     <label class="editor-field">
       <span>Иконка</span>
-      <input
-        v-model.trim="itemEditor.form.icon"
-        type="text"
-        placeholder="proxmox, grafana..."
-        autocomplete="off"
+      <UiIconPicker
+        v-model="itemEditor.form.icon"
+        aria-label="Иконка сервиса"
+        trigger-placeholder="Выберите иконку"
         :disabled="itemEditor.submitting"
       />
     </label>
@@ -114,6 +113,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import HeroDropdown from "@/primitives/selection/HeroDropdown.vue";
+import UiIconPicker from "@/primitives/selection/UiIconPicker.vue";
 import { useDashboardStore } from "@/features/stores/dashboardStore";
 
 const itemTypeOptions = [

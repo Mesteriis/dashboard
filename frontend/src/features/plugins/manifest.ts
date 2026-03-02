@@ -68,6 +68,15 @@ export interface PluginDataTableComponentV1 {
   errorText?: string;
 }
 
+export interface PluginSidebarActionV1 {
+  id: string;
+  title: string;
+  icon?: string;
+  route: string;
+  capability?: string;
+  target: "same_tab" | "new_tab";
+}
+
 export interface PluginUnknownComponentV1 {
   id: string;
   type: "unknown";
@@ -97,6 +106,7 @@ export interface PluginFrontendV1 {
 export interface PluginPageV1 {
   enabled: boolean;
   layout: PluginLayoutType;
+  sidebarActions: PluginSidebarActionV1[];
   components: PluginPageComponentV1[];
 }
 
@@ -340,6 +350,32 @@ function parseComponents(raw: unknown): PluginPageComponentV1[] {
   return components;
 }
 
+function parseSidebarActions(raw: unknown): PluginSidebarActionV1[] {
+  if (!Array.isArray(raw)) return [];
+  const actions: PluginSidebarActionV1[] = [];
+  for (const entry of raw) {
+    const record = asRecord(entry);
+    if (!record) continue;
+    const id = asString(record.id);
+    const route = asString(record.route);
+    if (!id || !route) continue;
+    const capability = asString(record.capability);
+    const icon = asString(record.icon);
+    const targetToken = asString(record.target).toLowerCase();
+    const target: "same_tab" | "new_tab" =
+      targetToken === "new_tab" ? "new_tab" : "same_tab";
+    actions.push({
+      id,
+      title: asString(record.title) || id,
+      ...(icon ? { icon } : {}),
+      route,
+      ...(capability ? { capability } : {}),
+      target,
+    });
+  }
+  return actions;
+}
+
 function parseManifest(raw: unknown, pluginId: string): PluginPageManifestV1 {
   const root = asRecord(raw);
   if (!root) throw new Error("Manifest must be an object");
@@ -397,6 +433,9 @@ function parseManifest(raw: unknown, pluginId: string): PluginPageManifestV1 {
     page: {
       enabled: asBool(rawPage?.enabled, false),
       layout,
+      sidebarActions: parseSidebarActions(
+        rawPage?.sidebarActions || rawPage?.sidebar_actions,
+      ),
       components: parseComponents(rawPage?.components),
     },
     schema: asRecord(root.schema) || {},
@@ -440,6 +479,10 @@ export function getMissingManifestCapabilities(
   actorCapabilities = getCurrentActorCapabilities(),
 ): string[] {
   const required = new Set<string>();
+  for (const action of manifest.page.sidebarActions || []) {
+    const capability = asString(action.capability);
+    if (capability) required.add(capability);
+  }
   for (const component of manifest.page.components) {
     if (component.type !== "data-table") continue;
     const capability = asString(component.dataSource.capability);

@@ -17,6 +17,12 @@ frontend:
 page:
   enabled: true
   layout: content-only
+  sidebarActions:
+    - id: open_autodiscover_page
+      title: Autodiscover
+      icon: radar
+      route: /plugins/autodiscover
+      target: same_tab
   components:
     - id: autodiscover-services-table
       type: data-table

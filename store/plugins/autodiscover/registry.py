@@ -139,17 +139,6 @@ async def _persist_scan_snapshot(
         logger.info("Autodiscover scan snapshot stored scan_id=%s status=%s", scan_id, status)
         return
 
-    await storage_rpc.kv_set(
-        plugin_id=PLUGIN_NAME,
-        key="last_scan_summary",
-        value=summary,
-    )
-    await storage_rpc.kv_set(
-        plugin_id=PLUGIN_NAME,
-        key="last_scan_id",
-        value=scan_id,
-    )
-
     if not isinstance(result_payload, dict):
         logger.info("Autodiscover scan snapshot stored scan_id=%s status=%s services=0", scan_id, status)
         return
@@ -168,21 +157,24 @@ async def _persist_scan_snapshot(
             scan_id,
             exc,
         )
-        with suppress(Exception):
-            await storage_rpc.kv_set(
-                plugin_id=PLUGIN_NAME,
-                key="services_latest",
-                value=services,
-            )
-            logger.warning(
-                "Autodiscover stored compatibility KV fallback services_latest scan_id=%s count=%s",
-                scan_id,
-                len(services),
-            )
-    else:
-        if persisted_services > 0:
-            with suppress(Exception):
-                await storage_rpc.kv_delete(plugin_id=PLUGIN_NAME, key="services_latest")
+
+    with suppress(Exception):
+        await storage_rpc.kv_set(
+            plugin_id=PLUGIN_NAME,
+            key="services_latest",
+            value={
+                "services": services,
+                "total": len(services),
+                "generated_at": generated_at or action.requested_at.isoformat(),
+            },
+        )
+
+    with suppress(Exception):
+        await storage_rpc.kv_set(plugin_id=PLUGIN_NAME, key="last_scan_summary", value=summary)
+    with suppress(Exception):
+        await storage_rpc.kv_set(plugin_id=PLUGIN_NAME, key="last_scan_id", value=scan_id)
+    with suppress(Exception):
+        await storage_rpc.kv_set(plugin_id=PLUGIN_NAME, key="last_scan_result", value=result_payload)
 
     logger.info(
         "Autodiscover scan snapshot stored scan_id=%s status=%s services=%s",

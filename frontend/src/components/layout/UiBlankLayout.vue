@@ -66,6 +66,14 @@
             <PanelLeftClose class="ui-icon" />
           </UiIconButton>
         </section>
+        <section
+          v-if="$slots['sidebar-links']"
+          :id="layoutSidebarLinksId"
+          class="blank-sidebar-links"
+          aria-label="Быстрые ссылки плагинов"
+        >
+          <slot name="sidebar-links" />
+        </section>
         <!-- Основная навигация -->
         <section :id="layoutSidebarNavId" class="blank-sidebar-main">
           <slot name="sidebar-mid" />
@@ -217,6 +225,7 @@ const instanceId = `layout-${++layoutCounter}`;
 const layoutId = instanceId;
 const layoutSidebarId = `${instanceId}-sidebar`;
 const layoutSidebarBrandId = `${instanceId}-sidebar-brand`;
+const layoutSidebarLinksId = `${instanceId}-sidebar-links`;
 const layoutSidebarNavId = `${instanceId}-sidebar-nav`;
 const layoutSidebarIndicatorsId = `${instanceId}-sidebar-indicators`;
 const layoutMainId = `${instanceId}-main`;
@@ -293,6 +302,7 @@ const emit = defineEmits<{
 }>();
 
 defineSlots<{
+  "sidebar-links": [];
   "sidebar-mid": [];
   "sidebar-bottom-indicators": [];
   "header-tabs": [];
@@ -571,8 +581,10 @@ if (import.meta.env.DEV) {
   
   // Check for actual slot names used by consumers
   const hasSidebarSlot = Boolean(
+    $slots["sidebar-links"] ||
     $slots["sidebar-mid"] ||
-    $slots["app.sidebar.middle"]
+    $slots["app.sidebar.middle"] ||
+    $slots["app.sidebar.links"]
   );
   const hasHeaderSlot = Boolean(
     $slots.default ||
@@ -774,7 +786,7 @@ if (import.meta.env.DEV) {
 
 .blank-main-header {
   position: relative;
-  z-index: 50;
+  z-index: var(--z-layer-header);
   display: flex;
   align-items: center;
   gap: 8px;
@@ -798,18 +810,18 @@ if (import.meta.env.DEV) {
 
 .blank-main-header :deep(.hero-glass-tabs-shell) {
   position: relative;
-  z-index: 40;
+  z-index: calc(var(--z-layer-header) - 10);
   overflow: visible;
   flex: 1 1 auto;
   width: 100%;
 }
 
 .blank-main-header :deep(.hero-action-menu) {
-  z-index: 100;
+  z-index: calc(var(--z-layer-header) + 10);
 }
 
 .blank-main-header :deep(.hero-control-panel--menu .ui-menu__list) {
-  z-index: 100;
+  z-index: calc(var(--z-layer-header) + 10);
 }
 
 /* ── ② Контент (#layout-canvas) ─────────────────────────────────────── */
@@ -904,12 +916,13 @@ if (import.meta.env.DEV) {
 
 .blank-sidebar .sidebar-content {
   display: grid;
-  grid-template-rows: auto 1fr auto;
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
   min-height: 0;
   gap: 10px;
 }
 
 .blank-sidebar-logo {
+  grid-row: 1;
   flex: 0 0 auto;
   min-height: 0;
   display: flex;
@@ -974,12 +987,68 @@ if (import.meta.env.DEV) {
   height: var(--logo-toggle-icon-size);
 }
 
+.blank-sidebar-links {
+  grid-row: 2;
+  min-height: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 0 14px;
+}
+
+.blank-sidebar-links :deep(.blank-sidebar-link-btn) {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  border: 1px solid rgba(120, 183, 218, 0.24);
+  background: linear-gradient(
+    150deg,
+    rgba(16, 37, 57, 0.62),
+    rgba(10, 26, 42, 0.44)
+  );
+  color: rgba(188, 225, 247, 0.92);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  cursor: pointer;
+  transition:
+    border-color 170ms ease,
+    background 170ms ease,
+    color 170ms ease,
+    transform 170ms ease;
+}
+
+.blank-sidebar-links :deep(.blank-sidebar-link-btn:hover) {
+  border-color: rgba(162, 216, 246, 0.38);
+  background: linear-gradient(
+    150deg,
+    rgba(20, 49, 73, 0.7),
+    rgba(14, 35, 55, 0.56)
+  );
+  color: rgba(221, 241, 255, 0.97);
+  transform: translateY(-1px);
+}
+
+.blank-sidebar-links :deep(.blank-sidebar-link-btn:focus-visible) {
+  outline: none;
+  border-color: rgba(166, 225, 255, 0.44);
+  box-shadow: 0 0 0 2px rgba(103, 177, 219, 0.24);
+}
+
+.blank-sidebar-links :deep(.blank-sidebar-link-btn .ui-icon) {
+  width: 16px;
+  height: 16px;
+}
+
 .blank-sidebar-main {
+  grid-row: 3;
   min-height: 0;
   overflow: hidden;
 }
 
 .blank-sidebar-indicators {
+  grid-row: 4;
   flex: 0 0 auto;
   min-height: 0;
   display: grid;

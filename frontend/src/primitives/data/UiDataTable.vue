@@ -10,51 +10,65 @@
           :value="search"
           @input="onSearch"
         />
-
-        <template v-if="showFilters">
-          <select
-            v-for="column in filterColumns"
-            :key="column.key"
-            class="ui-table__filter"
-            :value="filters[column.key] || ''"
-            @change="onFilterChange(column.key, $event)"
-          >
-            <option value="">{{ column.label }}: все</option>
-            <option
-              v-for="value in columnFilterValues(column.key)"
-              :key="`${column.key}-${value}`"
-              :value="value"
-            >
-              {{ value }}
-            </option>
-          </select>
-        </template>
       </div>
 
       <button
         v-if="showExport"
         type="button"
-        class="ui-table__export"
+        class="ui-table__export ui-table__export--compact"
+        title="Экспорт CSV"
         @click="exportCsv"
       >
-        Export CSV
+        CSV
       </button>
     </header>
 
-    <div class="ui-table__wrap" :style="tableWrapStyle">
+    <div ref="wrapElement" class="ui-table__wrap" :style="tableWrapStyle">
       <table>
         <thead>
           <tr>
-            <th
-              v-for="column in columns"
-              :key="column.key"
-              :class="{ sortable: column.sortable }"
-              @click="toggleSort(column)"
-            >
-              <span>{{ column.label }}</span>
-              <small v-if="sort.key === column.key">
-                {{ sort.direction === "asc" ? "▲" : "▼" }}
-              </small>
+            <th v-for="column in columns" :key="column.key" :class="{ sortable: column.sortable }">
+              <div class="ui-table__th-main">
+                <button
+                  v-if="column.sortable"
+                  type="button"
+                  class="ui-table__sort-btn"
+                  @click="toggleSort(column)"
+                >
+                  <span>{{ column.label }}</span>
+                  <small v-if="sort.key === column.key">
+                    {{ sort.direction === "asc" ? "▲" : "▼" }}
+                  </small>
+                </button>
+                <span v-else>{{ column.label }}</span>
+              </div>
+
+              <div
+                v-if="showFilters && column.filterable"
+                class="ui-table__th-filter"
+                @click.stop
+              >
+                <UiSelect
+                  :model-value="resolveColumnFilterModel(column.key)"
+                  :options="columnFilterOptions(column.key)"
+                  :placeholder="`${column.label}: все`"
+                  multiple
+                  search
+                  search-placeholder="Поиск значения..."
+                  @update:model-value="onColumnFilterModelUpdate(column.key, $event)"
+                >
+                  <template #trigger="{ open, selectedLabels }">
+                    <span class="ui-table__th-filter-value">
+                      {{
+                        selectedLabels.length
+                          ? `${column.label}: ${selectedLabels.length}`
+                          : `${column.label}: все`
+                      }}
+                    </span>
+                    <span class="ui-table__th-filter-caret" :class="{ open }">▾</span>
+                  </template>
+                </UiSelect>
+              </div>
             </th>
             <th v-if="actions.length">Actions</th>
           </tr>
@@ -101,23 +115,37 @@
     </div>
 
     <footer v-if="showPagination" class="ui-table__pagination">
-      <button type="button" :disabled="page <= 1" @click="page = page - 1">
-        Назад
-      </button>
-      <span>Страница {{ page }} / {{ totalPages }}</span>
-      <button
-        type="button"
-        :disabled="page >= totalPages"
-        @click="page = page + 1"
-      >
-        Вперёд
-      </button>
+      <label v-if="showPageSizeSelector" class="ui-table__page-size">
+        <span>Rows</span>
+        <UiSelect
+          class="ui-table__page-size-select"
+          :model-value="String(effectivePageSize)"
+          :options="pageSizeSelectOptions"
+          placeholder=""
+          @update:model-value="onPageSizeUpdate"
+        />
+      </label>
+
+      <div class="ui-table__pagination-controls">
+        <button type="button" :disabled="page <= 1" @click="page = page - 1">
+          Назад
+        </button>
+        <span>Страница {{ page }} / {{ totalPages }}</span>
+        <button
+          type="button"
+          :disabled="page >= totalPages"
+          @click="page = page + 1"
+        >
+          Вперёд
+        </button>
+      </div>
     </footer>
   </section>
 </template>
 
 <script setup lang="ts">
-import { computed, reactive, ref, watch } from "vue";
+import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from "vue";
+import UiSelect from "@/ui/forms/UiSelect.vue";
 
 interface TableColumn {
   key: string;
@@ -142,6 +170,12 @@ const props = withDefaults(
     showExport?: boolean;
     showPagination?: boolean;
     pageSize?: number;
+    pageSizeOptions?: number[];
+    showPageSizeSelector?: boolean;
+    autoPageSize?: boolean;
+    availableHeightPx?: number | null;
+    estimatedRowHeight?: number;
+    headerRowHeight?: number;
     rowClickable?: boolean;
     maxHeight?: string | null;
   }>(),
@@ -153,6 +187,12 @@ const props = withDefaults(
     showExport: true,
     showPagination: true,
     pageSize: 8,
+    pageSizeOptions: () => [8, 12, 16, 20, 30, 50],
+    showPageSizeSelector: true,
+    autoPageSize: false,
+    availableHeightPx: null,
+    estimatedRowHeight: 44,
+    headerRowHeight: 42,
     rowClickable: false,
     maxHeight: null,
   },
@@ -166,17 +206,78 @@ const emit = defineEmits<{
 
 const search = ref("");
 const page = ref(1);
+const manualPageSize = ref<number | null>(null);
+const wrapElement = ref<HTMLElement | null>(null);
+const measuredWrapHeight = ref(0);
 const sort = reactive<{ key: string; direction: "asc" | "desc" }>({
   key: "",
   direction: "asc",
 });
-const filters = reactive<Record<string, string>>({});
+const filters = reactive<Record<string, string[]>>({});
+let wrapResizeObserver: ResizeObserver | null = null;
 
 const actions = computed(() => props.actions || []);
 const rowClickable = computed(() => Boolean(props.rowClickable));
-const filterColumns = computed(() =>
-  props.columns.filter((column) => column.filterable),
+const showPageSizeSelector = computed(
+  () => Boolean(props.showPagination) && Boolean(props.showPageSizeSelector),
 );
+const pageSizeSelectOptions = computed(() =>
+  normalizedPageSizeOptions.value.map((size) => ({
+    label: String(size),
+    value: String(size),
+  })),
+);
+
+const normalizedPageSizeOptions = computed(() => {
+  const values = new Set<number>();
+  for (const value of props.pageSizeOptions || []) {
+    const parsed = Number(value);
+    if (!Number.isFinite(parsed)) continue;
+    const normalized = Math.max(1, Math.floor(parsed));
+    values.add(normalized);
+  }
+  const fallback = Math.max(1, Math.floor(Number(props.pageSize) || 1));
+  values.add(fallback);
+  return Array.from(values).sort((left, right) => left - right);
+});
+
+const autoHeightPx = computed(() => {
+  if (typeof props.availableHeightPx === "number" && Number.isFinite(props.availableHeightPx)) {
+    return Math.max(0, props.availableHeightPx);
+  }
+  return measuredWrapHeight.value;
+});
+
+const autoPageSize = computed<number | null>(() => {
+  if (!props.autoPageSize) return null;
+  const heightPx = autoHeightPx.value;
+  if (heightPx <= 0) return null;
+  const headerHeight = Math.max(0, Number(props.headerRowHeight) || 0);
+  const rowHeight = Math.max(20, Number(props.estimatedRowHeight) || 44);
+  const visibleRows = Math.max(1, Math.floor((heightPx - headerHeight) / rowHeight));
+  const options = normalizedPageSizeOptions.value;
+  if (!options.length) return visibleRows;
+  let selected = options[0];
+  for (const option of options) {
+    if (option <= visibleRows) {
+      selected = option;
+      continue;
+    }
+    break;
+  }
+  return selected;
+});
+
+const effectivePageSize = computed(() => {
+  if (manualPageSize.value && manualPageSize.value > 0) {
+    return manualPageSize.value;
+  }
+  if (autoPageSize.value && autoPageSize.value > 0) {
+    return autoPageSize.value;
+  }
+  return Math.max(1, Math.floor(Number(props.pageSize) || 1));
+});
+
 const tableWrapStyle = computed<Record<string, string> | undefined>(() => {
   if (!props.maxHeight) return undefined;
   return { maxHeight: props.maxHeight };
@@ -195,14 +296,18 @@ const preparedRows = computed(() => {
     }
 
     for (const [key, value] of Object.entries(filters)) {
-      if (!value) continue;
+      if (!value.length) continue;
       const raw = row[key];
       if (Array.isArray(raw)) {
-        const normalized = raw.map((entry) => String(entry));
-        if (!normalized.includes(value)) return false;
+        const normalized = new Set(raw.map((entry) => String(entry ?? "")));
+        const hasAnyMatch = value.some((selectedValue) =>
+          normalized.has(selectedValue),
+        );
+        if (!hasAnyMatch) return false;
         continue;
       }
-      if (String(raw ?? "") !== value) return false;
+      const current = String(raw ?? "");
+      if (!value.includes(current)) return false;
     }
 
     return true;
@@ -223,17 +328,17 @@ const preparedRows = computed(() => {
 });
 
 const totalPages = computed(() =>
-  Math.max(1, Math.ceil(preparedRows.value.length / props.pageSize)),
+  Math.max(1, Math.ceil(preparedRows.value.length / effectivePageSize.value)),
 );
 
 const pagedRows = computed(() => {
   if (!props.showPagination) return preparedRows.value;
-  const start = (page.value - 1) * props.pageSize;
-  return preparedRows.value.slice(start, start + props.pageSize);
+  const start = (page.value - 1) * effectivePageSize.value;
+  return preparedRows.value.slice(start, start + effectivePageSize.value);
 });
 
 watch(
-  () => [preparedRows.value.length, props.pageSize],
+  () => [preparedRows.value.length, effectivePageSize.value],
   () => {
     if (page.value > totalPages.value) {
       page.value = totalPages.value;
@@ -243,6 +348,45 @@ watch(
     }
   },
 );
+
+watch(
+  () => props.pageSize,
+  (nextValue) => {
+    if (manualPageSize.value == null) return;
+    if (manualPageSize.value === Math.max(1, Math.floor(Number(nextValue) || 1))) {
+      manualPageSize.value = null;
+    }
+  },
+);
+
+watch(
+  () => props.maxHeight,
+  async () => {
+    await nextTick();
+    updateMeasuredWrapHeight();
+  },
+);
+
+onMounted(async () => {
+  await nextTick();
+  updateMeasuredWrapHeight();
+  if (typeof ResizeObserver !== "undefined" && wrapElement.value) {
+    wrapResizeObserver = new ResizeObserver(() => updateMeasuredWrapHeight());
+    wrapResizeObserver.observe(wrapElement.value);
+  } else if (typeof window !== "undefined") {
+    window.addEventListener("resize", updateMeasuredWrapHeight);
+  }
+});
+
+onBeforeUnmount(() => {
+  if (wrapResizeObserver) {
+    wrapResizeObserver.disconnect();
+    wrapResizeObserver = null;
+  }
+  if (typeof window !== "undefined") {
+    window.removeEventListener("resize", updateMeasuredWrapHeight);
+  }
+});
 
 function resolveRowKey(row: Record<string, unknown>): string {
   const keyValue = row[props.rowKey];
@@ -265,10 +409,25 @@ function onSearch(event: Event): void {
   page.value = 1;
 }
 
-function onFilterChange(key: string, event: Event): void {
-  const target = event.target as HTMLSelectElement | null;
-  filters[key] = String(target?.value || "");
+function resolveColumnFilterModel(key: string): string[] {
+  return filters[key] || [];
+}
+
+function onColumnFilterModelUpdate(key: string, value: string | string[]): void {
+  filters[key] = normalizeFilterModel(value);
   page.value = 1;
+}
+
+function onPageSizeUpdate(value: string | string[]): void {
+  const rawValue = Array.isArray(value) ? value[0] : value;
+  const parsed = Number(rawValue);
+  if (!Number.isFinite(parsed)) return;
+  manualPageSize.value = Math.max(1, Math.floor(parsed));
+  page.value = 1;
+}
+
+function updateMeasuredWrapHeight(): void {
+  measuredWrapHeight.value = Math.max(0, wrapElement.value?.clientHeight || 0);
 }
 
 function columnFilterValues(key: string): string[] {
@@ -289,6 +448,24 @@ function columnFilterValues(key: string): string[] {
   return Array.from(values).sort((left, right) =>
     left.localeCompare(right, "ru"),
   );
+}
+
+function columnFilterOptions(key: string): Array<{ label: string; value: string }> {
+  return columnFilterValues(key).map((value) => ({
+    label: value,
+    value,
+  }));
+}
+
+function normalizeFilterModel(value: string | string[]): string[] {
+  const rawValues = Array.isArray(value) ? value : value ? [value] : [];
+  const unique = new Set<string>();
+  for (const item of rawValues) {
+    const token = String(item || "").trim();
+    if (!token) continue;
+    unique.add(token);
+  }
+  return Array.from(unique);
 }
 
 function onRowClick(row: Record<string, unknown>): void {

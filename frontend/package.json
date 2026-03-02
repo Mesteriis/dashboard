@@ -11,6 +11,7 @@
     "tauri:dev": "node scripts/sync-default-config.mjs && node scripts/ensure-sidecar.mjs && tauri dev --config ../tauri/tauri.conf.json",
     "tauri:build:arm64": "node scripts/sync-default-config.mjs && node scripts/ensure-sidecar.mjs && tauri build --config ../tauri/tauri.conf.json --target aarch64-apple-darwin",
     "tauri:build:universal": "node scripts/sync-default-config.mjs && node scripts/ensure-sidecar.mjs && tauri build --config ../tauri/tauri.conf.json --target universal-apple-darwin",
+    "tauri:build:thin": "tauri build --config ../tauri/tauri.thin.conf.json",
     "preview": "vite preview --port 4173",
     "format:check": "prettier --check \"src/**/*.{ts,vue,scss}\" \"scripts/**/*.mjs\" \"*.ts\" \"*.json\" \"*.html\"",
     "format:write": "prettier --write \"src/**/*.{ts,vue,scss}\" \"scripts/**/*.mjs\" \"*.ts\" \"*.json\" \"*.html\"",
@@ -19,6 +20,8 @@
     "typecheck:app": "vue-tsc -p tsconfig.typecheck.app.json --noEmit",
     "typecheck": "npm run typecheck:services && npm run typecheck:app",
     "test": "node --import tsx --test ../tests/frontend/*.test.mjs",
+    "test:ui-kit": "node --import tsx --test ../tests/frontend/uiKit.*.test.mjs",
+    "test:ui-kit:coverage": "node --import tsx --experimental-test-coverage --test-coverage-lines=100 --test-coverage-functions=100 --test-coverage-include=src/features/services/uiKitNavigation.ts --test-coverage-include=src/views/ui-showcase/sections/showcaseRegistry.ts --test-coverage-include=src/views/ui-showcase/showcaseNodeApi.ts --test ../tests/frontend/uiKit.*.test.mjs",
     "check:files": "node scripts/check-file-length.mjs"
   },
   "dependencies": {

@@ -26,6 +26,12 @@
   font-weight: 700;
 }
 
+.widget-value.widget-value-metric {
+  font-size: clamp(1.06rem, 1.55vw, 1.34rem);
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+
 .widget-subtitle,
 .widget-trend {
   margin: 0;

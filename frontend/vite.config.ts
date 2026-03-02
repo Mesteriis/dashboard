@@ -31,7 +31,9 @@ export default defineConfig(({ command }) => ({
   base: resolveBase(command),
   publicDir: false,
   server: {
+    host: "::",
     port: 5173,
+    strictPort: true,
     proxy: {
       "/api": {
         target: DEV_BACKEND_TARGET,

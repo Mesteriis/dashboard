@@ -76,12 +76,10 @@
 
         <label class="editor-field">
           <span>Иконка</span>
-          <input
-            v-model.trim="createEntityEditor.form.icon"
-            type="text"
-            maxlength="80"
-            autocomplete="off"
-            placeholder="layout-dashboard"
+          <UiIconPicker
+            v-model="createEntityEditor.form.icon"
+            aria-label="Иконка вкладки"
+            trigger-placeholder="Выберите иконку"
             :disabled="createEntityEditor.submitting"
           />
         </label>
@@ -117,12 +115,10 @@
 
         <label class="editor-field">
           <span>Иконка</span>
-          <input
-            v-model.trim="createEntityEditor.form.icon"
-            type="text"
-            maxlength="80"
-            autocomplete="off"
-            placeholder="folder"
+          <UiIconPicker
+            v-model="createEntityEditor.form.icon"
+            aria-label="Иконка группы"
+            trigger-placeholder="Выберите иконку"
             :disabled="createEntityEditor.submitting"
           />
         </label>
@@ -277,6 +273,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import BaseModal from "@/ui/overlays/BaseModal.vue";
+import UiIconPicker from "@/primitives/selection/UiIconPicker.vue";
 import { useDashboardStore } from "@/features/stores/dashboardStore";
 
 const dashboard = useDashboardStore();

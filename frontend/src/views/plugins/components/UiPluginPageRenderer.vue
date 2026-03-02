@@ -1,20 +1,5 @@
 <template>
   <section class="plugin-page">
-    <header class="plugin-page-head">
-      <button class="ghost" type="button" @click="emit('back')">
-        Back to Plugins
-      </button>
-      <div>
-        <p class="plugin-page-kicker">{{ pluginId }}</p>
-        <h1>{{ manifest.plugin_id }}</h1>
-        <p class="plugin-page-version">Version {{ manifest.version }}</p>
-        <p v-if="manifestEnvelope.negotiation.fallback_used" class="plugin-page-notice">
-          Fallback manifest is used:
-          <code>{{ manifestEnvelope.negotiation.reason || "unknown reason" }}</code>
-        </p>
-      </div>
-    </header>
-
     <section v-if="!manifest.page.enabled" class="plugin-page-status">
       <h3>Plugin page is disabled</h3>
       <p>Manifest marks this page as disabled (`page.enabled = false`).</p>
@@ -42,7 +27,7 @@
 
       <UiPluginBundleSandbox
         v-if="useCustomBundle"
-        :plugin-id="pluginId"
+        :plugin-id="manifest.plugin_id"
         :manifest="manifest"
         :entry="customBundleEntry"
         :sandbox-enabled="manifest.frontend.customBundle.sandbox"
@@ -65,12 +50,7 @@ import {
 } from "@/features/plugins/manifest";
 
 const props = defineProps<{
-  pluginId: string;
   manifestEnvelope: PluginManifestEnvelope;
-}>();
-
-const emit = defineEmits<{
-  back: [];
 }>();
 
 const customBundleFailed = ref(false);
@@ -117,40 +97,6 @@ function onBundleFailed(): void {
   overflow: auto;
   scrollbar-gutter: stable;
   padding-right: 2px;
-}
-
-.plugin-page-head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  gap: 16px;
-  padding: 4px 2px 10px;
-}
-
-.plugin-page-kicker {
-  margin: 0 0 4px;
-  font-size: 12px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: rgba(189, 207, 228, 0.86);
-}
-
-.plugin-page-head h1 {
-  margin: 0;
-}
-
-.plugin-page-version {
-  margin: 8px 0 0;
-  color: rgba(170, 192, 215, 0.82);
-  font-size: 13px;
-}
-
-.plugin-page-notice {
-  margin: 8px 0 0;
-  padding: 8px 10px;
-  border-radius: var(--ui-radius);
-  border: 1px solid rgba(124, 154, 188, 0.34);
-  background: rgba(10, 21, 34, 0.74);
 }
 
 .plugin-page-status {

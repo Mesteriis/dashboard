@@ -21,19 +21,34 @@ export function buildRouterTree(routes: RouteRecordRaw[]): RouterTreeNode[] {
   const result: RouterTreeNode[] = [];
 
   for (const route of routes) {
+    const meta = route.meta as Record<string, unknown> | undefined;
+    const title =
+      typeof meta?.title === "string" && meta.title.trim()
+        ? meta.title
+        : undefined;
+    const icon =
+      typeof meta?.icon === "string" && meta.icon.trim()
+        ? meta.icon
+        : undefined;
+    const hidden = typeof meta?.hidden === "boolean" ? meta.hidden : undefined;
+
     // Пропускаем скрытые роуты
-    if (route.meta?.hidden) continue;
+    if (hidden) continue;
 
     // Пропускаем роуты без имени (технические роуты)
     if (!route.name) continue;
 
     const node: RouterTreeNode = {
       name: String(route.name),
-      label: route.meta?.title || String(route.name),
+      label: title || String(route.name),
       path: route.path,
-      icon: route.meta?.icon,
-      hidden: route.meta?.hidden,
-      meta: route.meta,
+      icon,
+      hidden,
+      meta: {
+        title,
+        icon,
+        hidden,
+      },
     };
 
     // Рекурсивно обрабатываем дочерние роуты

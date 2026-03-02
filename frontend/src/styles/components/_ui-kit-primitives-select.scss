@@ -1,5 +1,10 @@
 .ui-select {
   position: relative;
+  z-index: 1;
+}
+
+.ui-select.is-open {
+  z-index: var(--z-layer-dropdown);
 }
 
 .ui-select.is-disabled {
@@ -43,7 +48,7 @@
 
 .ui-select__panel {
   position: absolute;
-  z-index: 40;
+  z-index: calc(var(--z-layer-dropdown) + 1);
   top: calc(100% + 6px);
   left: 0;
   width: 100%;

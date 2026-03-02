@@ -61,6 +61,13 @@
   padding-right: 2px;
 }
 
+.plugins-sidebar-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-content: flex-start;
+}
+
 .plugins-panel-nav-link {
   border: 1px solid var(--plugins-panel-color-004);
   border-radius: var(--ui-radius);
@@ -354,7 +361,7 @@
 .plugins-github-modal-backdrop {
   position: fixed;
   inset: 0;
-  z-index: 40;
+  z-index: var(--z-layer-overlay);
   display: grid;
   place-items: center;
   padding: 14px;

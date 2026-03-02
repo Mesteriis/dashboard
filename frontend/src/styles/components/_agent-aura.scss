@@ -3,7 +3,7 @@
 .agent-aura-overlay-backdrop {
   position: fixed;
   inset: 0;
-  z-index: 62;
+  z-index: var(--z-layer-overlay);
   display: grid;
   place-items: center;
   padding: calc(12px + var(--desktop-drag-strip)) 12px 12px;

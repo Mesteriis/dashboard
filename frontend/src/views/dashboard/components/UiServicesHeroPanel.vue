@@ -127,7 +127,7 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
-import { useRoute, useRouter, type RouteLocationRaw } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import type { Component } from "vue";
 import {
   Lock,
@@ -172,13 +172,20 @@ const {
 
 const router = useRouter();
 
-type SystemActionId = "kiosk" | "profile" | "pleiad_lock" | "exit" | "navigate" | "settings";
+type SystemActionId =
+  | "kiosk"
+  | "profile"
+  | "pleiad_lock"
+  | "exit"
+  | "navigate"
+  | "settings"
+  | "logout";
 
 interface SystemAction {
   id: SystemActionId | string;
   label: string;
   icon?: Component | string;
-  route?: RouteLocationRaw;
+  route?: string;
   action?: () => void | Promise<void>;
   danger?: boolean;
   divider?: boolean;

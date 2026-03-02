@@ -9,6 +9,7 @@ export function createDashboardConfigLoadSection(ctx: any) {
     try {
       const data = (await ctx.fetchDashboardConfig()) as DashboardConfig;
       ctx.config.value = data;
+      await ctx.loadPluginIndicators();
 
       if (
         !ctx.activePageId.value ||

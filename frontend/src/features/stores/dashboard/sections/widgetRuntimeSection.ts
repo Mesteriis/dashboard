@@ -5,8 +5,33 @@ import type {
   WidgetRuntimeState,
   WidgetStatListEntry,
 } from "@/features/stores/dashboard/storeTypes";
+import { runClientProbeScript } from "@/features/plugins/clientProbeSandbox";
+
+interface WidgetClientProbeConfig {
+  enabled: boolean;
+  script: string;
+  timeoutMs: number;
+  cacheSec: number;
+}
+
+interface WidgetClientProbeCacheEntry {
+  expiresAt: number;
+  payload: unknown;
+  error: string;
+}
 
 export function createDashboardWidgetRuntimeSection(ctx: any) {
+  function asRecord(value: unknown): Record<string, unknown> | null {
+    if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+    return value as Record<string, unknown>;
+  }
+
+  function asNumber(value: unknown, fallback: number): number {
+    const parsed = Number(value);
+    if (!Number.isFinite(parsed)) return fallback;
+    return parsed;
+  }
+
   function widgetState(widgetId: string): WidgetRuntimeState | null {
     return ctx.widgetStates[widgetId] || null;
   }
@@ -45,27 +70,62 @@ export function createDashboardWidgetRuntimeSection(ctx: any) {
     return current;
   }
 
-  function statCardValue(widget: DashboardWidget): unknown {
+  function resolveMapping(
+    widget: DashboardWidget,
+    override?: DashboardWidgetMapping,
+  ): DashboardWidgetMapping {
+    if (override && typeof override === "object") return override;
+    return widget.data?.mapping || {};
+  }
+
+  function statCardValueByMapping(
+    widget: DashboardWidget,
+    mappingOverride?: DashboardWidgetMapping,
+  ): unknown {
     const payload = widgetState(widget.id)?.payload;
-    const value = resolveExpression(payload, widget.data?.mapping?.value);
+    const mapping = resolveMapping(widget, mappingOverride);
+    const value = resolveExpression(payload, mapping.value);
     return value ?? "—";
   }
 
-  function statCardSubtitle(widget: DashboardWidget): unknown {
+  function statCardValue(widget: DashboardWidget): unknown {
+    return statCardValueByMapping(widget);
+  }
+
+  function statCardSubtitleByMapping(
+    widget: DashboardWidget,
+    mappingOverride?: DashboardWidgetMapping,
+  ): unknown {
     const payload = widgetState(widget.id)?.payload;
-    const subtitle = resolveExpression(payload, widget.data?.mapping?.subtitle);
+    const mapping = resolveMapping(widget, mappingOverride);
+    const subtitle = resolveExpression(payload, mapping.subtitle);
     return subtitle ?? "";
   }
 
-  function statCardTrend(widget: DashboardWidget): unknown {
+  function statCardSubtitle(widget: DashboardWidget): unknown {
+    return statCardSubtitleByMapping(widget);
+  }
+
+  function statCardTrendByMapping(
+    widget: DashboardWidget,
+    mappingOverride?: DashboardWidgetMapping,
+  ): unknown {
     const payload = widgetState(widget.id)?.payload;
-    const trend = resolveExpression(payload, widget.data?.mapping?.trend);
+    const mapping = resolveMapping(widget, mappingOverride);
+    const trend = resolveExpression(payload, mapping.trend);
     return trend ?? "";
   }
 
-  function statListEntries(widget: DashboardWidget): WidgetStatListEntry[] {
+  function statCardTrend(widget: DashboardWidget): unknown {
+    return statCardTrendByMapping(widget);
+  }
+
+  function statListEntriesByMapping(
+    widget: DashboardWidget,
+    mappingOverride?: DashboardWidgetMapping,
+  ): WidgetStatListEntry[] {
     const payload = widgetState(widget.id)?.payload;
-    const mapping: DashboardWidgetMapping = widget.data?.mapping || {};
+    const mapping = resolveMapping(widget, mappingOverride);
     const items = resolveExpression(payload, mapping.items);
 
     if (!Array.isArray(items)) return [];
@@ -75,6 +135,95 @@ export function createDashboardWidgetRuntimeSection(ctx: any) {
       const value = String(resolveExpression(entry, mapping.item_value) ?? "-");
       return { title, value };
     });
+  }
+
+  function statListEntries(widget: DashboardWidget): WidgetStatListEntry[] {
+    return statListEntriesByMapping(widget);
+  }
+
+  function resolveClientProbeConfig(
+    widget: DashboardWidget,
+  ): WidgetClientProbeConfig | null {
+    const raw =
+      asRecord(widget.data?.clientProbe) || asRecord(widget.data?.client_probe);
+    if (!raw) return null;
+    const script = String(raw.script || "").trim();
+    if (!script) return null;
+    return {
+      enabled: raw.enabled !== false,
+      script,
+      timeoutMs: Math.max(1000, asNumber(raw.timeoutMs ?? raw.timeout_ms, 5000)),
+      cacheSec: Math.max(5, asNumber(raw.cacheSec ?? raw.cache_sec, 120)),
+    };
+  }
+
+  function mergeClientProbePayload(
+    payload: unknown,
+    clientPayload: unknown,
+    clientError: string,
+  ): Record<string, unknown> {
+    const base = asRecord(payload)
+      ? { ...(payload as Record<string, unknown>) }
+      : { payload };
+
+    return {
+      ...base,
+      client: asRecord(clientPayload)
+        ? (clientPayload as Record<string, unknown>)
+        : {
+            value: clientPayload,
+          },
+      client_probe: {
+        ok: !clientError,
+        error: clientError || null,
+        updated_at: new Date().toISOString(),
+      },
+    };
+  }
+
+  async function resolvePayloadWithClientProbe(
+    widget: DashboardWidget,
+    payload: unknown,
+  ): Promise<unknown> {
+    const probeConfig = resolveClientProbeConfig(widget);
+    if (!probeConfig || !probeConfig.enabled) return payload;
+
+    const cached = ctx.widgetClientProbeCache[widget.id] as
+      | WidgetClientProbeCacheEntry
+      | undefined;
+    if (
+      cached &&
+      typeof cached.expiresAt === "number" &&
+      cached.expiresAt > Date.now()
+    ) {
+      return mergeClientProbePayload(payload, cached.payload, cached.error || "");
+    }
+
+    try {
+      const clientPayload = await runClientProbeScript({
+        script: probeConfig.script,
+        timeoutMs: probeConfig.timeoutMs,
+        context: {
+          pluginId: String(widget.plugin_id || ""),
+          widgetId: widget.id,
+          serverPayload: payload,
+        },
+      });
+      ctx.widgetClientProbeCache[widget.id] = {
+        expiresAt: Date.now() + probeConfig.cacheSec * 1000,
+        payload: clientPayload,
+        error: "",
+      };
+      return mergeClientProbePayload(payload, clientPayload, "");
+    } catch (error: unknown) {
+      const message = ctx.errorMessage(error, "Client probe failed");
+      ctx.widgetClientProbeCache[widget.id] = {
+        expiresAt: Date.now() + Math.min(probeConfig.cacheSec, 30) * 1000,
+        payload: null,
+        error: message,
+      };
+      return mergeClientProbePayload(payload, null, message);
+    }
   }
 
   function tableRows(widget: DashboardWidget): Array<Record<string, unknown>> {
@@ -136,7 +285,8 @@ export function createDashboardWidgetRuntimeSection(ctx: any) {
     state.error = "";
 
     try {
-      state.payload = await ctx.requestJson(endpoint);
+      const payload = await ctx.requestJson(endpoint);
+      state.payload = await resolvePayloadWithClientProbe(widget, payload);
       state.lastUpdated = Date.now();
     } catch (error: unknown) {
       state.error = ctx.errorMessage(error, "Ошибка загрузки виджета");
@@ -210,9 +360,13 @@ export function createDashboardWidgetRuntimeSection(ctx: any) {
     resolveExpression,
     runWidgetAction,
     statCardSubtitle,
+    statCardSubtitleByMapping,
     statCardTrend,
+    statCardTrendByMapping,
     statCardValue,
+    statCardValueByMapping,
     statListEntries,
+    statListEntriesByMapping,
     tableRows,
     widgetState,
   };

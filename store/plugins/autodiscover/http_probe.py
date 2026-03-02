@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import html
+import ipaddress
 import re
 from itertools import starmap
 from typing import Any, Literal
@@ -145,4 +146,78 @@ async def probe_http_services(
     return grouped
 
 
-__all__ = ["_probe_http_port", "extract_html_metadata", "probe_http_services"]
+def _normalize_host_token(value: object, ip: str) -> str | None:
+    token = str(value or "").strip().rstrip(".").lower()
+    if not token:
+        return None
+    if token in {"localhost", "localhost.localdomain"}:
+        return None
+    if token == ip:
+        return None
+    if " " in token:
+        return None
+    with contextlib.suppress(ValueError):
+        ipaddress.ip_address(token)
+        return None
+    return token
+
+
+async def probe_docker_hostnames(
+    open_ports_map: dict[str, list[dict[str, Any]]],
+    request: ScanRequest,
+) -> dict[str, str]:
+    targets: list[str] = []
+    for ip, ports in open_ports_map.items():
+        has_docker_port = False
+        for entry in ports:
+            try:
+                port = int(entry.get("port", 0))
+            except (TypeError, ValueError):
+                continue
+            if port == 2375:
+                has_docker_port = True
+                break
+        if has_docker_port:
+            targets.append(ip)
+
+    if not targets:
+        return {}
+
+    timeout = max(0.8, min(4.0, request.connect_timeout_sec * 4))
+    semaphore = asyncio.Semaphore(max(8, min(64, request.max_parallel // 4)))
+
+    async with httpx.AsyncClient(
+        timeout=timeout,
+        follow_redirects=False,
+        verify=request.http_verify_tls,
+        headers={"User-Agent": "oko-autodiscover/2.0"},
+    ) as client:
+
+        async def probe(ip: str) -> tuple[str, str | None]:
+            async with semaphore:
+                url = f"http://{ip}:2375/info"
+                try:
+                    response = await client.get(url)
+                    payload = response.json() if response.headers.get("content-type", "").startswith("application/json") else {}
+                except Exception:
+                    return ip, None
+                if not isinstance(payload, dict):
+                    return ip, None
+                candidate = _normalize_host_token(payload.get("Name"), ip)
+                return ip, candidate
+
+        resolved = await asyncio.gather(*[probe(ip) for ip in targets])
+
+    hostnames: dict[str, str] = {}
+    for ip, hostname in resolved:
+        if hostname:
+            hostnames[ip] = hostname
+    return hostnames
+
+
+__all__ = [
+    "_probe_http_port",
+    "extract_html_metadata",
+    "probe_docker_hostnames",
+    "probe_http_services",
+]

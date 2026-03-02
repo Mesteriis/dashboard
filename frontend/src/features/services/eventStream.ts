@@ -17,6 +17,8 @@ interface ConnectOptions {
   path: string;
   onEvent: (event: OkoSseEvent) => void;
   onError?: (error: unknown) => void;
+  onOpen?: () => void;
+  onClose?: () => void;
 }
 
 interface ParsedEventFrame {
@@ -68,8 +70,16 @@ function parseEventFrame(frame: string): ParsedEventFrame | null {
 }
 
 export function connectOkoSseStream(options: ConnectOptions): OkoSseStream {
-  const { path, onEvent, onError } = options;
+  const { path, onEvent, onError, onOpen, onClose } = options;
   const abortController = new AbortController();
+  let streamClosed = false;
+  let closedByClient = false;
+
+  function notifyClosed(): void {
+    if (streamClosed) return;
+    streamClosed = true;
+    onClose?.();
+  }
 
   (async () => {
     const response = await fetch(resolveRequestUrl(path), {
@@ -91,6 +101,8 @@ export function connectOkoSseStream(options: ConnectOptions): OkoSseStream {
       throw new Error("SSE stream has no body");
     }
 
+    onOpen?.();
+
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
     let buffer = "";
@@ -98,6 +110,10 @@ export function connectOkoSseStream(options: ConnectOptions): OkoSseStream {
     while (true) {
       const { done, value } = await reader.read();
       if (done) {
+        if (!closedByClient && !abortController.signal.aborted) {
+          onError?.(new Error("SSE stream ended unexpectedly"));
+        }
+        notifyClosed();
         break;
       }
 
@@ -133,12 +149,15 @@ export function connectOkoSseStream(options: ConnectOptions): OkoSseStream {
     if (abortController.signal.aborted) {
       return;
     }
+    notifyClosed();
     onError?.(error);
   });
 
   return {
     close: () => {
+      closedByClient = true;
       abortController.abort();
+      notifyClosed();
     },
   };
 }

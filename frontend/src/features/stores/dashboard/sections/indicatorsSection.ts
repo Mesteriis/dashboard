@@ -28,6 +28,13 @@ export function createDashboardIndicatorsSection(ctx: any) {
     return ctx.statListEntries(widget).slice(0, 2);
   }
 
+  function indicatorPreviewEntriesByMapping(
+    widget: DashboardWidget,
+    mapping?: Record<string, unknown> | null,
+  ): WidgetStatListEntry[] {
+    return ctx.statListEntriesByMapping(widget, mapping || undefined).slice(0, 2);
+  }
+
   function openIndicatorView(widgetId: string): void {
     const widget = ctx.sidebarIndicators.value.find(
       (entry: DashboardWidgetResolved) => entry.id === widgetId,
@@ -44,6 +51,7 @@ export function createDashboardIndicatorsSection(ctx: any) {
 
   return {
     indicatorPreviewEntries,
+    indicatorPreviewEntriesByMapping,
     isLargeIndicator,
     isWidgetBlock,
     openIndicatorView,

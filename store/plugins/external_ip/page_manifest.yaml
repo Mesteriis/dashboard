@@ -1,0 +1,208 @@
+plugin_id: external_ip
+version: "1.0.0"
+manifest_version: "1.0"
+plugin_api_version: "1.0"
+capabilities:
+  - read.plugins.services
+frontend:
+  renderer: universal
+  sandbox: true
+  customBundle:
+    enabled: false
+    entry: null
+    integrity: null
+    sandbox: true
+    killSwitchKey: oko:plugins:bundle:disabled
+page:
+  enabled: false
+  layout: content-only
+  sidebarActions: []
+  components: []
+dashboard:
+  indicators:
+    - id: external_ip_primary
+      alwaysVisible: true
+      widget:
+        id: plugin.external-ip.current
+        title: Внешний IP
+        type: stat_list
+        data:
+          endpoint: /api/v1/plugins/external_ip/services
+          refresh_sec: 120
+          tabs:
+            - id: network
+              title: Сеть
+              mapping:
+                value: $.ip
+                subtitle: $.summary.primary_segment_label
+                trend: $.summary.variance_badge
+                items: $.segments[*]
+                item_title: $.segment_label
+                item_value: $.ip_display
+            - id: client
+              title: Клиент
+              mapping:
+                value: $.client.ip
+                subtitle: $.client.source
+                trend: $.client.trend
+                items: $.client.samples[*]
+                item_title: $.name
+                item_value: $.value
+          clientProbe:
+            enabled: true
+            timeoutMs: 6000
+            cacheSec: 180
+            script: |
+              const endpoints = [
+                { name: "ipify", url: "https://api64.ipify.org?format=json", field: "ip" },
+                { name: "myip", url: "https://api.myip.com", field: "ip" },
+                { name: "ifconfig.me", url: "https://ifconfig.me/ip", field: "" },
+              ];
+              const ipv4 = /\b(?:(?:25[0-5]|2[0-4]\d|1?\d?\d)\.){3}(?:25[0-5]|2[0-4]\d|1?\d?\d)\b/;
+              const ipv6 = /\b(?:[A-Fa-f0-9]{1,4}:){2,7}[A-Fa-f0-9]{1,4}\b/;
+
+              const extractIp = (value, preferredField) => {
+                if (value && typeof value === "object") {
+                  const obj = value;
+                  const candidates = [preferredField, "ip", "query", "address", "ip_addr", "ipAddress"];
+                  for (const key of candidates) {
+                    if (!key) continue;
+                    const token = String(obj[key] || "").trim();
+                    if (token) return token;
+                  }
+                  const asText = JSON.stringify(obj);
+                  const match = asText.match(ipv4) || asText.match(ipv6);
+                  return match ? String(match[0]) : "";
+                }
+                const text = String(value || "").trim();
+                const match = text.match(ipv4) || text.match(ipv6);
+                return match ? String(match[0]) : "";
+              };
+
+              const fetchWithTimeout = async (url, timeoutMs = 2600) => {
+                const controller = new AbortController();
+                const timer = setTimeout(() => controller.abort(), timeoutMs);
+                try {
+                  const response = await fetch(url, {
+                    method: "GET",
+                    headers: { accept: "application/json,text/plain,*/*" },
+                    signal: controller.signal,
+                  });
+                  const contentType = String(response.headers.get("content-type") || "").toLowerCase();
+                  if (contentType.includes("application/json")) return await response.json();
+                  return await response.text();
+                } finally {
+                  clearTimeout(timer);
+                }
+              };
+
+              const detectLocalIps = async (timeoutMs = 1200) => {
+                if (!window.RTCPeerConnection) return [];
+                const ips = new Set();
+                const pc = new RTCPeerConnection({ iceServers: [] });
+                pc.createDataChannel("oko");
+                const settled = new Promise((resolve) => {
+                  const timer = setTimeout(() => resolve(null), timeoutMs);
+                  pc.onicecandidate = (event) => {
+                    if (!event || !event.candidate) {
+                      clearTimeout(timer);
+                      resolve(null);
+                      return;
+                    }
+                    const candidate = String(event.candidate.candidate || "");
+                    const match = candidate.match(ipv4) || candidate.match(ipv6);
+                    if (match) ips.add(String(match[0]));
+                  };
+                });
+                const offer = await pc.createOffer();
+                await pc.setLocalDescription(offer);
+                await settled;
+                pc.close();
+                return Array.from(ips).filter((ip) => ip && !ip.startsWith("127."));
+              };
+
+              const probes = [];
+              for (const endpoint of endpoints) {
+                try {
+                  const raw = await fetchWithTimeout(endpoint.url, 3000);
+                  const ip = extractIp(raw, endpoint.field);
+                  probes.push({
+                    name: endpoint.name,
+                    ip: ip || "unavailable",
+                    ok: Boolean(ip),
+                  });
+                  if (ip) break;
+                } catch (error) {
+                  probes.push({
+                    name: endpoint.name,
+                    ip: "unavailable",
+                    ok: false,
+                    error: error instanceof Error ? error.message : String(error || "request failed"),
+                  });
+                }
+              }
+
+              const primary = probes.find((entry) => entry.ok) || probes[0] || { name: "n/a", ip: "unavailable", ok: false };
+              const networkIp = String(ctx?.serverPayload?.ip || "").trim();
+              const sameAsNetwork =
+                networkIp &&
+                primary.ip &&
+                primary.ip !== "unavailable" &&
+                networkIp === primary.ip;
+              const compareLabel = !networkIp
+                ? "Нет данных сети"
+                : primary.ip === "unavailable"
+                  ? "Клиентский IP не определен"
+                  : sameAsNetwork
+                    ? "Совпадает с сетью"
+                    : "⚠ Отличается от сети";
+
+              let localIps = [];
+              try {
+                localIps = await detectLocalIps();
+              } catch {
+                localIps = [];
+              }
+
+              const samples = [
+                { name: "Публичный IP (клиент)", value: primary.ip || "unavailable" },
+                { name: "Сравнение клиент/сеть", value: compareLabel },
+                { name: "Локальные IP", value: localIps.length ? localIps.join(", ") : "n/a" },
+              ];
+
+              for (const probe of probes.slice(0, 3)) {
+                samples.push({
+                  name: `Провайдер ${probe.name}`,
+                  value: probe.ip,
+                });
+              }
+
+              return {
+                ip: primary.ip || "unavailable",
+                source: primary.name ? `Browser / ${primary.name}` : "Browser / n/a",
+                trend: sameAsNetwork ? "" : "⚠ Клиент и сеть расходятся",
+                compare: compareLabel,
+                local_ips: localIps,
+                probes,
+                samples,
+              };
+          mapping:
+            value: $.ip
+            subtitle: $.summary.primary_segment_label
+            trend: $.summary.variance_badge
+            items: $.segments[*]
+            item_title: $.segment_label
+            item_value: $.ip_display
+schema:
+  ip:
+    type:
+      - string
+      - "null"
+  provider:
+    type:
+      - string
+      - "null"
+  segments:
+    type: array
+  summary:
+    type: object

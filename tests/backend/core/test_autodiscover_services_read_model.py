@@ -113,6 +113,23 @@ class _TimeoutStorageRpc:
         raise RuntimeError("storage timeout")
 
 
+class _ProjectionFailureStorageRpc(_FakeStorageRpc):
+    async def table_upsert(
+        self,
+        *,
+        plugin_id: str,
+        table: str,
+        row: Mapping[str, object],
+    ) -> dict[str, object]:
+        if table == "scan_services":
+            raise RuntimeError("projection write failed")
+        return await super().table_upsert(
+            plugin_id=plugin_id,
+            table=table,
+            row=row,
+        )
+
+
 @pytest.mark.asyncio
 async def test_get_services_self_heals_stale_last_scan_id(monkeypatch: pytest.MonkeyPatch) -> None:
     storage = _FakeStorageRpc(
@@ -181,6 +198,62 @@ async def test_get_services_returns_empty_on_storage_timeout(monkeypatch: pytest
     assert response["services"] == []
     assert response["total"] == 0
     assert isinstance(response["generated_at"], str)
+
+
+@pytest.mark.asyncio
+async def test_get_services_falls_back_to_legacy_cache_on_projection_failure(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    storage = _ProjectionFailureStorageRpc()
+
+    action = ActionEnvelope(
+        type="autodiscover.scan",
+        requested_by="plugin.autodiscover.scheduler",
+        capability="exec.plugin.autodiscover.scan",
+        payload={},
+        dry_run=False,
+    )
+    result_payload = {
+        "generated_at": "2026-03-01T13:30:00+00:00",
+        "hosts": [
+            {
+                "ip": "192.168.1.21",
+                "hostname": "srv-fallback",
+                "open_ports": [{"port": 443, "service": "https"}],
+                "http_services": [
+                    {
+                        "port": 443,
+                        "title": "Gateway",
+                        "url": "https://192.168.1.21/",
+                    }
+                ],
+            }
+        ],
+    }
+
+    await _persist_scan_snapshot(
+        action=action,
+        status="completed",
+        summary={"generated_at": "2026-03-01T13:30:00+00:00"},
+        result_payload=deepcopy(result_payload),
+        storage_rpc=storage,
+    )
+
+    async def _noop_sync() -> None:
+        return None
+
+    monkeypatch.setattr(autodiscover_module, "_sync_result_to_storage", _noop_sync)
+
+    autodiscover_teardown()
+    autodiscover_setup(storage_rpc=storage)
+    try:
+        response = await get_services()
+    finally:
+        autodiscover_teardown()
+
+    assert response["total"] == 1
+    assert response["services"][0]["host_ip"] == "192.168.1.21"
+    assert response["generated_at"] == "2026-03-01T13:30:00+00:00"
 
 
 @pytest.mark.asyncio

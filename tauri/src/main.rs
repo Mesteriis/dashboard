@@ -601,7 +601,21 @@ fn desktop_show_main_window(app: AppHandle) {
   show_main_window(&app);
 }
 
+fn env_flag_enabled(name: &str) -> bool {
+  match std::env::var(name) {
+    Ok(value) => matches!(
+      value.trim().to_ascii_lowercase().as_str(),
+      "1" | "true" | "yes" | "on"
+    ),
+    Err(_) => false,
+  }
+}
+
 fn ensure_apple_silicon() -> Result<(), String> {
+  if env_flag_enabled("OKO_DESKTOP_DISABLE_PLATFORM_LOCK") {
+    return Ok(());
+  }
+
   if cfg!(target_os = "macos") && cfg!(target_arch = "aarch64") {
     return Ok(());
   }

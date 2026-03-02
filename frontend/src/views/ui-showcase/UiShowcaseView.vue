@@ -3,16 +3,10 @@
     :emblem-src="EMBLEM_SRC"
     :sidebar-hidden="false"
     :sidebar-particles-id="SIDEBAR_PARTICLES_ID"
+    app-slogan="UI Kit Showcase"
     content-label="UI Kit demo"
   >
     <template #sidebar-mid>
-      <header class="brand">
-        <img :src="EMBLEM_SRC" alt="" aria-hidden="true" />
-        <div>
-          <p class="brand-title">Oko</p>
-          <p class="brand-subtitle">UI Kit primitives showcase</p>
-        </div>
-      </header>
       <aside
         class="ui-kit-nav ui-kit-showcase-sidebar"
         aria-label="UI kit navigation"
@@ -107,6 +101,7 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
+import { useRoute } from "vue-router";
 import { Palette } from "lucide-vue-next";
 import {
   UI_KIT_SHOWCASE_GROUPS,
@@ -114,7 +109,7 @@ import {
 } from "@/views/ui-showcase/sections/showcaseRegistry";
 import UiBlankLayout from "@/components/layout/UiBlankLayout.vue";
 import UiNodeTree from "@/views/ui-showcase/components/UiNodeTree.vue";
-import { goDashboard } from "@/app/navigation/nav";
+import { goDashboard, replaceQuery } from "@/app/navigation/nav";
 import UiPrimitivesDemoView from "@/views/ui-showcase/UiPrimitivesDemoView.vue";
 import {
   EMBLEM_SRC,
@@ -124,6 +119,35 @@ import {
 import { useSidebarParticles } from "@/features/composables/useSidebarParticles";
 
 type GroupFilterId = UiKitPrimitiveGroup["id"];
+const route = useRoute();
+
+function resolveGroupByNodeId(nodeId: string): GroupFilterId | null {
+  const normalizedNodeId = String(nodeId || "").trim();
+  if (!normalizedNodeId) return null;
+  for (const group of UI_KIT_SHOWCASE_GROUPS) {
+    if (group.items.some((item) => item.id === normalizedNodeId)) {
+      return group.id;
+    }
+  }
+  return null;
+}
+
+function normalizeRouteNodeQuery(queryNode: unknown): string {
+  const raw = Array.isArray(queryNode)
+    ? queryNode[queryNode.length - 1]
+    : queryNode;
+  const normalized = String(raw || "").trim();
+  if (!normalized) return "";
+  return resolveGroupByNodeId(normalized) ? normalized : "";
+}
+
+const defaultNodeId =
+  UI_KIT_SHOWCASE_GROUPS[0]?.items[0]?.id || "ui-node-inputgroup";
+const initialNodeId = normalizeRouteNodeQuery(route.query.node) || defaultNodeId;
+const initialGroupId =
+  resolveGroupByNodeId(initialNodeId) ||
+  UI_KIT_SHOWCASE_GROUPS[0]?.id ||
+  "forms";
 
 useSidebarParticles({
   containerId: SIDEBAR_PARTICLES_ID,
@@ -131,12 +155,8 @@ useSidebarParticles({
 });
 
 const searchQuery = ref("");
-const activeGroup = ref<GroupFilterId>(
-  UI_KIT_SHOWCASE_GROUPS[0]?.id || "forms",
-);
-const activeNodeId = ref(
-  UI_KIT_SHOWCASE_GROUPS[0]?.items[0]?.id || "ui-node-inputgroup",
-);
+const activeGroup = ref<GroupFilterId>(initialGroupId);
+const activeNodeId = ref(initialNodeId);
 const isSelectionCleared = ref(false);
 
 const groupFilters = computed(() => [
@@ -206,6 +226,27 @@ function handleClose(): void {
 
 const hasVisibleItems = computed(() =>
   visibleGroups.value.some((group) => group.items.length > 0),
+);
+
+watch(
+  () => activeNodeId.value,
+  (nodeId) => {
+    void replaceQuery({ node: nodeId || null });
+  },
+);
+
+watch(
+  () => route.query.node,
+  (queryNode) => {
+    const nextNodeId = normalizeRouteNodeQuery(queryNode);
+    if (!nextNodeId || nextNodeId === activeNodeId.value) return;
+    const nextGroupId = resolveGroupByNodeId(nextNodeId);
+    if (nextGroupId) {
+      activeGroup.value = nextGroupId;
+    }
+    activeNodeId.value = nextNodeId;
+    isSelectionCleared.value = false;
+  },
 );
 
 watch(
@@ -284,10 +325,20 @@ watch(
   inline-size: 100%;
   min-width: 0;
   min-height: 0;
+  block-size: 100%;
+  height: 100%;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr);
+  overflow: hidden;
+  align-self: stretch;
 }
 
 .ui-kit-showcase-panel :deep(.ui-kit-page.panel) {
   inline-size: 100%;
+  block-size: 100%;
+  height: 100%;
+  min-height: 0;
+  max-height: 100%;
   min-width: 0;
   margin: 0;
   border: 0;
@@ -296,6 +347,9 @@ watch(
   backdrop-filter: none;
   box-shadow: none;
   padding: 0;
+  overflow: hidden;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr);
 }
 
 .ui-kit-showcase-panel :deep(.ui-kit-page__head) {
@@ -303,6 +357,8 @@ watch(
 }
 
 .ui-kit-showcase-panel :deep(.ui-kit-page__content) {
+  block-size: 100%;
+  height: 100%;
   min-height: 0;
   min-width: 0;
   overflow: auto;

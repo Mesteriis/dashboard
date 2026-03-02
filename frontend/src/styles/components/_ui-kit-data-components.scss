@@ -18,6 +18,7 @@
 
 .ui-select-button__item,
 .ui-pagination button,
+.ui-table__pagination-controls button,
 .ui-table__actions button,
 .ui-table__export,
 .ui-picklist__controls button,
@@ -46,6 +47,7 @@
 
 .ui-select-button__item:hover,
 .ui-pagination button:hover:not(:disabled),
+.ui-table__pagination-controls button:hover:not(:disabled),
 .ui-table__actions button:hover,
 .ui-table__export:hover,
 .ui-picklist__controls button:hover:not(:disabled),
@@ -66,6 +68,7 @@
 
 .ui-select-button__item:focus-visible,
 .ui-pagination button:focus-visible,
+.ui-table__pagination-controls button:focus-visible,
 .ui-table__actions button:focus-visible,
 .ui-table__export:focus-visible,
 .ui-picklist__controls button:focus-visible,
@@ -102,6 +105,7 @@
 .ui-table__toolbar {
   display: flex;
   justify-content: space-between;
+  align-items: flex-start;
   gap: 10px;
   flex-wrap: wrap;
 }
@@ -111,6 +115,12 @@
   gap: 8px;
   flex-wrap: wrap;
   flex: 1;
+  min-width: 0;
+}
+
+.ui-table__controls .ui-table__search {
+  flex: 1 1 320px;
+  min-width: min(320px, 100%);
 }
 
 .ui-table__wrap {
@@ -131,6 +141,7 @@
   border-bottom: 1px solid var(--ui-kit-data-components-color-018);
   padding: 10px 11px;
   text-align: left;
+  vertical-align: top;
 }
 
 .ui-table thead th {
@@ -162,7 +173,6 @@
 }
 
 .ui-table th.sortable {
-  cursor: pointer;
   user-select: none;
 }
 
@@ -173,6 +183,74 @@
 .ui-table th.sortable small {
   margin-inline-start: 6px;
   color: var(--ui-kit-data-components-color-023);
+}
+
+.ui-table__th-main {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 20px;
+}
+
+.ui-table__sort-btn {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  font-size: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+}
+
+.ui-table__sort-btn:hover {
+  color: var(--ui-kit-data-components-color-022);
+}
+
+.ui-table__sort-btn:focus-visible {
+  outline: none;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.ui-table__th-filter {
+  margin-top: 6px;
+  min-width: 0;
+}
+
+.ui-table__th-filter .ui-select {
+  min-width: 0;
+}
+
+.ui-table__th-filter .ui-select__trigger {
+  min-height: 28px;
+  padding: 0 8px;
+  gap: 6px;
+}
+
+.ui-table__th-filter .ui-select__panel {
+  width: max(220px, 100%);
+  max-width: min(420px, 78vw);
+}
+
+.ui-table__th-filter-value {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ui-table__th-filter-caret {
+  font-size: 12px;
+  transition: transform 140ms ease;
+}
+
+.ui-table__th-filter-caret.open {
+  transform: rotate(180deg);
 }
 
 .ui-table__actions {
@@ -191,15 +269,55 @@
 .ui-pagination {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 8px;
   flex-wrap: wrap;
 }
 
+.ui-table__pagination-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.ui-table__page-size {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ui-kit-data-components-color-020);
+  font-size: 12px;
+}
+
+.ui-table__page-size .ui-select {
+  min-width: 84px;
+}
+
+.ui-table__page-size .ui-select__trigger {
+  min-height: 30px;
+  padding: 0 8px;
+  gap: 6px;
+}
+
+.ui-table__page-size .ui-select__panel {
+  width: max(84px, 100%);
+}
+
 .ui-pagination button,
+.ui-table__pagination-controls button,
 .ui-table__actions button,
 .ui-table__export,
 .ui-picklist__controls button {
   padding: 6px 10px;
+}
+
+.ui-table__export--compact {
+  min-height: 30px;
+  padding: 4px 10px;
+  font-size: 0.74rem;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  align-self: flex-start;
 }
 
 .ui-pagination button.is-active {
@@ -212,6 +330,7 @@
 }
 
 .ui-pagination button:disabled,
+.ui-table__pagination-controls button:disabled,
 .ui-picklist__controls button:disabled {
   opacity: 0.46;
   cursor: default;

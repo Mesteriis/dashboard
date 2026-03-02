@@ -1,7 +1,7 @@
 .settings-modal-backdrop {
   position: fixed;
   inset: 0;
-  z-index: 35;
+  z-index: var(--z-layer-overlay);
   display: grid;
   place-items: center;
   padding: 14px;

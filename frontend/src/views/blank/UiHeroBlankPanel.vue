@@ -158,7 +158,7 @@ import {
   watch,
   type Component,
 } from "vue";
-import { useRoute, useRouter, type RouteLocationRaw } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { ChevronDown, FolderTree, Lock } from "lucide-vue-next";
 import UiIconButton from "@/ui/actions/UiIconButton.vue";
 import UiHeroControlsAccordion from "@/components/layout/UiHeroControlsAccordion.vue";
@@ -216,13 +216,21 @@ const shouldPlayIntro = ref(!hasPlayedBlankTabsIntro);
 
 const router = useRouter();
 
-type SystemActionId = "kiosk" | "profile" | "lock" | "exit" | "navigate";
+type SystemActionId =
+  | "kiosk"
+  | "profile"
+  | "lock"
+  | "exit"
+  | "navigate"
+  | "settings"
+  | "pleiad_lock"
+  | "logout";
 
 interface SystemAction {
   id: SystemActionId | string;
   label: string;
   icon?: Component | string;
-  route?: RouteLocationRaw;
+  route?: string;
   action?: () => void | Promise<void>;
   danger?: boolean;
   divider?: boolean;

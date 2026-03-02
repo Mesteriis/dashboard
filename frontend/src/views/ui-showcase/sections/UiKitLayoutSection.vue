@@ -56,6 +56,58 @@
       </UiShowcaseNode>
     </div>
 
+    <UiShowcaseNode
+      v-show="isNodeVisible('ui-node-collapsible-card')"
+      id="ui-node-collapsible-card"
+      class="ui-kit-stack"
+      group-label="Layout & Containers"
+      element-label="UiCollapsibleCard"
+      :value="collapsibleCardMeta"
+      :api="SHOWCASE_NODE_API['ui-node-collapsible-card']"
+    >
+      <div class="ui-kit-stack">
+        <UiCollapsibleCard
+          v-model="accordionCardAOpen"
+          title="Ingress Gateway"
+          subtitle="Accordion group: infra"
+          accordion
+          accordion-group="ui-kit-layout-card-group"
+        >
+          <template #body>
+            <p>Открытие этой карточки закроет соседнюю в той же группе.</p>
+          </template>
+          <template #footer>
+            <UiButton variant="ghost" size="sm">Open logs</UiButton>
+          </template>
+        </UiCollapsibleCard>
+
+        <UiCollapsibleCard
+          v-model="accordionCardBOpen"
+          title="Storage Health"
+          subtitle="Accordion group: infra"
+          accordion
+          accordion-group="ui-kit-layout-card-group"
+        >
+          <template #body>
+            <p>Связка настраивается через props accordion и accordionGroup.</p>
+          </template>
+          <template #footer>
+            <UiButton variant="ghost" size="sm">Run check</UiButton>
+          </template>
+        </UiCollapsibleCard>
+
+        <UiCollapsibleCard
+          v-model="standaloneCardOpen"
+          title="Standalone Card"
+          subtitle="Independent state"
+        >
+          <template #body>
+            <p>Эта карточка раскрывается независимо от остальных.</p>
+          </template>
+        </UiCollapsibleCard>
+      </div>
+    </UiShowcaseNode>
+
     <div class="ui-kit-grid cols-2">
       <UiShowcaseNode
         v-show="isNodeVisible('ui-node-fieldset-static')"
@@ -155,10 +207,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { computed, ref } from "vue";
 import UiAccordion from "@/primitives/navigation/UiAccordion.vue";
 import UiButton from "@/ui/actions/UiButton.vue";
 import UiCard from "@/ui/surfaces/UiCard.vue";
+import UiCollapsibleCard from "@/ui/surfaces/UiCollapsibleCard.vue";
 import UiDivider from "@/ui/surfaces/UiDivider.vue";
 import UiFieldset from "@/ui/surfaces/UiFieldset.vue";
 import UiSidebarDemoTree from "@/views/ui-showcase/components/UiSidebarDemoTree.vue";
@@ -194,6 +247,16 @@ const cardMeta = {
 };
 
 const dividerMeta = ["horizontal", "vertical"];
+const accordionCardAOpen = ref(true);
+const accordionCardBOpen = ref(false);
+const standaloneCardOpen = ref(false);
+
+const collapsibleCardMeta = computed(() => ({
+  accordionGroup: "ui-kit-layout-card-group",
+  firstOpen: accordionCardAOpen.value,
+  secondOpen: accordionCardBOpen.value,
+  standaloneOpen: standaloneCardOpen.value,
+}));
 
 const fieldsetOpen = ref(true);
 const stepIndex = ref(1);

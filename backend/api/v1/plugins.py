@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from contextlib import suppress
 import inspect
 from typing import Any
 
@@ -7,12 +8,13 @@ from core.plugins.page_manifest import resolve_page_manifest, serialize_resoluti
 from core.security import (
     require_actions_execute,
     require_actions_registry,
+    require_config_patch,
     require_plugins_list,
     require_plugins_manifest,
     require_plugins_services,
 )
 from depends.v1.core_deps import ContainerDep
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Body, HTTPException, Query
 
 plugins_router = APIRouter(prefix="/plugins", tags=["plugins"])
 
@@ -104,6 +106,69 @@ async def get_plugin_services(
         result = await result
     if not isinstance(result, dict):
         raise HTTPException(status_code=500, detail=f"Invalid services response for plugin: {plugin_id}")
+
+    return {
+        "plugin_id": plugin.id,
+        **result,
+    }
+
+
+@plugins_router.get("/{plugin_id}/settings")
+async def get_plugin_settings(
+    plugin_id: str,
+    container: ContainerDep,
+    _capability: str = require_plugins_services,
+) -> dict[str, Any]:
+    if not container.plugin_service:
+        raise HTTPException(status_code=503, detail="Plugin service not available")
+
+    plugin = container.plugin_service.get_plugin(plugin_id)
+    if plugin is None:
+        raise HTTPException(status_code=404, detail=f"Plugin not found: {plugin_id}")
+
+    handler = getattr(plugin.module, "get_settings", None) if plugin.module else None
+    if handler is None:
+        raise HTTPException(status_code=404, detail=f"Settings endpoint is not supported for plugin: {plugin_id}")
+    if not callable(handler):
+        raise HTTPException(status_code=500, detail=f"Invalid settings handler for plugin: {plugin_id}")
+
+    result = handler()
+    if inspect.isawaitable(result):
+        result = await result
+    if not isinstance(result, dict):
+        raise HTTPException(status_code=500, detail=f"Invalid settings response for plugin: {plugin_id}")
+
+    return {
+        "plugin_id": plugin.id,
+        **result,
+    }
+
+
+@plugins_router.put("/{plugin_id}/settings")
+async def update_plugin_settings(
+    plugin_id: str,
+    container: ContainerDep,
+    payload: dict[str, Any] = Body(default_factory=dict),
+    _capability: str = require_config_patch,
+) -> dict[str, Any]:
+    if not container.plugin_service:
+        raise HTTPException(status_code=503, detail="Plugin service not available")
+
+    plugin = container.plugin_service.get_plugin(plugin_id)
+    if plugin is None:
+        raise HTTPException(status_code=404, detail=f"Plugin not found: {plugin_id}")
+
+    handler = getattr(plugin.module, "update_settings", None) if plugin.module else None
+    if handler is None:
+        raise HTTPException(status_code=404, detail=f"Settings update is not supported for plugin: {plugin_id}")
+    if not callable(handler):
+        raise HTTPException(status_code=500, detail=f"Invalid settings update handler for plugin: {plugin_id}")
+
+    result = handler(payload)
+    if inspect.isawaitable(result):
+        result = await result
+    if not isinstance(result, dict):
+        raise HTTPException(status_code=500, detail=f"Invalid settings update response for plugin: {plugin_id}")
 
     return {
         "plugin_id": plugin.id,
@@ -259,6 +324,39 @@ async def disable_plugin(
     if success:
         return {"status": "disabled", "plugin_id": plugin_id}
     raise HTTPException(status_code=400, detail=f"Failed to disable plugin: {plugin_id}")
+
+
+@plugins_router.delete("/{plugin_id}")
+async def delete_plugin(
+    plugin_id: str,
+    container: ContainerDep,
+    _capability: str = require_actions_execute,
+) -> dict[str, Any]:
+    """Delete plugin from local plugins directory."""
+    if not container.plugin_service:
+        raise HTTPException(status_code=503, detail="Plugin service not available")
+    if not container.plugin_installer:
+        raise HTTPException(status_code=503, detail="Plugin installer not configured")
+
+    plugin = container.plugin_service.get_plugin(plugin_id)
+    if plugin is None:
+        raise HTTPException(status_code=404, detail=f"Plugin not found: {plugin_id}")
+
+    with suppress(Exception):
+        container.plugin_service.disable_plugin(plugin_id)
+
+    deleted = await container.plugin_installer.uninstall_plugin(plugin_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail=f"Plugin not found in install directory: {plugin_id}")
+
+    with suppress(Exception):
+        container.plugin_service.refresh_runtime()
+
+    return {
+        "status": "deleted",
+        "plugin_id": plugin_id,
+        "message": f"Plugin {plugin_id} deleted successfully",
+    }
 
 
 __all__ = ["plugins_router"]

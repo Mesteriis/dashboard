@@ -119,7 +119,7 @@ function onSpeedAction(id: string): void {
   speedActionLog.value = `Last speed action: ${id}`;
 }
 
-function onMenuAction(id: string): void {
-  menuActionLog.value = `Last menu action: ${id}`;
+function onMenuAction(item: { id: string; label: string }): void {
+  menuActionLog.value = `Last menu action: ${item.id}`;
 }
 </script>

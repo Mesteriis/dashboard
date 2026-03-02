@@ -1,0 +1,75 @@
+plugin_id: dns_trace
+version: "1.0.0"
+manifest_version: "1.0"
+plugin_api_version: "1.0"
+capabilities:
+  - read.plugins.services
+frontend:
+  renderer: universal
+  sandbox: true
+  customBundle:
+    enabled: false
+    entry: null
+    integrity: null
+    sandbox: true
+    killSwitchKey: oko:plugins:bundle:disabled
+page:
+  enabled: false
+  layout: content-only
+  sidebarActions: []
+  components: []
+dashboard:
+  indicators:
+    - id: dns_trace_primary
+      alwaysVisible: true
+      widget:
+        id: plugin.dns-trace.current
+        title: DNS и трассировка
+        type: stat_list
+        data:
+          endpoint: /api/v1/plugins/dns_trace/services
+          refresh_sec: 300
+          fieldsetLegend: DNS / Trace обзор
+          copyTitle: Копировать статус
+          tabs:
+            - id: summary
+              title: Сводка
+              mapping:
+                value: $.summary.primary_status
+                subtitle: $.summary.countries_label
+                trend: $.summary.warning
+                items: $.summary_entries[*]
+                item_title: $.name
+                item_value: $.value
+            - id: resolvers
+              title: Резолверы
+              mapping:
+                value: $.summary.primary_status
+                subtitle: По публичным DNS
+                trend: $.summary.warning
+                items: $.resolver_entries[*]
+                item_title: $.name
+                item_value: $.value
+            - id: nodes
+              title: Узлы
+              mapping:
+                value: $.summary.nodes_value
+                subtitle: $.summary.nodes_subtitle
+                trend: $.summary.nodes_trend
+                items: $.trace_nodes[*]
+                item_title: $.name
+                item_value: $.value
+          mapping:
+            value: $.summary.primary_status
+            subtitle: $.summary.countries_label
+            trend: $.summary.warning
+            items: $.summary_entries[*]
+            item_title: $.name
+            item_value: $.value
+schema:
+  resolvers:
+    type: array
+  traces:
+    type: array
+  summary:
+    type: object

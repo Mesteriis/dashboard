@@ -64,6 +64,15 @@ class PluginRowActionAddToDashboardV1(BaseModel):
     }
 
 
+class PluginSidebarActionV1(BaseModel):
+    id: str
+    title: str = "Open plugin page"
+    icon: str | None = None
+    route: str
+    capability: str | None = None
+    target: Literal["same_tab", "new_tab"] = "same_tab"
+
+
 class PluginPageComponentBaseV1(BaseModel):
     id: str
     type: str
@@ -96,7 +105,26 @@ class PluginDataTableComponentV1(PluginPageComponentBaseV1):
 class PluginPageV1(BaseModel):
     enabled: bool = False
     layout: Literal["content-only", "with-sidebar", "dashboard", "split-view"] = "content-only"
+    sidebar_actions: list[PluginSidebarActionV1] = Field(default_factory=list, alias="sidebarActions")
     components: list[PluginTextComponentV1 | PluginDataTableComponentV1] = Field(default_factory=list)
+
+    model_config = {
+        "populate_by_name": True,
+    }
+
+
+class PluginDashboardIndicatorV1(BaseModel):
+    id: str
+    widget: dict[str, Any]
+    always_visible: bool = Field(default=False, alias="alwaysVisible")
+
+    model_config = {
+        "populate_by_name": True,
+    }
+
+
+class PluginDashboardV1(BaseModel):
+    indicators: list[PluginDashboardIndicatorV1] = Field(default_factory=list)
 
 
 class PluginCustomBundleV1(BaseModel):
@@ -129,6 +157,7 @@ class PluginPageManifestV1(BaseModel):
     capabilities: list[str] = Field(default_factory=list)
     frontend: PluginFrontendV1 = Field(default_factory=PluginFrontendV1)
     page: PluginPageV1 = Field(default_factory=PluginPageV1)
+    dashboard: PluginDashboardV1 = Field(default_factory=PluginDashboardV1)
     schema: dict[str, Any] = Field(default_factory=dict)
 
 
@@ -271,6 +300,13 @@ def resolve_page_manifest(
                         f"component '{component.id}' row action '{action.id}' "
                         f"references undeclared capability '{action_capability}'"
                     )
+    for action in parsed.page.sidebar_actions:
+        action_capability = (action.capability or "").strip()
+        if action_capability and action_capability not in parsed.capabilities:
+            datasource_capability_errors.append(
+                f"sidebar action '{action.id}' references undeclared capability "
+                f"'{action_capability}'"
+            )
     if datasource_capability_errors:
         return ManifestResolution(
             manifest=fallback,

@@ -61,8 +61,15 @@ export async function goSettings(): Promise<void> {
   await getRouter().push({ path: "/settings" });
 }
 
-export async function goShowcase(): Promise<void> {
-  await getRouter().push({ path: "/ui" });
+export async function goShowcase(
+  opts: { node?: string } = {},
+): Promise<void> {
+  const normalizedNode = String(opts.node || "").trim();
+  const query: LocationQueryRaw = {};
+  if (normalizedNode) {
+    query.node = normalizedNode;
+  }
+  await getRouter().push({ path: "/ui", query });
 }
 
 export async function goPluginsPanel(

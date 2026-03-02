@@ -131,6 +131,9 @@ import {
   getRuntimeProfile,
   initDesktopRuntimeBridge,
   setDesktopRuntimeProfile,
+  type AppClientMode,
+  type DeploymentMode,
+  type RuntimeProfile,
 } from "@/features/services/desktopRuntime";
 import { EVENT_API_BASE_CHANGE, onOkoEvent } from "@/features/services/events";
 import { useDashboardStore } from "@/features/stores/dashboardStore";
@@ -138,17 +141,7 @@ import { useDashboardStore } from "@/features/stores/dashboardStore";
 const dashboard = useDashboardStore();
 const { loadConfig } = dashboard;
 
-type AppClientModeDraft = "thin" | "thick";
-type DeploymentMode = "docker" | "dev" | "app";
-
-interface RuntimeProfile {
-  desktop: boolean;
-  mode: "embedded" | "remote";
-  embeddedRunning: boolean;
-  deploymentMode?: DeploymentMode;
-  appClientMode?: AppClientModeDraft;
-  remoteBaseUrl?: string;
-}
+type AppClientModeDraft = Exclude<AppClientMode, null>;
 
 const desktopRuntime = ref<RuntimeProfile>(getRuntimeProfile());
 const deploymentModeDraft = ref<DeploymentMode>(

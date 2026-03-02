@@ -29,6 +29,29 @@
       </nav>
     </template>
 
+    <template #drawer>
+      <div class="plugin-details-drawer">
+        <button
+          class="ghost plugin-details-drawer-icon-btn"
+          type="button"
+          aria-label="Back to Plugins"
+          title="Plugins"
+          @click="handleBack"
+        >
+          <ArrowLeft class="ui-icon" />
+        </button>
+        <button
+          class="ghost plugin-details-drawer-icon-btn"
+          type="button"
+          aria-label="Back to Dashboard"
+          title="Dashboard"
+          @click="handleBackToDashboard"
+        >
+          <LayoutDashboard class="ui-icon" />
+        </button>
+      </div>
+    </template>
+
     <template #canvas-main>
       <section
         id="plugin-details-panel"
@@ -62,9 +85,7 @@
 
         <UiPluginPageRenderer
           v-else-if="manifestEnvelope"
-          :plugin-id="pluginId"
           :manifest-envelope="manifestEnvelope"
-          @back="handleBack"
         />
       </section>
     </template>
@@ -74,10 +95,10 @@
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
 import { useRoute } from "vue-router";
-import { Puzzle } from "lucide-vue-next";
+import { ArrowLeft, LayoutDashboard, Puzzle } from "lucide-vue-next";
 import UiPluginPageRenderer from "@/views/plugins/components/UiPluginPageRenderer.vue";
 import UiBlankLayout from "@/components/layout/UiBlankLayout.vue";
-import { goPluginsPanel } from "@/app/navigation/nav";
+import { goDashboard, goPluginsPanel } from "@/app/navigation/nav";
 import {
   PluginManifestNotFoundError,
   PluginManifestParseError,
@@ -149,6 +170,10 @@ function handleBack(): void {
   void goPluginsPanel();
 }
 
+function handleBackToDashboard(): void {
+  void goDashboard();
+}
+
 watch(
   () => pluginId.value,
   () => void loadManifest(),
@@ -180,5 +205,22 @@ watch(
 .plugin-page-error-detail {
   color: rgba(196, 214, 236, 0.82);
   font-size: 13px;
+}
+
+.plugin-details-drawer {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.plugin-details-drawer-icon-btn {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  min-height: 36px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 </style>

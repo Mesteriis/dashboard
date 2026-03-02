@@ -24,8 +24,51 @@
   gap: 8px;
 }
 
+.indicator-tab-controls .item-type.indicator-type-icon {
+  min-width: 28px;
+  justify-content: center;
+  padding: 2px 8px;
+}
+
+.indicator-tab-icon-btn {
+  min-width: 34px;
+  padding: 6px 8px;
+}
+
 .indicator-tab-content {
   display: grid;
   gap: 10px;
   align-content: start;
+}
+
+.indicator-tab-mode-switch {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.indicator-tab-mode-btn {
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.8rem;
+  line-height: 1.1;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+
+.indicator-tab-mode-btn:hover {
+  border-color: var(--sidebar-indicators-color-004);
+  color: var(--text);
+}
+
+.indicator-tab-mode-btn.active {
+  border-color: var(--sidebar-indicators-color-005);
+  color: var(--text);
+  background: var(--sidebar-indicators-color-006);
+}
+
+.indicator-tab-content .ui-fieldset {
+  margin: 2px 0;
 }

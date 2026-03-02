@@ -1,0 +1,266 @@
+plugin_id: internet_speed
+version: "1.0.0"
+manifest_version: "1.0"
+plugin_api_version: "1.0"
+capabilities:
+  - read.plugins.services
+frontend:
+  renderer: universal
+  sandbox: true
+  customBundle:
+    enabled: false
+    entry: null
+    integrity: null
+    sandbox: true
+    killSwitchKey: oko:plugins:bundle:disabled
+page:
+  enabled: false
+  layout: content-only
+  sidebarActions: []
+  components: []
+dashboard:
+  indicators:
+    - id: internet_speed_primary
+      alwaysVisible: true
+      widget:
+        id: plugin.internet-speed.current
+        title: Скорость интернета
+        type: stat_list
+        data:
+          endpoint: /api/v1/plugins/internet_speed/services
+          refresh_sec: 180
+          fieldsetLegend: Текущая скорость
+          copyTitle: Копировать метрику
+          tabs:
+            - id: network
+              title: Сеть
+              mapping:
+                value: $.summary.primary_speed_compact
+                subtitle: $.summary.primary_segment_label
+                trend: $.summary.variance_badge
+                items: $.segments[*]
+                item_title: $.segment_label
+                item_value: $.speed_compact
+            - id: client
+              title: Клиент
+              mapping:
+                value: $.client.value
+                subtitle: $.client.subtitle
+                trend: $.client.trend
+                items: $.client.samples[*]
+                item_title: $.name
+                item_value: $.value
+          clientProbe:
+            enabled: true
+            timeoutMs: 10000
+            cacheSec: 180
+            script: |
+              const segments = [
+                {
+                  id: "eu",
+                  title: "Европа",
+                  flag: "🇪🇺",
+                  provider: "cloudflare",
+                  latencyUrl: "https://speed.cloudflare.com/cdn-cgi/trace",
+                  downloadUrl: "https://speed.cloudflare.com/__down?bytes=900000",
+                  downloadBytes: 900000,
+                  uploadUrl: "https://speed.cloudflare.com/__up",
+                  uploadBytes: 280000,
+                },
+                {
+                  id: "us",
+                  title: "США",
+                  flag: "🇺🇸",
+                  provider: "cachefly/httpbin",
+                  latencyUrl: "https://cachefly.cachefly.net/1mb.test",
+                  downloadUrl: "https://cachefly.cachefly.net/1mb.test",
+                  downloadBytes: 1048576,
+                  uploadUrl: "https://httpbin.org/post",
+                  uploadBytes: 260000,
+                },
+              ];
+
+              const toFixed = (value, digits = 2) => {
+                const numeric = Number(value);
+                if (!Number.isFinite(numeric)) return null;
+                return Number(numeric.toFixed(digits));
+              };
+
+              const mbpsFromBytes = (bytes, elapsedMs) => {
+                const ms = Math.max(Number(elapsedMs) || 0, 1);
+                return (Number(bytes || 0) * 8) / (ms / 1000) / 1000000;
+              };
+
+              const formatMbps = (value) => {
+                const numeric = Number(value);
+                if (!Number.isFinite(numeric)) return "n/a";
+                return `${numeric.toFixed(2)} Mbps`;
+              };
+
+              const formatLatency = (value) => {
+                const numeric = Number(value);
+                if (!Number.isFinite(numeric)) return "n/a";
+                return `${Math.round(numeric)} ms`;
+              };
+
+              const speedDisplay = (downloadMpbs, uploadMpbs, latencyMs) => {
+                return `↓ ${formatMbps(downloadMpbs)} · ↑ ${formatMbps(uploadMpbs)} · ${formatLatency(latencyMs)}`;
+              };
+
+              const speedCompact = (downloadMpbs, uploadMpbs, latencyMs) => {
+                const down = Number.isFinite(Number(downloadMpbs)) ? Number(downloadMpbs).toFixed(1) : "n/a";
+                const up = Number.isFinite(Number(uploadMpbs)) ? Number(uploadMpbs).toFixed(1) : "n/a";
+                const ping = Number.isFinite(Number(latencyMs)) ? `${Math.round(Number(latencyMs))} ms` : "n/a";
+                return `↓ ${down} · ↑ ${up} Mbps · ${ping}`;
+              };
+
+              const fetchWithTimeout = async (url, options = {}, timeoutMs = 4500) => {
+                const controller = new AbortController();
+                const timer = setTimeout(() => controller.abort(), timeoutMs);
+                const startedAt = performance.now();
+                try {
+                  const response = await fetch(url, {
+                    ...options,
+                    cache: "no-store",
+                    signal: controller.signal,
+                  });
+                  if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                  }
+                  return {
+                    response,
+                    elapsedMs: performance.now() - startedAt,
+                  };
+                } finally {
+                  clearTimeout(timer);
+                }
+              };
+
+              const measureLatencyMs = async (url) => {
+                const result = await fetchWithTimeout(url, { method: "GET" }, 4200);
+                await result.response.text();
+                return toFixed(result.elapsedMs, 1);
+              };
+
+              const measureDownloadMbps = async (url, expectedBytes) => {
+                const result = await fetchWithTimeout(url, { method: "GET" }, 6500);
+                const blob = await result.response.arrayBuffer();
+                const bytes = blob.byteLength || Number(expectedBytes || 0);
+                return toFixed(mbpsFromBytes(bytes, result.elapsedMs), 2);
+              };
+
+              const measureUploadMbps = async (url, uploadBytes) => {
+                const bytes = Math.max(64000, Number(uploadBytes || 0));
+                const payload = new Uint8Array(bytes);
+                for (let i = 0; i < payload.length; i += 1) {
+                  payload[i] = i % 251;
+                }
+                const result = await fetchWithTimeout(
+                  url,
+                  {
+                    method: "POST",
+                    headers: {
+                      "content-type": "application/octet-stream",
+                    },
+                    body: payload,
+                  },
+                  7000,
+                );
+                await result.response.text();
+                return toFixed(mbpsFromBytes(bytes, result.elapsedMs), 2);
+              };
+
+              const measureSegment = async (segment) => {
+                try {
+                  const [latencyMs, downloadMbps, uploadMbps] = await Promise.all([
+                    measureLatencyMs(segment.latencyUrl),
+                    measureDownloadMbps(segment.downloadUrl, segment.downloadBytes),
+                    measureUploadMbps(segment.uploadUrl, segment.uploadBytes),
+                  ]);
+                  return {
+                    segment_id: segment.id,
+                    segment: segment.title,
+                    segment_flag: segment.flag,
+                    segment_label: `${segment.flag} ${segment.title}`,
+                    provider: segment.provider,
+                    latency_ms: latencyMs,
+                    download_mbps: downloadMbps,
+                    upload_mbps: uploadMbps,
+                    speed_display: speedDisplay(downloadMbps, uploadMbps, latencyMs),
+                    speed_compact: speedCompact(downloadMbps, uploadMbps, latencyMs),
+                    ok: true,
+                    error: null,
+                  };
+                } catch (error) {
+                  return {
+                    segment_id: segment.id,
+                    segment: segment.title,
+                    segment_flag: segment.flag,
+                    segment_label: `${segment.flag} ${segment.title}`,
+                    provider: segment.provider,
+                    latency_ms: null,
+                    download_mbps: null,
+                    upload_mbps: null,
+                    speed_display: speedDisplay(null, null, null),
+                    speed_compact: speedCompact(null, null, null),
+                    ok: false,
+                    error: error instanceof Error ? error.message : String(error || "request failed"),
+                  };
+                }
+              };
+
+              const results = [];
+              for (const segment of segments) {
+                results.push(await measureSegment(segment));
+              }
+
+              const okResults = results.filter((entry) => entry.ok);
+              const primary = okResults[0] || results[0] || null;
+
+              const serverDownload = Number(ctx?.serverPayload?.summary?.primary_download_mbps);
+              const clientDownload = Number(primary?.download_mbps);
+              const hasComparable = Number.isFinite(serverDownload) && Number.isFinite(clientDownload) && serverDownload > 0;
+              const deltaPct = hasComparable
+                ? Math.abs(clientDownload - serverDownload) / serverDownload * 100
+                : 0;
+
+              const trend = !hasComparable
+                ? ""
+                : deltaPct >= 25
+                  ? "⚠ Клиент и сеть заметно различаются"
+                  : "Скорость клиента близка к сети";
+
+              const samples = results.map((entry) => ({
+                name: entry.segment_label,
+                value: entry.speed_compact,
+              }));
+
+              if (Number.isFinite(deltaPct) && hasComparable) {
+                samples.push({
+                  name: "Δ клиент/сеть",
+                  value: `${deltaPct.toFixed(1)}%`,
+                });
+              }
+
+              return {
+                value: primary ? primary.speed_compact : speedCompact(null, null, null),
+                subtitle: primary ? `Browser / ${primary.provider}` : "Browser / n/a",
+                trend,
+                download_mbps: primary?.download_mbps ?? null,
+                upload_mbps: primary?.upload_mbps ?? null,
+                latency_ms: primary?.latency_ms ?? null,
+                segments: results,
+                samples,
+              };
+          mapping:
+            value: $.summary.primary_speed_compact
+            subtitle: $.summary.primary_segment_label
+            trend: $.summary.variance_badge
+            items: $.segments[*]
+            item_title: $.segment_label
+            item_value: $.speed_compact
+schema:
+  segments:
+    type: array
+  summary:
+    type: object

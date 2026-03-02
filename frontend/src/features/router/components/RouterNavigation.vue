@@ -30,10 +30,15 @@
             class="router-navigation__menu"
             role="menu"
           >
-            <RouterMenuItems
-              :items="menuItems"
-              @navigate="handleNavigateAndClose"
-            />
+            <ul class="router-menu" role="menu">
+              <RouterMenuItem
+                v-for="item in menuItems"
+                :key="item.id"
+                :item="item"
+                :active-route="currentRoutePath"
+                @navigate="handleNavigateAndClose"
+              />
+            </ul>
           </div>
         </Transition>
       </div>
@@ -41,13 +46,29 @@
 
     <template v-else-if="displayMode === 'inline'">
       <!-- Inline список роутов -->
-      <RouterMenuItems :items="menuItems" @navigate="handleNavigate" />
+      <ul class="router-menu" role="menu">
+        <RouterMenuItem
+          v-for="item in menuItems"
+          :key="item.id"
+          :item="item"
+          :active-route="currentRoutePath"
+          @navigate="handleNavigate"
+        />
+      </ul>
     </template>
 
     <template v-else-if="displayMode === 'sidebar'">
       <!-- Sidebar дерево роутов -->
       <div class="router-navigation__sidebar">
-        <RouterMenuItems :items="menuItems" @navigate="handleNavigate" />
+        <ul class="router-menu" role="menu">
+          <RouterMenuItem
+            v-for="item in menuItems"
+            :key="item.id"
+            :item="item"
+            :active-route="currentRoutePath"
+            @navigate="handleNavigate"
+          />
+        </ul>
       </div>
     </template>
   </div>
@@ -62,7 +83,9 @@ import {
   routerTreeToMenuItems,
   type RouterTreeNode,
 } from "@/features/router/utils/buildRouterTree";
-import RouterMenuItems from "@/features/router/components/RouterMenuItem.vue";
+import RouterMenuItem, {
+  type RouterMenuItemType,
+} from "@/features/router/components/RouterMenuItem.vue";
 
 type DisplayMode = "dropdown" | "inline" | "sidebar";
 
@@ -90,6 +113,7 @@ const emit = defineEmits<{
 const router = useRouter();
 const routes = router.getRoutes();
 const isDropdownOpen = ref(false);
+const currentRoutePath = computed(() => router.currentRoute.value.path);
 
 // Строим дерево роутов
 const routerTree = computed<RouterTreeNode[]>(() => {
@@ -125,22 +149,14 @@ function closeDropdown(): void {
   isDropdownOpen.value = false;
 }
 
-function handleNavigate(item: {
-  id: string;
-  label: string;
-  route?: string;
-}): void {
+function handleNavigate(item: RouterMenuItemType): void {
   if (item.route) {
     void router.push(item.route);
     emit("navigate", item.route);
   }
 }
 
-function handleNavigateAndClose(item: {
-  id: string;
-  label: string;
-  route?: string;
-}): void {
+function handleNavigateAndClose(item: RouterMenuItemType): void {
   handleNavigate(item);
   closeDropdown();
 }

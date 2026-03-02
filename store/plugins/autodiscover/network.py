@@ -14,6 +14,8 @@ from .constants import _IFCONFIG_INET_RE, _IP_ADDR_INET_RE, PORT_SERVICE_NAMES
 from .schemas import ScanRequest
 
 logger = logging.getLogger("core.plugins.autodiscover")
+_DISCOVERY_COMMON_PORTS = (22, 80, 443, 445, 3389, 5900)
+_PORT_RETRY_SET = {22, 53, 80, 111, 137, 139, 443, 445, 3389, 5900, 8000, 8080, 8443}
 
 
 def _network_from_interface_token(token: str) -> str | None:
@@ -181,6 +183,138 @@ def enumerate_hosts(networks: list[ipaddress.IPv4Network], *, max_hosts: int) ->
     return hosts
 
 
+def _derive_discovery_ports(ports: tuple[int, ...]) -> tuple[tuple[int, ...], bool]:
+    if not ports:
+        return _DISCOVERY_COMMON_PORTS, False
+    if len(ports) <= 24:
+        return tuple(sorted(set(int(port) for port in ports))), False
+
+    sorted_ports = tuple(sorted(set(int(port) for port in ports)))
+    sampled: set[int] = set()
+    max_samples = min(12, len(sorted_ports))
+    if max_samples <= 0:
+        return _DISCOVERY_COMMON_PORTS, True
+
+    for index in range(max_samples):
+        pos = int(round(index * (len(sorted_ports) - 1) / max(1, max_samples - 1)))
+        sampled.add(sorted_ports[pos])
+
+    for common in _DISCOVERY_COMMON_PORTS:
+        if common in sorted_ports:
+            sampled.add(common)
+
+    return tuple(sorted(sampled)), True
+
+
+async def _tcp_probe_host(ip: str, ports: tuple[int, ...], timeout_sec: float) -> bool:
+    for port in ports:
+        try:
+            _, writer = await asyncio.wait_for(
+                asyncio.open_connection(ip, int(port)),
+                timeout=timeout_sec,
+            )
+        except (TimeoutError, OSError):
+            continue
+        writer.close()
+        with contextlib.suppress(OSError):
+            await writer.wait_closed()
+        return True
+    return False
+
+
+async def _ping_probe_host(ip: str, timeout_sec: float) -> bool:
+    commands = (
+        ("ping", "-n", "-c", "1", "-W", "1", ip),
+        ("ping", "-n", "-c", "1", ip),
+    )
+    timeout = max(1.0, min(3.0, timeout_sec + 1.0))
+
+    for command in commands:
+        try:
+            process = await asyncio.create_subprocess_exec(
+                *command,
+                stdout=asyncio.subprocess.DEVNULL,
+                stderr=asyncio.subprocess.DEVNULL,
+            )
+        except FileNotFoundError:
+            return False
+        try:
+            await asyncio.wait_for(process.communicate(), timeout=timeout)
+        except TimeoutError:
+            with contextlib.suppress(ProcessLookupError):
+                process.kill()
+            with contextlib.suppress(Exception):
+                await process.wait()
+            continue
+        if process.returncode == 0:
+            return True
+    return False
+
+
+async def discover_active_hosts(
+    host_ips: list[str],
+    request: ScanRequest,
+) -> list[str]:
+    if not host_ips:
+        return []
+
+    probe_ports, sampled_probe = _derive_discovery_ports(request.ports)
+    ping_timeout = max(0.1, min(2.0, request.connect_timeout_sec))
+    tcp_timeout = max(0.05, min(1.0, request.connect_timeout_sec))
+    discovery_parallel = max(16, min(256, request.max_parallel))
+    discovery_batch_size = max(16, min(256, discovery_parallel * 2))
+    semaphore = asyncio.Semaphore(discovery_parallel)
+
+    logger.info(
+        "Autodiscover host discovery started candidates=%s ping_timeout=%s tcp_probe_ports=%s sampled_probe=%s",
+        len(host_ips),
+        ping_timeout,
+        len(probe_ports),
+        sampled_probe,
+    )
+
+    async def probe_host(ip: str) -> tuple[str, bool]:
+        async with semaphore:
+            ping_ok = await _ping_probe_host(ip, ping_timeout)
+            if ping_ok:
+                return ip, True
+            tcp_ok = await _tcp_probe_host(ip, probe_ports, tcp_timeout)
+            return ip, tcp_ok
+
+    active_by_ip: dict[str, bool] = {}
+    for start in range(0, len(host_ips), discovery_batch_size):
+        batch = host_ips[start : start + discovery_batch_size]
+        tasks = [asyncio.create_task(probe_host(ip)) for ip in batch]
+        try:
+            for completed_task in asyncio.as_completed(tasks):
+                ip, is_active = await completed_task
+                active_by_ip[ip] = is_active
+        finally:
+            for task in tasks:
+                if not task.done():
+                    task.cancel()
+            if tasks:
+                await asyncio.gather(*tasks, return_exceptions=True)
+        await asyncio.sleep(0)
+
+    active_hosts = [ip for ip in host_ips if active_by_ip.get(ip, False)]
+    if sampled_probe and len(active_hosts) < len(host_ips):
+        logger.warning(
+            "Autodiscover host discovery sampled only part of requested ports; "
+            "keeping all candidates to avoid false negatives active=%s candidates=%s",
+            len(active_hosts),
+            len(host_ips),
+        )
+        return list(host_ips)
+
+    logger.info(
+        "Autodiscover host discovery completed candidates=%s active=%s",
+        len(host_ips),
+        len(active_hosts),
+    )
+    return active_hosts
+
+
 async def scan_open_ports(
     host_ips: list[str],
     request: ScanRequest,
@@ -227,12 +361,12 @@ async def scan_open_ports(
         chunk_parallel,
     )
 
-    async def scan_port(ip: str, port: int) -> bool:
+    async def _probe_port(ip: str, port: int, timeout_sec: float) -> bool:
         async with semaphore:
             try:
                 _, writer = await asyncio.wait_for(
                     asyncio.open_connection(ip, port),
-                    timeout=request.connect_timeout_sec,
+                    timeout=timeout_sec,
                 )
             except (TimeoutError, OSError):
                 return False
@@ -241,6 +375,18 @@ async def scan_open_ports(
             with contextlib.suppress(OSError):
                 await writer.wait_closed()
             return True
+
+    async def scan_port(ip: str, port: int) -> bool:
+        first_timeout = request.connect_timeout_sec
+        if await _probe_port(ip, port, first_timeout):
+            return True
+        if port not in _PORT_RETRY_SET:
+            return False
+        retry_timeout = min(2.0, max(first_timeout * 2.0, first_timeout + 0.3))
+        if retry_timeout <= first_timeout:
+            return False
+        await asyncio.sleep(0)
+        return await _probe_port(ip, port, retry_timeout)
 
     async def scan_host(ip: str) -> tuple[str, list[dict[str, Any]]]:
         async with host_semaphore:
@@ -369,6 +515,7 @@ __all__ = [
     "_detect_cidrs_from_ip_addr",
     "_detect_cidrs_from_udp_probe",
     "detect_default_cidrs",
+    "discover_active_hosts",
     "enumerate_hosts",
     "resolve_networks",
     "scan_open_ports",

@@ -6,6 +6,25 @@
     :sidebar-particles-id="SIDEBAR_PARTICLES_ID"
     content-label="Plugin center content"
   >
+    <template #sidebar-links>
+      <section
+        class="plugins-sidebar-links"
+        aria-label="Быстрые ссылки плагинов"
+      >
+        <button
+          v-for="link in pluginSidebarLinks"
+          :key="link.key"
+          class="blank-sidebar-link-btn"
+          type="button"
+          :title="link.title"
+          :aria-label="link.title"
+          @click="openSidebarPluginLink(link)"
+        >
+          <component :is="resolveSidebarLinkIcon(link.icon)" class="ui-icon" />
+        </button>
+      </section>
+    </template>
+
     <template #sidebar-mid>
       <section class="sidebar-tree" aria-label="Node tree плагинов">
         <ul v-if="sidebarTreeGroups.length" class="tree-root">
@@ -100,7 +119,7 @@
             >Установленные плагины</span
           >
           <strong v-if="activeTab === 'installed'">{{
-            installedPlugins.length
+            installedPluginsCount
           }}</strong>
         </button>
 
@@ -153,9 +172,9 @@
             <h4>Плитка</h4>
           </header>
 
-          <div v-if="installedPlugins.length" class="plugins-main-tile-grid">
+          <div v-if="installedPluginsView.length" class="plugins-main-tile-grid">
             <article
-              v-for="plugin in installedPlugins"
+              v-for="plugin in installedPluginsView"
               :key="plugin.id"
               class="plugins-main-tile-card"
             >
@@ -168,20 +187,90 @@
                 {{ plugin.serviceCount }} сервисов ·
                 {{ plugin.elementsCount }} UI
               </p>
+              <p class="plugins-main-tile-meta">
+                {{ plugin.version ? `v${plugin.version}` : "version n/a" }} ·
+                {{ resolvePluginStateLabel(plugin.state) }}
+              </p>
+              <p
+                v-if="plugin.latestStoreVersion"
+                class="plugins-main-tile-meta"
+              >
+                Store: v{{ plugin.latestStoreVersion }}
+                <strong v-if="plugin.updateAvailable"> · доступно обновление</strong>
+              </p>
               <div class="plugins-main-tile-actions">
                 <button
                   class="ghost"
                   type="button"
+                  :disabled="!plugin.installed"
                   @click="openPlugin(plugin.id)"
                 >
                   Открыть
                 </button>
-                <button class="ghost" type="button">Проверить</button>
+                <button
+                  class="ghost"
+                  type="button"
+                  :disabled="
+                    !plugin.installed ||
+                    !plugin.canManage ||
+                    isInstalledPluginActionBusy(plugin.id, 'toggle')
+                  "
+                  @click="toggleInstalledPluginEnabled(plugin)"
+                >
+                  {{
+                    isInstalledPluginActionBusy(plugin.id, 'toggle')
+                      ? "..."
+                      : plugin.state === "disabled"
+                        ? "Включить"
+                        : "Отключить"
+                  }}
+                </button>
+                <button
+                  v-if="plugin.updateAvailable && plugin.storePluginId"
+                  class="ghost"
+                  type="button"
+                  :disabled="
+                    !plugin.installed ||
+                    !plugin.canManage ||
+                    isInstalledPluginActionBusy(plugin.id, 'update')
+                  "
+                  @click="updateInstalledPlugin(plugin)"
+                >
+                  {{
+                    isInstalledPluginActionBusy(plugin.id, 'update')
+                      ? "Обновление..."
+                      : "Обновить"
+                  }}
+                </button>
+                <button
+                  class="ghost"
+                  type="button"
+                  :disabled="
+                    !plugin.installed ||
+                    !plugin.canManage ||
+                    isInstalledPluginActionBusy(plugin.id, 'delete')
+                  "
+                  @click="deleteInstalledPlugin(plugin)"
+                >
+                  {{
+                    isInstalledPluginActionBusy(plugin.id, 'delete')
+                      ? "Удаление..."
+                      : "Удалить"
+                  }}
+                </button>
               </div>
             </article>
           </div>
 
-          <div v-else class="plugins-empty-state">
+          <p
+            v-if="installedActionMessage"
+            class="plugins-main-tile-meta"
+            :class="{ 'plugins-store-error': installedActionStatus === 'error' }"
+          >
+            {{ installedActionMessage }}
+          </p>
+
+          <div v-else-if="!installedPluginsView.length" class="plugins-empty-state">
             <h3>Пока нет установленных плагинов</h3>
             <p>После подключения расширений они появятся в этом списке.</p>
           </div>
@@ -356,12 +445,23 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onMounted, reactive, ref, watch } from "vue";
+import {
+  computed,
+  nextTick,
+  onMounted,
+  reactive,
+  ref,
+  watch,
+  type Component,
+} from "vue";
+import { useRouter } from "vue-router";
 import {
   FileArchive,
   Github,
   LayoutGrid,
   Package,
+  Puzzle,
+  Radar,
   Settings,
   Store,
   X,
@@ -385,6 +485,17 @@ interface InstalledPlugin {
   title: string;
   serviceCount: number;
   elementsCount: number;
+  version: string;
+  state: string;
+  scope: string;
+  installed: boolean;
+  canManage: boolean;
+}
+
+interface InstalledPluginView extends InstalledPlugin {
+  storePluginId: string;
+  latestStoreVersion: string;
+  updateAvailable: boolean;
 }
 
 interface StorePlugin {
@@ -395,6 +506,7 @@ interface StorePlugin {
   source: string;
   installed: boolean;
   openPluginId: string;
+  runtimeName: string;
 }
 
 interface PluginUsageEntry {
@@ -418,6 +530,20 @@ interface TreeNodeGroup {
   items: TreeNodeItem[];
 }
 
+type PluginSidebarLinkTarget = "same_tab" | "new_tab";
+
+interface PluginSidebarLink {
+  key: string;
+  id: string;
+  title: string;
+  icon: string;
+  route: string;
+  target: PluginSidebarLinkTarget;
+  pluginId: string;
+}
+
+type InstalledPluginAction = "toggle" | "update" | "delete";
+
 const props = withDefaults(
   defineProps<{
     tab: PluginPanelTab;
@@ -432,6 +558,7 @@ const emit = defineEmits<{
   openPlugin: [pluginId: string];
 }>();
 
+const router = useRouter();
 const dashboard = useUiStore();
 const { config, isSidebarHidden } = dashboard;
 
@@ -466,6 +593,11 @@ const loadingStore = ref(false);
 const installingStorePlugins = reactive<Record<string, boolean>>({});
 const storeActionStatus = ref<"idle" | "success" | "error">("idle");
 const storeActionMessage = ref("");
+const installedActionStatus = ref<"idle" | "success" | "error">("idle");
+const installedActionMessage = ref("");
+const installedPluginActionBusy = reactive<
+  Record<string, InstalledPluginAction | undefined>
+>({});
 
 function asRecord(value: unknown): Record<string, unknown> | null {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
@@ -474,6 +606,28 @@ function asRecord(value: unknown): Record<string, unknown> | null {
 
 function asNonEmptyString(value: unknown): string {
   return String(value || "").trim();
+}
+
+const SIDEBAR_LINK_ICONS: Record<string, Component> = {
+  radar: Radar,
+  package: Package,
+  puzzle: Puzzle,
+  settings: Settings,
+  store: Store,
+  layoutgrid: LayoutGrid,
+  grid: LayoutGrid,
+};
+
+function normalizeSidebarLinkTarget(value: unknown): PluginSidebarLinkTarget {
+  const token = asNonEmptyString(value).toLowerCase();
+  return token === "new_tab" ? "new_tab" : "same_tab";
+}
+
+function resolveSidebarLinkIcon(iconName: string): Component {
+  const normalized = asNonEmptyString(iconName)
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "");
+  return SIDEBAR_LINK_ICONS[normalized] || Package;
 }
 
 function extractPluginsList(payload: unknown): unknown[] {
@@ -513,6 +667,28 @@ function messageFromError(error: unknown): string {
     return String(error.message || "Unknown error");
   }
   return "Unknown error";
+}
+
+function toVersionChunks(value: string): number[] {
+  return String(value || "")
+    .split(/[.+\-_\s]+/)
+    .map((chunk) => {
+      const match = chunk.match(/(\d+)/);
+      return match ? Number(match[1]) : 0;
+    });
+}
+
+function compareVersions(left: string, right: string): number {
+  const leftChunks = toVersionChunks(left);
+  const rightChunks = toVersionChunks(right);
+  const maxLength = Math.max(leftChunks.length, rightChunks.length);
+  for (let index = 0; index < maxLength; index += 1) {
+    const a = leftChunks[index] ?? 0;
+    const b = rightChunks[index] ?? 0;
+    if (a > b) return 1;
+    if (a < b) return -1;
+  }
+  return 0;
 }
 
 async function loadInstalledPlugins(): Promise<void> {
@@ -619,6 +795,12 @@ const installedPlugins = computed<InstalledPlugin[]>(() => {
       title,
       serviceCount: usage?.serviceIds.size || 0,
       elementsCount: usage?.elementsCount || 0,
+      version:
+        asNonEmptyString(entry.version) || asNonEmptyString(manifest?.version),
+      state: asNonEmptyString(entry.state) || "discovered",
+      scope: asNonEmptyString(entry.scope),
+      installed: true,
+      canManage: asNonEmptyString(entry.scope) !== "internal",
     });
   }
 
@@ -629,6 +811,11 @@ const installedPlugins = computed<InstalledPlugin[]>(() => {
       title: usage.title,
       serviceCount: usage.serviceIds.size,
       elementsCount: usage.elementsCount,
+      version: "",
+      state: "",
+      scope: "",
+      installed: false,
+      canManage: false,
     });
   }
 
@@ -638,8 +825,93 @@ const installedPlugins = computed<InstalledPlugin[]>(() => {
     );
 });
 
+const pluginSidebarLinks = computed<PluginSidebarLink[]>(() => {
+  const links: PluginSidebarLink[] = [];
+  const seen = new Set<string>();
+  const pushLink = (
+    pluginId: string,
+    actionId: string,
+    title: string,
+    icon: string,
+    route: string,
+    target: PluginSidebarLinkTarget = "same_tab",
+  ): void => {
+    const resolvedPluginId = asNonEmptyString(pluginId);
+    const resolvedRoute = asNonEmptyString(route);
+    if (!resolvedPluginId || !resolvedRoute) return;
+    const resolvedActionId = asNonEmptyString(actionId) || `open-${resolvedPluginId}`;
+    const key = `${resolvedPluginId}:${resolvedActionId}:${resolvedRoute}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+    links.push({
+      key,
+      id: resolvedActionId,
+      title: asNonEmptyString(title) || resolvedPluginId,
+      icon: asNonEmptyString(icon) || "package",
+      route: resolvedRoute,
+      target,
+      pluginId: resolvedPluginId,
+    });
+  };
+
+  for (const rawEntry of installedPluginsApi.value) {
+    const entry = asRecord(rawEntry);
+    if (!entry) continue;
+
+    const pluginId = asNonEmptyString(entry.id) || asNonEmptyString(entry.name);
+    if (!pluginId) continue;
+
+    const manifest = asRecord(entry.manifest);
+    const pluginTitle =
+      asNonEmptyString(entry.title) ||
+      asNonEmptyString(entry.name) ||
+      asNonEmptyString(manifest?.title) ||
+      asNonEmptyString(manifest?.name) ||
+      pluginId;
+    const uiConfig = asRecord(entry.ui_config);
+    const metadata = asRecord(entry.metadata);
+    const pageManifestEnvelope = asRecord(metadata?.page_manifest);
+    const pageManifest = asRecord(pageManifestEnvelope?.manifest);
+    const page = asRecord(pageManifest?.page);
+    const actionsRaw = Array.isArray(page?.sidebarActions)
+      ? page.sidebarActions
+      : Array.isArray(page?.sidebar_actions)
+        ? page.sidebar_actions
+        : [];
+
+    for (const rawAction of actionsRaw) {
+      const action = asRecord(rawAction);
+      if (!action) continue;
+      const route = asNonEmptyString(action.route);
+      if (!route) continue;
+      const actionId = asNonEmptyString(action.id) || `open-${pluginId}`;
+      pushLink(
+        pluginId,
+        actionId,
+        asNonEmptyString(action.title) || pluginTitle,
+        asNonEmptyString(action.icon) || asNonEmptyString(uiConfig?.page_icon),
+        route,
+        normalizeSidebarLinkTarget(action.target),
+      );
+    }
+  }
+
+  return links.sort((left, right) =>
+    left.title.localeCompare(right.title, "ru", { sensitivity: "base" }),
+  );
+});
+
 const installedPluginIds = computed<Set<string>>(
-  () => new Set(installedPlugins.value.map((plugin) => plugin.id)),
+  () =>
+    new Set(
+      installedPlugins.value
+        .filter((plugin) => plugin.installed)
+        .map((plugin) => plugin.id),
+    ),
+);
+
+const installedPluginsCount = computed<number>(
+  () => installedPlugins.value.filter((plugin) => plugin.installed).length,
 );
 
 const storePlugins = computed<StorePlugin[]>(() => {
@@ -684,12 +956,36 @@ const storePlugins = computed<StorePlugin[]>(() => {
       source: asNonEmptyString(entry.source),
       installed: Boolean(openPluginId),
       openPluginId,
+      runtimeName: runtimeId,
     });
   }
 
   return result.sort((left, right) =>
     left.title.localeCompare(right.title, "ru", { sensitivity: "base" }),
   );
+});
+
+const installedPluginsView = computed<InstalledPluginView[]>(() => {
+  const storePluginsList = storePlugins.value;
+  return installedPlugins.value.map((plugin) => {
+    const matchedStorePlugin = storePluginsList.find(
+      (candidate) =>
+        candidate.id === plugin.id || candidate.runtimeName === plugin.id,
+    );
+    const latestStoreVersion = matchedStorePlugin?.version || "";
+    const updateAvailable = Boolean(
+      plugin.installed &&
+        latestStoreVersion &&
+        compareVersions(latestStoreVersion, plugin.version) > 0,
+    );
+
+    return {
+      ...plugin,
+      storePluginId: matchedStorePlugin?.id || "",
+      latestStoreVersion,
+      updateAvailable,
+    };
+  });
 });
 
 const storeCounterLabel = computed(() =>
@@ -813,6 +1109,144 @@ function isInstallingStorePlugin(pluginId: string): boolean {
   return Boolean(installingStorePlugins[pluginId]);
 }
 
+function resolvePluginStateLabel(state: string): string {
+  const normalized = asNonEmptyString(state).toLowerCase();
+  if (!normalized) return "not loaded";
+  if (normalized === "active") return "active";
+  if (normalized === "disabled") return "disabled";
+  if (normalized === "error") return "error";
+  if (normalized === "loading") return "loading";
+  return normalized;
+}
+
+function isInstalledPluginActionBusy(
+  pluginId: string,
+  action: InstalledPluginAction,
+): boolean {
+  return installedPluginActionBusy[pluginId] === action;
+}
+
+async function toggleInstalledPluginEnabled(
+  plugin: InstalledPluginView,
+): Promise<void> {
+  if (!plugin.installed || !plugin.canManage) return;
+  if (installedPluginActionBusy[plugin.id]) return;
+
+  const action: InstalledPluginAction = "toggle";
+  installedPluginActionBusy[plugin.id] = action;
+  installedActionStatus.value = "idle";
+  installedActionMessage.value = "";
+
+  const shouldEnable = plugin.state === "disabled";
+  const endpoint = shouldEnable ? "enable" : "disable";
+  try {
+    await requestJson(`/api/v1/plugins/${encodeURIComponent(plugin.id)}/${endpoint}`, {
+      method: "POST",
+    });
+    await loadInstalledPlugins();
+    installedActionStatus.value = "success";
+    installedActionMessage.value = shouldEnable
+      ? `Плагин '${plugin.title}' включен`
+      : `Плагин '${plugin.title}' отключен`;
+  } catch (error: unknown) {
+    installedActionStatus.value = "error";
+    installedActionMessage.value = `Не удалось изменить состояние '${plugin.title}': ${messageFromError(error)}`;
+  } finally {
+    delete installedPluginActionBusy[plugin.id];
+  }
+}
+
+async function updateInstalledPlugin(plugin: InstalledPluginView): Promise<void> {
+  if (!plugin.installed || !plugin.canManage) return;
+  if (!plugin.storePluginId) return;
+  if (installedPluginActionBusy[plugin.id]) return;
+
+  const action: InstalledPluginAction = "update";
+  installedPluginActionBusy[plugin.id] = action;
+  installedActionStatus.value = "idle";
+  installedActionMessage.value = "";
+
+  const shouldRestoreActive = plugin.state === "active";
+  let runtimePluginId = plugin.id;
+  let disabledForUpdate = false;
+
+  try {
+    if (shouldRestoreActive) {
+      await requestJson(`/api/v1/plugins/${encodeURIComponent(plugin.id)}/disable`, {
+        method: "POST",
+      });
+      disabledForUpdate = true;
+    }
+
+    const response = await requestJson(
+      `/api/v1/store/${encodeURIComponent(plugin.storePluginId)}/install`,
+      { method: "POST" },
+    );
+    const responseRecord = asRecord(response);
+    const installedPluginRecord = asRecord(responseRecord?.plugin);
+    runtimePluginId = asNonEmptyString(installedPluginRecord?.id) || plugin.id;
+
+    if (shouldRestoreActive) {
+      await requestJson(`/api/v1/plugins/${encodeURIComponent(runtimePluginId)}/load`, {
+        method: "POST",
+      });
+      disabledForUpdate = false;
+    }
+
+    await Promise.all([loadInstalledPlugins(), loadStorePlugins()]);
+    installedActionStatus.value = "success";
+    installedActionMessage.value = `Плагин '${plugin.title}' обновлен`;
+  } catch (error: unknown) {
+    let rollbackNote = "";
+    if (shouldRestoreActive && disabledForUpdate) {
+      try {
+        await requestJson(`/api/v1/plugins/${encodeURIComponent(runtimePluginId)}/load`, {
+          method: "POST",
+        });
+        rollbackNote = " Исходное состояние плагина восстановлено.";
+      } catch (rollbackError: unknown) {
+        rollbackNote =
+          ` Плагин мог остаться выключенным: ${messageFromError(rollbackError)}.`;
+      }
+    }
+    try {
+      await Promise.all([loadInstalledPlugins(), loadStorePlugins()]);
+    } catch {
+      // Preserve the primary error when state refresh fails.
+    }
+    installedActionStatus.value = "error";
+    installedActionMessage.value =
+      `Не удалось обновить '${plugin.title}': ${messageFromError(error)}${rollbackNote}`;
+  } finally {
+    delete installedPluginActionBusy[plugin.id];
+  }
+}
+
+async function deleteInstalledPlugin(plugin: InstalledPluginView): Promise<void> {
+  if (!plugin.installed || !plugin.canManage) return;
+  if (installedPluginActionBusy[plugin.id]) return;
+  if (!window.confirm(`Удалить плагин '${plugin.title}'?`)) return;
+
+  const action: InstalledPluginAction = "delete";
+  installedPluginActionBusy[plugin.id] = action;
+  installedActionStatus.value = "idle";
+  installedActionMessage.value = "";
+
+  try {
+    await requestJson(`/api/v1/plugins/${encodeURIComponent(plugin.id)}`, {
+      method: "DELETE",
+    });
+    await Promise.all([loadInstalledPlugins(), loadStorePlugins()]);
+    installedActionStatus.value = "success";
+    installedActionMessage.value = `Плагин '${plugin.title}' удален`;
+  } catch (error: unknown) {
+    installedActionStatus.value = "error";
+    installedActionMessage.value = `Не удалось удалить '${plugin.title}': ${messageFromError(error)}`;
+  } finally {
+    delete installedPluginActionBusy[plugin.id];
+  }
+}
+
 async function installStorePlugin(plugin: StorePlugin): Promise<void> {
   const storePluginId = String(plugin.id || "").trim();
   if (!storePluginId) return;
@@ -867,6 +1301,28 @@ function openPlugin(pluginId: string): void {
   const normalizedId = String(pluginId || "").trim();
   if (!normalizedId) return;
   emit("openPlugin", normalizedId);
+}
+
+function openSidebarPluginLink(link: PluginSidebarLink): void {
+  const route = asNonEmptyString(link.route);
+  if (!route) {
+    openPlugin(link.pluginId);
+    return;
+  }
+
+  const isExternal = /^https?:\/\//i.test(route);
+  if (link.target === "new_tab") {
+    const href = isExternal ? route : router.resolve(route).href;
+    window.open(href, "_blank", "noopener,noreferrer");
+    return;
+  }
+
+  if (isExternal) {
+    window.location.assign(route);
+    return;
+  }
+
+  void router.push(route);
 }
 
 function handleInstallZipClick(): void {

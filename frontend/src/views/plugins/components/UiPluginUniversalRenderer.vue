@@ -99,7 +99,10 @@
           <small>{{ stateByComponentId[component.id]?.error }}</small>
         </section>
         <section
-          v-else-if="!resolveFilteredIndexedRows(component).length"
+          v-else-if="
+            resolveComponentView(component.id) !== 'settings' &&
+            !resolveFilteredIndexedRows(component).length
+          "
           class="plugin-state"
         >
           {{
@@ -237,10 +240,14 @@
 
         <section
           v-else-if="
-            isCardsOnlyComponent(component) ||
-            resolveComponentView(component.id) === 'cards'
+            resolveComponentView(component.id) === 'cards' ||
+            (isCardsOnlyComponent(component) &&
+              resolveComponentView(component.id) !== 'settings')
           "
           class="plugin-cards-grid"
+          :class="{
+            'plugin-cards-grid-host-table': isCardsOnlyComponent(component),
+          }"
         >
           <UiDataTable
             v-if="isCardsOnlyComponent(component)"
@@ -252,6 +259,8 @@
             :show-export="false"
             :show-pagination="true"
             :page-size="20"
+            :page-size-options="[8, 12, 16, 20, 24, 32, 48]"
+            :auto-page-size="true"
             :row-clickable="true"
             max-height="min(70vh, 760px)"
             @row-click="openHostDetailsFromInventoryRow(component, $event)"
@@ -326,13 +335,115 @@
           </article>
 
           <article class="panel plugin-settings-card">
-            <h4>Plugin settings</h4>
-            <p><strong>ID:</strong> {{ manifest.plugin_id }}</p>
-            <p><strong>Version:</strong> {{ manifest.version }}</p>
-            <p><strong>Capabilities:</strong> {{ manifest.capabilities.length }}</p>
-            <p class="plugin-settings-note">
-              Runtime plugin settings are managed by plugin backend contracts.
-            </p>
+            <template v-if="isAutodiscoverSettingsComponent(component)">
+              <h4>Autodiscover scan settings</h4>
+
+              <section v-if="autodiscoverSettings.loading" class="plugin-state">
+                Loading autodiscover settings...
+              </section>
+              <section v-else-if="autodiscoverSettings.error" class="plugin-state plugin-state-error">
+                {{ autodiscoverSettings.error }}
+              </section>
+              <form v-else class="plugin-settings-form" @submit.prevent="saveAutodiscoverSettings">
+                <label class="plugin-settings-field">
+                  <span>Scan profile</span>
+                  <select v-model="autodiscoverSettings.settings.scan_profile" class="plugin-settings-select">
+                    <option v-for="profile in autodiscoverSettings.profiles" :key="profile" :value="profile">
+                      {{ profile }}
+                    </option>
+                  </select>
+                </label>
+
+                <label class="plugin-settings-field plugin-settings-checkbox">
+                  <input
+                    v-model="autodiscoverSettings.settings.verify_previous_hosts"
+                    type="checkbox"
+                  />
+                  <span>Re-scan hosts discovered in previous run</span>
+                </label>
+
+                <label class="plugin-settings-field">
+                  <span>Adaptive timeout mode</span>
+                  <select
+                    v-model="autodiscoverSettings.settings.adaptive_timeout_mode"
+                    class="plugin-settings-select"
+                  >
+                    <option
+                      v-for="mode in autodiscoverSettings.adaptiveTimeoutModes"
+                      :key="mode"
+                      :value="mode"
+                    >
+                      {{ mode }}
+                    </option>
+                  </select>
+                </label>
+
+                <label class="plugin-settings-field">
+                  <span>Hostname enrichment mode</span>
+                  <select
+                    v-model="autodiscoverSettings.settings.hostname_enrichment_mode"
+                    class="plugin-settings-select"
+                  >
+                    <option
+                      v-for="mode in autodiscoverSettings.hostnameEnrichmentModes"
+                      :key="mode"
+                      :value="mode"
+                    >
+                      {{ mode }}
+                    </option>
+                  </select>
+                </label>
+
+                <label class="plugin-settings-field plugin-settings-checkbox">
+                  <input
+                    v-model="autodiscoverSettings.settings.banner_grabbing_enabled"
+                    type="checkbox"
+                  />
+                  <span>Enable banner grabbing</span>
+                </label>
+                <label class="plugin-settings-field plugin-settings-checkbox">
+                  <input
+                    v-model="autodiscoverSettings.settings.diff_mode_enabled"
+                    type="checkbox"
+                  />
+                  <span>Enable scan diff mode</span>
+                </label>
+                <label class="plugin-settings-field plugin-settings-checkbox">
+                  <input
+                    v-model="autodiscoverSettings.settings.confidence_scoring_enabled"
+                    type="checkbox"
+                  />
+                  <span>Enable confidence scoring</span>
+                </label>
+
+                <div class="plugin-settings-save-row">
+                  <button
+                    class="ghost plugin-settings-save-btn"
+                    type="submit"
+                    :disabled="autodiscoverSettings.saving"
+                  >
+                    {{ autodiscoverSettings.saving ? "Saving..." : "Save settings" }}
+                  </button>
+                  <small v-if="autodiscoverSettings.savedMessage" class="plugin-settings-saved">
+                    {{ autodiscoverSettings.savedMessage }}
+                  </small>
+                </div>
+
+                <p class="plugin-settings-note">
+                  First startup sequence is fixed: <code>fast</code> -> <code>full</code> -> selected profile.
+                </p>
+              </form>
+            </template>
+
+            <template v-else>
+              <h4>Plugin settings</h4>
+              <p><strong>ID:</strong> {{ manifest.plugin_id }}</p>
+              <p><strong>Version:</strong> {{ manifest.version }}</p>
+              <p><strong>Capabilities:</strong> {{ manifest.capabilities.length }}</p>
+              <p class="plugin-settings-note">
+                Runtime plugin settings are managed by plugin backend contracts.
+              </p>
+            </template>
           </article>
         </section>
       </section>
@@ -625,6 +736,7 @@ import {
 } from "@/features/services/dashboardApi";
 import { requestJson } from "@/features/services/requestJson";
 import BaseModal from "@/ui/overlays/BaseModal.vue";
+import UiDataTable from "@/primitives/data/UiDataTable.vue";
 import {
   resolveResponsePath,
   type PluginDataTableComponentV1,
@@ -675,7 +787,7 @@ interface ServiceFilterOption {
   count: number;
 }
 
-interface HostCardDisplay {
+interface HostCardDisplay extends Record<string, unknown> {
   key: string;
   hostLabel: string;
   hostname: string;
@@ -683,16 +795,11 @@ interface HostCardDisplay {
 }
 
 interface HostInventoryRow extends HostCardDisplay {
-  macAddress: string;
+  ip: string;
+  mac: string;
+  ports: string[];
   vendor: string;
   deviceType: string;
-  portsLabel: string;
-}
-
-interface HostFilterOption {
-  value: string;
-  label: string;
-  count: number;
 }
 
 interface AddToDashboardFormState {
@@ -727,12 +834,32 @@ interface HostDetailsModalState {
   services: TableIndexedRow[];
 }
 
+interface AutodiscoverSettingsValues {
+  scan_profile: string;
+  verify_previous_hosts: boolean;
+  adaptive_timeout_mode: string;
+  hostname_enrichment_mode: string;
+  banner_grabbing_enabled: boolean;
+  diff_mode_enabled: boolean;
+  confidence_scoring_enabled: boolean;
+}
+
+interface AutodiscoverSettingsState {
+  loading: boolean;
+  saving: boolean;
+  error: string;
+  savedMessage: string;
+  settings: AutodiscoverSettingsValues;
+  profiles: string[];
+  adaptiveTimeoutModes: string[];
+  hostnameEnrichmentModes: string[];
+}
+
 const props = defineProps<{
   manifest: PluginPageManifestV1;
 }>();
 
 const SERVICE_FILTER_ALL = "__all__";
-const HOST_FILTER_ALL = "__all__";
 const LINKABLE_URL_SCHEMES = new Set([
   "http",
   "https",
@@ -755,9 +882,6 @@ const collapsedGroupStateByKey = reactive<Record<string, boolean>>({});
 const componentViewById = reactive<Record<string, ComponentViewMode>>({});
 const serviceFilterById = reactive<Record<string, string>>({});
 const groupingEnabledById = reactive<Record<string, boolean>>({});
-const hostPortFilterById = reactive<Record<string, string>>({});
-const hostVendorFilterById = reactive<Record<string, string>>({});
-const hostIpMacSearchById = reactive<Record<string, string>>({});
 const hostDetailsModal = reactive<HostDetailsModalState>({
   open: false,
   componentId: "",
@@ -765,6 +889,32 @@ const hostDetailsModal = reactive<HostDetailsModalState>({
   hostname: "",
   services: [],
 });
+const autodiscoverSettings = reactive<AutodiscoverSettingsState>({
+  loading: false,
+  saving: false,
+  error: "",
+  savedMessage: "",
+  settings: {
+    scan_profile: "balanced",
+    verify_previous_hosts: true,
+    adaptive_timeout_mode: "balanced",
+    hostname_enrichment_mode: "aggressive",
+    banner_grabbing_enabled: true,
+    diff_mode_enabled: true,
+    confidence_scoring_enabled: true,
+  },
+  profiles: ["fast", "balanced", "full"],
+  adaptiveTimeoutModes: ["off", "balanced", "aggressive"],
+  hostnameEnrichmentModes: ["off", "standard", "aggressive"],
+});
+const AUTODISCOVER_HOST_TABLE_COLUMNS = [
+  { key: "ip", label: "IP", sortable: true },
+  { key: "mac", label: "MAC", sortable: true },
+  { key: "ports", label: "Ports", sortable: true, filterable: true },
+  { key: "vendor", label: "Vendor", sortable: true, filterable: true },
+  { key: "hostname", label: "Hostname", sortable: true },
+  { key: "deviceType", label: "Type", sortable: true },
+];
 const addToDashboardForm = reactive<AddToDashboardFormState>({
   open: false,
   loading: false,
@@ -830,6 +980,13 @@ function setComponentView(componentId: string, mode: ComponentViewMode): void {
 }
 
 function isCardsOnlyComponent(component: PluginDataTableComponentV1): boolean {
+  return (
+    props.manifest.plugin_id === "autodiscover" &&
+    component.id === "autodiscover-services-table"
+  );
+}
+
+function isAutodiscoverSettingsComponent(component: PluginDataTableComponentV1): boolean {
   return (
     props.manifest.plugin_id === "autodiscover" &&
     component.id === "autodiscover-services-table"
@@ -1055,7 +1212,7 @@ function resolveHostInventoryValue(
   return "";
 }
 
-function resolveHostPortsLabel(services: TableIndexedRow[]): string {
+function resolveHostPorts(services: TableIndexedRow[]): string[] {
   const ports = Array.from(
     new Set(
       services
@@ -1073,14 +1230,14 @@ function resolveHostPortsLabel(services: TableIndexedRow[]): string {
     if (rightIsNumber) return 1;
     return left.localeCompare(right, undefined, { numeric: true, sensitivity: "base" });
   });
-  return ports.length ? ports.join(", ") : "—";
+  return ports.length ? ports : ["—"];
 }
 
 function resolveHostInventoryRows(
   component: PluginDataTableComponentV1,
 ): HostInventoryRow[] {
   return resolveHostCards(component).map((card) => {
-    const macAddress =
+    const mac =
       resolveHostInventoryValue(card, ["host_mac", "mac_address", "mac"]) || "—";
     const vendor =
       resolveHostInventoryValue(card, ["mac_vendor", "vendor", "manufacturer"]) ||
@@ -1089,119 +1246,26 @@ function resolveHostInventoryRows(
       resolveHostInventoryValue(card, ["device_type", "type", "host_type"]) || "—";
     return {
       ...card,
-      macAddress,
+      ip: card.hostLabel,
+      mac,
+      ports: resolveHostPorts(card.services),
       vendor,
       deviceType,
-      portsLabel: resolveHostPortsLabel(card.services),
     };
   });
 }
 
-function resolveHostPortFilter(componentId: string): string {
-  return hostPortFilterById[componentId] || HOST_FILTER_ALL;
-}
-
-function setHostPortFilter(componentId: string, value: string): void {
-  hostPortFilterById[componentId] = value || HOST_FILTER_ALL;
-}
-
-function resolveHostVendorFilter(componentId: string): string {
-  return hostVendorFilterById[componentId] || HOST_FILTER_ALL;
-}
-
-function setHostVendorFilter(componentId: string, value: string): void {
-  hostVendorFilterById[componentId] = value || HOST_FILTER_ALL;
-}
-
-function resolveHostIpMacSearch(componentId: string): string {
-  return hostIpMacSearchById[componentId] || "";
-}
-
-function setHostIpMacSearch(componentId: string, value: string): void {
-  hostIpMacSearchById[componentId] = asString(value);
-}
-
-function resolveHostPortFilterOptions(
+function openHostDetailsFromInventoryRow(
   component: PluginDataTableComponentV1,
-): HostFilterOption[] {
-  const rows = resolveHostInventoryRows(component);
-  const counts = new Map<string, number>();
-  for (const row of rows) {
-    const uniquePorts = new Set(
-      row.services
-        .map((entry) => asString(entry.row.port))
-        .filter(Boolean),
-    );
-    for (const port of uniquePorts) {
-      counts.set(port, (counts.get(port) || 0) + 1);
-    }
-  }
-  const options: HostFilterOption[] = [
-    { value: HOST_FILTER_ALL, label: "All ports", count: rows.length },
-  ];
-  for (const [value, count] of counts.entries()) {
-    options.push({ value, label: value, count });
-  }
-  options.sort((left, right) => {
-    if (left.value === HOST_FILTER_ALL) return -1;
-    if (right.value === HOST_FILTER_ALL) return 1;
-    return Number(left.value) - Number(right.value);
-  });
-  return options;
-}
-
-function resolveHostVendorFilterOptions(
-  component: PluginDataTableComponentV1,
-): HostFilterOption[] {
-  const rows = resolveHostInventoryRows(component);
-  const counts = new Map<string, number>();
-  for (const row of rows) {
-    const token = row.vendor || "—";
-    counts.set(token, (counts.get(token) || 0) + 1);
-  }
-  const options: HostFilterOption[] = [
-    { value: HOST_FILTER_ALL, label: "All vendors", count: rows.length },
-  ];
-  for (const [value, count] of counts.entries()) {
-    options.push({ value, label: value, count });
-  }
-  options.sort((left, right) => {
-    if (left.value === HOST_FILTER_ALL) return -1;
-    if (right.value === HOST_FILTER_ALL) return 1;
-    return left.label.localeCompare(right.label, undefined, {
-      sensitivity: "base",
-      numeric: true,
-    });
-  });
-  return options;
-}
-
-function resolveFilteredHostInventoryRows(
-  component: PluginDataTableComponentV1,
-): HostInventoryRow[] {
-  const rows = resolveHostInventoryRows(component);
-  const selectedPort = resolveHostPortFilter(component.id);
-  const selectedVendor = resolveHostVendorFilter(component.id);
-  const searchToken = resolveHostIpMacSearch(component.id).toLowerCase();
-
-  return rows.filter((row) => {
-    if (selectedPort !== HOST_FILTER_ALL) {
-      const hasPort = row.services.some(
-        (entry) => asString(entry.row.port) === selectedPort,
-      );
-      if (!hasPort) return false;
-    }
-    if (selectedVendor !== HOST_FILTER_ALL) {
-      const vendor = row.vendor || "—";
-      if (vendor !== selectedVendor) return false;
-    }
-    if (searchToken) {
-      const ip = row.hostLabel.toLowerCase();
-      const mac = row.macAddress.toLowerCase();
-      if (!ip.includes(searchToken) && !mac.includes(searchToken)) return false;
-    }
-    return true;
-  });
+  row: Record<string, unknown>,
+): void {
+  const selectedKey = asString(row.key);
+  if (!selectedKey) return;
+  const selected = resolveHostInventoryRows(component).find(
+    (entry) => entry.key === selectedKey,
+  );
+  if (!selected) return;
+  openHostDetailsModal(component, selected);
 }
 
 function openHostDetailsModal(
@@ -1930,6 +1994,111 @@ async function runRowAction(
   }
 }
 
+async function loadAutodiscoverSettings(): Promise<void> {
+  if (props.manifest.plugin_id !== "autodiscover") return;
+  autodiscoverSettings.loading = true;
+  autodiscoverSettings.error = "";
+  autodiscoverSettings.savedMessage = "";
+  try {
+    const response = await requestJson("/api/v1/plugins/autodiscover/settings", {
+      method: "GET",
+    });
+    const root = asRecord(response);
+    const settings = asRecord(root?.settings) || {};
+    const profiles = asRecord(root?.profiles);
+    const modes = asRecord(root?.modes);
+
+    autodiscoverSettings.settings.scan_profile =
+      asString(settings.scan_profile) || autodiscoverSettings.settings.scan_profile;
+    autodiscoverSettings.settings.verify_previous_hosts = Boolean(
+      settings.verify_previous_hosts ?? autodiscoverSettings.settings.verify_previous_hosts,
+    );
+    autodiscoverSettings.settings.adaptive_timeout_mode =
+      asString(settings.adaptive_timeout_mode) ||
+      autodiscoverSettings.settings.adaptive_timeout_mode;
+    autodiscoverSettings.settings.hostname_enrichment_mode =
+      asString(settings.hostname_enrichment_mode) ||
+      autodiscoverSettings.settings.hostname_enrichment_mode;
+    autodiscoverSettings.settings.banner_grabbing_enabled = Boolean(
+      settings.banner_grabbing_enabled ?? autodiscoverSettings.settings.banner_grabbing_enabled,
+    );
+    autodiscoverSettings.settings.diff_mode_enabled = Boolean(
+      settings.diff_mode_enabled ?? autodiscoverSettings.settings.diff_mode_enabled,
+    );
+    autodiscoverSettings.settings.confidence_scoring_enabled = Boolean(
+      settings.confidence_scoring_enabled ??
+        autodiscoverSettings.settings.confidence_scoring_enabled,
+    );
+
+    const availableProfiles = Array.isArray(profiles?.available)
+      ? profiles?.available.map((entry) => asString(entry)).filter(Boolean)
+      : [];
+    if (availableProfiles.length) {
+      autodiscoverSettings.profiles = availableProfiles;
+    }
+    const adaptiveModes = Array.isArray(modes?.adaptive_timeout_mode)
+      ? modes?.adaptive_timeout_mode.map((entry) => asString(entry)).filter(Boolean)
+      : [];
+    if (adaptiveModes.length) {
+      autodiscoverSettings.adaptiveTimeoutModes = adaptiveModes;
+    }
+    const hostnameModes = Array.isArray(modes?.hostname_enrichment_mode)
+      ? modes?.hostname_enrichment_mode.map((entry) => asString(entry)).filter(Boolean)
+      : [];
+    if (hostnameModes.length) {
+      autodiscoverSettings.hostnameEnrichmentModes = hostnameModes;
+    }
+  } catch (error: unknown) {
+    autodiscoverSettings.error =
+      error instanceof Error ? error.message : "Failed to load autodiscover settings";
+  } finally {
+    autodiscoverSettings.loading = false;
+  }
+}
+
+async function saveAutodiscoverSettings(): Promise<void> {
+  if (props.manifest.plugin_id !== "autodiscover") return;
+  autodiscoverSettings.saving = true;
+  autodiscoverSettings.error = "";
+  autodiscoverSettings.savedMessage = "";
+  try {
+    const response = await requestJson("/api/v1/plugins/autodiscover/settings", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(autodiscoverSettings.settings),
+    });
+    const root = asRecord(response);
+    const settings = asRecord(root?.settings) || {};
+    autodiscoverSettings.settings.scan_profile =
+      asString(settings.scan_profile) || autodiscoverSettings.settings.scan_profile;
+    autodiscoverSettings.settings.verify_previous_hosts = Boolean(
+      settings.verify_previous_hosts ?? autodiscoverSettings.settings.verify_previous_hosts,
+    );
+    autodiscoverSettings.settings.adaptive_timeout_mode =
+      asString(settings.adaptive_timeout_mode) ||
+      autodiscoverSettings.settings.adaptive_timeout_mode;
+    autodiscoverSettings.settings.hostname_enrichment_mode =
+      asString(settings.hostname_enrichment_mode) ||
+      autodiscoverSettings.settings.hostname_enrichment_mode;
+    autodiscoverSettings.settings.banner_grabbing_enabled = Boolean(
+      settings.banner_grabbing_enabled ?? autodiscoverSettings.settings.banner_grabbing_enabled,
+    );
+    autodiscoverSettings.settings.diff_mode_enabled = Boolean(
+      settings.diff_mode_enabled ?? autodiscoverSettings.settings.diff_mode_enabled,
+    );
+    autodiscoverSettings.settings.confidence_scoring_enabled = Boolean(
+      settings.confidence_scoring_enabled ??
+        autodiscoverSettings.settings.confidence_scoring_enabled,
+    );
+    autodiscoverSettings.savedMessage = "Saved";
+  } catch (error: unknown) {
+    autodiscoverSettings.error =
+      error instanceof Error ? error.message : "Failed to save autodiscover settings";
+  } finally {
+    autodiscoverSettings.saving = false;
+  }
+}
+
 async function loadTable(component: PluginDataTableComponentV1): Promise<void> {
   stateByComponentId[component.id] = { loading: true };
   rowsByComponentId[component.id] = [];
@@ -1973,31 +2142,6 @@ async function loadTable(component: PluginDataTableComponentV1): Promise<void> {
     if (!selectedExists) {
       serviceFilterById[component.id] = SERVICE_FILTER_ALL;
     }
-    if (isCardsOnlyComponent(component)) {
-      if (hostPortFilterById[component.id] === undefined) {
-        hostPortFilterById[component.id] = HOST_FILTER_ALL;
-      }
-      if (hostVendorFilterById[component.id] === undefined) {
-        hostVendorFilterById[component.id] = HOST_FILTER_ALL;
-      }
-      if (hostIpMacSearchById[component.id] === undefined) {
-        hostIpMacSearchById[component.id] = "";
-      }
-      const selectedPort = resolveHostPortFilter(component.id);
-      const selectedPortExists = resolveHostPortFilterOptions(component).some(
-        (option) => option.value === selectedPort,
-      );
-      if (!selectedPortExists) {
-        hostPortFilterById[component.id] = HOST_FILTER_ALL;
-      }
-      const selectedVendor = resolveHostVendorFilter(component.id);
-      const selectedVendorExists = resolveHostVendorFilterOptions(component).some(
-        (option) => option.value === selectedVendor,
-      );
-      if (!selectedVendorExists) {
-        hostVendorFilterById[component.id] = HOST_FILTER_ALL;
-      }
-    }
 
     stateByComponentId[component.id] = { loading: false };
   } catch (error: unknown) {
@@ -2012,7 +2156,11 @@ onMounted(async () => {
   const components = props.manifest.page.components.filter(
     (entry): entry is PluginDataTableComponentV1 => entry.type === "data-table",
   );
-  await Promise.all(components.map((component) => loadTable(component)));
+  const tasks: Promise<unknown>[] = [Promise.all(components.map((component) => loadTable(component)))];
+  if (props.manifest.plugin_id === "autodiscover") {
+    tasks.push(loadAutodiscoverSettings());
+  }
+  await Promise.all(tasks);
 });
 </script>
 
@@ -2225,111 +2373,8 @@ th {
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
 }
 
-.plugin-cards-grid-hosts {
-  display: grid;
-}
-
-.plugin-hosts-table-wrap {
-  padding: 10px;
-  overflow: hidden;
-  border: 1px solid rgba(84, 124, 156, 0.32);
-  background: linear-gradient(160deg, rgba(9, 24, 39, 0.9), rgba(5, 16, 27, 0.9));
-  display: grid;
-  gap: 8px;
-}
-
-.plugin-hosts-filters {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
-}
-
-.plugin-hosts-filter {
-  display: grid;
-  gap: 5px;
-  color: rgba(182, 205, 230, 0.9);
-  font-size: 12px;
-}
-
-.plugin-hosts-filter-search {
-  min-width: 0;
-}
-
-.plugin-hosts-filter-search .plugin-add-input {
-  min-width: 0;
-}
-
-.plugin-hosts-table-scroll {
-  overflow: auto;
-  max-height: min(70vh, 760px);
-  scrollbar-gutter: stable both-edges;
-  border-radius: 10px;
-  border: 1px solid rgba(79, 116, 147, 0.26);
-  background: rgba(5, 15, 25, 0.64);
-}
-
-.plugin-hosts-table {
-  width: 100%;
-  border-collapse: collapse;
-  table-layout: fixed;
-}
-
-.plugin-hosts-table th,
-.plugin-hosts-table td {
-  padding: 8px 10px;
-  border-bottom: 1px solid rgba(91, 126, 158, 0.2);
-  text-align: left;
-  vertical-align: top;
-}
-
-.plugin-hosts-table th {
-  color: rgba(197, 218, 242, 0.9);
-  font-weight: 600;
-  font-size: 12px;
-  position: sticky;
-  top: 0;
-  z-index: 1;
-  background: rgba(6, 17, 30, 0.95);
-  backdrop-filter: blur(2px);
-}
-
-.plugin-hosts-row {
-  cursor: pointer;
-  transition: background 120ms ease;
-}
-
-.plugin-hosts-row:hover {
-  background: rgba(86, 130, 167, 0.12);
-}
-
-.plugin-hosts-ip {
-  color: rgba(218, 233, 250, 0.96);
-  font-weight: 600;
-}
-
-.plugin-hosts-mac,
-.plugin-hosts-hostname,
-.plugin-hosts-type,
-.plugin-hosts-vendor {
-  color: rgba(188, 209, 231, 0.92);
-}
-
-.plugin-hosts-ports {
-  color: rgba(211, 228, 246, 0.95);
-  overflow-wrap: anywhere;
-}
-
-.plugin-hosts-actions-col {
-  width: 150px;
-}
-
-.plugin-hosts-actions-cell {
-  white-space: nowrap;
-}
-
-.plugin-hosts-empty {
-  text-align: center;
-  color: rgba(176, 198, 223, 0.86);
+.plugin-cards-grid-host-table {
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .plugin-data-card {
@@ -2409,10 +2454,55 @@ th {
   gap: 8px;
 }
 
+.plugin-settings-form {
+  display: grid;
+  gap: 10px;
+}
+
+.plugin-settings-field {
+  display: grid;
+  gap: 6px;
+  color: rgba(186, 208, 232, 0.9);
+  font-size: 12px;
+}
+
+.plugin-settings-select {
+  min-height: 30px;
+  border-radius: 8px;
+  border: 1px solid rgba(86, 118, 146, 0.36);
+  background: rgba(7, 18, 30, 0.86);
+  color: rgba(214, 229, 245, 0.94);
+  padding: 4px 8px;
+}
+
+.plugin-settings-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.plugin-settings-checkbox input {
+  margin: 0;
+}
+
+.plugin-settings-save-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.plugin-settings-save-btn {
+  min-height: 30px;
+}
+
+.plugin-settings-saved {
+  color: rgba(139, 222, 189, 0.9);
+}
+
 .plugin-modal-backdrop {
   position: fixed;
   inset: 0;
-  z-index: 120;
+  z-index: var(--z-layer-overlay);
   padding: 20px;
   display: grid;
   place-items: center;
@@ -2657,10 +2747,6 @@ th {
 }
 
 @media (max-width: 760px) {
-  .plugin-hosts-filters {
-    grid-template-columns: 1fr;
-  }
-
   .plugin-host-services-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -2681,10 +2767,6 @@ th {
 }
 
 @media (max-width: 980px) {
-  .plugin-hosts-filters {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
   .plugin-host-services-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }

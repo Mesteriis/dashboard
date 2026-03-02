@@ -8,12 +8,16 @@ const __dirname = path.dirname(__filename);
 const frontendDir = path.resolve(__dirname, "..");
 const rootDir = path.resolve(frontendDir, "..");
 
-const sourceConfig = path.join(rootDir, "dashboard.yaml");
 const tauriResourcesDir = path.join(rootDir, "tauri", "resources");
 const targetConfig = path.join(tauriResourcesDir, "dashboard.default.yaml");
 
-if (!existsSync(sourceConfig)) {
-  throw new Error(`Source config not found: ${sourceConfig}`);
+const sourceCandidates = [
+  path.join(rootDir, "dashboard.yaml"),
+  path.join(rootDir, "_dashboard.yaml"),
+];
+const sourceConfig = sourceCandidates.find((candidate) => existsSync(candidate));
+if (!sourceConfig) {
+  throw new Error(`Source config not found. Checked: ${sourceCandidates.join(", ")}`);
 }
 
 mkdirSync(tauriResourcesDir, { recursive: true });

@@ -136,6 +136,12 @@
   z-index: 1;
 }
 
+.editor-field .ui-icon-picker,
+.editor-field .ui-icon-picker__trigger {
+  width: 100%;
+  min-width: 0;
+}
+
 .editor-field .hero-dropdown.open,
 .editor-field .hero-multiselect.open {
   z-index: 60;

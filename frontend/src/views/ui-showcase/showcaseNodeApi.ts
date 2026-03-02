@@ -164,6 +164,23 @@ export const SHOWCASE_NODE_API: Record<string, ShowcaseNodeApi> = {
     signals: [],
     model: [],
   },
+  "ui-node-collapsible-card": {
+    props: [
+      "title",
+      "subtitle",
+      "emblemSrc",
+      "collapsible",
+      "modelValue",
+      "defaultOpen",
+      "accordion",
+      "accordionGroup",
+      "expandLabel",
+      "collapseLabel",
+    ],
+    slots: ["default", "header", "body", "footer", "emblem", "toggle"],
+    signals: ["update:modelValue", "toggle"],
+    model: ["v-model<boolean>"],
+  },
   "ui-node-divider": {
     props: ["label", "orientation"],
     slots: [],

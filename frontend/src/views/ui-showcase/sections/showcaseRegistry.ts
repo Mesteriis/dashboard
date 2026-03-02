@@ -127,6 +127,7 @@ export const UI_KIT_SHOWCASE_GROUPS: UiKitPrimitiveGroup[] = [
         items: [
           { id: "ui-node-fieldset-static", label: "Fieldset static" },
           { id: "ui-node-fieldset-collapsible", label: "Fieldset collapsible" },
+          { id: "ui-node-collapsible-card", label: "Collapsible card" },
           { id: "ui-node-accordion-vertical", label: "Accordion vertical" },
           { id: "ui-node-accordion-horizontal", label: "Accordion horizontal" },
         ],

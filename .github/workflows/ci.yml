@@ -5,19 +5,90 @@ on:
     branches: [main, master]
   pull_request:
     branches: [main, master]
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 env:
-  PYTHON_VERSION: "3.14"
+  PYTHON_VERSION: "3.11"
   NODE_VERSION: "20"
 
 jobs:
-  backend-lint:
-    name: Backend Lint (Ruff)
+  changes:
+    name: Detect Changed Blocks
     runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+      store: ${{ steps.filter.outputs.store }}
+      tauri: ${{ steps.filter.outputs.tauri }}
+      ci: ${{ steps.filter.outputs.ci }}
+      any: ${{ steps.filter.outputs.any }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect path changes
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            backend:
+              - 'backend/**'
+              - 'tests/backend/**'
+              - 'pyproject.toml'
+              - 'uv.lock'
+              - 'alembic.ini'
+              - '_dashboard.yaml'
+            frontend:
+              - 'frontend/**'
+              - 'tests/frontend/**'
+            store:
+              - 'store/**'
+              - 'tests/store/**'
+              - 'pyproject.toml'
+              - 'uv.lock'
+            tauri:
+              - 'tauri/**'
+              - 'scripts/**'
+            ci:
+              - '.github/workflows/**'
+              - '.pre-commit-config.yaml'
+            any:
+              - '**/*'
+
+  repo-hygiene:
+    name: Repo Hygiene & Secrets
+    runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.any == 'true'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Ensure local env file is not tracked
+        run: |
+          if git ls-files --error-unmatch .env >/dev/null 2>&1; then
+            echo "::error file=.env::.env is tracked in Git. Keep secrets in local-only .env and commit only .env.example."
+            exit 1
+          fi
+
+      - name: Scan git history for leaked secrets
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  backend-quality:
+    name: Backend - Linters & Tests
+    runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.backend == 'true' || needs.changes.outputs.ci == 'true'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -25,7 +96,7 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v5
         with:
-          version: "latest"
+          version: latest
           enable-cache: true
 
       - name: Set up Python
@@ -36,70 +107,23 @@ jobs:
       - name: Install dependencies
         run: uv sync --frozen --group dev
 
-      - name: Run ruff check
+      - name: Ruff check
         run: uv run --group dev ruff check backend tests/backend
 
-      - name: Run ruff format check
+      - name: Ruff format check
         run: uv run --group dev ruff format --check backend tests/backend
 
-  backend-typecheck:
-    name: Backend Typecheck (Mypy)
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v5
-        with:
-          version: "latest"
-          enable-cache: true
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-
-      - name: Install dependencies
-        run: uv sync --frozen --group dev
-
-      - name: Run mypy
+      - name: Mypy
         run: uv run --group dev mypy
 
-  backend-tests:
-    name: Backend Tests (Pytest)
+      - name: Pytest (backend)
+        run: uv run --group dev pytest tests/backend --cov=backend --cov-report=term-missing --cov-fail-under=90
+
+  frontend-quality:
+    name: Frontend - Linters & Tests
     runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v5
-        with:
-          version: "latest"
-          enable-cache: true
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-
-      - name: Install dependencies
-        run: uv sync --frozen --group dev
-
-      - name: Run pytest with coverage
-        run: uv run --group dev pytest tests/backend --cov=backend --cov-report=xml --cov-report=term-missing
-
-      - name: Upload coverage to GitHub
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-report
-          path: coverage.xml
-          retention-days: 7
-
-  frontend-lint:
-    name: Frontend Lint (ESLint)
-    runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.frontend == 'true' || needs.changes.outputs.ci == 'true'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -108,81 +132,26 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
+          cache: npm
           cache-dependency-path: frontend/package-lock.json
 
       - name: Install dependencies
         run: cd frontend && npm ci
 
-      - name: Run eslint
+      - name: ESLint
         run: cd frontend && npm run lint
 
-  frontend-typecheck:
-    name: Frontend Typecheck
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - name: Typecheck
+        run: cd frontend && npm run typecheck
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
-
-      - name: Install dependencies
-        run: cd frontend && npm ci
-
-      - name: Run typecheck services
-        run: cd frontend && npm run typecheck:services
-
-      - name: Run typecheck app
-        run: cd frontend && npm run typecheck:app
-
-  frontend-tests:
-    name: Frontend Tests
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
-
-      - name: Install dependencies
-        run: cd frontend && npm ci
-
-      - name: Run tests
+      - name: Frontend tests
         run: cd frontend && npm run test
 
-  frontend-build:
-    name: Frontend Build
+  store-quality:
+    name: Store - Linters & Tests
     runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
-
-      - name: Install dependencies
-        run: cd frontend && npm ci
-
-      - name: Build frontend
-        run: cd frontend && npm run build
-
-  precommit:
-    name: Pre-commit Hooks
-    runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.store == 'true' || needs.changes.outputs.ci == 'true'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -190,7 +159,7 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v5
         with:
-          version: "latest"
+          version: latest
           enable-cache: true
 
       - name: Set up Python
@@ -201,15 +170,51 @@ jobs:
       - name: Install dependencies
         run: uv sync --frozen --group dev
 
+      - name: Ruff check (store)
+        run: uv run --group dev ruff check store tests/store
+
+      - name: Ruff format check (store)
+        run: uv run --group dev ruff format --check store tests/store
+
+      - name: Pytest (store)
+        run: PYTHONPATH=. uv run --group dev pytest --override-ini=addopts= tests/store
+
+  precommit:
+    name: Pre-commit (manual stage)
+    runs-on: ubuntu-latest
+    needs: changes
+    if: |
+      needs.changes.outputs.backend == 'true' ||
+      needs.changes.outputs.frontend == 'true' ||
+      needs.changes.outputs.store == 'true' ||
+      needs.changes.outputs.tauri == 'true' ||
+      needs.changes.outputs.ci == 'true'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: latest
+          enable-cache: true
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
+          cache: npm
           cache-dependency-path: frontend/package-lock.json
 
-      - name: Install frontend dependencies
-        run: cd frontend && npm ci
+      - name: Install dependencies
+        run: |
+          uv sync --frozen --group dev
+          cd frontend && npm ci
 
-      - name: Run pre-commit (manual stage)
+      - name: Run pre-commit
         run: uv run --group dev pre-commit run -a --hook-stage manual

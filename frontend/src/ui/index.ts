@@ -15,5 +15,6 @@ export { default as BaseModal } from "@/ui/overlays/BaseModal.vue";
 export { default as UiBaseModal } from "@/ui/overlays/UiBaseModal.vue";
 
 export { default as UiCard } from "@/ui/surfaces/UiCard.vue";
+export { default as UiCollapsibleCard } from "@/ui/surfaces/UiCollapsibleCard.vue";
 export { default as UiDivider } from "@/ui/surfaces/UiDivider.vue";
 export { default as UiFieldset } from "@/ui/surfaces/UiFieldset.vue";

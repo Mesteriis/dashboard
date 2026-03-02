@@ -1,272 +1,183 @@
-# Store Service
+# Store Service (Plugin Catalog)
 
-FastAPI-based plugin storage and management service for the OKO Dashboard plugin system.
+`store/` — отдельный FastAPI сервис, который хранит каталог плагинов, принимает ZIP/GitHub источники и предоставляет backend'у RPC-интерфейс для синхронизации и установки.
 
-## Overview
+## Роль в платформе
 
-The Store provides a centralized API for:
-- Uploading plugins via ZIP files
-- Importing plugins from GitHub repositories
-- Managing plugin catalog entries
-- Providing plugin metadata and manifests to the main dashboard application
+Store отделяет lifecycle плагинов от основного backend runtime:
+- backend не обязан знать, откуда взялся плагин;
+- команды могут вести централизованный каталог расширений;
+- установка в runtime идёт через контролируемый API, а не через ручное копирование.
 
-## Architecture
+Бизнес-ценность:
+- масштабируемое управление расширяемостью;
+- меньше рисков «ручной рассинхронизации» между окружениями;
+- удобный вход для plugin ecosystem.
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                     Store API                            │
-├─────────────────────────────────────────────────────────┤
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  │
-│  │  Upload ZIP  │  │ GitHub Import│  │   Registry   │  │
-│  │  Endpoint    │  │  Endpoint    │  │   Service    │  │
-│  └──────────────┘  └──────────────┘  └──────────────┘  │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  │
-│  │   Storage    │  │   Metadata   │  │   Health     │  │
-│  │   Service    │  │   Manager    │  │   Monitor    │  │
-│  └──────────────┘  └──────────────┘  └──────────────┘  │
-└─────────────────────────────────────────────────────────┘
-```
+## Архитектура
 
-## Quick Start
+```text
+Store API (FastAPI)
+  - /api/v1/plugins/*  (catalog + upload)
+  - /api/v1/rpc/*      (backend integration)
+  - /api/v1/health
 
-### Development
+Services
+  - PluginStorageService (catalog, validation, extraction)
+  - GitHubService (repo metadata/download helpers)
 
-```bash
-# Install dependencies
-uv sync
-
-# Run locally
-cd store
-uvicorn main:app --reload --host 0.0.0.0 --port 8001
+Persistence
+  - filesystem storage
+  - plugins.json metadata registry
+  - uploads/* extracted plugin sources
 ```
 
-### Docker
+## Ключевые сценарии
 
-```bash
-# Build and run with Docker Compose
-docker-compose up -d store
+### 1. ZIP upload
 
-# View logs
-docker-compose logs -f store
-```
+1. Клиент отправляет файл в `POST /api/v1/plugins/upload/zip`.
+2. Store сохраняет архив во временную зону `uploads/{plugin_id}`.
+3. Распаковывает, валидирует `manifest.py`.
+4. Добавляет запись в `plugins.json`.
 
-## API Endpoints
+### 2. GitHub import
 
-### System
+1. Клиент отправляет `repo_url` + `branch` (+ optional `subdirectory`).
+2. Store скачивает ZIP архива ветки.
+3. Распаковывает и валидирует структуру плагина.
+4. Обновляет каталог.
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/v1/health` | Health check |
-| GET | `/api/v1/info` | System information |
+### 3. Backend sync/install
 
-### Plugins
+1. Backend вызывает `GET /api/v1/rpc/plugins`.
+2. Для установки вызывает `POST /api/v1/rpc/plugins/download`.
+3. Полученный путь копируется backend-установщиком в `backend/plugins/{plugin_name}`.
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/v1/plugins` | List all plugins |
-| GET | `/api/v1/plugins/{id}` | Get plugin details |
-| POST | `/api/v1/plugins/upload/zip` | Upload plugin from ZIP |
-| POST | `/api/v1/plugins/upload/github` | Import plugin from GitHub |
-| DELETE | `/api/v1/plugins/{id}` | Delete plugin |
-| GET | `/api/v1/plugins/{id}/path` | Get plugin file path |
+## API контракт
 
-## Usage Examples
+### Системные endpoint'ы
 
-### Upload Plugin via ZIP
+- `GET /api/v1/health`
+- `GET /api/v1/info`
 
-```bash
-curl -X POST http://localhost:8001/api/v1/plugins/upload/zip \
-  -F "file=@my-plugin.zip"
-```
+### Catalog endpoint'ы
 
-Response:
-```json
-{
-  "success": true,
-  "plugin_id": "abc123",
-  "message": "Plugin my_plugin uploaded successfully",
-  "plugin": {
-    "id": "abc123",
-    "name": "my_plugin",
-    "version": "1.0.0",
-    "source": "zip_upload"
-  }
-}
-```
+- `GET /api/v1/plugins`
+- `GET /api/v1/plugins/{plugin_id}`
+- `POST /api/v1/plugins/upload/zip`
+- `POST /api/v1/plugins/upload/github`
+- `DELETE /api/v1/plugins/{plugin_id}`
+- `GET /api/v1/plugins/{plugin_id}/path`
 
-### Import Plugin from GitHub
+### RPC endpoint'ы (для backend)
 
-```bash
-curl -X POST http://localhost:8001/api/v1/plugins/upload/github \
-  -H "Content-Type: application/json" \
-  -d '{
-    "repo_url": "https://github.com/user/my-plugin",
-    "branch": "main"
-  }'
-```
+- `GET /api/v1/rpc/plugins`
+- `POST /api/v1/rpc/plugins/download`
+- `GET /api/v1/rpc/plugins/{plugin_id}/manifest`
+- `GET /api/v1/rpc/health`
 
-### Import Plugin from GitHub Subdirectory
+## Plugin package contract
 
-```bash
-curl -X POST http://localhost:8001/api/v1/plugins/upload/github \
-  -H "Content-Type: application/json" \
-  -d '{
-    "repo_url": "https://github.com/user/my-repo",
-    "branch": "main",
-    "subdirectory": "plugins/my-plugin"
-  }'
-```
+Минимальная структура:
 
-### List All Plugins
-
-```bash
-curl http://localhost:8001/api/v1/plugins
-```
-
-### Delete Plugin
-
-```bash
-curl -X DELETE http://localhost:8001/api/v1/plugins/{id}
-```
-
-## Plugin Structure
-
-Plugins must follow the OKO plugin structure:
-
-```
+```text
 my-plugin/
-├── __init__.py
-├── manifest.py          # Required: Plugin metadata
-├── ui.yaml              # Optional: UI configuration
-└── plugin_manifest.py   # Optional: Plugin implementation
+  __init__.py
+  manifest.py
 ```
 
-### manifest.py
+Опционально:
 
-```python
-PLUGIN_NAME = "my_plugin"
-PLUGIN_VERSION = "1.0.0"
-PLUGIN_DESCRIPTION = "My awesome plugin"
-PLUGIN_AUTHOR = "Your Name"
-PLUGIN_HOMEPAGE = "https://example.com"
-PLUGIN_LICENSE = "MIT"
-PLUGIN_TAGS = ("network", "scanner")
-PLUGIN_CAPABILITIES = ("exec.my_plugin.action",)
+```text
+my-plugin/
+  ui.yaml
+  page_manifest.yaml
+  plugin_manifest.py
+  ...
 ```
 
-## Configuration
+`manifest.py` должен содержать минимум:
+- `PLUGIN_NAME`
+- `PLUGIN_VERSION`
 
-Environment variables:
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `OKO_STORE_STORAGE_PATH` | `./plugins` | Plugin storage directory |
-| `OKO_STORE_MAX_PLUGIN_SIZE_MB` | `100` | Maximum plugin file size (MB) |
-| `OKO_STORE_DEBUG` | `false` | Enable debug mode |
-| `OKO_STORE_API_KEY` | - | Optional API key for authentication |
-| `GITHUB_TOKEN` | - | GitHub token for private repositories |
-
-## Integration with Main Dashboard
-
-The main dashboard can integrate with the Store via HTTP API:
-
-```python
-import httpx
-
-STORE_URL = "http://store:8001/api/v1"
-
-# List plugins
-async def list_plugins():
-    async with httpx.AsyncClient() as client:
-        response = await client.get(f"{STORE_URL}/plugins")
-        return response.json()
-
-# Upload plugin
-async def upload_plugin(zip_path: Path):
-    async with httpx.AsyncClient() as client:
-        with open(zip_path, "rb") as f:
-            files = {"file": ("plugin.zip", f, "application/zip")}
-            response = await client.post(f"{STORE_URL}/plugins/upload/zip", files=files)
-            return response.json()
-
-# Get plugin path for loading
-async def get_plugin_path(plugin_id: str) -> Path | None:
-    async with httpx.AsyncClient() as client:
-        response = await client.get(f"{STORE_URL}/plugins/{plugin_id}/path")
-        if response.status_code == 200:
-            data = response.json()
-            return Path(data["path"]) if data["exists"] else None
-    return None
-```
-
-## Storage Layout
-
-```
-plugins/
-├── plugins.json           # Plugin metadata registry
-├── uploads/               # Uploaded plugin packages
-│   ├── {plugin_id}/
-│   │   ├── plugin.zip
-│   │   └── extracted/
-│   └── ...
-```
-
-## Health Check
+## Локальный запуск
 
 ```bash
-curl http://localhost:8001/api/v1/health
+uv sync
+uv run uvicorn store.main:app --reload --host 0.0.0.0 --port 8001
 ```
 
-Response:
-```json
-{
-  "status": "healthy",
-  "version": "0.1.0",
-  "storage_path": "/app/plugins",
-  "plugins_count": 5
-}
+Проверка:
+
+```bash
+curl http://127.0.0.1:8001/api/v1/health
 ```
 
-## API Documentation
+Swagger:
+- `http://127.0.0.1:8001/docs`
+- `http://127.0.0.1:8001/redoc`
 
-Interactive API documentation is available at:
-- Swagger UI: `http://localhost:8001/docs`
-- ReDoc: `http://localhost:8001/redoc`
+## Запуск в Docker
 
-## Security Considerations
+Сервис объявлен в `docker-compose.yml` как `store`:
 
-1. **Plugin Validation**: All plugins are validated for proper manifest structure before being stored
-2. **File Size Limits**: Configurable maximum plugin size to prevent DoS
-3. **API Authentication**: Optional API key support for production deployments
-4. **GitHub Rate Limits**: Use `GITHUB_TOKEN` for higher rate limits when importing from GitHub
+```bash
+docker compose up --build store
+```
 
-## Troubleshooting
+## Конфигурация
 
-### Plugin Upload Fails
+`store/core/config.py` определяет поля:
+- `host`, `port`
+- `debug`
+- `storage_path`
+- `max_plugin_size_mb`
+- `github_token`
+- CORS-параметры
 
-- Check file size is within limits
-- Verify ZIP contains valid plugin structure
-- Ensure `manifest.py` exists with required fields
+### Важно про текущее состояние реализации
 
-### GitHub Import Fails
+В текущем коде есть практические ограничения:
 
-- Verify repository URL is correct
-- Check branch name exists
-- For private repos, ensure `GITHUB_TOKEN` is set
-- Check subdirectory path if specified
+- Фактический storage path жёстко закреплён как `store/plugins` (`HARDCODED_STORAGE_PATH` в `services/storage.py`).
+- `max_plugin_size_mb` и `api_key` сейчас не применяются как runtime enforcement в upload endpoint'ах.
+- Валидация манифеста сделана lightweight-парсером и подходит для базового contract-check, но не для sandbox/security hardening.
 
-### Storage Issues
+Эти ограничения стоит учитывать для production-профиля.
 
-- Verify storage directory has write permissions
-- Check disk space availability
-- Review logs for detailed error messages
+## Интеграция с backend
 
-## Future Enhancements
+Backend использует:
+- `StoreClient` для `sync_plugins`, `download_plugin`, `health_check`;
+- `PluginInstaller` для копирования плагина в `backend/plugins`.
 
-- [ ] Plugin version management
-- [ ] Plugin dependency resolution
-- [ ] Remote plugin repository support
-- [ ] Plugin signature verification
-- [ ] Automatic plugin updates from GitHub
-- [ ] Plugin rating and review system
-- [ ] Search and discovery features
+В backend интеграция включается переменной:
+- `OKO_STORE_URL` (пример: `http://store:8001/api/v1`)
+
+## Наблюдаемость и логирование
+
+Store использует `structlog`:
+- `debug=true` -> human-readable console renderer;
+- `debug=false` -> JSON logs.
+
+На старте выводит:
+- путь storage;
+- число найденных плагинов;
+- краткие записи по каждому обнаруженному plugin entry.
+
+## Security considerations
+
+Текущая версия закрывает базовые риски (проверка структуры и наличия манифеста), но для production желательно добавить:
+- строгую валидацию размера загрузки;
+- authn/authz для upload/delete endpoint'ов;
+- antivirus/static scanning для загружаемых архивов;
+- sandbox для парсинга/обработки plugin артефактов.
+
+## OSS-модель развития Store
+
+Рекомендуемые правила изменений:
+- Любые изменения catalog/RPC схем должны сопровождаться контрактными тестами.
+- Добавление новых источников (Git provider, artifact storage) делать через сервисный слой, не смешивая с API handlers.
+- Изменения plugin validation должны быть backward-compatible к существующему plugin contract.
+- Функции безопасности (лимиты, auth, scanning) развивать как first-class дорожку, а не в виде ad-hoc middleware.

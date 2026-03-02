@@ -866,6 +866,8 @@ onBeforeUnmount(() => {
 <style scoped>
 .ui-icon-picker {
   position: relative;
+  width: 100%;
+  min-width: 0;
   display: grid;
   gap: 8px;
 }

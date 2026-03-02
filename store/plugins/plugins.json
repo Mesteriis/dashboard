@@ -24,7 +24,7 @@
       ]
     },
     "created_at": "2026-03-01T13:02:53.755507",
-    "updated_at": "2026-03-01T21:50:34.359499",
+    "updated_at": "2026-03-02T16:58:22.960217",
     "metadata": {
       "local_path": "/Users/avm/projects/Personal/dashboard/store/plugins/oko_e2e_probe"
     }
@@ -48,7 +48,7 @@
       "capabilities": null
     },
     "created_at": "2026-03-01T13:02:53.755967",
-    "updated_at": "2026-03-01T21:50:34.359838",
+    "updated_at": "2026-03-02T16:58:22.962273",
     "metadata": {
       "local_path": "/Users/avm/projects/Personal/dashboard/store/plugins/autodiscover"
     }
@@ -78,9 +78,100 @@
       ]
     },
     "created_at": "2026-03-01T13:02:53.756084",
-    "updated_at": "2026-03-01T21:50:34.360106",
+    "updated_at": "2026-03-02T16:58:22.962764",
     "metadata": {
       "local_path": "/Users/avm/projects/Personal/dashboard/store/plugins/oko_e2e"
+    }
+  },
+  "external_ip": {
+    "id": "external_ip",
+    "name": "external_ip",
+    "version": "1.0.0",
+    "description": "Detect and expose current external/public IP address",
+    "author": "OKO Dashboard Team",
+    "source": "local",
+    "source_url": "/Users/avm/projects/Personal/dashboard/store/plugins/external_ip",
+    "manifest": {
+      "name": "external_ip",
+      "version": "1.0.0",
+      "description": "Detect and expose current external/public IP address",
+      "author": "OKO Dashboard Team",
+      "homepage": null,
+      "license": "MIT",
+      "tags": [
+        "network",
+        "ip",
+        "external"
+      ],
+      "capabilities": [
+        "read.plugins.services"
+      ]
+    },
+    "created_at": "2026-03-02T11:59:32.693698",
+    "updated_at": "2026-03-02T16:58:22.964112",
+    "metadata": {
+      "local_path": "/Users/avm/projects/Personal/dashboard/store/plugins/external_ip"
+    }
+  },
+  "dns_trace": {
+    "id": "dns_trace",
+    "name": "dns_trace",
+    "version": "1.0.0",
+    "description": "DNS resolution and traceroute diagnostics for global targets",
+    "author": "OKO Dashboard Team",
+    "source": "local",
+    "source_url": "/Users/avm/projects/Personal/dashboard/store/plugins/dns_trace",
+    "manifest": {
+      "name": "dns_trace",
+      "version": "1.0.0",
+      "description": "DNS resolution and traceroute diagnostics for global targets",
+      "author": "OKO Dashboard Team",
+      "homepage": null,
+      "license": "MIT",
+      "tags": [
+        "network",
+        "dns",
+        "trace",
+        "geo"
+      ],
+      "capabilities": [
+        "read.plugins.services"
+      ]
+    },
+    "created_at": "2026-03-02T14:54:58.474630",
+    "updated_at": "2026-03-02T16:58:22.961005",
+    "metadata": {
+      "local_path": "/Users/avm/projects/Personal/dashboard/store/plugins/dns_trace"
+    }
+  },
+  "internet_speed": {
+    "id": "internet_speed",
+    "name": "internet_speed",
+    "version": "1.0.0",
+    "description": "Measure internet speed (download/upload/latency) for network and browser scopes",
+    "author": "OKO Dashboard Team",
+    "source": "local",
+    "source_url": "/Users/avm/projects/Personal/dashboard/store/plugins/internet_speed",
+    "manifest": {
+      "name": "internet_speed",
+      "version": "1.0.0",
+      "description": "Measure internet speed (download/upload/latency) for network and browser scopes",
+      "author": "OKO Dashboard Team",
+      "homepage": null,
+      "license": "MIT",
+      "tags": [
+        "network",
+        "speed",
+        "latency"
+      ],
+      "capabilities": [
+        "read.plugins.services"
+      ]
+    },
+    "created_at": "2026-03-02T14:54:58.526305",
+    "updated_at": "2026-03-02T16:58:22.964662",
+    "metadata": {
+      "local_path": "/Users/avm/projects/Personal/dashboard/store/plugins/internet_speed"
     }
   }
 }
